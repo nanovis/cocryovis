@@ -1,0 +1,3671 @@
+{
+	"fullscreen": 87,
+	"annotation_mode": 342,
+	"rotation_mouse": 0,
+	"zoom_mouse": 1,
+	"slices_mouse": 2,
+	"clipping-disabled": 48,
+	"clipping-x-axis": 49,
+	"clipping-y-axis": 50,
+	"clipping-z-axis": 51,
+	"clipping-view-aligned": 52,
+	"clipping_raw_data": 32,
+	"_comment keys": "keycodes can be found here - https://www.glfw.org/docs/3.3/group__keys.html",
+	"_comment mouse buttons": "mouse button codes can be found here - https://www.glfw.org/docs/3.3/group__buttons.html"
+}{
+  "ambient_occlusion": true,
+  "annotation_kernel_size": 25,
+  "annotations": false,
+  "ao_radius": 1.0,
+  "ao_samples": 20,
+  "ao_strength": 0.8999999761581421,
+  "bloom": true,
+  "clear_color": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "clip_offset": 0.0,
+  "clip_plane": 0,
+  "clip_volume_a": true,
+  "clip_volume_b": true,
+  "clip_volume_c": true,
+  "clipping": false,
+  "early_ray_termination": true,
+  "enable_volume_a": true,
+  "enable_volume_b": true,
+  "enable_volume_c": true,
+  "far_plane": 100.0,
+  "near_plane": 0.009999999776482582,
+  "ray_jittering": true,
+  "sample_rate": 10.0,
+  "shadow_quality": 5.0,
+  "shadow_radius": 0.2,
+  "shadow_strength": 0.5,
+  "shadows": true
+}
+{
+    "effects": [
+	{"name": "toneMapping", "vs" : "pass.vs", "fs" : "mono-tone.fs"},
+	{"name": "gaussX", "vs" : "pass.vs", "fs" : "gaussX.fs"},
+	{"name": "gaussY", "vs" : "pass.vs", "fs" : "gaussY.fs"},
+	{"name": "add", "vs" : "pass.vs", "fs" : "add.fs"}
+	]
+}{
+    "effects": [
+	{"name": "toneMapping", "vs" : "pass.vs", "fs" : "mono-tone.fs"},
+	{"name": "gaussX", "vs" : "pass.vs", "fs" : "gaussX.fs"},
+	{"name": "gaussY", "vs" : "pass.vs", "fs" : "gaussY.fs"}
+	]
+}// multiple of 16 bytes
+struct Param 
+{	
+	param0 : vec4<f32>,
+	param1 : vec4<f32>,
+	param2 : vec4<f32>,
+	param3 : vec4<f32>,
+	param4 : vec4<f32>,
+}
+
+@group(0) @binding(0) var texSampler : sampler;
+@group(0) @binding(1) var tex : texture_2d<f32>;
+@group(0) @binding(2) var tex0 : texture_2d<f32>;
+@group(0) @binding(3) var<uniform> param : Param;
+
+
+fn toneMap(color : vec4<f32>) -> vec4<f32>
+{
+	var low = 0.4;
+	var high = 1.0;
+	var mappedColor = vec4<f32>(0.0, 0.0, 0.0, color.w);
+	mappedColor.x = clamp((color.x - low) / (high - low), 0.0, 1.0);
+	mappedColor.y = clamp((color.y - low) / (high - low), 0.0, 1.0);
+	mappedColor.z = clamp((color.z - low) / (high - low), 0.0, 1.0);
+	
+	return mappedColor;
+}
+
+@fragment
+fn main(
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32>,
+	@builtin(position) position : vec4<f32>
+) 
+-> @location(0) vec4<f32> 
+{
+	var coord = tex_coords;
+	coord.x = tex_coords.y;
+	coord.y = tex_coords.x;
+	
+	var color = textureSample(tex, texSampler, coord);
+
+	coord.y = 1.0 - coord.y;
+	
+	var interaction = (param.param0.z == 1.0);
+	
+	if (interaction)
+	{
+		if (i32(position.x) % 2 == 0)
+		{
+			coord.x = coord.x + 1.0 / param.param0.x; 
+		}
+		if (i32(position.y) % 2 == 0)
+		{
+			coord.y = coord.y + 1.0 / param.param0.y; 
+		}
+	}
+	
+	var color0 = textureSample(tex0, texSampler, coord);
+		
+	color = color * 1.25;
+	
+	return color0;
+	
+//	return vec4<f32>(color.x + color0.x, color.y + color0.y, color.z + color0.z, color.w);
+}struct Param 
+{
+	mousePosX : f32,
+	mousePosY : f32,
+	param2 : f32,
+	param3 : f32,
+	
+	volumeSize : vec4<u32>,
+	annotationVolume : vec4<f32>,
+	vertex : vec4<f32>,
+	pingPong : vec4<f32>,
+	kernelSize : vec4<f32>,
+	clippingPlaneOrigin : vec4<f32>,
+	clippingPlaneNormal : vec4<f32>,
+}
+
+struct Plane 
+{
+	position : vec3<f32>,
+	normal : vec3<f32>,
+}
+
+struct Ray 
+{
+	origin : vec3<f32>,
+	direction : vec3<f32>,
+}
+
+struct Intersection 
+{
+	intersects : bool,
+	position : vec3<f32>,
+}
+
+@group(0) @binding(0) var<uniform> param : Param;
+@group(0) @binding(1) var output : texture_storage_3d<rgba8unorm, write>;
+@group(0) @binding(2) var input : texture_3d<f32>;
+
+fn intersect_plane(ray: Ray, p : Plane) -> Intersection
+{
+	var d = -dot(p.position, p.normal);
+	var v = dot(ray.direction, p.normal);
+	var t = -(dot(ray.origin, p.normal) + d) / v;
+	
+	var intersection : Intersection;
+	intersection.intersects = false;
+	
+	if(t > 0.0)
+	{
+		intersection.intersects = true;
+		intersection.position = ray.origin * t * ray.direction;
+	}
+		
+	return intersection;
+}
+
+fn apply_brush(pos : vec3<f32>, delta : vec3<i32>, copy : bool)
+{
+	var kernel = vec3<i32>(i32(param.kernelSize.x), i32(param.kernelSize.y), i32(param.kernelSize.z));
+	
+	var strength = pow(f32(delta.x*delta.x)/f32(kernel.x) + 
+					f32(delta.y*delta.y)/f32(kernel.y) +
+					f32(delta.z*delta.z)/f32(kernel.z)
+					, 0.5);
+
+	if(strength > 1.0) {
+		return;
+	}
+	var tex_coord = vec3<i32>(i32(pos.x * f32(param.volumeSize.x)), 
+							i32(pos.y * f32(param.volumeSize.y)),
+							i32(pos.z * f32(param.volumeSize.z)));
+	
+	var tex_coord_kernel = tex_coord + delta;
+	var sample = textureLoad(input, tex_coord_kernel, 0).rgba;
+	var result = sample;
+	//var result = vec4<f32>(sample.x, sample.y, sample.z, 1.0);
+	if(!copy) 
+	{
+		var density = 0.5 - cos((1.0 - strength) * 3.141592) * 0.5;	
+
+		if(!bool(param.param2)) {
+			density = - density;
+		}
+		
+		if(bool(param.annotationVolume.x == 0.0)) {
+			result.x = clamp(result.x + density, 0.0, 1.0);
+		}
+		if(bool(param.annotationVolume.x == 1.0)) {
+			result.y = clamp(result.y + density, 0.0, 1.0);
+		}
+		if(bool(param.annotationVolume.x == 2.0)) {
+			result.z = clamp(result.z + density, 0.0, 1.0);
+		}
+		if(bool(param.annotationVolume.x == 3.0)) {
+			result.w = clamp(result.w + density, 0.0, 1.0);				
+		}
+	}
+	textureStore(output, tex_coord_kernel, result);	
+}
+
+@compute @workgroup_size(4, 4, 4)
+fn main(@builtin(global_invocation_id) global_id : vec3<u32>) 
+{
+	var kernel = vec3<i32>(i32(param.kernelSize.x), i32(param.kernelSize.y), i32(param.kernelSize.z));
+	
+	// Guard against out-of-bounds work group sizes
+	if (global_id.x >= u32(kernel.x * 2 + 1) || global_id.y >= u32(kernel.y * 2 + 1) || global_id.z >= u32(kernel.z * 2 + 1)) {
+		return;
+	}
+	
+	
+	var delta = vec3<i32>(kernel.x - i32(global_id.x), kernel.z - i32(global_id.y), kernel.z - i32(global_id.z));	
+	var copy = bool(param.pingPong.x);
+	
+	apply_brush(vec3<f32>(param.vertex.x, param.vertex.y, param.vertex.z), delta, copy);	
+}[[block]] struct Param 
+{
+	paramF1 : f32,
+	paramF2 : f32,
+	paramF3 : f32,
+	screenSize : vec2<f32>,
+	paramV1 : vec3<f32>,
+	paramV2 : vec3<f32>,
+	paramV3 : vec3<f32>,
+};
+
+[[group(0), binding(0)]] var texSampler : sampler;
+[[group(0), binding(1)]] var tex : texture_2d<f32>;
+[[group(0), binding(2)]] var<uniform> param : Param;
+
+[[stage(fragment)]]
+fn main(
+[[location(0)]] eye : vec3<f32>,
+[[location(1)]] direction : vec3<f32>,
+[[location(2)]] light : vec3<f32>,
+[[location(3)]] lightPos : vec3<f32>,
+[[location(4)]] fragPos : vec3<f32>,
+[[location(5)]] tex_coords : vec2<f32> 
+) 
+-> [[location(0)]] vec4<f32> 
+{
+	var fragColor = vec4<f32>(tex_coords.y, tex_coords.x, 0.0 , 1.0);
+	
+	var coord = tex_coords;
+	coord.x = tex_coords.y;
+	coord.y = tex_coords.x;
+	
+	var color = vec3<f32> (0.0, 0.0, 0.0);
+	var offsetScale = 0.01;
+	var count = 0.0;
+	
+	for (var xOffset: f32 = -1.0; xOffset < 2.0; xOffset = xOffset + 1.0) 
+	{
+		for (var yOffset: f32 = -1.0; yOffset < 2.0; yOffset = yOffset + 1.0) 
+		{
+			var coordOffset = coord;
+			coordOffset.x = coordOffset.x + xOffset * offsetScale;
+			coordOffset.y = coordOffset.y + yOffset * offsetScale;
+			//color = color + textureSample(tex, texSampler, coordOffset).xyz;
+			color = color + textureSampleLevel(tex, texSampler, coordOffset, 0.0).xyz;
+			count = count + 1.0;
+		}
+	}
+	color = color / count;
+	//fragColor = textureSample(tex, texSampler, coord);
+	fragColor = textureSampleLevel(tex, texSampler, coord, 0.0);
+	fragColor = vec4<f32>(color.x, color.y, color.z, 1.0);
+	
+	return fragColor;
+}//data texture
+uniform sampler3D Data;
+uniform sampler1D Transfer1D;
+uniform sampler2D Transfer2D;
+
+uniform sampler3D vol[8];
+
+uniform sampler2D colorTexture;
+uniform sampler2D positionTexture;
+
+uniform float cut;
+
+
+uniform float _cut;
+uniform float _size;
+uniform float _scale;
+uniform float _offsetX;
+uniform float _offsetY;
+uniform float _offsetZ;
+uniform float _offset;
+uniform float _dvr;
+uniform float _dvr2;
+uniform float _color;
+uniform float _single;
+
+uniform mat4 modelview;
+uniform mat4 projection;
+
+vec4 col[8];
+
+float MULT = 10.0;
+
+//size of the data bounding box
+//vec3 size = vec3(1.0, 1.0, 0.25) * 0.5;
+
+vec3 size = vec3(1,1,1) * 1.0;
+
+//vec3 size = vec3(1,1,1) * mix(1.3, 0.7, _size);
+
+//vec3 size = vec3(-1024,-1440,448) * 0.00038 * 1.0;
+
+//rendering
+varying vec3 light,lightPos;
+
+/*float rand()
+{
+    return fract(sin(dot(gl_FragCoord.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}*/
+
+uint seed;
+
+uint wang_hash(uint seed)
+{
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return seed;
+}
+
+float rand()
+{
+	seed = wang_hash(seed);
+	float f = float(seed) * (1.0 / 4294967296.0);
+	return f
+	 / cos(f)
+	;
+}
+
+
+
+float cube(in vec3 eye, in vec3 dir, in vec3 size, out float fr)
+{
+	float far;
+	float near;
+	float t1, t2, t3;
+	int i;
+	fr = 0.0;
+	far = 9999.0;
+	near = -9999.0;
+	for (i = 0; i < 3; i++)
+	{
+		if (dir[i] == 0.0)
+		{
+			if (eye[i]<-0.0001 || eye[i]>0.0001)
+			{
+				return -1.0;
+			}
+		}
+		else
+		{
+			t1 = (-size[i] - eye[i]) / dir[i];
+			t2 = (size[i] - eye[i]) / dir[i];
+			if (t2 > t1)
+			{
+				t3 = t1;
+				t1 = t2;
+				t2 = t3;
+			}
+
+			if (t2 > near)
+				near=t2;
+			if (t1 < far)
+				far=t1;
+			if (far < 0.0) //eye lies behind the cube and looks away
+				return -1.0;
+			if (near > far) //eye is drunk
+				return -1.0;
+		}
+	}
+	if (near < 0.0) //eye lies within the cube
+	{
+		fr = far;
+		return 0.0;
+	}
+	else
+	{
+		fr = far;
+		return near;
+	}
+}
+
+float dataRead(in vec3 pos, int which)
+{	
+	float ramp0 = 0.4;
+	float ramp1 = 0.6999;	
+	
+	if (which == 0)
+	{
+		ramp0 = 0.4;
+		ramp1 = 0.999;
+	}
+	if (which == 1)
+	{
+		ramp0 = 0.125;
+		ramp1 = 0.9;
+	}
+	if (which == 2)
+	{
+		ramp0 = 0.3;
+		ramp1 = 0.999;
+	}
+	if (which == 3)
+	{
+		ramp0 = 0.4;
+		ramp1 = 0.999;
+	}
+	
+	if (which == 4)
+	{
+		//ramp0 = 0.58;
+		//ramp0 = 0.4;
+		ramp0 = 0.3;
+		ramp1 = 1.0;
+	}
+	if (which == 5)
+	{
+		//ramp0 = 0.58;
+		//ramp0 = 0.4;
+		ramp0 = 0.0;
+		ramp1 = 1.0;
+	}
+		
+	//ramp0 = 0.6;
+	//ramp1 = 0.999;
+	
+	/*if (which == 0 && pos.y > 0.4)
+		return 0.0;
+
+	if (which == 1 && pos.y > 0.45)
+		return 0.0;*/
+
+	vec4 value;
+	
+	//if (pos.y < 0.1)
+		//which = 1;
+	
+	vec3 uvy = pos.xyz;
+	
+	vec3 realSize = vec3(1024, 1440, 448);
+	float realZRatio = realSize.y / realSize.z;
+	float realXRatio = realSize.y / realSize.x;
+	
+	uvy.z -= 0.5;
+	uvy.z *= realZRatio;
+	uvy.z += 0.5;
+	
+	uvy.x -= 0.5;
+	uvy.x *= realXRatio;
+	uvy.x += 0.5;
+
+	vec3 centerOffsetS = vec3(-0.1, -0.082, 0.0);
+	vec3 centerOffsetT = vec3(0.0, -0.17, 0.0);
+	
+	vec3 centerOffset = mix(centerOffsetT, centerOffsetS, _offset);
+	
+	float scale = mix(0.8, 0.3, _scale);
+	scale = 1.0;
+		
+	//centerOffset = vec3(0.0, -0.17, 0.0);
+
+	uvy = ((1.0 - scale) * 0.5) + uvy * scale;
+	//uvy += centerOffset;
+	
+	
+	//uvy.z = 1.0-uvy.z;
+	
+	//uvy.xy *= 2.0;
+	
+	/*float mask = texture3D(vol[3], uvy).a;
+	
+	{
+		ramp0 = 0.3;
+		ramp1 = 0.999;		
+		mask = clamp((1.0 - mask - ramp0) / (ramp1 - ramp0), 0.0, 1.0);
+	}*/
+	
+	//float ov = texture3D(vol[4], uvy).a;
+	value = texture3D(vol[which], uvy);
+	
+	/*value = mix(
+		texture3D(vol[0], uvy),
+		texture3D(vol[1], uvy),
+		//vec4(0.25));
+		vec4(0.0));*/
+	
+	if (which == 3 || which == 5)
+	{
+		value = 1.0 - value;
+		/*if (value.a < 0.6)
+			value = vec4(0.0);*/
+		
+		/*float cont = -0.0;
+		float v = pow(cont + 1.0, 3.0) - 1.0;*/
+		//value = value + (value - 0.5) * v;	
+	}
+
+	vec3 ic = uvy;
+			
+			if (ic.x < 0.0 || ic.x > 1.0 ||
+			    ic.y < 0.0 || ic.y > 1.0 ||
+				ic.z < 0.0 || ic.z > 1.0)
+				return 0.0;
+			else
+ 
+	value.a = clamp((value.a - ramp0) / (ramp1 - ramp0), 0.0, 1.0);
+	
+	float cp = 0.5;
+	//if (ic.z > cp || ic.z < cp - 0.01) return 0.0;
+	
+	
+	//value.a = (value.a - ramp0) * (1.0 - ramp0);
+	
+	//value.a *= ov;
+	
+	//float mask = (1.0 - texture3D(vol[5], uvy).a);
+	
+	return clamp(value.a * mix(1.0, MULT, _dvr), 0.0, 1.0)
+	//* 0.025
+	;
+	
+	//return clamp(value.a * 100.0, 0.0, 1.0);
+	//return 1.0;
+}
+
+
+vec2 raySphereIntersect(vec3 r0, vec3 rd, vec3 s0, float sr)
+{
+    float a = dot(rd, rd);
+    vec3 s0_r0 = r0 - s0;
+    float b = 2.0 * dot(rd, s0_r0);
+    float c = dot(s0_r0, s0_r0) - (sr * sr);
+	float disc = b * b - 4.0 * a* c;
+    if (disc < 0.0) {
+        return vec2(-1.0, -1.0);
+    }else{
+		return vec2(-b - sqrt(disc), -b + sqrt(disc)) / (2.0 * a);
+	}
+}
+
+
+
+
+
+
+
+varying
+vec3 eye,dir;
+
+
+struct Ray {
+    vec3 O; // Origin
+    vec3 V; // Direction vector
+};
+
+// Notes: GLUP.viewport = [x0,y0,width,height]
+// clip-space coordinates are in [-1,1] (not [0,1]) !
+
+// Computes the ray that passes through the current fragment
+// The ray is in world space.
+Ray primary_ray() {
+	
+	vec2 crd = gl_FragCoord.xy / vec2(1920, 1080);
+	
+    vec4 near = vec4(
+    2.0 * ( crd.x - 0.5),
+    2.0 * ( crd.y - 0.5),
+        0.0,
+        1.0
+    );
+	
+	mat4 imp = inverse( projection *modelview);
+	
+    near = imp * near ;
+    vec4 far = near + imp * vec4(0.0,0.0, 1.0, 0.0);
+    near.xyz /= near.w ;
+    far.xyz /= far.w ;
+    return Ray(near.xyz, far.xyz-near.xyz) ;
+}
+
+// Updates fragment depth from a point in world space
+float frag_depth(in vec3 M_world_space) {
+    vec4 M_clip_space = modelview * projection * vec4(M_world_space,1.0);
+    float z = 0.5*(1.0 + M_clip_space.z/M_clip_space.w);
+    return (1.0-z)*gl_DepthRange.near + z*gl_DepthRange.far;
+}
+
+
+float lightRadius = 2.9;
+
+void main()
+{	
+	Ray ray = primary_ray();
+	
+	//eye = ray.O; dir = ray.V;
+	
+  if(false)
+	{
+		vec2 coord = gl_FragCoord.xy / vec2(1280, 720);
+		
+		//vec4 texel = texture3D(vol[4], vec3(coord, 0.5));
+		float ta = dataRead(vec3(coord, _size), 4);
+		
+		gl_FragColor = vec4(vec3(ta), 1.0);
+		return;
+	}	
+	
+	
+  	vec2 coord = gl_FragCoord.xy / vec2(1920, 1080);	
+	vec4 bgCol = texture2D(colorTexture, coord);
+	vec4 bgPos = texture2D(positionTexture, coord);
+	
+	bool isBg = false;
+	if (length(bgPos) > 1.9999999)
+	{
+		isBg = true;
+	}
+	else
+	{
+		isBg = false;
+	}
+	
+
+	if (false)
+if (coord.y > 0.5 || coord.x < 0.5)
+{
+	gl_FragColor = vec4(1,0,0,1);
+	return;
+}
+	
+	
+	
+	
+  seed = gl_FragCoord.x * gl_FragCoord.y;
+  
+  float bright = 2.46;
+  
+  col[0] = vec4(vec3(0.75, 0.25, 0.5) * 2.0, 1.0); 
+  col[1] = vec4(0.8,0.8,0.9,1); 
+  col[2] = vec4(0.3,0.5,0.8,1); 
+  col[3] = vec4(1,1,1,1); 
+  col[4] = vec4(1,1,1,1); 
+
+  
+  /*col[0] = vec4(vec3(0.55, 0.35, 0.5) * 1.02 * bright, 1.0); 
+  col[1] = vec4(vec3(0.2,0.05,0.07) * bright, 1.0);
+  col[2] = vec4(vec3(0.37,0.15,0.18) * bright, 1.0);
+  col[3] = vec4(vec3(0.12,0.14,0.25) * 1.5 * bright, 1.0);
+  col[4] = vec4(vec3(.8,.1,0.1) * 1.5 * bright, 1.0);
+  col[5] = vec4(vec3(0.62, 0.6, 0.67) * 0.6 * bright, 1.0);
+  col[6] = vec4(1,1,1,1);
+  col[7] = vec4(1,1,1,1);*/
+
+
+	vec4 color, background, mx; //sampled colors
+	vec3 halfV,                 //half vector
+		 isec0,                 //intersection
+		 isec1,                 //transformed intersection
+		 halfv,
+		 n = vec3(0.0),         //normal
+		 accumC = vec3(0.0),    //accumulated color (for DVR)
+		 voxelSize = 1.8 / vec3(832.0, 832.0, 494.0);
+		 //voxelSize = 1.0 / vec3(1024.0);
+	float accumA = 0.0, t, tmp, fr = 0.0, gm, nDotL;
+	
+	float accumA2 = 0.0;
+	vec3 accumC2 = vec3(0.0);
+
+	float firstHit = 0.0, lastHit = 0.0;
+
+	//float mxa[50];
+	int mxp = 0;
+
+	int i, j = 0;
+
+	/*for (i = 0; i < 50; i++)
+		mxa[i] = 0.0;*/
+
+	//background = vec4(texture2D(Transfer2D, vec2(0.0, 0.0)).rgb, 1.0);
+	//background = vec4(texture1D(Transfer1D, 0.0).rgb, 1.0);
+	//background = vec4(43.0 / 255.0, 167.0 / 255.0, 231.0 / 255.0, 1.0);
+
+		//background = vec4(1.0, 1.0, 1.0, 1.0);
+	//background = vec4(0.0, 0.0, 0.0, 1.0);
+
+	//background = vec4(43.0 / 255.0, 72.0 / 255.0, 136.0 / 255.0, 1.0);
+  background = vec4(0.0,0.01,0.06,1.0);
+  //background = vec4(1,1,1,1);
+  //background = vec4(0.64,0.6,0.6,1);
+  //background = vec4(0.7,0.65,0.68,1);
+
+	//vec4 cl = texture2D(Transfer2D, vec2(dir.x, dir.y));
+	//background = vec4(dir.x, dir.y, dir.z, 1.0);
+	//background = vec4(cl.rgb, 1.0);
+
+	color = background;
+
+	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
+	t = cube(eye, dir, size, fr);
+  
+	//if ray missed the cube, just return first color (at 0.0) of the transfer function (without alpha)
+	if (false && t < 0.0)
+	{
+		vec2 zi = raySphereIntersect(eye, dir, lightPos, lightRadius);
+		if (zi.x >= 0.0 && zi.y >= 0.0)
+			gl_FragColor = vec4(1);
+		else		
+			gl_FragColor = background;
+	
+		return;
+	}
+	
+	//step size
+	float stepSize = 1.0 / (2048.0 * 3.0 / MULT); //0.003
+
+	//ray offset jittering
+	t += rand() * stepSize * 0.1;
+  
+  	
+	bool please = true;
+
+	
+	  float cut = mix(0.6, 
+	  mix(0.45, 0.8, _dvr),
+	  _cut);
+
+			
+	//rendering loop
+	i = 0;
+	
+	
+	
+	
+	if (_dvr < 1.0)
+	while (float(i) < (fr - t) / stepSize)
+	{
+		i++;
+
+		//calculate intersection along the ray
+		tmp = float(i) *
+		//mix(stepSize, stepSize * 1000.0, pow(float(i) / ((fr - t) / stepSize), 0.5))
+		//mix(stepSize * 1.0, stepSize * 0.0001, accumA)
+		stepSize
+		+ t;
+		isec0 = tmp * dir + eye;
+		
+		//transform it to match the bounding box centered on [0, 0, 0]
+		isec1 = (isec0 / size) * 0.5 + 0.5;
+
+		if (false && length(isec0-lightPos) < lightRadius)
+		{
+			accumA2 = 1.0;
+			accumC2 = vec3(1.0);
+			break;
+		}
+		
+		if (isec1.x < 0.0 || isec1.x > 1.0 ||
+			isec1.y < 0.0 || isec1.y > 1.0 ||
+			isec1.z < 0.0 || isec1.z > 1.0)
+		{
+			break;
+		}
+		
+				if (true)
+				{
+				  /*if (isec1.y > 0.98)
+				  {
+					  continue;
+				  }*/
+
+				  if (isec1.z > cut || isec1.z < cut - 0.2)
+				  {
+					  continue;
+				  }
+				  if (isec1.z <= cut && isec1.z >= cut - 0.2 && please)
+				  {
+						please = false;
+						float _accumA = 0.0;
+						vec3 _accumC = vec3(0.0);
+						
+						float mask = 0.0;
+						
+						//for (int k = 0; k < 3; k++)
+						int k = 4;
+						{
+							float a = dataRead(isec1,4);
+							
+							mask =
+							max(
+								dataRead(isec1,0),
+								max(
+									dataRead(isec1,1),
+									max(
+										dataRead(isec1,2),
+										dataRead(isec1,3)
+									)
+								)
+							);
+							
+							
+							
+							mask = mix(1.0, dataRead(isec1,3), _dvr2);
+							
+							//a *= mask;
+							
+							//a = texture3D(vol[k],isec1).a;
+
+							_accumC += (1.0 - _accumA) * col[k].rgb * a;
+							_accumA += (1.0 - _accumA) * a;		
+						}
+
+					  accumA2 = clamp(mask * 2.0, 0.0, 1.0);
+					  accumC2 = _accumC;
+					  
+					  /*if (mask == 1)
+						  accumC2 = vec3(1.0);*/
+					  
+					  break;
+				  }
+				}
+	
+    }
+    
+
+	
+	/*if (accumA2 == 1.0)
+	{
+		gl_FragColor = vec4(1,0,0,1);return;
+	}
+	else
+	{
+		gl_FragColor = vec4(1,1,0,1);return;		
+	}*/
+
+	
+	i = 0;
+	
+	
+	if (_dvr2 > 0.0)
+	while (float(i) < (fr - t) / stepSize)
+	{
+		i++;
+
+		//calculate intersection along the ray
+		tmp = float(i) *
+		//mix(stepSize, stepSize * 1000.0, pow(float(i) / ((fr - t) / stepSize), 0.5))
+		//mix(stepSize * 1.0, stepSize * 0.0001, accumA)
+		stepSize
+		+ t;
+		isec0 = tmp * dir + eye;
+		
+		//transform it to match the bounding box centered on [0, 0, 0]
+		isec1 = (isec0 / size) * 0.5 + 0.5;
+
+		if (false && length(isec0-lightPos) < lightRadius)
+		{
+			accumA = 1.0;
+			accumC = vec3(1.0);
+			break;
+		}
+		
+		if (isec1.x < 0.0 || isec1.x > 1.0 ||
+			isec1.y < 0.0 || isec1.y > 1.0 ||
+			isec1.z < 0.0 || isec1.z > 1.0)
+		{
+			break;
+		}
+
+		{
+				  /*if (isec1.y > 0.98)
+				  {
+					  continue;
+				  }*/
+
+				  if (isec1.z >= cut)
+				  {
+					  //continue;
+				  }				
+		}
+				
+	
+		if (accumA > 0.85/* && !please*/)
+		{
+			break;
+		}
+
+		
+	float maskValue = dataRead(isec1, 5);			
+
+ 		n.x = dataRead(isec1 - vec3(voxelSize.x, 0.0, 0.0), 3) - dataRead(isec1 + vec3(voxelSize.x, 0.0, 0.0), 3);
+		n.y = dataRead(isec1 - vec3(0.0, voxelSize.y, 0.0), 3) - dataRead(isec1 + vec3(0.0, voxelSize.y, 0.0), 3);
+		n.z = dataRead(isec1 - vec3(0.0, 0.0, voxelSize.z), 3) - dataRead(isec1 + vec3(0.0, 0.0, voxelSize.z), 3);
+		
+		/*n.x = dataRead(isec1 - vec3(voxelSize.x * 0.5, 0.0, 0.0), 0) - mx;
+		n.y = dataRead(isec1 - vec3(0.0, voxelSize.y * 0.5, 0.0), 0) - mx;
+		n.z = dataRead(isec1 - vec3(0.0, 0.0, voxelSize.z * 0.5), 0) - mx;*/
+		    
+	//float gm = length(n);
+    n = normalize(n);
+
+
+	//mx.a *= 1.0 * pow(gm, 2.0);
+	
+	  /*mx = dataRead(isec1, 3) 
+	  * gm
+	  ;*/
+	  //if (mx.a < 0.04) continue;
+	  //if (mx.a < 0.1) continue;
+	  
+
+
+
+
+	//float omx = dataRead(isec1, 4);
+	float omx = 1.0;
+
+	float spikeMx = 0.0;
+    //for (int which = 0; which <= 2; which++)
+    int which = 0;
+    {
+    
+      //if ((which < 3 || which == 5) && isec1.z < 0.5) continue;
+
+	  //if ((which < 2) && isec1.z > mix(1.0, 0.75,cut)) continue;
+	  
+	  //if (which < 2)
+	  
+
+
+ 		/*n.x = dataRead(isec1 - vec3(voxelSize.x, 0.0, 0.0), which) - dataRead(isec1 + vec3(voxelSize.x, 0.0, 0.0), which);
+		n.y = dataRead(isec1 - vec3(0.0, voxelSize.y, 0.0), which) - dataRead(isec1 + vec3(0.0, voxelSize.y, 0.0), which);
+		n.z = dataRead(isec1 - vec3(0.0, 0.0, voxelSize.z), which) - dataRead(isec1 + vec3(0.0, 0.0, voxelSize.z), which);
+		float gm = length(n);*/
+    	  
+		  /*mx = dataRead(isec1, which)
+		  //* pow(gm,2.2)
+		  ;*/
+
+ 		  //if (tmp < 0.63) mx.a = 0.0;
+
+	mx = dataRead(isec1, which);
+	
+	if (which == 0)
+		spikeMx = mx;	
+	
+	mx *= omx;	
+	
+	//if (which == 1) mx *= (1.0 - pow(spikeMx, 0.1));
+	if (which == 1 && spikeMx > 0.0) mx = 0.0;
+	
+	mx.a *= mix(1.0, (maskValue), _single);
+	
+if (mx.a < 0.025) continue;
+		  
+
+  		//halfV = normalize(vec3(10.0,0.0,10.0) - isec1);
+		halfV = normalize(lightPos - isec0);
+
+
+  		vec4 s = vec4(0);
+		vec4 s2 = vec4(0);
+  		float t;
+		
+		int q;
+		
+		if (false)
+		{
+			vec4 _s = vec4(0);
+			
+			//if (accumA > 0.0 || mx.a > 0.0)
+			for (q = 0; q < 1; q++)
+			{	
+				for (t = 0.01; t < 1.0; t += 0.02)
+				{			
+						vec3 randomDirection = -1.0 + 2.0 * vec3(rand(), rand(), rand());
+						randomDirection = normalize(randomDirection) * rand();
+						
+						halfV = normalize(lightPos + randomDirection * mix(0.0, lightRadius, t) - isec0);
+
+						vec3 sp = isec1 + halfV * t * 0.5;
+				
+				
+						/*vec3 _n;
+						_n.x = dataRead(sp - vec3(voxelSize.x, 0.0, 0.0), 0) - dataRead(sp + vec3(voxelSize.x, 0.0, 0.0), 0);
+						_n.y = dataRead(sp - vec3(0.0, voxelSize.y, 0.0), 0) - dataRead(sp + vec3(0.0, voxelSize.y, 0.0), 0);
+						_n.z = dataRead(sp - vec3(0.0, 0.0, voxelSize.z), 0) - dataRead(sp + vec3(0.0, 0.0, voxelSize.z), 0);			
+						
+						float _gm = length(_n);*/
+				
+					   //s += dataRead(isec1 + halfV * t, which) * (0.25 - t) * 5.5;
+					   
+					   float os = dataRead(sp, 4);
+					   float ms = dataRead(sp, 5);
+					   
+					   float v0 = dataRead(sp, 0);
+					   float v1 = dataRead(sp, 1);
+					   float v2 = dataRead(sp, 2);
+					   float vm = max(v0, max(v1, v2));
+					   //vm = dataRead(sp, 3);
+					   
+					   s += vm * os
+					   
+					   *
+					   mix(1.0, (ms), _single)
+
+					   /** _gm*/ * pow(1.0 - t, 2.0); //pow(1.0 - pow(t, 2.1), 10.01);
+					   //s += dataRead(isec1 + halfV * t * 1.0, 1); //pow(1.0 - pow(t, 2.1), 10.01);
+				}
+				s /= 0.7;
+				//s *= 5.0;
+				s = clamp(s, 0.0, 1.0);
+			
+				_s += s;
+			}
+			s = _s / float(q);
+		}
+		
+
+		if (true)
+		{
+			vec4 _s = vec4(0);
+			int samples = (int) mix(1.0,1.0,_dvr2);
+			samples = 3;
+			float radius = 0.01;
+			for (q = 0; q < samples; q++)
+			{
+				vec3 randomDirection = vec3(-1.0 + 2.0 * rand(), -1.0 + rand() * 2.0, -1.0 + 2.0 * rand());
+				randomDirection = normalize(randomDirection) * rand();	
+				
+				randomDirection = randomDirection + n * 0.5 + vec3(0.0, 2.0, 0.0);
+				
+				vec3 sp = isec1 + randomDirection * radius;
+				
+				float os = dataRead(sp, 4) * 0.5;
+				float ms = dataRead(sp, 5);
+				
+								
+			    float v0 = dataRead(sp, 0);
+			    float v1 = dataRead(sp, 1);
+			    float v2 = dataRead(sp, 2);
+			    float vm = max(v0, max(v1, v2));
+			    //vm = dataRead(sp, 3);
+					   
+				_s += vm * os
+					   *
+					   mix(1.0, (ms), _single)				
+				/** pow(length(randomDirection), 1.0)*/;
+			}
+			_s = pow(_s, vec4(1.0));
+			_s /= float(samples);
+			_s *= 20.0;
+			s2 = clamp(_s, 0.0, 1.0);
+
+			//s2 = mix(1.0 - s, _s, 1.2);
+			//s += _s * 0.0;
+			//s = s * 0.5 + _s;
+			//s *= 0.9;
+			///s = _s;
+		}
+		
+
+
+
+
+		
+			/*float pen = 0.0;
+			for (t = 0.01; t < 1.0; t += 0.01)
+			{			
+				   pen += dataRead(isec1 + n * t * 0.0001, 1) * pow(1.0 - t, 1.0);
+			}
+			pen *= 2.0;
+			pen = clamp(s, 0.0, 1.0);		*/
+		
+		
+		
+		
+  		nDotL = max(dot(n, halfV), 0.0);
+  
+  
+  		//base color
+  		//color = vec4(0.9,0.9,0.9,1.0);
+  		//color = vec4(0.9,0.85,0.82,1.0); //skull
+      
+      //color = mix(col[0], col[1], 1.0 /** pow(accumA, 1.0)*/) * 1.0;
+	  //color = mix(col[0], col[1], pow(accumA, 0.1));
+	  
+	  //color = mix(col[0], col[1], 0.0);
+	  color = col[which];
+	  
+	  vec3 colorGray = vec3(0.7,0.7,0.7);
+	  
+	  color.rgb = mix(colorGray, color.rgb, _color);
+	  //color.rgb = vec3(0.5,0.5,0.5);
+	  
+	  //if (accumA > 0.7) color = col[1];
+	  
+	  if (isec1.y < 0.04)
+	  {
+		  //color = vec4(1,1,1,1) * 1.0;
+		  //n = vec3(0.0, 1.0, 1.0);
+	  }
+  
+  		/*if (mx.a < 0.4)
+  			color = vec4(0.7,0.1,0.1,1.0);
+  		else
+  			color = vec4(0.9,0.92,0.9,1.0);*/
+  
+  		/*color = mix(vec4(0.7,0.2,0.2,1.0),
+  			vec4(0.9,0.92,0.9,1.0),
+  			smoothstep(0.3, 0.40, mx.a));*/
+  
+  		//color = vec4(0.9, 0.9, 0.9, 1.0);
+  
+  		//color = vec4(0.8,0.56,0.5,1.0);
+  		
+  		//ambient
+  		//color = mix(color, vec4(1.0), 0.1);
+  
+  
+     //mx.a *= 0.1;
+	
+		
+		
+		
+		//color = mix(color, color * pow(gm * 12.0, 1.0), 20.1);
+		//color = clamp(color, vec4(0), vec4(1.0));
+		//color = vec4(0);
+	      
+  		//diffuse		
+		//color = mix(vec4(0.0, 0.02, 0.1, 1.0), color, max(0.2, nDotL));
+  
+  		//specular
+  		//color = mix(color, color+vec4(1.0, 1.0, 1.0, 1.0), pow(max(0.0, nDotL), 120.0) * 3.0);		
+		
+		
+
+
+		if (false)
+		{
+			vec3 _eye = normalize(isec1.xyz - eye);
+			float fr = smoothstep(0.0, 1.0, pow(max(abs(dot(normalize(n.xyz), normalize( _eye.xyz ))), 0.0), 0.9));
+			color = mix(
+				vec4(vec3(0.0),1.0),
+				//color,
+				//(vec4(0.2) + (1.0 - s.a * 0.8)),
+				//vec4(4.0) * max(0.0, 1.0 - pow(s.a * 1.0, 1.0)),
+				vec4(1.0),
+				//color,
+				//color + vec4(1.0, 0.3, 0.0, 1.0) * 0.9,
+				1.0 - fr
+			);
+			color = mix(color, color * vec4(0.4), pow(1.0 * s.a, 2.0));
+			color = clamp(color, vec4(0), vec4(1.0));
+		}	
+		
+		
+		if (false)
+		{
+			vec3 _eye = normalize(isec1.xyz - eye);
+			float fr = smoothstep(0.0, 1.0, pow(max(abs(dot(-normalize(n.xyz), normalize( dir.xyz ))), 0.0), 0.01));
+			color = mix(
+				//vec4(0.0,0.0,0.0,1.0),
+				color,
+				vec4(20.0, 14.0, 0.0, 1.0) * 9.35,
+				1.0 - fr
+			);
+			//color = clamp(color, vec4(0), vec4(1.0));
+		}
+
+  		//shadows
+  		color = mix(color, color * vec4(0.15, 0.18, 0.32, 1.0), s.a * 1.5);
+		color = mix(color, color * vec4(0.15, 0.18, 0.32, 1.0), s2.a * 0.7);
+		color *= 1.15;
+
+		if (false)
+		{
+			vec3 _eye = normalize(isec1.xyz - eye);
+			float fr = smoothstep(0.0, 1.0, pow(max(abs(dot(-normalize(n.xyz), normalize( dir.xyz ))), 0.0), 0.05));
+			
+			/*color = mix(
+				color,
+				color + vec4(0.9, 0.5, 0.2, 1.0) * 7.0,
+				1.0 - fr
+			);*/
+			
+			
+			float transp = dataRead(isec1, 5);
+			
+			mx.a *= mix(1.0, (1.0 - fr) * 1.0, 1.0 - transp);
+			
+			//color = clamp(color, vec4(0), vec4(1.0));
+		}		
+
+
+	
+	
+	
+	if (true)	
+	{
+		vec3 fgPos = -1.0 + 2.0 * isec1.xyz;
+		fgPos *= size;
+		
+		//fgPos = (inverse(projection) * vec4(fgPos.rgb, 1.0)).xyz;
+		
+		//fgPos.z += 0.01;
+
+		//fgPos = isec0;
+		
+		//bgPos /= 0.00013;
+		//fgPos /= 0.00013;
+		//bgPos *= 19.5;
+		//bgPos /= 0.00013;
+		//bgPos *= 20;
+		
+		
+		
+		
+
+		vec4 bgView = ( modelview * vec4(	bgPos.rgb, 1.0) ).rgba;
+		vec4 fgView = ( modelview * vec4(	fgPos.rgb, 1.0	) ).rgba;
+		
+		
+
+			/*color.rgb = 0.5 + 0.5 * bgView.xyz;
+		if (gl_FragCoord.y < 540)
+			color.rgb = 0.5 + 0.5 * fgView.xyz;
+				
+		mx.a = 1.0;
+		
+		gl_FragColor = color; return;*/
+		
+			
+		
+		//if (length(eye-isec0) > length(eye-bgPos.xyz))
+		if (!isBg)
+		{
+			//bgView.z += 0.135;
+			
+			/*color.rgb=vec3(1,0,0);
+			mx.a = 1.0;
+		
+			if (bgView.z > 0.0)
+				color.rgb=vec3(1,1,0);*/
+			
+			//fgView.z *= 1000.0;
+			
+			//bgView.z += 0.4;
+			//bgView.z *= 1000.0;
+			
+			/*if (gl_FragCoord.y < 540)
+				gl_FragColor = vec4(vec3(-bgView.z), 1.0); 
+			else
+				gl_FragColor = vec4(vec3(-fgView.z), 1.0); return;*/
+			
+			if (bgView.z > fgView.z)
+			{
+				//color.rgb = fgView * 10.0;
+				//mx.a = 1.0;
+				
+				color.rgb = bgCol;
+				mx.a = 1.0;				
+			}
+
+		}
+	}
+	
+	
+	
+	
+		
+		
+		/*color.rgb = bgCol;
+		mx.a = 1.0;*/
+
+			//color.rgb = n.xyz;
+		
+		//color = clamp(color, vec4(0), vec4(1.0));
+  
+ 
+  		accumC += (1.0 - accumA) * color.rgb * mx.a;
+  		accumA += (1.0 - accumA) * mx.a;  
+
+		if (accumA > 0.9)
+  		{
+  			break;
+  		}		
+    }
+    
+    
+    
+    
+	}
+  
+  
+  
+  
+
+	if (false)
+	{
+		float accumA = 0.0;
+		vec3 accumC = vec3(0.0);
+		
+		for (int i = 0; i < 3; i++)
+		{
+			float a = texture3D(vol[i],vec3(gl_FragCoord.xy / 1024, 0.5)).a;			
+
+			accumC += (1.0 - accumA) * col[i].rgb * a;
+			accumA += (1.0 - accumA) * a;		
+		}
+	}
+	{
+		/*accumC += (1.0 - accumA) * accumC2 * accumA2;
+		accumA += (1.0 - accumA);			*/
+		accumC = mix(accumC, accumC2, accumA2);
+		
+		gl_FragColor = vec4(bgCol.rgb * (1.0 - mix(accumA, accumA, _dvr)) + mix(accumC, accumC, _dvr), 1.0);
+	}
+
+	
+	//gl_FragColor = vec4(dat,dat,dat,1);
+
+  //gl_FragColor = vec4(accumC, 1);
+	
+	//gl_FragColor = texture1D(Transfer1D, 0.0);
+	//gl_FragColor = vec4(mix(background.rgb, accumC, accumA), 1.0);
+	
+	//gl_FragColor = vec4(vec3(accumA), 1.0);
+  
+}
+// multiple of 16 bytes
+struct Param 
+{	
+	param0 : vec4<f32>,
+	param1 : vec4<f32>,
+	param2 : vec4<f32>,
+	param3 : vec4<f32>,
+	param4 : vec4<f32>,
+}
+
+@group(0) @binding(0) var texSampler : sampler;
+@group(0) @binding(1) var tex : texture_2d<f32>;
+@group(0) @binding(2) var tex0 : texture_2d<f32>;
+@group(0) @binding(3) var<uniform> param : Param;
+
+@fragment
+fn main(
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32> 
+) 
+-> @location(0) vec4<f32> 
+{
+	var maxSize = max(param.param0.x, param.param0.y);
+	var amount = 20.0 / 1280.0 * maxSize;
+	var size = vec2<f32>(param.param0.x, param.param0.y);
+		
+	var step = 1.0 / (size.x);
+
+	var texel = vec4<f32> (0.0);
+	var color = vec4<f32> (0.0);
+	var w = 0.0;
+	var sum = 0.0;
+	
+	
+	// Viewport and clipspace conventions are different in WebGPU. 
+	// WebGPU has 0,0 in the top left (as opposed to bottom left). 
+	// The frustum in WebGPU is 1 to 0 (as opposed to 1 to -1). 
+	
+	var coord = tex_coords;
+	coord.x = tex_coords.y;
+	coord.y = tex_coords.x;
+ 
+	if (amount == 0.0)
+	{
+		color = textureSample(tex, texSampler, coord);
+		//color = texture2D(tex0, gl_TexCoord[0].st);
+		sum = 1.0;
+	}
+	else
+	{
+		var iAmount = i32(amount + 1.0);
+		for (var i = -iAmount; i <= iAmount; i = i+1)
+		{
+			//vec2 sc = gl_TexCoord[0].st + vec2(i * step, 0.0);
+			var sc = coord + vec2<f32>(f32(i) * step, 0.0);
+			if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0)
+			{
+				continue;
+			}
+			//texel = texture2D(tex0, sc);	
+			//texel = textureSample(tex, texSampler, sc);
+			texel = textureSampleLevel(tex, texSampler, sc, 0.0);
+			w = exp(-pow(f32(i) / amount * 1.5, 2.0));
+			//w = 1.0;	
+			color = color + texel * w;	
+			sum = sum + w;
+		}
+	}
+
+	return color / sum;
+}
+
+
+// multiple of 16 bytes
+struct Param 
+{	
+	param0 : vec4<f32>,
+	param1 : vec4<f32>,
+	param2 : vec4<f32>,
+	param3 : vec4<f32>,
+	param4 : vec4<f32>,
+}
+
+@group(0) @binding(0) var texSampler : sampler;
+@group(0) @binding(1) var tex : texture_2d<f32>;
+@group(0) @binding(2) var tex0 : texture_2d<f32>;
+@group(0) @binding(3) var<uniform> param : Param;
+
+@fragment
+fn main(
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32> 
+) 
+-> @location(0) vec4<f32> 
+{
+	var maxSize = max(param.param0.x, param.param0.y);
+	var amount = 20.0 / 1280.0 * maxSize;
+	var size = vec2<f32>(param.param0.x, param.param0.y);
+	
+	var step = 1.0 / (size.y);
+
+	var texel = vec4<f32> (0.0);
+	var color = vec4<f32> (0.0);
+	var w = 0.0;
+	var sum = 0.0;
+	
+	var coord = tex_coords;
+	coord.x = tex_coords.y;
+	coord.y = tex_coords.x;
+ 
+	if (amount == 0.0)
+	{
+		color = textureSample(tex, texSampler, coord);
+		//color = texture2D(tex0, gl_TexCoord[0].st);
+		sum = 1.0;
+	}
+	else
+	{
+		var iAmount = i32(amount + 1.0);
+		for (var i = -iAmount; i <= iAmount; i = i+1)
+		{
+			//vec2 sc = gl_TexCoord[0].st + vec2(i * step, 0.0);
+			var sc = coord + vec2<f32>(0.0, f32(i) * step);
+			if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0)
+			{
+				continue;
+			}
+			//texel = texture2D(tex0, sc);	
+			//texel = textureSample(tex, texSampler, sc);
+			texel = textureSampleLevel(tex, texSampler, sc, 0.0);
+			w = exp(-pow(f32(i) / amount * 1.5, 2.0));
+			//w = 1.0;	
+			color = color + texel * w;	
+			sum = sum + w;
+		}
+	}
+
+	return color / sum;
+}
+
+
+struct Param 
+{
+	param0 : vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> param : Param;
+@group(0) @binding(1) var inputA : texture_3d<f32>;
+@group(0) @binding(2) var inputB : texture_3d<f32>;
+@group(0) @binding(3) var output : texture_storage_3d<rgba8unorm, write>;
+
+
+
+@compute @workgroup_size(4, 4, 4)
+fn main(@builtin(global_invocation_id) global_id : vec3<u32>) 
+{
+	var bounds = vec3<i32>(i32(param.param0.x), i32(param.param0.y), i32(param.param0.z));
+	// Guard against out-of-bounds work group sizes
+	if ( global_id.x >= u32(bounds.x) || global_id.y >= u32(bounds.y) || global_id.z >= u32(bounds.z) )  {
+		return;
+	}
+	var tex_coord = vec3<i32>(i32(global_id.x), i32(global_id.y), i32(global_id.z) );
+	var sampleA = textureLoad(inputA, tex_coord, 0);
+	var sampleB = textureLoad(inputB, tex_coord, 0);
+	
+	var result = vec4<f32>(0.0);
+	var channel = i32(param.param0.w);
+	if(channel == 0)
+	{
+		result = vec4<f32>(sampleB.x, sampleA.y, sampleA.z, sampleA.w);
+	}
+	if(channel == 1)
+	{
+		result = vec4<f32>(sampleA.x, sampleB.x, sampleA.z, sampleA.w);
+	}
+	if(channel == 2)
+	{
+		result = vec4<f32>(sampleA.x, sampleA.y, sampleB.x, sampleA.w);
+	}
+	if(channel == 3)
+	{
+		result = vec4<f32>(sampleA.x, sampleA.y, sampleA.z, sampleB.x);
+	}
+	
+	textureStore(output, tex_coord, result);	
+}// multiple of 16 bytes
+struct Param 
+{	
+	param0 : vec4<f32>,
+	param1 : vec4<f32>,
+	param2 : vec4<f32>,
+	param3 : vec4<f32>,
+	param4 : vec4<f32>,
+}
+
+@group(0) @binding(0) var texSampler : sampler;
+@group(0) @binding(1) var tex : texture_2d<f32>;
+@group(0) @binding(2) var tex0 : texture_2d<f32>;
+@group(0) @binding(3) var<uniform> param : Param;
+
+
+fn toneMap(color : vec4<f32>) -> vec4<f32>
+{
+	var low = 0.0;
+	var high = 1.0;
+	var mappedColor = vec4<f32>(0.0, 0.0, 0.0, color.w);
+	mappedColor.x = clamp((color.x - low) / (high - low), 0.0, 1.0);
+	mappedColor.y = clamp((color.y - low) / (high - low), 0.0, 1.0);
+	mappedColor.z = clamp((color.z - low) / (high - low), 0.0, 1.0);
+	
+	if ((mappedColor.x + mappedColor.y + mappedColor.z) / 3.0 < 0.2)
+	{
+		mappedColor = vec4<f32>(0.0, 0.0, 0.0, color.w);
+	}
+	
+	return mappedColor;
+}
+
+@fragment
+fn main(
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32>,
+	@builtin(position) position : vec4<f32>
+) 
+-> @location(0) vec4<f32> 
+{
+	var coord = tex_coords;
+	coord.x = tex_coords.y;
+	coord.y = tex_coords.x;
+	
+	//var interaction = (param.param0.z == 1.0);
+	//if (interaction)
+	//{	
+	//	if (i32(position.x) % 2 == 0 /*|| i32(position.y) % 2 == 0*/)
+	//	{
+	//		coord.x = coord.x + 1.0 / param.param0.x; 
+	//	}
+	//	if (i32(position.y) % 2 == 0 /*|| i32(position.y) % 2 == 0*/)
+	//	{
+	//		coord.y = coord.y + 1.0 / param.param0.y; 
+	//	}
+	//}
+	
+	var color = textureSample(tex, texSampler, coord);
+	
+	//var rr = textureSample(texTone, texSampler, color.r).r;
+	//var rg = textureSample(texTone, texSampler, color.g).r;
+	//var rb = textureSample(texTone, texSampler, color.b).r;
+	
+	color = toneMap(color);
+				
+	return color;
+}struct VertexOutput {
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32>,
+	@builtin(position) Position : vec4<f32>,
+}
+
+
+@vertex fn main(
+	@location(0) vertex : vec3<f32>,
+	@location(1) txCoord : vec2<f32>
+)-> VertexOutput
+{
+	var output : VertexOutput;
+	
+	output.tex_coords = txCoord;
+	output.fragPos = vertex;
+	output.Position = vec4<f32>(vertex, 1.0);
+
+	return output;	
+}struct Param 
+{
+	param0 : vec4<f32>,
+	enableVolumes : vec4<f32>,
+	clippingPlaneOrigin : vec4<f32>,
+	clippingPlaneNormal : vec4<f32>,
+	volumeSize : vec4<f32>,
+	screenSize : vec4<f32>,
+}
+
+struct TransferFunctionColor
+{
+	color : array<vec4<f32>>,
+}
+
+struct TransferFunctionRamp
+{
+	ramp : array<f32>,
+}
+
+struct VolumeRatios
+{
+	ratio : array<vec3<f32>>,
+}
+
+@group(0) @binding(1) var<uniform> param : Param;
+@group(0) @binding(2) var s : sampler;
+@group(0) @binding(3) var volume : texture_3d<f32>;
+@group(0) @binding(4) var<storage, read> transferFunctionColor: TransferFunctionColor;
+@group(0) @binding(5) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
+@group(0) @binding(6) var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
+@group(0) @binding(7) var<storage, read> volumeRatios: VolumeRatios;
+@group(0) @binding(8) var depthTex : texture_depth_2d;
+@group(0) @binding(9) var annotation_tex : texture_3d<f32>;
+
+fn dataRead(pos : vec3<f32>, which : i32) -> vec4<f32>
+{
+	var mapped : vec4<f32>;
+	var sample : vec4<f32>;
+	if(which == 0) 
+	{
+		sample = textureSampleLevel(volume, s, pos, 0.0);	
+		if(bool(param.enableVolumes.x)) 
+		{
+			var low0 = transferFunctionRamp1.ramp[0];
+			var high0 = transferFunctionRamp2.ramp[0];
+			mapped.x = clamp((sample.x - low0) / (high0 - low0), 0.0, 1.0);	
+		}
+
+		if(bool(param.enableVolumes.y)) 
+		{	
+			var low1 = transferFunctionRamp1.ramp[1];
+			var high1 = transferFunctionRamp2.ramp[1];
+			mapped.y = clamp((sample.y - low1) / (high1 - low1), 0.0, 1.0);	
+		}
+
+		if(bool(param.enableVolumes.z)) 
+		{
+			var low2 = transferFunctionRamp1.ramp[2];
+			var high2 = transferFunctionRamp2.ramp[2];
+			mapped.z = clamp((sample.z - low2) / (high2 - low2), 0.0, 1.0);	
+		}
+
+		if(bool(param.enableVolumes.w)) 
+		{
+			var low3 = transferFunctionRamp1.ramp[3];
+			var high3 = transferFunctionRamp2.ramp[3];
+			//mapped.w = clamp((sample.w - low3) / (high3 - low3), 0.0, 1.0);
+			mapped.w = sample.w;
+		}
+	} else if(which == 1) 
+	{
+		mapped = textureSampleLevel(annotation_tex, s, pos, 0.0);
+		// we only show the annotation of the currently selected annotation volume
+		if(param.param0.z == 0.0) {
+			mapped = vec4<f32>(mapped.x, 0.0, 0.0, 0.0);
+		}
+		if(param.param0.z == 1.0) {
+			mapped = vec4<f32>(0.0, mapped.y, 0.0, 0.0);
+		}
+		if(param.param0.z == 2.0) {
+			mapped = vec4<f32>(0.0, 0.0, mapped.z, 0.0);
+		}
+		if(param.param0.z == 3.0) {
+			mapped = vec4<f32>(0.0, 0.0, 0.0, mapped.w);
+		}		
+	}
+	
+	return mapped;
+}
+
+fn color_transfer(which : i32) -> vec3<f32> 
+{
+	return transferFunctionColor.color[which].xyz;
+}
+
+fn outline(coords : vec3<f32>) -> vec4<f32> 
+{
+	var color = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+	var epsilon = vec3<f32>(0.0005, 0.0005, 0.0005);
+	epsilon = epsilon * 20.0;
+	epsilon = epsilon / volumeRatios.ratio[0];
+	
+	if (abs(-1.0 + 2.0 * coords.x) > 1.0 - epsilon.x ||
+		abs(-1.0 + 2.0 * coords.y) > 1.0 - epsilon.y ||
+		abs(-1.0 + 2.0 * coords.z) > 1.0 - epsilon.z)
+	{
+		var ex = (1.0 - abs(-1.0 + 2.0 * coords.x)) / epsilon.x;
+		var ey = (1.0 - abs(-1.0 + 2.0 * coords.y)) / epsilon.y;
+		var ez = (1.0 - abs(-1.0 + 2.0 * coords.z)) / epsilon.z;
+
+		ex = 0.5 - 0.5 * cos(3.141592654 * 2.0 * ex);
+		ey = 0.5 - 0.5 * cos(3.141592654 * 2.0 * ey);
+		ez = 0.5 - 0.5 * cos(3.141592654 * 2.0 * ez);
+
+		var alpha = ex * ey * ez;
+		alpha = clamp(alpha, 0.0, 1.0);
+		//color = vec4<f32>(1.0, 0.0, 0.0, alpha);
+		color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+	}
+	return color;
+}
+
+@fragment
+fn main(
+	@location(0) color: vec3<f32>,
+	@location(1) tex_coords : vec2<f32>,
+	@location(2) world_pos : vec4<f32>,
+	@builtin(position) position : vec4<f32>) 
+-> @location(0) vec4<f32> 
+{
+	var volumeRatio = volumeRatios.ratio[0];
+	var fragColor = vec4<f32>(0.12, 0.12, 0.12, 0.6);
+	
+	var coords = world_pos.xyz;
+	coords = coords / volumeRatio;
+	coords = coords * 0.5 + 0.5;
+	
+	var zo = param.param0.x;
+		
+	var annotationColorA = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+	var annotationColorB = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+	var annotationColorC = vec4<f32>(0.0, 0.0, 1.0, 1.0);
+	var annotationColorD = vec4<f32>(1.0, 0.0, 1.0, 1.0);
+	
+	var e = 0.005;
+	if(abs(-1.0 + 2.0 * coords.x) >= 1.0 - e ||
+		abs(-1.0 + 2.0 * coords.y) >= 1.0 - e ||
+		abs(-1.0 + 2.0 * coords.z) >= 1.0 - e)
+	{
+		discard;
+	}
+	
+	var outline_color = outline(coords) * pow(1.0 - zo, 0.4);
+	
+	
+	fragColor = fragColor * pow(1.0 - zo, 0.4);
+			
+	var masks = dataRead(coords, 0);
+	var annotations = dataRead(coords, 1);
+	
+	var annotation = textureSampleLevel(annotation_tex, s, coords, 0.0);
+		
+	var result_color = masks.x * color_transfer(0) +
+				 masks.y * color_transfer(1) +
+				 masks.z * color_transfer(2);
+				 
+	if(param.param0.w == 1.0) {
+		result_color = vec3<f32>(masks.w);
+	}
+	
+				 
+	var stripes : array<vec3<f32>, 3>;
+	var stripeStrength = 0.2;
+	
+	for (var i: i32 = 0; i < 3; i = i + 1)
+	{
+		stripes[i] = color_transfer(i);
+		if (sin((position.x + position.y) * 100.0) > 0.0)
+		{
+			stripes[i] = mix(stripes[i], vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
+		}
+		else
+		{
+			stripes[i] = mix(stripes[i], vec3<f32>(1.0, 1.0, 1.0), stripeStrength);
+		}
+	}
+	
+	for (var i: i32 = 0; i < 3; i = i + 1)
+	{
+		result_color = mix(result_color, stripes[i], annotations[i]);		
+	}		
+					
+	
+	var sample = vec4<f32>(result_color.x, result_color.y, result_color.z, 1.0);
+	
+	
+	if(param.param0.w == 1.0 || length(sample.xyz) > 0.0001) 
+	{
+		sample.w = 1.0;
+		fragColor = sample;
+	}
+
+	var coord = vec2<i32>(position.xy);
+	var depth = textureLoad(depthTex, coord, 0);
+	
+	var depth_range_near = 0.0;
+	var depth_range_far = 1.0;
+	
+	var frag_depth = position.z;
+	//var frag_depth = position.z / position.w *
+	//			(depth_range_far - depth_range_near) * 0.5 +
+	//			(depth_range_near + depth_range_far) * 0.5; 
+	
+	if(zo == 0.0 && frag_depth > depth + 0.000001 && depth != 0.0) 
+	{
+		discard;
+	}
+		
+	var result = fragColor;
+	result.x = result.x + outline_color.x;
+	result.y = result.y + outline_color.y;
+	result.z = result.z + outline_color.z;
+	//result.xyz = result.xyz + annotationColor.xyz + outline_color.xyz;
+	
+	return result;
+	//return fragColor + outline_color + annotation * annotationColor;
+	//return fragColor + outline_color + vec4<f32>(annotation, annotation,annotation, 1.0) * annotationColor;
+}struct Camera 
+{
+	model : mat4x4<f32>,
+	view : mat4x4<f32>,
+	viewInv : mat4x4<f32>,
+	proj : mat4x4<f32>,
+}
+
+struct Model {
+	matrix : mat4x4<f32>,
+}
+
+struct Param 
+{
+	param0 : vec4<f32>,
+	param1 : vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> camera : Camera;
+@group(0) @binding(1) var<uniform> param : Param;
+
+struct VertexOutput {
+	@builtin(position) position : vec4<f32>,
+	@location(0) color: vec3<f32>,
+	@location(1) tex_coords : vec2<f32>,
+	@location(2) world_pos : vec4<f32>, 
+}
+
+@vertex fn main(
+	@location(0) vertex : vec3<f32>,
+	@location(1) txCoord : vec2<f32>)
+-> VertexOutput
+{
+	var vertex_scaled = vertex * 2.0;
+	var output : VertexOutput;	
+	output.position = camera.proj * camera.view * camera.model * 
+						vec4<f32>(vertex_scaled, 1.0);	
+	output.world_pos = camera.model * vec4<f32>(vertex_scaled, 1.0);
+	output.tex_coords = txCoord;
+	output.color = vec3<f32>(1.0, 0.0, 0.0);
+				
+	return output;
+}[[fragment]] 
+fn main(
+	[[location(0)]] vCol: vec3<f32>,
+	[[location(1)]] direction: vec3<f32>,
+	[[location(2)]] eye: vec3<f32>
+) 
+-> [[location(0)]] vec4<f32> 
+{
+	var fragColor = vec4<f32>(vCol, 1.0);
+	fragColor = vec4<f32>(eye, 1.0);
+	return fragColor;
+}let PI : f32 = 3.141592653589793;
+
+fn radians(degs : f32) -> f32 {
+	return (degs * PI) / 180.0;
+}
+
+[[block]] struct Camera {
+	view : mat4x4<f32>;
+	viewInv : mat4x4<f32>;
+	proj : mat4x4<f32>;
+};
+[[group(0), binding(0)]] var<uniform> camera : Camera;
+
+[[block]] struct Model {
+	
+	matrix : mat4x4<f32>;
+};
+[[group(0), binding(1)]] var<uniform> model : Model;
+
+struct VertexOutput {
+  [[location(0)]] vCol: vec3<f32>,
+  [[location(1)]] direction: vec3<f32>,
+  [[location(2)]] eye: vec3<f32>,
+  [[builtin(position)]] Position : vec4<f32>,
+};
+
+[[stage(vertex)]] fn main(
+[[location(0)]] aPos : vec2<f32>,
+[[location(1)]] aCol : vec3<f32>)
+-> VertexOutput
+{
+	var output : VertexOutput;			
+	
+	var vertex = vec3<f32>(aPos.x, aPos.y, 0.0);
+	var fov : f32 = (45.0 / 360.0) * (2.0 * 3.141592654);
+	var fl : f32 = 1.0 / tan(fov / 2.0);
+	
+	var tmp = vec4<f32>(vertex.x / (1080.0 / 1920.0), vertex.y, vertex.z - fl, 1.0);
+
+	var ve : vec3<f32> = (camera.viewInv * tmp).xyz;
+	
+	output.eye = (camera.viewInv * vec4<f32>(0.0, 0.0, 0.0, 1.0)).xyz;
+	output.direction = ve - output.eye;	
+	
+	output.vCol = aCol;
+	output.Position = vec4<f32>(vec3<f32>(aPos, 0.0), 1.0);
+		
+	return output;
+}[[block]] struct CubeOutput 
+{
+	t : f32,
+	fr : f32,
+};
+
+[[block]] struct VolumeRatios
+{
+	ratio : array<vec3<f32>>,
+};
+
+[[block]] struct TransferFunctionColor
+{
+	color : array<vec4<f32>>,
+};
+
+[[block]] struct TransferFunctionRamp
+{
+	ramp : array<f32>,
+};
+
+
+[[block]] struct Param 
+{
+	enableEarlyRayTermination : i32,
+	enableJittering : i32,
+	enableAmbientOcclusion : i32,
+	enableSoftShadows : i32,
+	slice : f32,
+	sampleRate : f32,
+	aoRadius : f32,
+	aoStrength : f32,
+	aoNumSamples : i32,
+	shadowQuality : f32,
+	shadowStrength : f32,
+};
+[[group(0), binding(2)]] var s : sampler;
+[[group(0), binding(3)]] var volume0 : texture_3d<f32>;
+[[group(0), binding(4)]] var volume1 : texture_3d<f32>;
+[[group(0), binding(5)]] var volume2 : texture_3d<f32>;
+[[group(0), binding(6)]] var volume3 : texture_3d<f32>;
+[[group(0), binding(7)]] var volume4 : texture_3d<f32>;
+[[group(0), binding(8)]] var<uniform> param : Param;
+[[group(0), binding(9)]] var<storage, read> transferFunctionColor: TransferFunctionColor;
+[[group(0), binding(10)]] var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
+[[group(0), binding(11)]] var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
+[[group(0), binding(12)]] var<storage, read> volumeRatios: VolumeRatios;
+
+var<private> seedGlobal : u32;
+var<private> lightRadius : f32;
+
+fn wang_hash(seedIn : u32) -> u32
+{
+	var seed = seedIn;
+    seed = (seed ^ 61u) ^ (seed >> 16u);
+    seed = seed * 9u;
+    seed = seed ^ (seed >> 4u);
+    seed = seed * u32(0x27d4eb2d);
+    seed = seed ^ (seed >> 15u);
+    return seed;
+}
+
+fn rand() -> f32
+{
+	seedGlobal = wang_hash(seedGlobal);
+	var f = f32(seedGlobal) * (1.0 / 4294967296.0);
+	return f
+	/cos(f)
+	;
+}
+
+
+fn cube(eye : vec3<f32>, dir : vec3<f32>, size : vec3<f32>) -> CubeOutput
+{
+	var output : CubeOutput;
+	var far : f32;
+	var near : f32;
+	var t1 : f32;
+	var t2 : f32;
+	var t3 : f32;
+	output.fr = 0.0;
+	far = 9999.0;
+	near = -9999.0;
+	var i : i32 = 0;
+	loop
+	{
+		if (i >= 3) { break; }
+
+		if (dir[i] == 0.0)
+		{
+			if (eye[i]<-0.0001 || eye[i]>0.0001)
+			{
+				output.t = -1.0;
+				return output;
+			}
+		}
+		else
+		{
+			t1 = (-size[i] - eye[i]) / dir[i];
+			t2 = (size[i] - eye[i]) / dir[i];
+			if (t2 > t1)
+			{
+				t3 = t1;
+				t1 = t2;
+				t2 = t3;
+			}
+
+			if (t2 > near) {
+				near=t2;
+			}
+			if (t1 < far) {
+				far=t1;
+			}
+			if (far < 0.0) { //eye lies behind the cube and looks away
+				output.t = 0.0;
+				return output;
+			}
+			if (near > far) { //eye is drunk
+				output.t = -1.0;
+				return output;
+			}
+		}
+		i = i + 1;
+	}
+	if (near < 0.0) //eye lies within the cube
+	{
+		output.fr = far;
+		output.t = 0.0;
+	}
+	else
+	{
+		output.fr = far;
+		output.t = near;
+	}
+	return output;
+}
+
+fn dataRead(pos : vec3<f32>, which : i32) -> f32
+{
+	var uvy = pos.xyz;
+	
+	//var realSize = vec3<f32>(1024.0, 1440.0, 448.0);
+	var realSize = vec3<f32>(1024.0, 1440.0, 448.0);
+	var realZRatio = realSize.y / realSize.z;
+	var realXRatio = realSize.y / realSize.x;
+	
+	uvy.z = uvy.z - 0.5;
+	uvy.z = uvy.z * realZRatio;
+	uvy.z = uvy.z + 0.5;
+	
+	uvy.x = uvy.x - 0.5;
+	uvy.x = uvy.x * realXRatio;
+	uvy.x = uvy.x + 0.5;
+	
+	
+	var sample : f32;
+	
+	if (which == 0)
+	{
+		sample = textureSample(volume0, s, pos).x * 1.0;
+	}
+	elseif (which == 1)
+	{
+		sample = textureSample(volume1, s, pos).x * 1.0;
+	}
+	elseif (which == 2)
+	{
+		sample = textureSample(volume2, s, pos).x * 1.0;
+	}	
+	elseif (which == 3)
+	{
+		sample = textureSample(volume3, s, pos).x * 1.0;
+	}
+	elseif (which == 4)
+	{
+		sample = textureSample(volume4, s, pos).x * 1.0;
+	}	
+	
+	var low = transferFunctionRamp1.ramp[which];
+	var high = transferFunctionRamp2.ramp[which];
+	var mapped = clamp((sample - low) / (high - low), 0.0, 1.0);	
+	return mapped;
+}
+
+// color transfer function
+fn color_transfer(intensity : f32, which : i32) -> vec3<f32> 
+{
+    //var high = vec3<f32>(1.0, 0.0, 0.0);
+    //var low = vec3<f32>(0.0, 0.0, 1.0);
+	
+	/*var low = transferFunctionColor1.color[which].xyz;
+	var high = transferFunctionColor2.color[which].xyz;
+			
+    var alpha = (exp(intensity) - 1.0) / (exp(1.0) - 1.0);
+	return vec3<f32>(intensity * high + (1.0 - intensity) * low);*/
+	
+	return transferFunctionColor.color[which].xyz;
+	
+    //return vec4<f32>(intensity * high + (1.0 - intensity) * low, alpha);
+}
+
+[[stage(fragment)]]
+fn main(
+[[location(0)]] eye : vec3<f32>,
+[[location(1)]] direction : vec3<f32>,
+[[location(2)]] light : vec3<f32>,
+[[location(3)]] lightPos : vec3<f32>,
+[[location(4)]] fragPos : vec3<f32>,
+[[location(5)]] tex_coords : vec2<f32> 
+) 
+-> [[location(0)]] vec4<f32> 
+{
+	//var size = vec3<f32>(1.0, 1.0, 1.0);
+	var size = volumeRatios.ratio[0];
+	
+	// intialize random seed
+	//seedGlobal = u32(tex_coords.x * 21032.0 * tex_coords.y * 43242.0);
+	seedGlobal = u32(tex_coords.x * tex_coords.y * 1000000.0);
+	
+	lightRadius = 10.0;
+		
+	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
+	var outputCube = cube(eye, direction, size);
+	
+	var stepSize = 0.05;
+	stepSize = stepSize / param.sampleRate;
+
+	// ray offset jittering
+	if (bool(param.enableJittering))
+	{
+		outputCube.t = outputCube.t + rand() * stepSize * 1.0;
+	}
+	
+	var iterations = i32((outputCube.fr - outputCube.t) / stepSize);
+		
+	var src = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+	var dst = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+
+	// D3D backend will unroll loops and cause following error
+	// error X3511: unable to unroll loop, loop does not appear to terminate in a timely manne
+	// It's a known problem with the FXC compiler used by Chrome
+	// https://bugs.chromium.org/p/tint/issues/detail?id=1112	
+	
+	// raymarching
+	var max = 0.0;
+
+	var accumA = 0.0;
+	var accumC = vec3<f32>(0.0);
+	
+	for (var i: i32 = 0; i < iterations; i = i + 1) 
+	{
+		//calculate intersection along the ray
+		var tmp = f32(i) * stepSize + outputCube.t;
+		var isec0 = tmp * direction + eye;
+		
+		//transform it to match the bounding box centered on [0, 0, 0]
+		var isec1 = (isec0 / size) * 0.5 + 0.5;
+	
+		if (isec1.x < 0.0 || isec1.x > 1.0 ||
+			isec1.y < 0.0 || isec1.y > 1.0 ||
+			isec1.z < 0.0 || isec1.z > 1.0)
+		{
+			continue;
+		} 
+		
+		for (var which: i32 = 0; which < 3; which = which + 1) 
+		{
+			var mask = 0.0;
+			
+			var alpha = dataRead(isec1, which);
+			//var color = vec3<f32>(0.8, 0.5, 0.3);
+			
+			alpha = alpha * dataRead(isec1, 4);
+			
+			var color = color_transfer(alpha, which) * 1.0;
+			
+			//alpha normalization based on the stepSize
+			alpha = alpha * stepSize / 0.025;
+			
+			//alpha normalization - correct, but slower formula
+			//var ds = stepSize * 20.0;
+			//alpha = 1.0 - pow(1.0 - alpha, ds);
+
+			
+			if (alpha > max)
+			{
+				max = alpha;
+			}
+			
+			//object space ambient occlusion
+			var ao = 0.0;
+			if (bool(param.enableAmbientOcclusion)) 
+			{
+				//var radius = 0.01;
+				var radius = param.aoRadius;
+				//radius = 0.1;
+				
+				for (var j: i32 = 0; j < param.aoNumSamples; j = j + 1)
+				{
+					var randomOffset = vec3<f32>(-1.0 + 2.0 * rand(), rand(), -1.0 + 2.0 * rand());
+					randomOffset = randomOffset * radius;
+					
+					var occlusion = 1.0 - dataRead(isec1 + randomOffset, 3);
+					ao = ao + occlusion;
+				}			
+				ao = ao / f32(param.aoNumSamples);
+				//ao = (1.0 - ao);
+				ao = ao * 1.0;
+				//ao = (1.0 - ao * param.aoStrength) ;
+				//ao = ao * 10.0 * param.aoStrength;
+			}
+			
+		
+			var shadow = 0.0;
+			if (bool(param.enableSoftShadows)) 
+			{
+				var sTotal : f32;
+				
+				sTotal = 0.0;
+				
+				//if (accumA > 0.0 || mx.a > 0.0)
+				
+				var quality : i32;
+				quality = 1;
+				
+				var samplingRadiusShadow = 0.3;
+				var numSamplesShadow = f32(i32(param.shadowQuality * 15.0));
+				var stepShadow = 1.0 / numSamplesShadow;
+				var shadowStrength = param.shadowStrength;
+				var shadowSampleCount = 0;
+				
+				for (var q: i32 = 0; q < quality; q = q + 1)
+				{	
+					for (var t: f32 = 0.05; t < 1.0; t = t + stepShadow)
+					{			
+						var randomDirection = vec3<f32>(-1.0 + 2.0 * rand(), -1.0 + 2.0 * rand(), -1.0 + 2.0 * rand());
+						randomDirection = normalize(randomDirection) * rand();
+
+						var halfV = normalize(lightPos + randomDirection * mix(0.0, lightRadius, t) - isec1);
+
+						var sp = isec1 + halfV * t * samplingRadiusShadow;
+
+						//s += dataRead(isec1 + halfV * t, which) * (0.25 - t) * 5.5;
+						/*var occlusion0 = dataRead(sp, 0);
+						var occlusion1 = dataRead(sp, 1);
+						var occlusion2 = dataRead(sp, 2);
+						var occlusion = occlusion0 + occlusion1 + occlusion2;*/
+						var occlusion = 1.0 - dataRead(sp, 3);
+
+						shadow = shadow + (occlusion) * pow(1.0 - t, 4.0); //pow(1.0 - pow(t, 2.1), 10.01);
+						//s += dataRead(isec1 + halfV * t * 1.0, 1); //pow(1.0 - pow(t, 2.1), 10.01);
+					}
+					
+					//shadow = shadow * stepShadow;			
+					sTotal = sTotal + shadow;
+					
+					//sample count for the shadow normalization
+					shadowSampleCount = shadowSampleCount + 1;
+				}
+				shadow = sTotal / f32(shadowSampleCount * shadowSampleCount);
+				shadow = shadow * shadowStrength;
+				shadow = clamp(shadow, 0.0, 1.0);				
+			}
+			
+			
+			
+			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
+			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), shadow);
+
+			// front to back blending
+			//color = color * alpha;
+			//color = color * (1.0 - shadow) /** param.aoStrength*/;
+			//src = vec4<f32>(color, alpha);
+			//dst = (1.0 - dst.a) * src + dst;
+			
+			
+			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;
+			accumA = accumA + (1.0 - accumA) * alpha;  
+
+			// break from loop on high enough alpha value
+			if (bool(param.enableEarlyRayTermination) && accumA >= 0.95)
+			{
+				break;
+			}
+		}
+	}
+	
+	
+	accumC = accumC * 1.7;
+	
+	if (accumC.x > 0.8) 
+	{
+		var it = (accumC.x - 0.8) / 0.2;
+		it = it * it;
+		accumC = accumC + it;
+	}
+	
+	//var coords = vec3<f32>(tex_coords.x, tex_coords.y, 0.6);	
+	//var coords = vec3<f32>(param.slice, tex_coords.x, tex_coords.y);	
+	//var coords = vec3<f32>(tex_coords.x, param.slice, tex_coords.y);	
+	//var coords = vec3<f32>(tex_coords.x, param.slice, tex_coords.y);		
+	//var sample = 1.0 - textureSample(volume4, s, coords).x;
+	
+		
+	//var fragColor = vec4<f32>(eye, 1.0);
+
+	var fragColor = vec4<f32>(accumC.x, accumC.y, accumC.z, accumA);
+	
+	
+
+	//fragColor = vec4<f32>(eye.x, eye.y, eye.z, 1.0);
+	
+	//fragColor = vec4<f32>(rand(), 0.0,0.0,1.0);
+	
+	//fragColor = vec4<f32>(sample, sample, sample, 1.0);
+		
+	//fragColor = vec4<f32>(fragPos, 1.0);
+	//fragColor = vec4<f32>(direction, 1.0);
+	
+	/*if(outputCube.t < 0.0) {
+		fragColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+	}*/
+	//fragColor = vec4<f32>(sample, 0.0, 0.0, 1.0);
+		
+	//fragColor = vec4<f32>(max, max, max, 1.0);
+
+	//fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+	return fragColor;
+}struct CubeOutput 
+{
+	t : f32,
+	fr : f32,
+}
+
+struct Plane 
+{
+	position : vec3<f32>,
+	normal : vec3<f32>,
+}
+
+struct Camera {
+	view : mat4x4<f32>,
+	viewInv : mat4x4<f32>,
+	proj : mat4x4<f32>,
+	aspectRatio : f32,
+	fov : f32,
+}
+
+struct Ray 
+{
+	origin : vec3<f32>,
+	direction : vec3<f32>,
+}
+
+struct Intersection 
+{
+	intersects : bool,
+	position : vec3<f32>,
+}
+
+struct VolumeRatios
+{
+	ratio : array<vec3<f32>>,
+}
+
+struct TransferFunctionColor
+{
+	color : array<vec4<f32>>,
+}
+
+struct TransferFunctionRamp
+{
+	ramp : array<f32>,
+}
+
+struct Param 
+{
+	enableEarlyRayTermination : i32,
+	enableJittering : i32,
+	enableAmbientOcclusion : i32,
+	enableSoftShadows : i32,
+	
+	interaction : f32,
+	sampleRate : f32,
+	aoRadius : f32,
+	aoStrength : f32,
+	
+	aoNumSamples : i32,
+	shadowQuality : f32,
+	shadowStrength : f32,
+	voxelSize : f32,
+	
+	enableVolumeA : i32,
+	enableVolumeB : i32,
+	enableVolumeC : i32,
+	enableVolumeD : i32,
+	
+	clippingMask : vec4<f32>,
+	viewVector : vec4<f32>,
+	clippingPlaneOrigin : vec4<f32>,
+	clippingPlaneNormal : vec4<f32>,
+	clearColor : vec4<f32>,
+	
+	enableAnnotations : i32,
+	annotationVolume : i32,
+	annotationPingPong : i32,
+	shadowRadius : f32,
+}
+
+@group(0) @binding(0) var<uniform> camera : Camera;
+@group(0) @binding(2) var s : sampler;
+@group(0) @binding(3) var volume0 : texture_3d<f32>;
+@group(0) @binding(4) var volume1 : texture_3d<f32>;
+@group(0) @binding(5) var volume2 : texture_3d<f32>;
+@group(0) @binding(6) var volume3 : texture_3d<f32>;
+@group(0) @binding(7) var volume4 : texture_3d<f32>;
+@group(0) @binding(8) var<uniform> param : Param;
+@group(0) @binding(9) var<storage, read> transferFunctionColor: TransferFunctionColor;
+@group(0) @binding(10) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
+@group(0) @binding(11) var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
+@group(0) @binding(12) var<storage, read> volumeRatios: VolumeRatios;
+
+var<private> seedGlobal : u32;
+var<private> lightRadius : f32;
+
+fn wang_hash(seedIn : u32) -> u32
+{
+	var seed = seedIn;
+    seed = (seed ^ 61u) ^ (seed >> 16u);
+    seed = seed * 9u;
+    seed = seed ^ (seed >> 4u);
+    seed = seed * u32(0x27d4eb2d);
+    seed = seed ^ (seed >> 15u);
+    return seed;
+}
+
+fn rand() -> f32
+{
+	seedGlobal = wang_hash(seedGlobal);
+	var f = f32(seedGlobal) * (1.0 / 4294967296.0);
+	return f / cos(f);
+}
+
+fn rand11() -> f32
+{
+	var result = -1.0 + 2.0 * rand();
+	return result;
+}
+
+fn cube(eye : vec3<f32>, dir : vec3<f32>, size : vec3<f32>) -> CubeOutput
+{
+	var output : CubeOutput;
+	var far : f32;
+	var near : f32;
+	var t1 : f32;
+	var t2 : f32;
+	var t3 : f32;
+	output.fr = 0.0;
+	far = 9999.0;
+	near = -9999.0;
+	var i : i32 = 0;
+	loop
+	{
+		if (i >= 3) { break; }
+
+		if (dir[i] == 0.0)
+		{
+			if (eye[i]<-0.0001 || eye[i]>0.0001)
+			{
+				output.t = -1.0;
+				return output;
+			}
+		}
+		else
+		{
+			t1 = (-size[i] - eye[i]) / dir[i];
+			t2 = (size[i] - eye[i]) / dir[i];
+			if (t2 > t1)
+			{
+				t3 = t1;
+				t1 = t2;
+				t2 = t3;
+			}
+
+			if (t2 > near) {
+				near=t2;
+			}
+			if (t1 < far) {
+				far=t1;
+			}
+			if (far < 0.0) { //eye lies behind the cube and looks away
+				output.t = -1.0;
+				return output;
+			}
+			if (near > far) { //eye is drunk
+				output.t = -1.0;
+				return output;
+			}
+		}
+		i = i + 1;
+	}
+	if (near < 0.0) //eye lies within the cube
+	{
+		output.fr = far;
+		output.t = 0.0;
+	}
+	else
+	{
+		output.fr = far;
+		output.t = near;
+	}
+	return output;
+}
+
+var<private> clipped : bool;
+
+fn clip(sample : vec4<f32>, pos : vec3<f32> ) -> vec4<f32>
+{
+	var result = sample;
+	var d = dot(param.clippingPlaneOrigin.xyz, param.clippingPlaneNormal.xyz);
+	var r = dot(pos, param.clippingPlaneNormal.xyz);
+	
+	if(d > r) 
+	{
+		//clipped = true;
+		result = result * param.clippingMask;
+	}
+
+	return result;
+}
+
+fn dataReadAnnotation(pos : vec3<f32>) -> vec4<f32>
+{
+	var result : vec4<f32>;
+	var volumeRatio = volumeRatios.ratio[0];
+	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
+	
+	if(bool(param.annotationPingPong)) 
+	{
+		result = textureSampleLevel(volume2, s, pos, 0.0);
+	}
+	else {
+		result = textureSampleLevel(volume3, s, pos, 0.0);
+	}
+	result = clip(result, posOrig);
+	
+	return result;
+}
+
+fn dataRead(pos : vec3<f32>) -> vec4<f32>
+{
+	var mapped : vec4<f32>;
+	
+	var volumeRatio = volumeRatios.ratio[0];
+	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
+
+	var sample4 = textureSampleLevel(volume0, s, pos, 0.0);
+
+	var low0 = transferFunctionRamp1.ramp[0];
+	var high0 = transferFunctionRamp2.ramp[0];
+	mapped.x = clamp((sample4.x - low0) / (high0 - low0), 0.0, 1.0);		
+	
+	mapped.x = mapped.x * f32(param.enableVolumeA);
+	
+	var low1 = transferFunctionRamp1.ramp[1];
+	var high1 = transferFunctionRamp2.ramp[1];
+	mapped.y = clamp((sample4.y - low1) / (high1 - low1), 0.0, 1.0);	
+	mapped.y = mapped.y * f32(param.enableVolumeB);
+	
+	var low2 = transferFunctionRamp1.ramp[2];
+	var high2 = transferFunctionRamp2.ramp[2];
+	mapped.z = clamp((sample4.z - low2) / (high2 - low2), 0.0, 1.0);	
+	mapped.z = mapped.z * f32(param.enableVolumeC);
+
+	var low3 = transferFunctionRamp1.ramp[3];
+	var high3 = transferFunctionRamp2.ramp[3];
+	mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);	
+
+	var clipEnabled = param.clippingMask.x != 1.0 ||
+					  param.clippingMask.y != 1.0 ||
+					  param.clippingMask.z != 1.0;
+
+	if (clipEnabled && !clipped)
+	{
+		mapped = clip(mapped, posOrig);
+	}
+
+	
+	return mapped;
+}
+
+
+fn calcTBNMatrix(direction : vec3<f32>) -> mat3x3<f32> 
+{
+	var tangent : vec3<f32>;
+	var binormal : vec3<f32>;
+	
+	var c1 = cross(direction, vec3<f32>(0.0, 0.0, 1.0));
+	var c2 = cross(direction, vec3<f32>(0.0, 1.0, 0.0));
+	
+	if (length(c1) > length(c2))
+	{
+		tangent = c1;
+	}
+	else
+	{
+		tangent = c2;
+	}
+	tangent = normalize(tangent);
+	
+	binormal = cross(direction, tangent);
+	binormal = normalize(binormal);
+	
+	
+	return mat3x3<f32>(tangent, binormal, direction);
+}
+
+fn calcTBNMatrix2(direction : vec3<f32>) -> mat3x3<f32> 
+{
+	var up = normalize(vec3<f32>(0.01, 0.99, 0.9));
+	if(dot(direction, up) < 0.1) {
+		up = normalize(vec3<f32>(0.01, 0.2, 0.9));
+	}
+	var tangent = normalize(cross(up, direction));
+	var bitangent = normalize(cross(direction, tangent));
+	
+	return mat3x3<f32>(tangent, bitangent, direction);
+}
+
+fn color_transfer(which : i32) -> vec3<f32> 
+{
+	return transferFunctionColor.color[which].xyz;
+}
+
+fn intersect_plane(ray: Ray, p : Plane) -> Intersection
+{
+	var d = -dot(p.position, p.normal);
+	var v = dot(ray.direction, p.normal);
+	var t = -(dot(ray.origin, p.normal) + d) / v;
+	
+	var intersection : Intersection;
+	intersection.intersects = false;
+	
+	if(t > 0.0)
+	{
+		intersection.intersects = true;
+		intersection.position = ray.origin * t * ray.direction;
+	}
+		
+	return intersection;
+}
+
+struct FragmentOutput {
+	@location(0) color : vec4<f32>,
+	@builtin(frag_depth) frag_depth : f32,
+}
+
+@fragment
+fn main(
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32>,
+	@builtin(position) position : vec4<f32>,
+) 
+-> FragmentOutput
+{	
+	
+	var output : FragmentOutput;
+	output.frag_depth = 0.0;
+	output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+
+	var interaction = (param.interaction == 1.0);
+	if(interaction)
+	{
+		if (i32(position.x) % 2 == 0 || i32(position.y) % 2 == 0)
+		{
+			//discard;
+		}
+	}
+
+	clipped = false;
+	
+	// volumeRatio = voxelSize * (dataSize / maxDataSize)
+	var volumeRatio = volumeRatios.ratio[0];
+	//size = vec3<f32>(1.5, 1.0, 1.0);
+			
+	// intialize random seed
+	//seedGlobal = u32(tex_coords.x * 21032.0 * tex_coords.y * 43242.0);
+	seedGlobal = u32(tex_coords.x * tex_coords.y * 1000000.0);
+			
+		
+	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
+	var outputCube = cube(eye, direction, volumeRatio);
+	
+	
+	//var bg = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+	var bg = param.clearColor;
+	
+	if(outputCube.t < 0.0 )
+	{
+		output.color = bg;
+		return output;
+		//discard;
+	} 
+	else
+	{
+		//return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+	}
+	
+	var stepSize = 0.01;
+	stepSize = stepSize / param.sampleRate;
+
+	// ray offset jittering
+	if (bool(param.enableJittering))
+	{
+		outputCube.t = outputCube.t + rand() * stepSize * 1.0;
+	}
+	
+	var iterations = i32((outputCube.fr - outputCube.t) / stepSize);
+		
+	var src = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+	var dst = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+
+	// D3D backend will unroll loops and cause following error when gradient instructions are used
+	// error X3511: unable to unroll loop, loop does not appear to terminate in a timely manne
+	// It's a known problem with the FXC compiler used by Chrome
+	// https://bugs.chromium.org/p/tint/issues/detail?id=1112	
+	// Fix: do not use gradient instruction, such as all texture sampling methods which determine the used mip-level by themselves
+	// instead define mip map level through "textureSampleLevel()"
+	
+	// raymarching
+	var accumA = 0.0;
+	var accumC = vec3<f32>(0.0, 0.0, 0.0);
+
+	var quit = false;
+	var clipColor = vec4<f32>(0.0, 0.0, 0.0, 0.0);	
+	var firstHit = true;
+	
+	var enableAO = bool(param.enableAmbientOcclusion);
+	var enableSoftShadows = bool(param.enableSoftShadows);
+	var enableEarlyRayTermination = bool(param.enableEarlyRayTermination);
+	var enableAnnotations = bool(param.enableAnnotations);
+	
+	for (var i: i32 = 0; i < iterations; i = i + 1) 
+	{
+		//calculate intersection along the ray
+		var tmp = f32(i) * stepSize + outputCube.t;
+		var isec0 = tmp * direction + eye;
+		//var isec0Shifted = isec0;
+		
+		// account for the data padding and shift the volume in the center
+		//isec0Shifted.x = isec0Shifted.x - (param.paddingRatioX / 2.0);
+		//transform it to match the bounding box centered on [0, 0, 0]
+		var isec1 = (isec0 / volumeRatio) * 0.5 + 0.5;
+	
+		if (isec1.x < 0.0 || isec1.x > 1.0 ||
+			isec1.y < 0.0 || isec1.y > 1.0 ||
+			isec1.z < 0.0 || isec1.z > 1.0)
+		{
+			continue;
+		}
+		
+		var masks = vec4<f32>(0.0);
+		// 0,1,2 mask 3 is raw data
+		masks = dataRead(isec1);
+		
+		
+		
+		// ======================== SAMPLE ANNOTATION VOLUME ========================
+		var annotationSample = 0.0;
+		if(enableAnnotations) 
+		{
+			var annotationVec = dataReadAnnotation(isec1);
+			if(param.annotationVolume == 0) 
+			{
+				annotationSample = annotationVec.x;
+				masks.x = max(masks.x, annotationSample);
+			}
+			if(param.annotationVolume == 1) 
+			{
+				annotationSample = annotationVec.y;
+				masks.y = max(masks.y, annotationSample);
+			}
+			if(param.annotationVolume == 2) 
+			{
+				annotationSample = annotationVec.z;
+				masks.z = max(masks.z, annotationSample);
+			}
+			if(param.annotationVolume == 3) 
+			{
+				annotationSample = annotationVec.w;
+				masks.w = max(masks.w, annotationSample);
+			}			
+		}
+				
+		// voxels with low influence are skipped 
+		var influence = masks[0] + masks[1] + masks[2];
+		if (( influence <= 0.2) || masks[3] <= 0.1) {
+			continue;
+		}
+		
+		// store depth of first hit
+		if(firstHit)
+		{
+			var projPos = camera.proj * camera.view * vec4<f32>(isec0.xyz, 1.0);
+			output.frag_depth = projPos.z / projPos.w;
+			firstHit = false;
+		}
+			
+				
+		// ============= OBJECTS SPACE AMBIENT OCCLUSION =============
+		var ao = 0.0;
+		if (enableAO) 
+		{
+			var radius = param.aoRadius * 0.015 * param.voxelSize;
+						
+			for (var j: i32 = 0; j < param.aoNumSamples; j = j + 1)
+			{
+				var randomOffset = vec3<f32>(rand11(), rand11(), rand11());
+				randomOffset = normalize(randomOffset);
+				randomOffset = randomOffset / volumeRatio;
+				//var tbn = calcTBNMatrix(normalize(lightPos - isec1));
+				//randomOffset = tbn * randomOffset;
+				var offsetLength = 0.2 + rand() * 0.5;
+				randomOffset = randomOffset * radius * offsetLength;
+				
+				var sample_pos = isec1 + randomOffset;
+				var sample = vec3<f32>(0.0);
+				// sample only within bounds of the texture
+				if(sample_pos.x > 0.0 && sample_pos.x < 1.0 && 
+				   sample_pos.y > 0.0 && sample_pos.y < 1.0 && 
+				   sample_pos.z > 0.0 && sample_pos.z < 1.0) 
+				{
+					sample = dataRead(sample_pos).xyz;
+				}
+				var value = (sample.x + sample.y + sample.z);
+				value = clamp(value, 0.0, 1.0);	
+				var occlusion = 1.0 - value;
+				//var occlusion = 1.0 - clamp(voxel.x + voxel.y + voxel.z, 0.0, 1.0);
+
+				ao = ao + occlusion;
+			}			
+			ao = ao / f32(param.aoNumSamples);
+			ao = ao * param.aoStrength;
+		}
+		
+		// ======================== SOFT SHADOWS ========================
+		var shadow = 0.0;
+		if (enableSoftShadows) 
+		{
+			var sTotal : f32;
+			
+			sTotal = 0.0;
+							
+			var quality : i32;
+			quality = 1;
+			
+			//var samplingRadiusShadow = 0.2;
+			var stepShadow = 0.05 / param.shadowQuality;
+			var shadowStrength = param.shadowStrength * 5.0;
+			var shadowSampleCount = 0;
+			
+			for (var q: i32 = 0; q < quality; q = q + 1)
+			{	
+				for (var t: f32 = 0.05; t < 1.0; t = t + stepShadow)
+				{			
+					var halfV = normalize(lightPos - isec1);
+
+					var sample_pos = isec1 + halfV * t * param.shadowRadius;
+					
+					var sample = vec3<f32>(0.0);
+					// sample only within bounds of the texture
+					if(sample_pos.x > 0.0 && sample_pos.x < 1.0 && 
+					   sample_pos.y > 0.0 && sample_pos.y < 1.0 && 
+				       sample_pos.z > 0.0 && sample_pos.z < 1.0) 
+					{
+						sample = dataRead(sample_pos).xyz;
+					}
+					//voxel = dataRead(sp, 0).xyz;
+					
+					var value = 1.0 - (sample.x + sample.y + sample.z);
+					var low = transferFunctionRamp1.ramp[4];
+					var high = transferFunctionRamp2.ramp[4];
+					var occlusion = 1.0 - clamp((value - low) / (high - low), 0.0, 1.0);
+					//occlusion = 1.0 - value;
+					//occlusion = 1.0 - dataRead(sp, 1).x;
+
+					shadow = shadow + (occlusion) /** pow((0.25 - t) * 2.0, 1.0)*/;
+
+					//sample count for the shadow normalization
+					shadowSampleCount = shadowSampleCount + 1;
+				}
+				
+				sTotal = sTotal + shadow;
+			}
+			shadow = sTotal / f32(shadowSampleCount);
+			shadow = shadow * shadowStrength;
+			shadow = clamp(shadow, 0.0, 1.0);				
+		}		
+		
+		// ============= COLOR AND ALPHA ACCUMULATION =============
+		for (var which: i32 = 0; which < 3; which = which + 1) 
+		{
+			var alpha = masks[which];		
+			var color = color_transfer(which) * 1.0;
+			
+			// alpha normalization based on the stepSize
+			alpha = alpha * stepSize / 0.0025;
+					
+			// alpha normalization - correct, but slower formula
+			//var ds = stepSize * 20.0;
+			//alpha = 1.0 - pow(1.0 - alpha, ds);
+			
+			// apply original data
+			alpha = alpha * masks[3]; //ToDo: temorary not used since raw data is missing for small volume
+					
+			//shading
+			var originalColor = color;
+			
+			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
+			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
+			
+			
+			var annotationColor = originalColor;
+						
+			var stripeStrength = 0.2;
+			if (sin((position.x + position.y) * 100.0) > 0.0)
+			{
+				annotationColor = mix(annotationColor, vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
+			}
+			else
+			{
+				annotationColor = mix(annotationColor, vec3<f32>(1.0, 1.0, 1.0), stripeStrength);
+			}			
+			
+			color = mix(color, annotationColor, annotationSample);
+			
+			//front to back alpha compositing
+			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;
+			accumA = accumA + (1.0 - accumA) * alpha;  
+
+			// break from loop on high enough alpha value
+			if (enableEarlyRayTermination && accumA >= 0.8)
+			{
+				accumA = 1.0;
+				quit = true;
+				break;
+			}
+		}
+		
+		// early ray termination
+		if (quit)
+		{
+			break;
+		}
+	}
+	
+	// make the picture brighter
+	accumC = accumC * 1.5;
+
+	// apply background color
+	accumC = accumC + (1.0 - accumA) * bg.xyz;
+	accumA = accumA + (1.0 - accumA);  
+
+	// background
+	if(accumA == 0.0) {
+		accumA = 1.0;
+	}
+	
+	var fragColor = vec4<f32>(accumC.x, accumC.y, accumC.z, accumA);
+	
+	
+	/*fragColor.x = fragColor.x * 4.0;
+	fragColor.y = fragColor.y * 4.0;
+	fragColor.z = fragColor.z * 4.0;*/
+	
+	//fragColor = sample;
+	//fragColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+	//fragColor = fragColor + clipColor;
+	//output.frag_depth = 0.5;
+	output.color = fragColor;
+
+	return output;
+}[[block]] struct CubeOutput 
+{
+	t : f32;
+	fr : f32;
+};
+
+[[block]] struct VolumeRatios
+{
+	ratio : array<vec3<f32>>;
+};
+
+[[block]] struct TransferFunctionColor
+{
+	color : array<vec4<f32>>;
+};
+
+[[block]] struct TransferFunctionRamp
+{
+	ramp : array<f32>;
+};
+
+
+[[block]] struct Param 
+{
+	enableEarlyRayTermination : i32;
+	enableJittering : i32;
+	enableAmbientOcclusion : i32;
+	enableSoftShadows : i32;
+	slice : f32;
+	sampleRate : f32;
+	aoRadius : f32;
+	aoStrength : f32;
+	aoNumSamples : i32;
+	shadowQuality : f32;
+	shadowStrength : f32;
+	voxelSize : f32;
+	
+	//padding : vec2<f32>;
+	//clearColor : vec4<f32>;
+};
+[[group(0), binding(2)]] var s : sampler;
+[[group(0), binding(3)]] var volume0 : texture_3d<f32>;
+[[group(0), binding(4)]] var volume1 : texture_3d<f32>;
+[[group(0), binding(5)]] var volume2 : texture_3d<f32>;
+[[group(0), binding(6)]] var volume3 : texture_3d<f32>;
+[[group(0), binding(7)]] var volume4 : texture_3d<f32>;
+[[group(0), binding(8)]] var<uniform> param : Param;
+[[group(0), binding(9)]] var<storage, read> transferFunctionColor: TransferFunctionColor;
+[[group(0), binding(10)]] var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
+[[group(0), binding(11)]] var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
+[[group(0), binding(12)]] var<storage, read> volumeRatios: VolumeRatios;
+
+var<private> seedGlobal : u32;
+var<private> lightRadius : f32;
+
+fn wang_hash(seedIn : u32) -> u32
+{
+	var seed = seedIn;
+    seed = (seed ^ 61u) ^ (seed >> 16u);
+    seed = seed * 9u;
+    seed = seed ^ (seed >> 4u);
+    seed = seed * u32(0x27d4eb2d);
+    seed = seed ^ (seed >> 15u);
+    return seed;
+}
+
+fn rand() -> f32
+{
+	seedGlobal = wang_hash(seedGlobal);
+	var f = f32(seedGlobal) * (1.0 / 4294967296.0);
+	return f
+	/cos(f)
+	;
+}
+
+
+fn cube(eye : vec3<f32>, dir : vec3<f32>, size : vec3<f32>) -> CubeOutput
+{
+	var output : CubeOutput;
+	var far : f32;
+	var near : f32;
+	var t1 : f32;
+	var t2 : f32;
+	var t3 : f32;
+	output.fr = 0.0;
+	far = 9999.0;
+	near = -9999.0;
+	var i : i32 = 0;
+	loop
+	{
+		if (i >= 3) { break; }
+
+		if (dir[i] == 0.0)
+		{
+			if (eye[i]<-0.0001 || eye[i]>0.0001)
+			{
+				output.t = -1.0;
+				return output;
+			}
+		}
+		else
+		{
+			t1 = (-size[i] - eye[i]) / dir[i];
+			t2 = (size[i] - eye[i]) / dir[i];
+			if (t2 > t1)
+			{
+				t3 = t1;
+				t1 = t2;
+				t2 = t3;
+			}
+
+			if (t2 > near) {
+				near=t2;
+			}
+			if (t1 < far) {
+				far=t1;
+			}
+			if (far < 0.0) { //eye lies behind the cube and looks away
+				output.t = 0.0;
+				return output;
+			}
+			if (near > far) { //eye is drunk
+				output.t = -1.0;
+				return output;
+			}
+		}
+		i = i + 1;
+	}
+	if (near < 0.0) //eye lies within the cube
+	{
+		output.fr = far;
+		output.t = 0.0;
+	}
+	else
+	{
+		output.fr = far;
+		output.t = near;
+	}
+	return output;
+}
+
+fn dataRead(pos : vec3<f32>, which : i32) -> vec4<f32>
+{
+	var uvy = pos.xyz;
+	
+	//var realSize = vec3<f32>(1024.0, 1440.0, 448.0);
+	var realSize = vec3<f32>(1.0,1.0,1.0);
+	var realZRatio = realSize.y / realSize.z;
+	var realXRatio = realSize.y / realSize.x;
+	
+	uvy.z = uvy.z - 0.5;
+	uvy.z = uvy.z * realZRatio;
+	uvy.z = uvy.z + 0.5;
+	
+	uvy.x = uvy.x - 0.5;
+	uvy.x = uvy.x * realXRatio;
+	uvy.x = uvy.x + 0.5;
+	
+	
+	var sample1 : f32;
+	var sample4 : vec4<f32>;
+
+	var mapped : vec4<f32>;
+
+	if (which == 0)
+	{
+		sample4 = textureSample(volume0, s, pos) * 1.0;		
+		
+		var low0 = transferFunctionRamp1.ramp[0];
+		var high0 = transferFunctionRamp2.ramp[0];
+
+		var low1 = transferFunctionRamp1.ramp[1];
+		var high1 = transferFunctionRamp2.ramp[1];
+
+		var low2 = transferFunctionRamp1.ramp[2];
+		var high2 = transferFunctionRamp2.ramp[2];
+
+		var low3 = transferFunctionRamp1.ramp[3];
+		var high3 = transferFunctionRamp2.ramp[3];
+
+		mapped.x = clamp((sample4.x - low0) / (high0 - low0), 0.0, 1.0);	
+		mapped.y = clamp((sample4.y - low1) / (high1 - low1), 0.0, 1.0);	
+		mapped.z = clamp((sample4.z - low2) / (high2 - low2), 0.0, 1.0);	
+		mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);	
+	}
+	elseif (which == 1)
+	{
+		sample1 = textureSample(volume1, s, pos).x;
+
+		var low = transferFunctionRamp1.ramp[4];
+		var high = transferFunctionRamp2.ramp[4];
+		
+		mapped.x = 1.0 - (1.0 - clamp((sample1 - low) / (high - low), 0.0, 1.0))
+		/** (textureSample(volume0, s, pos).a)*/;
+	}
+	
+	return mapped;
+}
+
+// color transfer function
+fn color_transfer(which : i32) -> vec3<f32> 
+{
+	return transferFunctionColor.color[which].xyz;
+}
+
+[[stage(fragment)]]
+fn main(
+[[location(0)]] eye : vec3<f32>,
+[[location(1)]] direction : vec3<f32>,
+[[location(2)]] light : vec3<f32>,
+[[location(3)]] lightPos : vec3<f32>,
+[[location(4)]] fragPos : vec3<f32>,
+[[location(5)]] tex_coords : vec2<f32> 
+) 
+-> [[location(0)]] vec4<f32> 
+{	
+	var size = volumeRatios.ratio[0];
+			
+	// intialize random seed
+	//seedGlobal = u32(tex_coords.x * 21032.0 * tex_coords.y * 43242.0);
+	seedGlobal = u32(tex_coords.x * tex_coords.y * 1000000.0);
+			
+	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
+	var outputCube = cube(eye, direction, size);
+	
+	var stepSize = 0.01;
+	stepSize = stepSize / param.sampleRate;
+
+	// ray offset jittering
+	if (bool(param.enableJittering))
+	{
+		outputCube.t = outputCube.t + rand() * stepSize * 1.0;
+	}
+	
+	var iterations = i32((outputCube.fr - outputCube.t) / stepSize);
+		
+	var src = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+	var dst = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+
+	// D3D backend will unroll loops and cause following error
+	// error X3511: unable to unroll loop, loop does not appear to terminate in a timely manne
+	// It's a known problem with the FXC compiler used by Chrome
+	// https://bugs.chromium.org/p/tint/issues/detail?id=1112	
+	
+	// raymarching
+	var max = 0.0;
+
+	var accumA = 0.0;
+	var accumC = vec3<f32>(0.0);
+	
+	var quit = false;
+	
+	for (var i: i32 = 0; i < iterations; i = i + 1) 
+	{
+		//calculate intersection along the ray
+		var tmp = f32(i) * stepSize + outputCube.t;
+		var isec0 = tmp * direction + eye;
+		
+		//transform it to match the bounding box centered on [0, 0, 0]
+		var isec1 = (isec0 / size) * 0.5 + 0.5;
+	
+		if (isec1.x < 0.0 || isec1.x > 1.0 ||
+			isec1.y < 0.0 || isec1.y > 1.0 ||
+			isec1.z < 0.0 || isec1.z > 1.0)
+		{
+			continue;
+		} 
+				
+		var masks = vec4<f32>(0.0);
+		
+		masks = dataRead(isec1, 0);
+		
+		if ((masks[0] + masks[1] + masks[2] < 0.2) || masks[3] < 0.0)
+		{
+			continue;
+		}
+		
+				
+		//object space ambient occlusion
+		var ao = 0.0;
+		if (bool(param.enableAmbientOcclusion)) 
+		{
+			var radius = param.aoRadius * 0.01;
+			
+			for (var j: i32 = 0; j < param.aoNumSamples; j = j + 1)
+			{
+				var randomOffset = vec3<f32>(-1.0 + 2.0 * rand(), 2.0 + rand(), -1.0 + 2.0 * rand());
+				randomOffset = randomOffset * radius;
+				
+				var occlusion = 1.0 - dataRead(isec1 + randomOffset, 1).x;
+				ao = ao + occlusion;
+			}			
+			ao = ao / f32(param.aoNumSamples);
+			ao = ao * param.aoStrength;
+		}
+		
+	
+		//soft shadows
+		var shadow = 0.0;
+		if (bool(param.enableSoftShadows)) 
+		{
+			var sTotal : f32;
+			
+			sTotal = 0.0;
+							
+			var quality : i32;
+			quality = 1;
+			
+			var samplingRadiusShadow = 0.1;
+			var stepShadow = 0.05 / param.shadowQuality;
+			var shadowStrength = param.shadowStrength;
+			var shadowSampleCount = 0;
+			
+			for (var q: i32 = 0; q < quality; q = q + 1)
+			{	
+				for (var t: f32 = 0.05; t < 1.0; t = t + stepShadow)
+				{			
+					var halfV = normalize(lightPos - isec1);
+
+					var sp = isec1 + halfV * t * samplingRadiusShadow;
+
+					var occlusion = 1.0 - dataRead(sp, 1).x;
+
+					shadow = shadow + (occlusion) /** pow((0.25 - t) * 2.0, 1.0)*/;
+
+					//sample count for the shadow normalization
+					shadowSampleCount = shadowSampleCount + 1;
+				}
+				
+				sTotal = sTotal + shadow;
+			}
+			shadow = sTotal / f32(shadowSampleCount);
+			shadow = shadow * shadowStrength;
+			shadow = clamp(shadow, 0.0, 1.0);				
+		}		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//color and alpha accumulation
+		for (var which: i32 = 0; which < 3; which = which + 1) 
+		{
+			var mask = 0.0;
+			
+			var alpha = masks[which];
+			
+			var color = color_transfer(which) * 1.0;
+			
+			//alpha normalization based on the stepSize
+			alpha = alpha * stepSize / 0.0025;
+					
+			//alpha normalization - correct, but slower formula
+			//var ds = stepSize * 20.0;
+			//alpha = 1.0 - pow(1.0 - alpha, ds);
+			
+			//apply original data
+			//alpha = alpha * masks[3];
+					
+			//shading
+			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
+			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
+
+			//front to back alpha compositing
+			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;
+			accumA = accumA + (1.0 - accumA) * alpha;  
+
+			// break from loop on high enough alpha value
+			if (bool(param.enableEarlyRayTermination) && accumA >= 0.8)
+			{
+				quit = true;
+				break;
+			}
+		}
+		
+		if (quit)
+		{
+			break;
+		}
+		
+	}
+	
+	//make the picture brighter
+	accumC = accumC * 1.5;
+	
+	var coords = vec3<f32>(tex_coords.x, tex_coords.y, 0.5);		
+	/*var sample = textureSample(volume1, s, coords);
+	var fragColor = vec4<f32>(sample.r, 0.0, 0.0, 1.0);*/
+	
+	
+	var masks = vec4<f32>(0.0);	
+	masks = dataRead(coords, 0);
+	//var fragColor = vec4<f32>(1.0 - masks[3], 0.0, 0.0, 1.0);
+		
+		
+	
+	var fragColor = vec4<f32>(accumC.x, accumC.y, accumC.z, accumA);
+	
+	//var fragColor = vec4<f32>(param.voxelSize, 0.0, 0.0, accumA);
+	//var fragColor = vec4<f32>(0.33, 1.0, 0.33, accumA);
+	
+	
+	
+	return fragColor;
+}struct Camera {
+	view : mat4x4<f32>,
+	viewInv : mat4x4<f32>,
+	proj : mat4x4<f32>,
+	aspectRatio : f32,
+	fov : f32,
+}
+
+@group(0) @binding(0) var<uniform> camera : Camera;
+
+
+struct VertexOutput {
+	@location(0) eye : vec3<f32>,
+	@location(1) direction : vec3<f32>,
+	@location(2) light : vec3<f32>,
+	@location(3) lightPos : vec3<f32>,
+	@location(4) fragPos : vec3<f32>,
+	@location(5) tex_coords : vec2<f32>, 
+	@builtin(position) position : vec4<f32>,
+}
+
+@vertex fn main(
+@location(0) vertex : vec3<f32>,
+@location(1) txCoord : vec2<f32>)
+-> VertexOutput
+{
+	var output : VertexOutput;	
+	
+	var fov : f32 = (camera.fov / 360.0) * (2.0 * 3.141592654);
+	var fl : f32 = 1.0 / tan(fov / 2.0);
+	
+	//var tmp = vec4<f32>(vertex.x / (1080.0 / 1920.0), vertex.y, vertex.z - fl, 1.0);
+	var tmp = vec4<f32>(vertex.x / (1.0 / camera.aspectRatio), vertex.y, vertex.z - fl, 1.0);
+
+	// vertex position
+	var ve : vec3<f32> = (camera.viewInv * tmp).xyz;
+	
+	output.eye = (camera.viewInv * vec4<f32>(0.0, 0.0, 0.0, 1.0)).xyz;
+	output.direction = ve - output.eye;	
+	output.lightPos = (camera.viewInv * vec4<f32>(0.0, 1.0, 1.0, 1.0)).xyz;
+	output.light = normalize(output.lightPos);
+	output.fragPos = vertex;
+	output.tex_coords = txCoord;	
+	
+	output.position = vec4<f32>(vertex, 1.0);
+
+	//output.Position = camera.view * output.Position;
+	//output.Position = camera.proj * camera.view * output.Position;
+
+	
+	return output;
+}[[block]] struct Camera {
+	view : mat4x4<f32>;
+	viewInv : mat4x4<f32>;
+	proj : mat4x4<f32>;
+};
+[[group(0), binding(0)]] var<uniform> camera : Camera;
+
+[[block]] struct Model {
+	matrix : mat4x4<f32>;
+};
+[[group(0), binding(1)]] var<uniform> model : Model;
+
+struct VertexOutput {
+  [[location(0)]] eye : vec3<f32>;
+  [[location(1)]] direction : vec3<f32>;
+  [[location(2)]] light : vec3<f32>;
+  [[location(3)]] lightPos : vec3<f32>;
+  [[location(4)]] fragPos : vec3<f32>;
+  [[location(5)]] tex_coords : vec2<f32>; 
+  [[builtin(position)]] Position : vec4<f32>;
+};
+
+[[stage(vertex)]] fn main(
+[[location(0)]] vertex : vec3<f32>,
+[[location(1)]] txCoord : vec2<f32>)
+-> VertexOutput
+{
+	var output : VertexOutput;	
+	
+	var fov : f32 = (45.0 / 360.0) * (2.0 * 3.141592654);
+	var fl : f32 = 1.0 / tan(fov / 2.0);
+	
+	var tmp = vec4<f32>(vertex.x / (1080.0 / 1920.0), vertex.y, vertex.z - fl, 1.0);
+
+	// vertex position
+	var ve : vec3<f32> = (camera.viewInv * tmp).xyz;
+	
+	output.eye = (camera.viewInv * vec4<f32>(0.0, 0.0, 0.0, 1.0)).xyz;
+	output.direction = ve - output.eye;	
+	output.lightPos = (camera.viewInv * vec4<f32>(1.0, 1.0, 3.0, 1.0)).xyz;
+	output.light = normalize(output.lightPos);
+	output.fragPos = vertex;
+	output.tex_coords = txCoord;
+	
+	
+	output.Position = vec4<f32>(vertex, 1.0);
+
+	//output.Position = camera.view * output.Position;
+	//output.Position = camera.proj * camera.view * output.Position;
+
+	
+	return output;
+}varying vec3 eye,dir,light,lightPos, fragPos;
+
+uniform mat4 modelview;
+
+void main()
+{
+	mat4 inv = inverse(modelview);
+	vec3 ve;
+	gl_Position = gl_Vertex;
+	fragPos = gl_Vertex;
+
+
+	float fov = (45.0 / 360.0) * (2.0 * 3.141592654);
+    float fl = 1.0 / tan(fov / 2.0);
+	
+	//ve = vec3(inv * vec4(gl_Vertex.x*gl_Color.r, gl_Vertex.y, gl_Vertex.z, 1.0));
+	ve = vec3(inv * vec4(gl_Vertex.x / (1080.0 / 1920.0), gl_Vertex.y, gl_Vertex.z - fl, 1.0));
+
+	eye = vec3(inv * vec4(0.0, 0.0, 0.0, 1));
+
+	dir = ve - eye;
+	//lightPos = vec3(inv * vec4(10.0, 3.0, 8.0, 1));
+	lightPos = vec3(inv * vec4(1.0, 1.0, 3.0, 1));
+	//lightPos = vec3(4.0, 3.0, 5.0);
+	light = normalize(lightPos);
+
+	gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+
+
+{
+    "rampLow": 0.2,
+	"rampHigh": 0.6,
+    "color": {
+        "x": 34,
+        "y": 51,
+        "z": 120
+    },
+	"comment" : "inner"
+}{
+    "rampLow": 0.2,
+	"rampHigh": 0.6,
+    "color": {
+        "x": 34,
+        "y": 51,
+        "z": 120
+    }
+}{
+    "rampLow": 0.1,
+	"rampHigh": 0.9,
+    "color": {
+        "x": 207,
+        "y": 31,
+        "z": 97
+    },
+	"comment" : "spikes"
+}{
+    "rampLow": 0.1,
+	"rampHigh": 0.9,
+    "color": {
+        "x": 190,
+        "y": 30,
+        "z": 90
+    },
+	"comment" : "spikes"
+}{
+    "rampLow": 0.1,
+	"rampHigh": 0.9,
+    "color": {
+        "x": 199,
+        "y": 154,
+        "z": 171
+    },
+	"comment" : "membrane"
+}{
+    "rampLow": 0.1,
+	"rampHigh": 0.9,
+    "color": {
+        "x": 199,
+        "y": 154,
+        "z": 171
+    }
+}{
+    "rampLow": 0.1,
+	"rampHigh": 0.9,
+    "color": {
+        "x": 12,
+        "y": 150,
+        "z": 123
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "rampLow": 0.1,
+	"rampHigh": 0.15,
+    "color": {
+        "x": 199,
+        "y": 154,
+        "z": 171
+    },
+	"comment" : "membrane"
+}

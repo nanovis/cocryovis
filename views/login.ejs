@@ -1,0 +1,24 @@
+<%- include('head', { title: 'VolWeb' }) -%>
+
+    <h1>Vol Web</h1>
+    <h2>Login</h2>
+    <div class="center">
+        <form method="post" action="/login">
+            <div>
+                <label>Username:</label>
+                <input type="text" name="username">
+            </div>
+            <div>
+                <label>Pass:</label>
+                <input type="password" name="password">
+            </div>
+            <div class="center">
+                <input class="login" type="submit" value="Login">
+            </div>
+        </form>
+    </div>
+    <div class="msgbox">
+        <%- message %>
+    </div>
+
+<%- include('foot') -%>

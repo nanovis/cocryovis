@@ -1,0 +1,207 @@
+<%- include('head', { title: 'VolWeb' }) -%>
+    <script>
+function _(el) {
+    return document.getElementById(el);
+}
+
+function progressHandler(event, progressBarId, statusId) {
+    var percent = (event.loaded / event.total) * 100;
+    _(progressBarId).value = Math.round(percent);
+    _(statusId).innerHTML = Math.round(percent) + "% uploaded... please wait";
+}
+
+function completeHandler(event, progressBarId, statusId) {
+    _(statusId).innerHTML = event.target.responseText;
+    _(progressBarId).value = 0; //wil clear progress bar after successful upload
+}
+
+function errorHandler(event, statusId) {
+    _(statusId).innerHTML = "Upload Failed";
+}
+
+function abortHandler(event, statusId) {
+    _(statusId).innerHTML = "Upload Aborted";
+}
+
+function uploadFile(apiURL, filesField, progressBarId, statusId) {
+    var files = _(filesField).files;
+    // console.log(files);
+    var formdata = new FormData();
+    for ( let i = 0; i < files.length; i++ ) {
+        console.log(files[i]);
+        formdata.append('files', files[i]);
+    }
+    var ajax = new XMLHttpRequest();
+    ajax.upload.addEventListener("progress", (e) => progressHandler(e, progressBarId, statusId), false);
+    ajax.addEventListener("load", (e) => completeHandler(e, progressBarId, statusId), false);
+    ajax.addEventListener("error", (e) => errorHandler(e, statusId), false);
+    ajax.addEventListener("abort", (e) => abortHandler(e, statusId), false);
+    ajax.open("POST", apiURL);
+    ajax.send(formdata);
+}
+
+function getIlastikStatus(statusId) {
+    var ajax = new XMLHttpRequest();
+    ajax.addEventListener("load", (e) => { _(statusId).innerHTML = e.target.responseText}, false);
+    ajax.addEventListener("error", (e) => errorHandler(e, statusId), false);
+    ajax.open("GET", '/api/actions/get-ilastik-status/', true);
+    ajax.send();
+}
+    </script>
+
+    <h1>Vol Web</h1>
+    <h2>Model <%= model.name %>:</h2>
+    <p><b>Model description:</b> <%= model.description %></p>
+
+    <h3>Raw data</h3>
+    <% if (model.rawData.length > 0) { %>
+        <ul>
+            <% model.rawData.forEach(function (rawData) { %>
+                <li>
+                    RawData-<%= rawData.id %>
+                    <a href="/api/actions/download-raw-data/<%= model.id %>/<%= rawData.id %>">[Download]</a>
+                    <a href="/api/actions/delete-raw-data/<%= model.id %>/<%= rawData.id %>">[X]</a>
+                    <a href="#" onClick="(() => {
+                        const disp = document.getElementById('sparseLabelUpload-<%= rawData.id %>').style.display;
+                        document.getElementById('sparseLabelUpload-<%= rawData.id %>').style.display = disp === 'block' ? 'none' : 'block';
+                        })()">[Add Sparse Labels]</a>
+                    <form method="POST" enctype="multipart/form-data" id="sparseLabelUpload-<%= rawData.id %>" style="display:none;">
+                        <label for="files">Select files:</label>
+                        <input type="file" id="sparseLabelsFiles-<%= rawData.id %>" name="files" accept="image/tif,image/tiff,application/zip" multiple>
+                        <input type="button" onclick="uploadFile('/api/actions/upload-sparse-labels/<%= model.id %>/<%= rawData.id %>', 'sparseLabelsFiles-<%= rawData.id %>', 'progressBarSparseLabels-<%= rawData.id %>', 'statusSparseLabels-<%= rawData.id %>')" value="Upload sparse labels">
+                        <progress id="progressBarSparseLabels-<%= rawData.id %>" value="0" max="100" style="width:300px;"></progress>
+                        <span id="statusSparseLabels-<%= rawData.id %>"></span>
+                    </form>
+                    <br />
+                </li>
+            <% }); %>
+        </ul>
+    <% } %>
+    <br />
+    <form method="POST" enctype="multipart/form-data">
+        <label for="files">Select files:</label>
+        <input type="file" id="rawFiles" name="files" accept="image/tif,image/tiff,application/zip" multiple>
+        <input type="button" onclick="uploadFile('/api/actions/upload-raw-data/<%= model.id %>', 'rawFiles', 'progressBarRawData', 'statusRawData')" value="Upload raw data">
+        <progress id="progressBarRawData" value="0" max="100" style="width:300px;"></progress>
+        <span id="statusRawData"></span>
+    </form>
+    <hr />
+    
+
+    <% if(model.rawData.length > 0) { %>
+    <% if (model.sparseLabels.length > 0) { %>
+    <h3>Sparse labels</h3>
+        <ul>
+            <% model.sparseLabels.forEach(function (sparseLabel) { %>
+                <li>
+                    SparseLables-<%= sparseLabel.id %> (RawData-<%= sparseLabel.idRawData %>)
+                    <a href="/api/actions/download-sparse-label/<%= model.id %>/<%= sparseLabel.id %>">[Download]</a>
+                    <a href="/api/actions/delete-sparse-label/<%= model.id %>/<%= sparseLabel.id %>">[X]</a>
+                    <a href="#" onClick="(() => {
+                        const disp = document.getElementById('ilastikLabelsUpload-<%= sparseLabel.id %>').style.display;
+                        document.getElementById('ilastikLabelsUpload-<%= sparseLabel.id %>').style.display = disp === 'block' ? 'none' : 'block';
+                        })()">[Upload Ilastik Labels]</a>
+                    <form  method="POST" enctype="multipart/form-data" id="ilastikLabelsUpload-<%= sparseLabel.id %>" style="display:none;">
+                        <label for="files">Select files:</label>
+                        <input type="file" id="ilastikLabelsFiles-<%= sparseLabel.id %>" name="files" accept="image/tif,image/tiff,application/zip" multiple>
+                        <input type="button" onclick="uploadFile('/api/actions/upload-ilastik-labels/<%= model.id %>/<%= sparseLabel.id %>', 'ilastikLabelsFiles-<%= sparseLabel.id %>', 'progressBarIlastikLabels-<%= sparseLabel.id %>', 'statusIlastikLabels-<%= sparseLabel.id %>')" value="Upload ilastik labels">
+                        <progress id="progressBarIlastikLabels-<%= sparseLabel.id %>" value="0" max="100" style="width:300px;"></progress>
+                        <span id="statusIlastikLabels-<%= sparseLabel.id %>"></span>
+                    </form>
+                    <a href="/api/actions/generate-ilastik-labels/<%= model.id %>/<%= sparseLabel.idRawData %>/<%= sparseLabel.id %>">[Generate Ilastik Labels]</a>
+                    <a href="#" onclick="getIlastikStatus('statusIlastikLabelsGetStatus-<%= sparseLabel.id %>')">[Get ilastik status]</a>
+                    <span id="statusIlastikLabelsGetStatus-<%= sparseLabel.id %>"></span>
+                </li>
+            <% }); %>
+        </ul>
+    <hr />
+    <% } %>
+    <% } %>
+    
+
+    <% if(model.sparseLabels.length > 0) { %>
+    <h3>Ilastik labels</h3>
+    <% if (model.ilastikLabels.length > 0) { %>
+        <ul>
+            <% model.ilastikLabels.forEach(function (ilastikLabel) { %>
+                <li>
+                    IlastikLabel-<%= ilastikLabel.id %> (RawDataId: <%= ilastikLabel.idRawData %>, SparseLabelId: <%= ilastikLabel.idSparseLabels %>)
+                    <a href="/api/actions/download-ilastik-label/<%= model.id %>/<%= ilastikLabel.id %>">[Download]</a>
+                    <a href="/api/actions/delete-ilastik-label/<%= model.id %>/<%= ilastikLabel.id %>">[X]</a>
+                </li>
+            <% }); %>
+        </ul>
+    <% } %>
+    <hr />
+    <% } %>
+
+    <h3>Inference</h3>
+    <h4>Checkpoint upload</h4>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="files">Select files:</label>
+        <input type="file" id="checkpoint" name="files" accept=".ckpt">
+        <input type="button" onclick="uploadFile('/api/actions/upload-checkpoint/<%= model.id %>', 'checkpoint', 'progressBarCheckpoint', 'statusCheckpoint')" value="Upload checkpoint">
+        <progress id="progressBarCheckpoint" value="0" max="100" style="width:300px;"></progress>
+        <span id="statusCheckpoint"></span>
+    </form>
+
+    <% if(model.checkpoints.length > 0) { %>
+    <h4>Checkpoints</h4>
+        <ul>
+            <% model.checkpoints.forEach(function (checkpoint) { %>
+                <li>
+                    Checkpoint-<%= checkpoint.id %> (<%= checkpoint.filename %>)
+                    <a href="/api/actions/download-checkpoint/<%= model.id %>/<%= checkpoint.id %>">[Download]</a>
+                    <a href="/api/actions/delete-checkpoint/<%= model.id %>/<%= checkpoint.id %>">[X]</a>
+                </li>
+            <% }); %>
+        </ul>
+    <% } %>
+
+    <h4>Inference data</h4>
+    <% if (model.inferenceData.length > 0) { %>
+        <ul>
+            <% model.inferenceData.forEach(function (inference) { %>
+                <li>
+                    Inference data-<%= inference.id %>
+                    
+                    [Run inference:
+                    <% model.checkpoints.forEach(function(checkpoint) { %>
+                        <a href="/api/actions/run-inference/<%= model.id %>/<%= inference.id %>/<%= checkpoint.id %>/"><%= checkpoint.id %></a>
+                    <% }); %>
+                    ]
+                    <a href="/api/actions/download-inference-data/<%= model.id %>/<%= inference.id %>">[Download]</a>
+                    <a href="/api/actions/inference-status/<%= model.id %>/<%= inference.id %>/">[Status]</a>
+                    <a href="/api/actions/delete-inference-data/<%= model.id %>/<%= inference.id %>">[X]</a>
+                </li>
+            <% }); %>
+        </ul>
+    <% } %>
+
+    <h4>Predictions</h4>
+    <% if (model.predictions.length > 0) { %>
+        <ul>
+            <% model.predictions.forEach(function (prediction) { %>
+                <li>
+                    Prediction-<%= prediction.id %>
+                    <a href="/api/actions/download-predictions/<%= model.id %>/<%= prediction.id %>">[Download]</a>
+                    <a href="/api/actions/visualize-data/<%= model.id %>/<%= prediction.inferenceDataId %>/<%= prediction.id %>">[Visualize]</a>
+                    <a href="/api/actions/delete-predictions/<%= model.id %>/<%= prediction.id %>">[X]</a>
+                </li>
+            <% }); %>
+        </ul>
+    <% } %>
+
+    <form method="POST" enctype="multipart/form-data">
+        <label for="files">Select files:</label>
+        <input type="file" id="inferenceData" name="files" accept=".json,.raw,.mrc,application/zip" multiple>
+        <input type="button" onclick="uploadFile('/api/actions/upload-inference-data/<%= model.id %>', 'inferenceData', 'progressBarinferenceData', 'statusinferenceData')" value="Upload inference data">
+        <progress id="progressBarinferenceData" value="0" max="100" style="width:300px;"></progress>
+        <span id="statusinferenceData"></span>
+    </form>
+
+
+    <br />
+    <br />
+    <a href="/api/actions/list-models">Back to models list.</a>
+<%- include('foot') -%>

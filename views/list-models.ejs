@@ -1,0 +1,15 @@
+<%- include('head', { title: 'VolWeb' }) -%>
+
+    <h1>Vol Web</h1>
+    <h2>Segmentation models:</h2>
+    <ul>
+        <% for (var i = 0; i < models.length; i++) { %>
+            <li>
+                <a href="/api/actions/model-details/<%= models[i].id %>"><%= models[i].name %></a> ... 
+                <a href="/api/actions/delete-model/<%= models[i].id %>">[X]</a>
+            </li>
+        <% } %>
+    </ul>
+
+    <a href="/auth">Back to auth page.</a>
+<%- include('foot') -%>

@@ -1,0 +1,10 @@
+{
+    "rampLow": 0.1,
+	"rampHigh": 0.15,
+    "color": {
+        "x": 207,
+        "y": 31,
+        "z": 97
+    },
+	"comment" : "spikes"
+}

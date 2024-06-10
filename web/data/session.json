@@ -1,0 +1,32 @@
+{
+  "ambient_occlusion": true,
+  "annotation_kernel_size": 25,
+  "annotations": false,
+  "ao_radius": 1.0,
+  "ao_samples": 20,
+  "ao_strength": 0.8999999761581421,
+  "bloom": true,
+  "clear_color": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "clip_offset": 0.0,
+  "clip_plane": 0,
+  "clip_volume_a": true,
+  "clip_volume_b": true,
+  "clip_volume_c": true,
+  "clipping": false,
+  "early_ray_termination": true,
+  "enable_volume_a": true,
+  "enable_volume_b": true,
+  "enable_volume_c": true,
+  "far_plane": 100.0,
+  "near_plane": 0.009999999776482582,
+  "ray_jittering": true,
+  "sample_rate": 10.0,
+  "shadow_quality": 5.0,
+  "shadow_radius": 0.2,
+  "shadow_strength": 0.5,
+  "shadows": true
+}

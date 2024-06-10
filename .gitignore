@@ -1,0 +1,5 @@
+.token
+node_modules
+wandb
+uploads/*
+!uploads/.gitkeep
