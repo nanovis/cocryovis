@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { Low, JSONFileSync } from 'lowdb';
+import DatabaseManager from "../../tools/database-manager.mjs";
 import { spawn } from 'child_process';
 import path from 'path';
 import cors from 'cors';
@@ -20,9 +20,7 @@ const ilastik = new IlastikHandler(config.ilastik);
 const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 
 // DB connection
-const adapter = new JSONFileSync('./db.json')
-const db = new Low(adapter)
-await db.read()
+const db = DatabaseManager.db;
 const users = db.data.users;
 const models = db.data.models;
 const modelHandler = new ModelHandler(config.models, models);

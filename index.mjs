@@ -9,13 +9,13 @@ import express from 'express';
 import pkg from 'pbkdf2-password';
 import path from 'path';
 import session from 'express-session';
-import { Low, JSONFile } from 'lowdb';
 import { actions } from './routes/api/actions.mjs';
 import bodyParser from 'body-parser';
 import { argv } from 'process';
 import { readFileSync } from 'fs';
 import cors from 'cors';
 import { restrict } from './middleware/restrict.mjs';
+import DatabaseManager from "./tools/database-manager.mjs";
 
 const port = argv[2] || 8080;
 const app = express(express.json());
@@ -54,9 +54,7 @@ app.use(function (req, res, next) {
 });
 
 // DB middleware
-const adapter = new JSONFile('./db.json')
-const db = new Low(adapter)
-await db.read()
+const db = DatabaseManager.db;
 const users = db.data.users;
 
 // Authenticate user in DB

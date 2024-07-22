@@ -3,3 +3,6 @@ node_modules
 wandb
 uploads/*
 !uploads/.gitkeep
+.vs
+db.json
+.idea
