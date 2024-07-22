@@ -23,7 +23,7 @@ const app = express(express.json());
 // config
 const config = JSON.parse(readFileSync('config.json', 'utf8'));
 app.set('view engine', 'ejs');
-app.set('views', path.join('.', 'views'));
+app.set('views', [path.join('.', 'views'), path.join('.', 'views', 'project')]);
 const hash = pkg();
 
 // middleware

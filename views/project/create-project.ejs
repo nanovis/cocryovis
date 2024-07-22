@@ -1,0 +1,15 @@
+<%- include('head', { title: 'VolWeb' }) -%>
+
+    <h1>Vol Web</h1>
+    <h2>Create Project:</h2>
+    <form action="/api/actions/projects/create-project" method="post" enctype="multipart/form-data">
+        <label for="name">Project name:</label>
+        <input type="text" name="name" /> <br />
+        <br />
+        <label for="name">Project description:</label>
+        <textarea name="description" rows="4" cols="25"></textarea> <br />
+        <br />
+        <input type="submit" value="Create" />
+    </form>
+
+<%- include('foot') -%>

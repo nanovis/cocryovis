@@ -13,6 +13,8 @@ import { restrict } from '../../middleware/restrict.mjs';
 import AdmZip from 'adm-zip';
 import { ModelHandler } from '../../tools/model-handler.mjs';
 import * as fs from 'fs';
+import { Project } from '../../tools/project.mjs';
+import { ProjectHandler } from '../../tools/project-handler.mjs';
 
 // Config
 const config = JSON.parse(fileSystem.readFileSync('config.json', 'utf8'));
@@ -24,6 +26,7 @@ const db = DatabaseManager.db;
 const users = db.data.users;
 const models = db.data.models;
 const modelHandler = new ModelHandler(config.models, models);
+const projectHandler = new ProjectHandler(db.data.projects);
 
 export const actions = express.Router();
 
@@ -522,4 +525,41 @@ actions.get('/delete-predictions/:id/:predictionsId', restrict, async (req, res)
 // Test File Upload
 actions.get('/file-upload', restrict, (req, res) => {
     res.render('file-upload');
+});
+
+
+///////////////////////
+/////// PROJECTS
+///////////////////////
+const projectsActionsPath = "projects"
+
+actions.get(`/${projectsActionsPath}/`, restrict, (req, res) => {
+    res.send("List of projects");
+});
+
+actions.get(`/${projectsActionsPath}/create-project`, restrict, (req, res) => {
+    res.render('create-project');
+});
+
+actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res) => {
+    console.log('Creating a new project');
+    try {
+        const project = new Project(req.body.name, req.session.user.id)
+        const projectId = projectHandler.addNewProject(project);
+
+        await db.write();
+        console.log("Project successfully created.");
+        res.redirect(`/api/actions/${projectsActionsPath}/` + projectId);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:id`, restrict, (req, res) => {
+    try {
+        const project = projectHandler.findProject(req.session.user.id);
+        res.render('project-details', { project: project });
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
