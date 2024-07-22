@@ -69,7 +69,7 @@ function authenticate(name, pass, fn) {
 }
 
 // Handling root route
-app.use('/', express.static('web'))
+app.get('/', restrict, express.static('web'))
  
 // Handling auth route
 app.get('/auth', restrict, function (req, res) {
