@@ -26,7 +26,7 @@ const db = DatabaseManager.db;
 const users = db.data.users;
 const models = db.data.models;
 const modelHandler = new ModelHandler(config.models, models);
-const projectHandler = new ProjectHandler(db.data.projects);
+const projectHandler = new ProjectHandler(db);
 
 export const actions = express.Router();
 
@@ -534,7 +534,12 @@ actions.get('/file-upload', restrict, (req, res) => {
 const projectsActionsPath = "projects"
 
 actions.get(`/${projectsActionsPath}/`, restrict, (req, res) => {
-    res.send("List of projects");
+    try {
+        const projects = projectHandler.projectsFromUser(req.session.user.id);
+        res.render('project-list', { projects: projects });
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
 
 actions.get(`/${projectsActionsPath}/create-project`, restrict, (req, res) => {
@@ -545,9 +550,9 @@ actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res
     console.log('Creating a new project');
     try {
         const project = new Project(req.body.name, req.session.user.id)
-        const projectId = projectHandler.addNewProject(project);
+        const projectId = await projectHandler.addNewProject(project);
 
-        await db.write();
+        // await db.write();
         console.log("Project successfully created.");
         res.redirect(`/api/actions/${projectsActionsPath}/` + projectId);
     } catch (err) {
@@ -559,6 +564,16 @@ actions.get(`/${projectsActionsPath}/:id`, restrict, (req, res) => {
     try {
         const project = projectHandler.findProject(req.session.user.id);
         res.render('project-details', { project: project });
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, async (req, res) => {
+    try {
+        const project = projectHandler.findProject(req.session.user.id);
+        await projectHandler.deleteProject(project.id);
+        res.redirect(`/api/actions/${projectsActionsPath}/`);
     } catch (err) {
         res.status(500).send(err);
     }

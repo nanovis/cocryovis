@@ -5,8 +5,10 @@
     <h1>Vol Web</h1>
     <h2>Project <%= project.name %>:</h2>
     <p><b>Owner ID:</b> <%= project.userId %></p>
+    <p><b>Description:</b> <%= project.description %></p>
 
     <br />
     <br />
-    <a href="/api/actions/list-models">Back to models list.</a>
+    <a href="/api/actions/projects">Back to projects list.</a>
+    <hr />
 <%- include('foot') -%>

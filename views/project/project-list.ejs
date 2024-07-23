@@ -1,0 +1,15 @@
+<%- include('head', { title: 'VolWeb' }) -%>
+
+    <h1>Vol Web</h1>
+    <h2>List of projects:</h2>
+    <ul>
+        <% for (var i = 0; i < projects.length; i++) { %>
+            <li>
+                <a href="/api/actions/projects/<%= projects[i].id %>"><%= projects[i].name %></a> ...
+                <a href="/api/actions/projects/delete-project/<%= projects[i].id %>">[X]</a>
+            </li>
+        <% } %>
+    </ul>
+
+    <a href="/auth">Back to auth page.</a>
+<%- include('foot') -%>
