@@ -67,7 +67,7 @@
 <% for (const volume of project.volumes) { %>
     <p>
         <b>Volume:</b> <%= volume.name %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a> ...
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a>
     </p>
     <h4>Raw Data:</h4>
     <% if (Object.hasOwn(volume, 'rawData') && volume.rawData == null) { %>
@@ -86,7 +86,7 @@
 
 
     <% } else { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/rawData"><%= volume.rawData.name %></a> ...
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data"><%= volume.rawData.name %></a> ...
         <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-raw-data">[X]</a>
     <% } %>
     <h4>Sparse Labels:</h4>

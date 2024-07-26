@@ -60,6 +60,10 @@ export class LowdbProjectModel extends IProjectModel {
         await this.projects.remove({ id }).write();
     }
 
+    getVolume(projectId, volumeId) {
+        return super.getVolume(Number(projectId), Number(volumeId));
+    }
+
     async addVolume(projectId, name, description){
         projectId = Number(projectId);
 
@@ -93,8 +97,12 @@ export class LowdbProjectModel extends IProjectModel {
         await super.removeVolume(Number(projectId), Number(volumeId));
     }
 
+    getRawVolume(projectId, volumeId) {
+        return super.getRawVolume(Number(projectId), Number(volumeId));
+    }
+
     async addRawVolume(projectId, volumeId, file) {
-        await super.addRawVolume(Number(projectId), Number(volumeId), file);
+        return await super.addRawVolume(Number(projectId), Number(volumeId), file);
     }
 
     async removeRawVolume(projectId, volumeId) {

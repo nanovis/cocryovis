@@ -1,3 +1,5 @@
+import {RawData} from "./raw-data.mjs";
+
 export class Volume {
     constructor(name, description, path = "", rawData = null, sparseLabels = [], pseudoLabels = [], id = -1) {
         this.name = name;
@@ -15,6 +17,10 @@ export class Volume {
     }
 
     static fromReference(dbVolume) {
-        return new Volume(dbVolume.name, dbVolume.description, dbVolume.path, dbVolume.rawData, dbVolume.sparseLabels, dbVolume.pseudoLabels, dbVolume.id);
+        let rawData = null;
+        if (dbVolume.rawData != null) {
+            rawData = RawData.fromReference(dbVolume.rawData);
+        }
+        return new Volume(dbVolume.name, dbVolume.description, dbVolume.path, rawData, dbVolume.sparseLabels, dbVolume.pseudoLabels, dbVolume.id);
     }
 }

@@ -626,13 +626,14 @@ actions.post(`/${projectsActionsPath}/:projectId/volume/:volumeId/upload-raw-dat
 });
 
 // Download Raw Data
-// actions.get('/download-raw-data/:id/:rawDataId', restrict, async (req, res) => {
-//     console.log('Downloading raw data for model id: ' + req.params.id);
-//     let data = modelHandler.downloadData(req.params.id, 'rawData', req.params.rawDataId);
-//     res.set('Content-Type', 'application/zip');
-//     res.set('Content-Disposition', 'attachment; filename=' + data.name);
-//     res.send(data.zipBuffer);
-// });
+actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/raw-data`, restrict, async (req, res) => {
+    console.log(`Downloading raw data for volume ${req.params.volumeId} (project ${req.params.projectId})`);
+    const rawVolume = projectModel.getRawVolume(req.params.projectId, req.params.volumeId);
+    let data = projectModel.prepareDataForDownload(rawVolume);
+    res.set('Content-Type', 'application/zip');
+    res.set('Content-Disposition', 'attachment; filename=' + data.name);
+    res.send(data.zipBuffer);
+});
 
 // Delete Raw Data
 actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/delete-raw-data`, restrict, async (req, res) => {

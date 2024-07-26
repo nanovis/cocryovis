@@ -2,6 +2,7 @@ import fileSystem from "fs";
 import {fileNameFilter} from "../tools/utils.mjs";
 import path from "path";
 import AdmZip from "adm-zip";
+import {RawData} from "./raw-data.mjs";
 
 export class IProjectModel {
     constructor(config) {
@@ -66,6 +67,10 @@ export class IProjectModel {
         });
     }
 
+    getVolume(projectId, volumeId) {
+        return this.getById(projectId).findVolume(volumeId);
+    }
+
     async addVolume(projectId, name, description){
         throw new Error('Method not implemented');
     }
@@ -113,6 +118,10 @@ export class IProjectModel {
         });
     }
 
+    getRawVolume(projectId, volumeId) {
+        return this.getById(projectId).findVolume(volumeId).rawData;
+    }
+
     async addRawVolume(projectId, volumeId, file) {
         if (Array.isArray(file)) {
             throw new Error(`Raw data has to consist of a single file only.`);
@@ -120,16 +129,17 @@ export class IProjectModel {
         const project = this.getById(projectId);
         const volume = project.findVolume(volumeId);
 
-        let rawData;
+        let rawData = null;
 
         try {
-            rawData = await this.saveRawVolumeData(volume, file);
+            const [name, path] = await this.saveRawVolumeData(volume, file);
+            rawData = new RawData(name, path);
         }
         catch (error) {
             throw error;
         }
 
-        if (!Object.hasOwn(rawData, 'name')) {
+        if (rawData == null) {
             throw new Error(`No valid raw file found.`);
         }
         volume.rawData = rawData;
@@ -139,7 +149,8 @@ export class IProjectModel {
 
     async saveRawVolumeData(volume, file) {
         const uploadPath = path.join(volume.path, this.volumeSubfolders.rawData);
-        const rawData = {};
+        let rawDataFileName;
+        let rawDataPath;
 
         if (!fileSystem.existsSync(uploadPath)) {
             fileSystem.mkdirSync(uploadPath, { recursive: true });
@@ -152,8 +163,8 @@ export class IProjectModel {
                 if (entry.name.endsWith('.raw')) {
                     const filteredFileName = fileNameFilter(entry.name);
                     zip.extractEntryTo(entry, uploadPath, false, true, false, filteredFileName);
-                    rawData.name = filteredFileName;
-                    rawData.path = path.join(uploadPath, filteredFileName);
+                    rawDataFileName = filteredFileName;
+                    rawDataPath = path.join(uploadPath, filteredFileName);
                     break;
                 }
             }
@@ -161,11 +172,11 @@ export class IProjectModel {
             const filteredFileName = fileNameFilter(file.name);
             const rawPath = path.join(uploadPath, filteredFileName);
             await file.mv(rawPath);
-            rawData.name = filteredFileName;
-            rawData.path = rawPath;
+            rawDataFileName = filteredFileName;
+            rawDataPath = rawPath;
         }
 
-        return rawData;
+        return [rawDataFileName, rawDataPath];
     }
 
     async removeRawVolume(projectId, volumeId) {
@@ -189,5 +200,15 @@ export class IProjectModel {
                 console.log(`Error deleting ${volume.rawData.name}: ${err}.`);
             }
         });
+    }
+
+    prepareDataForDownload(downloadable) {
+        const zip = new AdmZip();
+        zip.addLocalFile(downloadable.path);
+        const outputFileName = path.parse(downloadable.path).name;
+        return {
+            name: `${outputFileName}.zip`,
+            zipBuffer: zip.toBuffer()
+        };
     }
 }
