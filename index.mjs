@@ -15,7 +15,7 @@ import { argv } from 'process';
 import { readFileSync } from 'fs';
 import cors from 'cors';
 import { restrict } from './middleware/restrict.mjs';
-import DatabaseManager from "./tools/database-manager.mjs";
+import DatabaseManager from "./tools/lowdb-manager.mjs";
 
 const port = argv[2] || 8080;
 const app = express(express.json());

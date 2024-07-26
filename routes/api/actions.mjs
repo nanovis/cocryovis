@@ -1,6 +1,5 @@
 import express from 'express';
-import bodyParser from 'body-parser';
-import DatabaseManager from "../../tools/database-manager.mjs";
+import DatabaseManager from "../../tools/lowdb-manager.mjs";
 import { spawn } from 'child_process';
 import path from 'path';
 import cors from 'cors';
@@ -10,11 +9,10 @@ import  * as fileSystem from 'fs';
 import { IlastikHandler } from '../../tools/ilastik-handler.mjs';
 import { NanoOetziHandler } from '../../tools/nano-oetzi-handler.mjs';
 import { restrict } from '../../middleware/restrict.mjs';
-import AdmZip from 'adm-zip';
 import { ModelHandler } from '../../tools/model-handler.mjs';
 import * as fs from 'fs';
-import { Project } from '../../tools/project.mjs';
-import { ProjectHandler } from '../../tools/project-handler.mjs';
+import { Project } from '../../models/project.mjs';
+import { ModelFactory } from "../../models/model-factory.mjs";
 
 // Config
 const config = JSON.parse(fileSystem.readFileSync('config.json', 'utf8'));
@@ -23,10 +21,10 @@ const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 
 // DB connection
 const db = DatabaseManager.db;
-const users = db.data.users;
 const models = db.data.models;
 const modelHandler = new ModelHandler(config.models, models);
-const projectHandler = new ProjectHandler(db, config.projects);
+
+const projectModel = ModelFactory.createProjectModel(config.db.type, config.projects);
 
 export const actions = express.Router();
 
@@ -536,7 +534,7 @@ const projectsActionsPath = "projects"
 // Get Project List
 actions.get(`/${projectsActionsPath}/`, restrict, (req, res) => {
     try {
-        const projects = projectHandler.projectsFromUser(req.session.user.id);
+        const projects = projectModel.getUserProjects(req.session.user.id);
         res.render('project-list', { projects: projects });
     } catch (err) {
         res.status(500).send(err);
@@ -546,7 +544,7 @@ actions.get(`/${projectsActionsPath}/`, restrict, (req, res) => {
 // Get Project Details
 actions.get(`/${projectsActionsPath}/details/:id`, restrict, (req, res) => {
     try {
-        const project = projectHandler.findProject(Number(req.params.id));
+        const project = projectModel.getById(req.params.id);
         res.render('project-details', { project: project });
     } catch (err) {
         res.status(500).send(err);
@@ -562,10 +560,11 @@ actions.get(`/${projectsActionsPath}/create-project`, restrict, (req, res) => {
 actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res) => {
     console.log('Creating a new project');
     try {
-        const projectId = await projectHandler.addNewProject(req.body.name, req.body.description, req.session.user.id);
+        const project = Project.createProject(req.body.name, req.body.description, req.session.user.id);
+        await projectModel.create(project);
 
         console.log("Project successfully created.");
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + projectId);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + project.id);
     } catch (err) {
         console.error("Error in creating project:", err);
         res.status(500).send(err);
@@ -575,8 +574,7 @@ actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res
 // Delete Project
 actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, async (req, res) => {
     try {
-        const project = projectHandler.findProject(Number(req.params.id));
-        await projectHandler.deleteProject(project.id);
+        await projectModel.delete(req.params.id);
         res.redirect(`/api/actions/${projectsActionsPath}/`);
     } catch (err) {
         res.status(500).send(err);
@@ -587,7 +585,7 @@ actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, async (req, 
 actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, async (req, res) => {
     console.log('Creating a new volume');
     try {
-        await projectHandler.addNewVolume(Number(req.params.id), req.body.name, req.body.description);
+        await projectModel.addVolume(req.params.id, req.body.name, req.body.description);
 
         console.log("Volume successfully created.");
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.id);
@@ -601,7 +599,7 @@ actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, async (req, 
 actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/delete`, restrict, async (req, res) => {
     console.log(`Deleting Volume ${req.params.volumeId}`);
     try {
-        await projectHandler.removeVolume(Number(req.params.projectId), Number(req.params.volumeId));
+        await projectModel.removeVolume(req.params.projectId, req.params.volumeId);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.projectId);
     } catch (err) {
         console.error("Error in creating volume:", err);
@@ -619,8 +617,7 @@ actions.post(`/${projectsActionsPath}/:projectId/volume/:volumeId/upload-raw-dat
                 message: 'No file uploaded'
             });
         } else {
-            await projectHandler.uploadRawVolumeData(
-                Number(req.params.projectId), Number(req.params.volumeId), req.files.files);
+            await projectModel.addRawVolume(req.params.projectId, req.params.volumeId, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.projectId);
         }
     } catch (err) {
@@ -641,7 +638,7 @@ actions.post(`/${projectsActionsPath}/:projectId/volume/:volumeId/upload-raw-dat
 actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/delete-raw-data`, restrict, async (req, res) => {
     console.log(`Deleting raw data for volume ${req.params.volumeId} (project ${req.params.projectId})`);
     try {
-        await projectHandler.deleteRawVolumeData(Number(req.params.projectId), Number(req.params.volumeId));
+        await projectModel.removeRawVolume(req.params.projectId, req.params.volumeId);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.projectId);
     } catch (err) {
         res.status(500).send(err);
