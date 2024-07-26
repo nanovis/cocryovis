@@ -17,5 +17,8 @@
     },
     "models": {
         "path": "../models/"
+    },
+    "projects": {
+        "path": "../projects/"
     }
 }

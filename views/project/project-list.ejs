@@ -5,7 +5,7 @@
     <ul>
         <% for (var i = 0; i < projects.length; i++) { %>
             <li>
-                <a href="/api/actions/projects/<%= projects[i].id %>"><%= projects[i].name %></a> ...
+                <a href="/api/actions/projects/details/<%= projects[i].id %>"><%= projects[i].name %></a> ...
                 <a href="/api/actions/projects/delete-project/<%= projects[i].id %>">[X]</a>
             </li>
         <% } %>

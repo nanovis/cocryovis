@@ -1,14 +1,116 @@
 <%- include('head', { title: 'VolWeb' }) -%>
-    <script>
-    </script>
+<script>
+    function _(el) {
+        return document.getElementById(el);
+    }
 
-    <h1>Vol Web</h1>
-    <h2>Project <%= project.name %>:</h2>
-    <p><b>Owner ID:</b> <%= project.userId %></p>
-    <p><b>Description:</b> <%= project.description %></p>
+    function progressHandler(event, progressBarId, statusId) {
+        const percent = (event.loaded / event.total) * 100;
+        _(progressBarId).value = Math.round(percent);
+        _(statusId).innerHTML = Math.round(percent) + "% uploaded... please wait";
+    }
 
+    function completeHandler(event, progressBarId, statusId) {
+        _(statusId).innerHTML = event.target.responseText;
+        const progressBar = _(progressBarId);
+        progressBar.value = 0;
+        _(progressBarId).style.display = 'none';
+    }
+
+    function uploadFile(apiURL, filesField, progressBarId, statusId) {
+        const files = _(filesField).files;
+
+        const formdata = new FormData();
+        for ( let i = 0; i < files.length; i++ ) {
+            console.log(files[i]);
+            formdata.append('files', files[i]);
+        }
+        const ajax = new XMLHttpRequest();
+        _(progressBarId).style.display = 'block';
+        ajax.upload.addEventListener("progress", (e) => progressHandler(e, progressBarId, statusId), false);
+        ajax.addEventListener("load", (e) => completeHandler(e, progressBarId, statusId), false);
+        ajax.addEventListener("error", (e) => errorHandler(e, statusId), false);
+        ajax.addEventListener("abort", (e) => abortHandler(e, statusId), false);
+        // Handle potential redirects
+        ajax.onload = function() {
+            if (ajax.responseURL) {
+                window.location.href = ajax.responseURL;
+            }
+        };
+
+        ajax.open("POST", apiURL);
+        ajax.send(formdata);
+    }
+</script>
+
+<h1>Vol Web</h1>
+<h2>Project <%= project.name %>:</h2>
+<p><b>Owner ID:</b> <%= project.userId %></p>
+<p><b>Description:</b> <%= project.description %></p>
+
+<br />
+<h3 style="text-align: left">Volumes:</h3>
+<button id="createVolumeToggle" onClick="(() => {
+    const disp = document.getElementById('createVolume').style.display;
+    document.getElementById('createVolume').style.display = disp === 'block' ? 'none' : 'block';
+    document.getElementById('createVolumeToggle').textContent = disp === 'block' ? 'Add New Volume &darr;' : 'Add New Volume &uarr;';
+    })()">Add New Volume &darr;</button>
+<form id="createVolume" style="display: none" action="/api/actions/projects/<%= project.id %>/create-volume" method="post" enctype="multipart/form-data">
+    <label for="name">Volume name:</label>
+    <input type="text" name="name" /> <br />
     <br />
+    <label for="description">Volume description:</label>
+    <textarea name="description" rows="4" cols="25"></textarea>
+    <input type="submit" value="Add" />
+</form>
+<hr />
+<% for (const volume of project.volumes) { %>
+    <p>
+        <b>Volume:</b> <%= volume.name %>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a> ...
+    </p>
+    <h4>Raw Data:</h4>
+    <% if (Object.hasOwn(volume, 'rawData') && volume.rawData == null) { %>
+        <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
+            <label for="file">Select Raw Data:</label>
+            <input type="file" id="rawDataFiles" name="files" accept="application/zip,.raw">
+            <br>
+            <br>
+            <input
+                    type="button"
+                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-raw-data', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
+                    value = "Upload Raw Data to Server">
+            <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
+            <span id="statusRawData"></span>
+        </form>
+
+
+    <% } else { %>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/rawData"><%= volume.rawData.name %></a> ...
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-raw-data">[X]</a>
+    <% } %>
+    <h4>Sparse Labels:</h4>
+    <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/create-sparse-labels">
+        <button <% if(Object.hasOwn(volume, 'rawData')) { %> title="Requires a raw volume" disabled <% } %>>Create Sparse Labels from Volume</button>
+    </a>
     <br />
-    <a href="/api/actions/projects">Back to projects list.</a>
+    <button id="uploadSparseLabelsToggle" onClick="(() => {
+        const disp = document.getElementById('sparseLabelUpload').style.display;
+        document.getElementById('sparseLabelUpload').style.display = disp === 'block' ? 'none' : 'block';
+        document.getElementById('uploadSparseLabelsToggle').textContent = disp === 'block' ? 'Upload Sparse Labeled Volume &darr;' : 'Upload Sparse Labeled Volume &uarr;';
+        })()">Upload Sparse Volume &darr;</button>
+    <form method="POST" enctype="multipart/form-data" id="sparseLabelUpload" style="display:none;">
+        <label for="files">Select files:</label>
+        <input type="file" id="sparseLabelsFiles" name="files" accept="image/tif,image/tiff,application/zip" multiple>
+        <input type="button" onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-sparse-labels', 'sparseLabelsFiles', 'progressBarSparseLabels', 'statusSparseLabels')" value="Upload">
+        <progress id="progressBarSparseLabels" value="0" max="100" style="width:300px;"></progress>
+        <span id="statusSparseLabels"></span>
+    </form>
     <hr />
+<% } %>
+
+<br />
+<br />
+<a href="/api/actions/projects">Back to projects list.</a>
+<hr />
 <%- include('foot') -%>
