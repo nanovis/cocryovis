@@ -42,7 +42,8 @@
         ajax.send(formdata);
     }
 </script>
-
+<a href="/api/actions/projects">Back to projects list.</a>
+<br />
 <h1>Vol Web</h1>
 <h2>Project <%= project.name %>:</h2>
 <p><b>Owner ID:</b> <%= project.userId %></p>
@@ -130,9 +131,31 @@
     <% } %>
     <hr />
 <% } %>
-
+<br />
+<hr />
+<hr />
+<br />
+<h3 style="text-align: left">Models:</h3>
+<button id="createModelToggle" onClick="(() => {
+    const disp = document.getElementById('createVolume').style.display;
+    document.getElementById('createModel').style.display = disp === 'block' ? 'none' : 'block';
+    document.getElementById('createModelToggle').textContent = disp === 'block' ? 'Add New Model &darr;' : 'Add New Model &uarr;';
+    })()">Add New Model &darr;</button>
+<form id="createModel" style="display: none" action="/api/actions/projects/<%= project.id %>/create-model" method="post" enctype="multipart/form-data">
+    <label for="name">Model name:</label>
+    <input type="text" name="name" /> <br />
+    <br />
+    <label for="description">Model description:</label>
+    <textarea name="description" rows="4" cols="25"></textarea>
+    <input type="submit" value="Add" />
+</form>
+<% for (const model of project.models) { %>
+    <p>
+        <b>Model:</b> <%= model.name %>
+        <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/delete">[X]</a>
+    </p>
+<% } %>
 <br />
 <br />
-<a href="/api/actions/projects">Back to projects list.</a>
 <hr />
 <%- include('foot') -%>

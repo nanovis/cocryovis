@@ -17,12 +17,19 @@ export class IProjectModel {
 
     subfolders = {
         volumes: 'volumes',
+        models: 'models'
     };
 
     volumeSubfolders = {
         rawData: 'raw-data',
         sparseLabels: 'sparse-labels',
         pseudoLabels: 'pseudo-labels',
+    };
+
+    modelSubfolders = {
+        checkpoints: 'checkpoints',
+        inferenceData: 'inference-data',
+        predictions: 'predictions',
     };
 
     getUserProjects(userId) {
@@ -211,6 +218,57 @@ export class IProjectModel {
         volume.removePseudoLabel(pseudoLabeledVolumeId);
         await this.update(projectId, project);
         console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+    }
+
+    getModel(projectId, modelId) {
+        return this.getById(projectId).findModel(modelId);
+    }
+
+    async addModel(projectId, name, description) {
+        throw new Error('Method not implemented');
+    }
+
+    createModelDirectory(project, model) {
+        const folderName = model.id + "_" + fileNameFilter(model.name);
+        const folderPath = path.join(this.config.path, project.path, this.subfolders.models, folderName);
+        model.path = folderPath;
+        if (fileSystem.existsSync(folderPath)) {
+            throw new Error(`Model directory already exists`);
+        }
+        fileSystem.mkdirSync(folderPath, {recursive: true});
+
+        for (const subfolder in this.modelSubfolders) {
+            fileSystem.mkdirSync(path.join(folderPath, this.modelSubfolders[subfolder]));
+        }
+    }
+
+    async removeModel(projectId, modelId) {
+        const project = this.getById(projectId);
+        const model = project.findModel(modelId);
+
+        if (model === undefined){
+            throw new Error(`Model does not exists`);
+        }
+
+        try {
+            this.removeModelDirectory(model);
+        }
+        catch (error) {
+            throw error;
+        }
+
+        project.removeModel(model.id);
+
+        await this.update(projectId, project);
+        console.log(`Model ${model.name} (Id: ${model.id}) successfully deleted.`);
+    }
+
+    removeModelDirectory(model) {
+        fileSystem.rm(model.path, { recursive: true, force: true }, (err) => {
+            if (err) {
+                console.log(`Error deleting ${model.name}: ${err}.`);
+            }
+        });
     }
 
     async saveData(files, uploadPath, acceptedFileExtensions = [], singleFileOnly = false) {

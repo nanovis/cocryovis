@@ -737,3 +737,29 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:
         res.status(500).send(err);
     }
 });
+
+// Create New Model
+actions.post(`/${projectsActionsPath}/:id/create-model`, restrict, async (req, res) => {
+    console.log('Creating a new model');
+    try {
+        await projectModel.addModel(req.params.id, req.body.name, req.body.description);
+
+        console.log("Model successfully created.");
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.id);
+    } catch (err) {
+        console.error("Error in creating volume:", err);
+        res.status(500).send(err);
+    }
+});
+
+// Remove Volume
+actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, async (req, res) => {
+    console.log(`Deleting Model ${req.params.idModel}`);
+    try {
+        await projectModel.removeModel(req.params.idProject, req.params.idModel);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        console.error("Error in creating model:", err);
+        res.status(500).send(err);
+    }
+});

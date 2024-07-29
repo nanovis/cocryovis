@@ -5,6 +5,7 @@ import LowdbManager from "../../tools/lowdb-manager.mjs";
 import path from "path";
 import {SparseLabeledVolume} from "../sparse-labeled-volume.mjs";
 import {PseudoLabeledVolume} from "../pseudo-labeled-volume.mjs";
+import {Model} from "../model.mjs";
 
 export class LowdbProjectModel extends IProjectModel {
     constructor(config) {
@@ -195,5 +196,42 @@ export class LowdbProjectModel extends IProjectModel {
 
     async removePseudoLabeledVolume(projectId, volumeId, pseudoLabeledVolumeId) {
         await super.removePseudoLabeledVolume(Number(projectId), Number(volumeId), Number(pseudoLabeledVolumeId));
+    }
+
+    getModel(projectId, modelId) {
+        return super.getModel(Number(projectId), Number(modelId));
+    }
+
+    async addModel(projectId, name, description) {
+        projectId = Number(projectId);
+
+        const model = Model.createModel(name, description);
+        const project = this.getById(projectId);
+
+        if (!Object.hasOwn(project, 'models')) {
+            project.models = []
+        }
+
+        if (project.models.length === 0) {
+            model.id = 1;
+        } else {
+            model.id = project.models.at(-1).id + 1;
+        }
+
+        try {
+            this.createModelDirectory(project, model)
+        }
+        catch (error) {
+            throw error;
+        }
+
+        project.models.push(model);
+
+        await this.update(projectId, project);
+        return model.id;
+    }
+
+    async removeModel(projectId, modelId) {
+        await super.removeModel(Number(projectId), Number(modelId));
     }
 }
