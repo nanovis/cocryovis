@@ -22,7 +22,7 @@ export class IProjectModel {
     volumeSubfolders = {
         rawData: 'raw-data',
         sparseLabels: 'sparse-labels',
-        ilastikLabels: 'ilastik-labels',
+        pseudoLabels: 'pseudo-labels',
     };
 
     getUserProjects(userId) {
@@ -132,8 +132,11 @@ export class IProjectModel {
         let rawData = null;
 
         try {
-            const [name, path] = await this.saveRawVolumeData(volume, file);
-            rawData = new RawData(name, path);
+            const {fileNames, filePaths} = await this.saveData(file,
+                path.join(volume.path, this.volumeSubfolders.rawData), [".raw"], true);
+            if (fileNames.length >= 0) {
+                rawData = new RawData(fileNames[0], filePaths[0]);
+            }
         }
         catch (error) {
             throw error;
@@ -147,38 +150,6 @@ export class IProjectModel {
         console.log("Raw Data successfully uploaded.");
     }
 
-    async saveRawVolumeData(volume, file) {
-        const uploadPath = path.join(volume.path, this.volumeSubfolders.rawData);
-        let rawDataFileName;
-        let rawDataPath;
-
-        if (!fileSystem.existsSync(uploadPath)) {
-            fileSystem.mkdirSync(uploadPath, { recursive: true });
-        }
-
-        if (file.name.endsWith('.zip')) {
-            let zip = new AdmZip(file.data);
-            const zipEntries = zip.getEntries();
-            for (const entry of zipEntries) {
-                if (entry.name.endsWith('.raw')) {
-                    const filteredFileName = fileNameFilter(entry.name);
-                    zip.extractEntryTo(entry, uploadPath, false, true, false, filteredFileName);
-                    rawDataFileName = filteredFileName;
-                    rawDataPath = path.join(uploadPath, filteredFileName);
-                    break;
-                }
-            }
-        } else {
-            const filteredFileName = fileNameFilter(file.name);
-            const rawPath = path.join(uploadPath, filteredFileName);
-            await file.mv(rawPath);
-            rawDataFileName = filteredFileName;
-            rawDataPath = rawPath;
-        }
-
-        return [rawDataFileName, rawDataPath];
-    }
-
     async removeRawVolume(projectId, volumeId) {
         const project = this.getById(projectId);
         const volume = project.findVolume(volumeId);
@@ -187,15 +158,116 @@ export class IProjectModel {
             throw new Error(`Volume ${volume.name} has no raw data.`);
         }
 
-        await this.removeRawVolumeData(volume);
+        await this.removeData(volume.rawData.path);
 
         volume.rawData = null;
         await this.update(projectId, project);
         console.log("Raw Data successfully deleted.");
     }
 
-    async removeRawVolumeData(volume) {
-        await fileSystem.rm(volume.rawData.path, { recursive: true, force: true }, (err) => {
+    getSparseLabeledVolume(projectId, volumeId, sparseLabeledVolumeId) {
+        return this.getById(projectId).findVolume(volumeId).findSparseLabel(sparseLabeledVolumeId);
+    }
+
+    async addSparseLabeledVolumes(projectId, volumeId, files) {
+        throw new Error('Method not implemented');
+    }
+
+    async removeSparseLabeledVolume(projectId, volumeId, sparseLabeledVolumeId) {
+        const project = this.getById(projectId);
+        const volume = project.findVolume(volumeId);
+        const sparseLabeledVolume = volume.findSparseLabel(sparseLabeledVolumeId);
+
+        if(!sparseLabeledVolume) {
+            throw new Error(`Sparse labeled volume ${sparseLabeledVolumeId} does not exist in volume ${volume.name}.`);
+        }
+
+        await this.removeData(sparseLabeledVolume.path);
+
+        volume.removeSparseLabel(sparseLabeledVolumeId);
+        await this.update(projectId, project);
+        console.log(`Sparse labeled volume ${sparseLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+    }
+
+    getPseudoLabeledVolume(projectId, volumeId, pseudoLabeledVolumeId) {
+        return this.getById(projectId).findVolume(volumeId).findPseudoLabel(pseudoLabeledVolumeId);
+    }
+
+    async addPseudoLabeledVolumes(projectId, volumeId, files) {
+        throw new Error('Method not implemented');
+    }
+
+    async removePseudoLabeledVolume(projectId, volumeId, pseudoLabeledVolumeId) {
+        const project = this.getById(projectId);
+        const volume = project.findVolume(volumeId);
+        const pseudoLabeledVolume = volume.findPseudoLabel(pseudoLabeledVolumeId);
+
+        if(!pseudoLabeledVolume) {
+            throw new Error(`Pseudo labeled volume ${pseudoLabeledVolumeId} does not exist in volume ${volume.name}.`);
+        }
+
+        await this.removeData(pseudoLabeledVolume.path);
+
+        volume.removePseudoLabel(pseudoLabeledVolumeId);
+        await this.update(projectId, project);
+        console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+    }
+
+    async saveData(files, uploadPath, acceptedFileExtensions = [], singleFileOnly = false) {
+        function isFileExtensionAccepted(filename, acceptedFileExtensions) {
+            return acceptedFileExtensions.length === 0 || acceptedFileExtensions.some(extension => filename.endsWith(extension));
+        }
+
+        const fileNames = [];
+        const filePaths = [];
+
+        const promises = [];
+
+        if (!fileSystem.existsSync(uploadPath)) {
+            fileSystem.mkdirSync(uploadPath, { recursive: true });
+        }
+        if (Array.isArray(files)) {
+            for (const file of files) {
+                if (isFileExtensionAccepted(file.name, acceptedFileExtensions)) {
+                    const filteredFileName = fileNameFilter(file.name);
+                    const fullPath = path.join(uploadPath, filteredFileName);
+                    fileNames.push(filteredFileName);
+                    filePaths.push(fullPath);
+                    promises.push(file.mv(fullPath));
+                    if (singleFileOnly) {
+                        break;
+                    }
+                }
+            }
+        } else if (files.name.endsWith('.zip')) {
+            let zip = new AdmZip(files.data);
+            const zipEntries = zip.getEntries();
+            for (const entry of zipEntries) {
+                if (isFileExtensionAccepted(entry.name, acceptedFileExtensions)) {
+                    const filteredFileName = fileNameFilter(entry.name);
+                    zip.extractEntryTo(entry, uploadPath, false, true, false, filteredFileName);
+                    fileNames.push(filteredFileName);
+                    filePaths.push(path.join(uploadPath, filteredFileName));
+                    if (singleFileOnly) {
+                        break;
+                    }
+                }
+            }
+        } else if(isFileExtensionAccepted(files.name, acceptedFileExtensions)) {
+            const filteredFileName = fileNameFilter(files.name);
+            const fullPath = path.join(uploadPath, filteredFileName);
+            await files.mv(fullPath);
+            fileNames.push(filteredFileName);
+            filePaths.push(path.join(uploadPath, filteredFileName));
+        }
+
+        await Promise.all(promises);
+
+        return {fileNames: fileNames, filePaths: filePaths};
+    }
+
+    async removeData(path) {
+        await fileSystem.rm(path, { recursive: true, force: true }, (err) => {
             if (err) {
                 console.log(`Error deleting ${volume.rawData.name}: ${err}.`);
             }

@@ -596,11 +596,11 @@ actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, async (req, 
 });
 
 // Remove Volume
-actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/delete`, restrict, async (req, res) => {
-    console.log(`Deleting Volume ${req.params.volumeId}`);
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restrict, async (req, res) => {
+    console.log(`Deleting Volume ${req.params.idVolume}`);
     try {
-        await projectModel.removeVolume(req.params.projectId, req.params.volumeId);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.projectId);
+        await projectModel.removeVolume(req.params.idProject, req.params.idVolume);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         console.error("Error in creating volume:", err);
         res.status(500).send(err);
@@ -608,8 +608,8 @@ actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/delete`, restri
 });
 
 // Upload Raw Data
-actions.post(`/${projectsActionsPath}/:projectId/volume/:volumeId/upload-raw-data`, restrict, async (req, res) => {
-    console.log(`Uploading raw data for volume ${req.params.volumeId} (project id: ${req.params.projectId})`);
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-data`, restrict, async (req, res) => {
+    console.log(`Uploading raw data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
     try {
         if (!req.files || !req.files.files) {
             res.send({
@@ -617,8 +617,8 @@ actions.post(`/${projectsActionsPath}/:projectId/volume/:volumeId/upload-raw-dat
                 message: 'No file uploaded'
             });
         } else {
-            await projectModel.addRawVolume(req.params.projectId, req.params.volumeId, req.files.files);
-            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.projectId);
+            await projectModel.addRawVolume(req.params.idProject, req.params.idVolume, req.files.files);
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
         res.status(500).send(err);
@@ -626,39 +626,114 @@ actions.post(`/${projectsActionsPath}/:projectId/volume/:volumeId/upload-raw-dat
 });
 
 // Download Raw Data
-actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/raw-data`, restrict, async (req, res) => {
-    console.log(`Downloading raw data for volume ${req.params.volumeId} (project ${req.params.projectId})`);
-    const rawVolume = projectModel.getRawVolume(req.params.projectId, req.params.volumeId);
-    let data = projectModel.prepareDataForDownload(rawVolume);
-    res.set('Content-Type', 'application/zip');
-    res.set('Content-Disposition', 'attachment; filename=' + data.name);
-    res.send(data.zipBuffer);
-});
-
-// Delete Raw Data
-actions.get(`/${projectsActionsPath}/:projectId/volume/:volumeId/delete-raw-data`, restrict, async (req, res) => {
-    console.log(`Deleting raw data for volume ${req.params.volumeId} (project ${req.params.projectId})`);
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data`, restrict, async (req, res) => {
+    console.log(`Downloading raw data for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        await projectModel.removeRawVolume(req.params.projectId, req.params.volumeId);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.projectId);
+        const rawVolume = projectModel.getRawVolume(req.params.idProject, req.params.idVolume);
+        let data = projectModel.prepareDataForDownload(rawVolume);
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
     } catch (err) {
         res.status(500).send(err);
     }
 });
 
+// Delete Raw Data
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete-raw-data`, restrict, async (req, res) => {
+    console.log(`Deleting raw data for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    try {
+        await projectModel.removeRawVolume(req.params.idProject, req.params.idVolume);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
 
-// Create Sparse Labels
-// actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-sparse-labels`, restrict, async (req, res) => {
-// });
-//
-// // Upload Sparse Labels
-// actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-labels`, restrict, async (req, res) => {
-// });
-//
-// // Download Sparse Label
-// actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels`, restrict, async (req, res) => {
-// });
-//
-// // Delete Sparse Labels
-// actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/delete`, restrict, async (req, res) => {
-// });
+// Upload Sparse Labels
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-labels`, restrict, async (req, res) => {
+    console.log(`Uploading Sparse Data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
+    try {
+        if (!req.files || !req.files.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            await projectModel.addSparseLabeledVolumes(req.params.idProject, req.params.idVolume, req.files.files);
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Download Sparse Label
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/download`, restrict, async (req, res) => {
+    console.log(`Downloading sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    try {
+        const sparseLabeledVolume = projectModel
+            .getSparseLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idSparseLabels);
+        let data = projectModel.prepareDataForDownload(sparseLabeledVolume);
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Delete Sparse Labels
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/delete`, restrict, async (req, res) => {
+    console.log(`Deleting sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    try {
+        await projectModel.removeSparseLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idSparseLabels);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Upload Pseudo Labels
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-labels`, restrict, async (req, res) => {
+    console.log(`Uploading Sparse Data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
+    try {
+        if (!req.files || !req.files.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            await projectModel.addPseudoLabeledVolumes(req.params.idProject, req.params.idVolume, req.files.files);
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Download Pseudo Label
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels`, restrict, async (req, res) => {
+    console.log(`Downloading pseudo labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    try {
+        const pseudoLabeledVolume = projectModel
+            .getPseudoLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idPseudoLabels);
+        let data = projectModel.prepareDataForDownload(pseudoLabeledVolume);
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Delete Pseudo Labels
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels/delete`, restrict, async (req, res) => {
+    console.log(`Deleting sparse labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    try {
+        await projectModel.removePseudoLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idPseudoLabels);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});

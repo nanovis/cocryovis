@@ -2,7 +2,9 @@ import { IProjectModel } from "../i-project-model.mjs";
 import {Project} from "../project.mjs";
 import {Volume} from "../volume.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
-import fileSystem from "fs";
+import path from "path";
+import {SparseLabeledVolume} from "../sparse-labeled-volume.mjs";
+import {PseudoLabeledVolume} from "../pseudo-labeled-volume.mjs";
 
 export class LowdbProjectModel extends IProjectModel {
     constructor(config) {
@@ -107,5 +109,91 @@ export class LowdbProjectModel extends IProjectModel {
 
     async removeRawVolume(projectId, volumeId) {
         await super.removeRawVolume(Number(projectId), Number(volumeId));
+    }
+
+    getSparseLabeledVolume(projectId, volumeId, sparseLabeledVolumeId) {
+        return super.getSparseLabeledVolume(Number(projectId), Number(volumeId), Number(sparseLabeledVolumeId));
+    }
+
+    async addSparseLabeledVolumes(projectId, volumeId, files) {
+        projectId = Number(projectId);
+        volumeId = Number(volumeId);
+        const project = this.getById(projectId);
+        const volume = project.findVolume(volumeId);
+
+        let sparseLebeledVolumes = [];
+        let nextId = 1;
+        if (volume.sparseLabels.length > 0) {
+            nextId = volume.sparseLabels.at(-1).id + 1;
+        }
+
+        try {
+            const {fileNames, filePaths} = await this.saveData(files,
+                path.join(volume.path, this.volumeSubfolders.sparseLabels), [".raw"], false);
+            for (let i = 0; i < fileNames.length; i++) {
+                const newSparseLabeledVolume = SparseLabeledVolume
+                    .createSparseLabeledVolume(fileNames[i], filePaths[i]);
+                newSparseLabeledVolume.id = nextId;
+                nextId++;
+                sparseLebeledVolumes.push(newSparseLabeledVolume);
+            }
+        }
+        catch (error) {
+            throw error;
+        }
+
+        if (sparseLebeledVolumes.length === 0) {
+            throw new Error(`No valid files found.`);
+        }
+        volume.sparseLabels.push(...sparseLebeledVolumes);
+        await this.update(projectId, project);
+        console.log("Sparse Labeled Volumes successfully uploaded.");
+    }
+
+    async removeSparseLabeledVolume(projectId, volumeId, sparseLabeledVolumeId) {
+        await super.removeSparseLabeledVolume(Number(projectId), Number(volumeId), Number(sparseLabeledVolumeId));
+    }
+
+    getPseudoLabeledVolume(projectId, volumeId, pseudoLabeledVolumeId) {
+        return super.getPseudoLabeledVolume(Number(projectId), Number(volumeId), Number(pseudoLabeledVolumeId));
+    }
+
+    async addPseudoLabeledVolumes(projectId, volumeId, files) {
+        projectId = Number(projectId);
+        volumeId = Number(volumeId);
+        const project = this.getById(projectId);
+        const volume = project.findVolume(volumeId);
+
+        let pseudoLabeledVolumes = [];
+        let nextId = 1;
+        if (volume.pseudoLabels.length > 0) {
+            nextId = volume.pseudoLabels.at(-1).id + 1;
+        }
+
+        try {
+            const {fileNames, filePaths} = await this.saveData(files,
+                path.join(volume.path, this.volumeSubfolders.pseudoLabels), [".raw"], false);
+            for (let i = 0; i < fileNames.length; i++) {
+                const newPseudoLabeledVolume = PseudoLabeledVolume
+                    .createPseudoLabeledVolume(fileNames[i], filePaths[i]);
+                newPseudoLabeledVolume.id = nextId;
+                nextId++;
+                pseudoLabeledVolumes.push(newPseudoLabeledVolume);
+            }
+        }
+        catch (error) {
+            throw error;
+        }
+
+        if (pseudoLabeledVolumes.length === 0) {
+            throw new Error(`No valid files found.`);
+        }
+        volume.pseudoLabels.push(...pseudoLabeledVolumes);
+        await this.update(projectId, project);
+        console.log("Pseudo Labeled Volumes successfully uploaded.");
+    }
+
+    async removePseudoLabeledVolume(projectId, volumeId, pseudoLabeledVolumeId) {
+        await super.removePseudoLabeledVolume(Number(projectId), Number(volumeId), Number(pseudoLabeledVolumeId));
     }
 }
