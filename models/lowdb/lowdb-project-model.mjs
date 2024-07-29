@@ -6,6 +6,7 @@ import path from "path";
 import {SparseLabeledVolume} from "../sparse-labeled-volume.mjs";
 import {PseudoLabeledVolume} from "../pseudo-labeled-volume.mjs";
 import {Model} from "../model.mjs";
+import {saveData} from "../../tools/utils.mjs";
 
 export class LowdbProjectModel extends IProjectModel {
     constructor(config) {
@@ -29,22 +30,21 @@ export class LowdbProjectModel extends IProjectModel {
         return Project.fromReference(projectReference);
     }
 
-    async create(project) {
-        if (this.projects.length === 0) {
-            project.id = 1;
-        } else {
-            project.id = this.projects.at(-1).id + 1;
-        }
-
+    async create(name, description, userId) {
         try {
-            this.createProjectDirectory(project);
+            let newId = 1;
+            if (this.projects.length > 0) {
+                newId = this.projects.at(-1).id + 1;
+            }
+
+            const project = Project.createProject(newId, name, description, userId, this.config.path);
+
+            await this.db.update(({projects}) => projects.push(project))
+            return project.id;
         }
         catch (error) {
             throw error;
         }
-
-        await this.db.update(({projects}) => projects.push(project))
-        return project.id;
     }
 
     async update(id, project) {
@@ -58,9 +58,15 @@ export class LowdbProjectModel extends IProjectModel {
     async delete(id) {
         id = Number(id);
 
-        const project = this.getById(id);
-        this.removeProjectDirectory(project);
-        await this.projects.remove({ id }).write();
+        const index = this.projects.findIndex((p) => p.id === id);
+
+        if (index === -1) {
+            throw new Error(`Project ${id} does not exist.`);
+        }
+
+        const project = Project.fromReference(this.projects[index]);
+        await project.delete();
+        await this.db.update(({ projects }) => projects.splice(index, 1));
     }
 
     getVolume(projectId, volumeId) {
@@ -68,32 +74,32 @@ export class LowdbProjectModel extends IProjectModel {
     }
 
     async addVolume(projectId, name, description){
-        projectId = Number(projectId);
-
-        const volume = Volume.createVolume(name, description);
-        const project = this.getById(projectId);
-
-        if (!Object.hasOwn(project, 'volumes')) {
-            project.volumes = []
-        }
-
-        if (project.volumes.length === 0) {
-            volume.id = 1;
-        } else {
-            volume.id = project.volumes.at(-1).id + 1;
-        }
-
         try {
-            this.createVolumeDirectory(project, volume)
+            projectId = Number(projectId);
+
+            const project = this.getById(projectId);
+
+            if (!Object.hasOwn(project, 'volumes')) {
+                project.volumes = []
+            }
+
+            let newId = 1;
+
+            if (project.volumes.length > 0) {
+                newId = project.volumes.at(-1).id + 1;
+            }
+
+            const volume = Volume.createVolume(newId, name, description,
+                path.join(project.path, project.subfolders.volumes));
+
+            project.volumes.push(volume);
+
+            await this.update(projectId, project);
+            return volume.id;
         }
         catch (error) {
             throw error;
         }
-
-        project.volumes.push(volume);
-
-        await this.update(projectId, project);
-        return volume.id;
     }
 
     async removeVolume(projectId, volumeId){
@@ -122,31 +128,31 @@ export class LowdbProjectModel extends IProjectModel {
         const project = this.getById(projectId);
         const volume = project.findVolume(volumeId);
 
-        let sparseLebeledVolumes = [];
         let nextId = 1;
         if (volume.sparseLabels.length > 0) {
             nextId = volume.sparseLabels.at(-1).id + 1;
         }
 
+        let volumeAdded = false;
+
         try {
-            const {fileNames, filePaths} = await this.saveData(files,
-                path.join(volume.path, this.volumeSubfolders.sparseLabels), [".raw"], false);
+            const {fileNames, filePaths} = await saveData(files,
+                path.join(volume.path, volume.subfolders.sparseLabels), [".raw"], false);
             for (let i = 0; i < fileNames.length; i++) {
                 const newSparseLabeledVolume = SparseLabeledVolume
-                    .createSparseLabeledVolume(fileNames[i], filePaths[i]);
-                newSparseLabeledVolume.id = nextId;
+                    .createSparseLabeledVolume(nextId, fileNames[i], filePaths[i]);
                 nextId++;
-                sparseLebeledVolumes.push(newSparseLabeledVolume);
+                volume.addSparseLabel(newSparseLabeledVolume);
+                volumeAdded = true;
             }
         }
         catch (error) {
             throw error;
         }
 
-        if (sparseLebeledVolumes.length === 0) {
+        if (!volumeAdded) {
             throw new Error(`No valid files found.`);
         }
-        volume.sparseLabels.push(...sparseLebeledVolumes);
         await this.update(projectId, project);
         console.log("Sparse Labeled Volumes successfully uploaded.");
     }
@@ -165,31 +171,31 @@ export class LowdbProjectModel extends IProjectModel {
         const project = this.getById(projectId);
         const volume = project.findVolume(volumeId);
 
-        let pseudoLabeledVolumes = [];
         let nextId = 1;
         if (volume.pseudoLabels.length > 0) {
             nextId = volume.pseudoLabels.at(-1).id + 1;
         }
 
+        let volumeAdded = false;
+
         try {
-            const {fileNames, filePaths} = await this.saveData(files,
-                path.join(volume.path, this.volumeSubfolders.pseudoLabels), [".raw"], false);
+            const {fileNames, filePaths} = await saveData(files,
+                path.join(volume.path, volume.subfolders.pseudoLabels), [".raw"], false);
             for (let i = 0; i < fileNames.length; i++) {
                 const newPseudoLabeledVolume = PseudoLabeledVolume
-                    .createPseudoLabeledVolume(fileNames[i], filePaths[i]);
-                newPseudoLabeledVolume.id = nextId;
+                    .createPseudoLabeledVolume(nextId, fileNames[i], filePaths[i]);
+                volume.addPseudoLabel(newPseudoLabeledVolume);
                 nextId++;
-                pseudoLabeledVolumes.push(newPseudoLabeledVolume);
+                volumeAdded = true;
             }
         }
         catch (error) {
             throw error;
         }
 
-        if (pseudoLabeledVolumes.length === 0) {
+        if (!volumeAdded) {
             throw new Error(`No valid files found.`);
         }
-        volume.pseudoLabels.push(...pseudoLabeledVolumes);
         await this.update(projectId, project);
         console.log("Pseudo Labeled Volumes successfully uploaded.");
     }
@@ -203,32 +209,29 @@ export class LowdbProjectModel extends IProjectModel {
     }
 
     async addModel(projectId, name, description) {
-        projectId = Number(projectId);
-
-        const model = Model.createModel(name, description);
-        const project = this.getById(projectId);
-
-        if (!Object.hasOwn(project, 'models')) {
-            project.models = []
-        }
-
-        if (project.models.length === 0) {
-            model.id = 1;
-        } else {
-            model.id = project.models.at(-1).id + 1;
-        }
-
         try {
-            this.createModelDirectory(project, model)
+            projectId = Number(projectId);
+            const project = this.getById(projectId);
+            if (!Object.hasOwn(project, 'models')) {
+                project.models = []
+            }
+
+            let newId = 1;
+
+            if (project.models.length > 0) {
+                newId = project.models.at(-1).id + 1;
+            }
+
+            const model = Model.createModel(newId, name, description,
+                path.join(project.path, project.subfolders.models));
+
+            project.models.push(model);
+            await this.update(projectId, project);
+            return model.id;
         }
         catch (error) {
             throw error;
         }
-
-        project.models.push(model);
-
-        await this.update(projectId, project);
-        return model.id;
     }
 
     async removeModel(projectId, modelId) {

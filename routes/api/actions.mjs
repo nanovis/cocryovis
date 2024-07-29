@@ -11,7 +11,6 @@ import { NanoOetziHandler } from '../../tools/nano-oetzi-handler.mjs';
 import { restrict } from '../../middleware/restrict.mjs';
 import { ModelHandler } from '../../tools/model-handler.mjs';
 import * as fs from 'fs';
-import { Project } from '../../models/project.mjs';
 import { ModelFactory } from "../../models/model-factory.mjs";
 
 // Config
@@ -560,8 +559,7 @@ actions.get(`/${projectsActionsPath}/create-project`, restrict, (req, res) => {
 actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res) => {
     console.log('Creating a new project');
     try {
-        const project = Project.createProject(req.body.name, req.body.description, req.session.user.id);
-        await projectModel.create(project);
+        const project = await projectModel.create(req.body.name, req.body.description, req.session.user.id);
 
         console.log("Project successfully created.");
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + project.id);
@@ -630,7 +628,7 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data`, rest
     console.log(`Downloading raw data for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
         const rawVolume = projectModel.getRawVolume(req.params.idProject, req.params.idVolume);
-        let data = projectModel.prepareDataForDownload(rawVolume);
+        let data = rawVolume.prepareDataForDownload(rawVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
         res.send(data.zipBuffer);
@@ -674,7 +672,7 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:
     try {
         const sparseLabeledVolume = projectModel
             .getSparseLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idSparseLabels);
-        let data = projectModel.prepareDataForDownload(sparseLabeledVolume);
+        let data = sparseLabeledVolume.prepareDataForDownload(sparseLabeledVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
         res.send(data.zipBuffer);
@@ -713,12 +711,12 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-
 });
 
 // Download Pseudo Label
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels`, restrict, async (req, res) => {
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels/download`, restrict, async (req, res) => {
     console.log(`Downloading pseudo labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
         const pseudoLabeledVolume = projectModel
             .getPseudoLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idPseudoLabels);
-        let data = projectModel.prepareDataForDownload(pseudoLabeledVolume);
+        let data = pseudoLabeledVolume.prepareDataForDownload(pseudoLabeledVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
         res.send(data.zipBuffer);

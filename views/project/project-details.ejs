@@ -124,9 +124,9 @@
         <span id="statusPseudoLabels"></span>
     </form>
     <br />
-    <% for (const sparseLabeledVolume of volume.sparseLabels) { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse_labels/<%= sparseLabeledVolume.id %>/download"><%= sparseLabeledVolume.name %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse_labels/<%= sparseLabeledVolume.id %>/delete">[X]</a>
+    <% for (const pseudoLabeledVolume of volume.pseudoLabels) { %>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo_labels/<%= pseudoLabeledVolume.id %>/download"><%= pseudoLabeledVolume.name %></a> ...
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo_labels/<%= pseudoLabeledVolume.id %>/delete">[X]</a>
         <br />
     <% } %>
     <hr />

@@ -1,9 +1,3 @@
-import fileSystem from "fs";
-import {fileNameFilter} from "../tools/utils.mjs";
-import path from "path";
-import AdmZip from "adm-zip";
-import {RawData} from "./raw-data.mjs";
-
 export class IProjectModel {
     constructor(config) {
         if(this.constructor === IProjectModel) {
@@ -14,23 +8,6 @@ export class IProjectModel {
             throw new Error("Missing projects config");
         }
     }
-
-    subfolders = {
-        volumes: 'volumes',
-        models: 'models'
-    };
-
-    volumeSubfolders = {
-        rawData: 'raw-data',
-        sparseLabels: 'sparse-labels',
-        pseudoLabels: 'pseudo-labels',
-    };
-
-    modelSubfolders = {
-        checkpoints: 'checkpoints',
-        inferenceData: 'inference-data',
-        predictions: 'predictions',
-    };
 
     getUserProjects(userId) {
         throw new Error('Method not implemented');
@@ -52,28 +29,6 @@ export class IProjectModel {
         throw new Error('Method not implemented');
     }
 
-    createProjectDirectory(project) {
-        const projectFolder = project.id + "_" + fileNameFilter(project.name);
-        let projectPath = path.join(this.config.path, projectFolder)
-        project.path = projectPath;
-        if (fileSystem.existsSync(projectPath)) {
-            throw new Error(`Project directory already exists`);
-        }
-        fileSystem.mkdirSync(projectPath, { recursive: true });
-
-        for (const subfolder in this.subfolders) {
-            fileSystem.mkdirSync(path.join(projectPath, this.subfolders[subfolder]));
-        }
-    }
-
-    removeProjectDirectory(project) {
-        fileSystem.rm(project.path, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.log(`Error deleting ${project.name}: ${err}.`);
-            }
-        });
-    }
-
     getVolume(projectId, volumeId) {
         return this.getById(projectId).findVolume(volumeId);
     }
@@ -82,47 +37,18 @@ export class IProjectModel {
         throw new Error('Method not implemented');
     }
 
-    createVolumeDirectory(project, volume) {
-        const volumeFolder = volume.id + "_" + fileNameFilter(volume.name);
-        const volumePath = path.join(this.config.path, project.path, this.subfolders.volumes, volumeFolder);
-        volume.path = volumePath;
-        if (fileSystem.existsSync(volumePath)) {
-            throw new Error(`Volume directory already exists`);
-        }
-        fileSystem.mkdirSync(volumePath, {recursive: true});
-
-        for (const subfolder in this.volumeSubfolders) {
-            fileSystem.mkdirSync(path.join(volumePath, this.volumeSubfolders[subfolder]));
-        }
-    }
-
     async removeVolume(projectId, volumeId){
-        const project = this.getById(projectId);
-        const volume = project.findVolume(volumeId);
-
-        if (volume === undefined){
-            throw new Error(`Volume does not exists`);
-        }
-
         try {
-            this.removeVolumeDirectory(volume);
+            const project = this.getById(projectId);
+
+            await project.removeVolume(volumeId);
+
+            await this.update(projectId, project);
+            console.log(`Volume ${volumeId} successfully deleted.`);
         }
         catch (error) {
             throw error;
         }
-
-        project.removeVolume(volume.id);
-
-        await this.update(projectId, project);
-        console.log(`Volume ${volume.name} (Id: ${volume.id}) successfully deleted.`);
-    }
-
-    removeVolumeDirectory(volume) {
-        fileSystem.rm(volume.path, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.log(`Error deleting ${volume.name}: ${err}.`);
-            }
-        });
     }
 
     getRawVolume(projectId, volumeId) {
@@ -133,43 +59,34 @@ export class IProjectModel {
         if (Array.isArray(file)) {
             throw new Error(`Raw data has to consist of a single file only.`);
         }
-        const project = this.getById(projectId);
-        const volume = project.findVolume(volumeId);
-
-        let rawData = null;
 
         try {
-            const {fileNames, filePaths} = await this.saveData(file,
-                path.join(volume.path, this.volumeSubfolders.rawData), [".raw"], true);
-            if (fileNames.length >= 0) {
-                rawData = new RawData(fileNames[0], filePaths[0]);
-            }
+            const project = this.getById(projectId);
+            const volume = project.findVolume(volumeId);
+
+            await volume.addRawData(file);
+
+            await this.update(projectId, project);
+            console.log("Raw Data successfully uploaded.");
+        }
+        catch(error) {
+            throw error;
+        }
+    }
+
+    async removeRawVolume(projectId, volumeId) {
+        try {
+            const project = this.getById(projectId);
+            const volume = project.findVolume(volumeId);
+
+            await volume.removeRawData();
+
+            await this.update(projectId, project);
+            console.log("Raw Data successfully deleted.");
         }
         catch (error) {
             throw error;
         }
-
-        if (rawData == null) {
-            throw new Error(`No valid raw file found.`);
-        }
-        volume.rawData = rawData;
-        await this.update(projectId, project);
-        console.log("Raw Data successfully uploaded.");
-    }
-
-    async removeRawVolume(projectId, volumeId) {
-        const project = this.getById(projectId);
-        const volume = project.findVolume(volumeId);
-
-        if(!volume.rawData) {
-            throw new Error(`Volume ${volume.name} has no raw data.`);
-        }
-
-        await this.removeData(volume.rawData.path);
-
-        volume.rawData = null;
-        await this.update(projectId, project);
-        console.log("Raw Data successfully deleted.");
     }
 
     getSparseLabeledVolume(projectId, volumeId, sparseLabeledVolumeId) {
@@ -183,15 +100,9 @@ export class IProjectModel {
     async removeSparseLabeledVolume(projectId, volumeId, sparseLabeledVolumeId) {
         const project = this.getById(projectId);
         const volume = project.findVolume(volumeId);
-        const sparseLabeledVolume = volume.findSparseLabel(sparseLabeledVolumeId);
 
-        if(!sparseLabeledVolume) {
-            throw new Error(`Sparse labeled volume ${sparseLabeledVolumeId} does not exist in volume ${volume.name}.`);
-        }
+        await volume.removeSparseLabel(sparseLabeledVolumeId);
 
-        await this.removeData(sparseLabeledVolume.path);
-
-        volume.removeSparseLabel(sparseLabeledVolumeId);
         await this.update(projectId, project);
         console.log(`Sparse labeled volume ${sparseLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
     }
@@ -207,15 +118,9 @@ export class IProjectModel {
     async removePseudoLabeledVolume(projectId, volumeId, pseudoLabeledVolumeId) {
         const project = this.getById(projectId);
         const volume = project.findVolume(volumeId);
-        const pseudoLabeledVolume = volume.findPseudoLabel(pseudoLabeledVolumeId);
 
-        if(!pseudoLabeledVolume) {
-            throw new Error(`Pseudo labeled volume ${pseudoLabeledVolumeId} does not exist in volume ${volume.name}.`);
-        }
+        await volume.removePseudoLabel(pseudoLabeledVolumeId);
 
-        await this.removeData(pseudoLabeledVolume.path);
-
-        volume.removePseudoLabel(pseudoLabeledVolumeId);
         await this.update(projectId, project);
         console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
     }
@@ -228,117 +133,16 @@ export class IProjectModel {
         throw new Error('Method not implemented');
     }
 
-    createModelDirectory(project, model) {
-        const folderName = model.id + "_" + fileNameFilter(model.name);
-        const folderPath = path.join(this.config.path, project.path, this.subfolders.models, folderName);
-        model.path = folderPath;
-        if (fileSystem.existsSync(folderPath)) {
-            throw new Error(`Model directory already exists`);
-        }
-        fileSystem.mkdirSync(folderPath, {recursive: true});
-
-        for (const subfolder in this.modelSubfolders) {
-            fileSystem.mkdirSync(path.join(folderPath, this.modelSubfolders[subfolder]));
-        }
-    }
-
     async removeModel(projectId, modelId) {
-        const project = this.getById(projectId);
-        const model = project.findModel(modelId);
-
-        if (model === undefined){
-            throw new Error(`Model does not exists`);
-        }
-
         try {
-            this.removeModelDirectory(model);
+            const project = this.getById(projectId);
+
+            await project.removeModel(modelId);
+            await this.update(projectId, project);
+            console.log(`Model ${modelId} successfully deleted.`);
         }
         catch (error) {
             throw error;
         }
-
-        project.removeModel(model.id);
-
-        await this.update(projectId, project);
-        console.log(`Model ${model.name} (Id: ${model.id}) successfully deleted.`);
-    }
-
-    removeModelDirectory(model) {
-        fileSystem.rm(model.path, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.log(`Error deleting ${model.name}: ${err}.`);
-            }
-        });
-    }
-
-    async saveData(files, uploadPath, acceptedFileExtensions = [], singleFileOnly = false) {
-        function isFileExtensionAccepted(filename, acceptedFileExtensions) {
-            return acceptedFileExtensions.length === 0 || acceptedFileExtensions.some(extension => filename.endsWith(extension));
-        }
-
-        const fileNames = [];
-        const filePaths = [];
-
-        const promises = [];
-
-        if (!fileSystem.existsSync(uploadPath)) {
-            fileSystem.mkdirSync(uploadPath, { recursive: true });
-        }
-        if (Array.isArray(files)) {
-            for (const file of files) {
-                if (isFileExtensionAccepted(file.name, acceptedFileExtensions)) {
-                    const filteredFileName = fileNameFilter(file.name);
-                    const fullPath = path.join(uploadPath, filteredFileName);
-                    fileNames.push(filteredFileName);
-                    filePaths.push(fullPath);
-                    promises.push(file.mv(fullPath));
-                    if (singleFileOnly) {
-                        break;
-                    }
-                }
-            }
-        } else if (files.name.endsWith('.zip')) {
-            let zip = new AdmZip(files.data);
-            const zipEntries = zip.getEntries();
-            for (const entry of zipEntries) {
-                if (isFileExtensionAccepted(entry.name, acceptedFileExtensions)) {
-                    const filteredFileName = fileNameFilter(entry.name);
-                    zip.extractEntryTo(entry, uploadPath, false, true, false, filteredFileName);
-                    fileNames.push(filteredFileName);
-                    filePaths.push(path.join(uploadPath, filteredFileName));
-                    if (singleFileOnly) {
-                        break;
-                    }
-                }
-            }
-        } else if(isFileExtensionAccepted(files.name, acceptedFileExtensions)) {
-            const filteredFileName = fileNameFilter(files.name);
-            const fullPath = path.join(uploadPath, filteredFileName);
-            await files.mv(fullPath);
-            fileNames.push(filteredFileName);
-            filePaths.push(path.join(uploadPath, filteredFileName));
-        }
-
-        await Promise.all(promises);
-
-        return {fileNames: fileNames, filePaths: filePaths};
-    }
-
-    async removeData(path) {
-        await fileSystem.rm(path, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.log(`Error deleting ${volume.rawData.name}: ${err}.`);
-            }
-        });
-    }
-
-    prepareDataForDownload(downloadable) {
-        const zip = new AdmZip();
-        zip.addLocalFile(downloadable.path);
-        const outputFileName = path.parse(downloadable.path).name;
-        return {
-            name: `${outputFileName}.zip`,
-            zipBuffer: zip.toBuffer()
-        };
     }
 }
