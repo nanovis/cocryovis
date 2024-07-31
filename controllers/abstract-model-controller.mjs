@@ -1,6 +1,6 @@
 // export class IModelModel {
 //     constructor(config) {
-//         if(this.constructor === IProjectModel) {
+//         if(this.constructor === AbstractProjectController) {
 //             throw new Error("Class is of abstract type and can't be instantiated");
 //         }
 //         this.config = config;

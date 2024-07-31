@@ -1,8 +1,8 @@
 import {readFileSync} from "fs";
 
-export class IModel {
+export class AbstractController {
     constructor() {
-        if (this.constructor === IModel) {
+        if (this.constructor === AbstractController) {
             throw new Error("Class is of abstract type and can't be instantiated");
         }
         try {

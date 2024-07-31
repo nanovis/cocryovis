@@ -1,13 +1,13 @@
-import {Volume} from "../volume.mjs";
+import {Volume} from "../../models/volume.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import path from "path";
-import {SparseLabeledVolume} from "../sparse-labeled-volume.mjs";
-import {PseudoLabeledVolume} from "../pseudo-labeled-volume.mjs";
+import {SparseLabeledVolume} from "../../models/sparse-labeled-volume.mjs";
+import {PseudoLabeledVolume} from "../../models/pseudo-labeled-volume.mjs";
 import {saveData} from "../../tools/utils.mjs";
-import {IVolumeModel} from "../i-volume-model.mjs";
+import {AbstractVolumeController} from "../abstract-volume-controller.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
 
-class LowdbVolumeModel extends IVolumeModel {
+class LowdbVolumeController extends AbstractVolumeController {
     constructor() {
         super();
         this.db = LowdbManager.db;
@@ -207,6 +207,6 @@ class LowdbVolumeModel extends IVolumeModel {
     }
 }
 
-const lowdbVolumeModelInstance = LowdbVolumeModel.getInstance();
+const lowdbVolumeControllerInstance = LowdbVolumeController.getInstance();
 
-export default lowdbVolumeModelInstance;
+export default lowdbVolumeControllerInstance;

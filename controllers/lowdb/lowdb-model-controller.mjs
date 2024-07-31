@@ -1,4 +1,4 @@
-// import { IProjectModel } from "../i-project-model.mjs";
+// import { AbstractProjectController } from "../abstract-project-controller.mjs";
 // import {Project} from "../project.mjs";
 // import {Volume} from "../volume.mjs";
 // import LowdbManager from "../../tools/lowdb-manager.mjs";
@@ -8,7 +8,7 @@
 // import {Model} from "../model.mjs";
 // import {saveData} from "../../tools/utils.mjs";
 //
-// export class LowdbProjectModel extends IProjectModel {
+// export class LowdbProjectModel extends AbstractProjectController {
 //     constructor(config) {
 //         super(config);
 //         this.db = LowdbManager.db;

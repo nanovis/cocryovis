@@ -1,9 +1,9 @@
-import { IProjectModel } from "../i-project-model.mjs";
-import {Project} from "../project.mjs";
+import {AbstractProjectController} from "../abstract-project-controller.mjs";
+import {Project} from "../../models/project.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
 
-class LowdbProjectModel extends IProjectModel {
+class LowdbProjectController extends AbstractProjectController {
     constructor() {
         super();
         this.db = LowdbManager.db;
@@ -112,6 +112,6 @@ class LowdbProjectModel extends IProjectModel {
     }
 }
 
-const lowdbProjectModelInstance = LowdbProjectModel.getInstance();
+const lowdbProjectControllerInstance = LowdbProjectController.getInstance();
 
-export default lowdbProjectModelInstance;
+export default lowdbProjectControllerInstance;

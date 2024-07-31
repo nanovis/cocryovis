@@ -1,10 +1,9 @@
-import {IModel} from "./i-model.mjs";
-import {Volume} from "./volume.mjs";
+import {AbstractController} from "./abstract-controller.mjs";
 
-export class IVolumeModel extends IModel {
+export class AbstractVolumeController extends AbstractController {
     constructor() {
         super();
-        if(this.constructor === IVolumeModel) {
+        if(this.constructor === AbstractVolumeController) {
             throw new Error("Class is of abstract type and can't be instantiated");
         }
     }
