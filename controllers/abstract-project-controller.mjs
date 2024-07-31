@@ -1,4 +1,5 @@
 import {AbstractController} from "./abstract-controller.mjs";
+import globalEventEmitter from "../tools/global-event-system.mjs";
 
 export class AbstractProjectController extends AbstractController {
     constructor() {
@@ -6,6 +7,12 @@ export class AbstractProjectController extends AbstractController {
         if(this.constructor === AbstractProjectController) {
             throw new Error("Class is of abstract type and can't be instantiated");
         }
+        globalEventEmitter.on('volumeCreated', async (volume) => {
+            await this.onVolumeCreated(volume);
+        });
+        globalEventEmitter.on('volumeDeleted', async (volume) => {
+            await this.onVolumeDeleted(volume);
+        });
     }
 
     getAllProjects() {
@@ -34,5 +41,35 @@ export class AbstractProjectController extends AbstractController {
 
     async delete(id) {
         throw new Error('Method not implemented');
+    }
+
+    async addVolume(projectId, volumeId) {
+        const project = this.getById(projectId);
+        project.addVolume(volumeId);
+        await this.update(project);
+    }
+
+    async removeVolume(projectId, volumeId) {
+        const project = this.getById(projectId);
+        project.removeVolume(volumeId);
+        await this.update(project);
+    }
+
+    async onVolumeCreated(volume) {
+        for (const projectId of volume.projectIds) {
+            const project = this.getById(projectId);
+            project.addVolume(volume.id);
+            await this.update(project);
+        }
+    }
+
+    async onVolumeDeleted(volume) {
+        const projects = this.getByIds(volume.projectIds);
+        for (const project of projects) {
+            if (project.volumeIds.includes(volume.id)) {
+                await this.removeVolume(project.id, volume.id);
+                await this.update(project);
+            }
+        }
     }
 }

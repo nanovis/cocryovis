@@ -1,9 +1,5 @@
 import {Volume} from "../../models/volume.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
-import path from "path";
-import {SparseLabeledVolume} from "../../models/sparse-labeled-volume.mjs";
-import {PseudoLabeledVolume} from "../../models/pseudo-labeled-volume.mjs";
-import {saveData} from "../../tools/utils.mjs";
 import {AbstractVolumeController} from "../abstract-volume-controller.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
 
@@ -12,9 +8,6 @@ class LowdbVolumeController extends AbstractVolumeController {
         super();
         this.db = LowdbManager.db;
         this.volumes = this.db.data.volumes;
-        globalEventEmitter.on('projectDeleted', async (project) => {
-            await this.onProjectDeleted(project);
-        });
         Object.preventExtensions(this);
     }
 
@@ -86,30 +79,13 @@ class LowdbVolumeController extends AbstractVolumeController {
         await this.db.update(({ volumes }) => volumes.splice(index, 1));
     }
 
-    async onProjectDeleted(project) {
-        const volumes = this.getByIds(project.volumeIds);
-        for (const volume in volumes) {
-            if (project.id in volume.projectIds) {
-                await this.removeProject(volume.id, project.id);
-            }
-        }
-    }
-
     async addProject(volumeId, projectId) {
-        const volume = this.getById(volumeId);
-        volume.addProject(projectId);
-        await this.update(volume);
+        await super.addProject(Number(volumeId), Number(projectId));
     }
 
     async removeProject(volumeId, projectId) {
-        const volume = this.getById(volumeId);
-        volume.removeProject(projectId);
-        if (volume.projectIds.length === 0) {
-            await this.delete(volume.id);
-        }
-        else {
-            await this.update(volume);
-        }
+        await super.removeProject(Number(volumeId), Number(projectId));
+
     }
 
     getRawVolume(volumeId) {

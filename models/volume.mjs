@@ -81,7 +81,7 @@ export class Volume {
         }
 
         return new Volume(dbVolume.id, dbVolume.name, dbVolume.description, dbVolume.userId,
-            dbVolume.path, rawData, sparseLabeledVolume, pseudoLabeledVolume);
+            dbVolume.path, rawData, sparseLabeledVolume, pseudoLabeledVolume, dbVolume.projectIds);
     }
 
     addProject(projectId) {

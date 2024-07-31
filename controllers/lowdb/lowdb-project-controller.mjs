@@ -8,12 +8,6 @@ class LowdbProjectController extends AbstractProjectController {
         super();
         this.db = LowdbManager.db;
         this.projects = this.db.data.projects;
-        globalEventEmitter.on('volumeCreated', async (volume) => {
-            await this.onVolumeCreated(volume);
-        });
-        globalEventEmitter.on('volumeDeleted', async (volume) => {
-            await this.onVolumeDeleted(volume);
-        });
         Object.preventExtensions(this);
     }
 
@@ -81,34 +75,12 @@ class LowdbProjectController extends AbstractProjectController {
         await this.db.update(({ projects }) => projects.splice(index, 1));
     }
 
-    async onVolumeCreated(volume) {
-        for (const projectId of volume.projectIds) {
-            const project = this.getById(projectId);
-            project.addVolume(volume.id);
-            await this.update(project);
-        }
-    }
-
-    async onVolumeDeleted(volume) {
-        const projects = this.getByIds(volume.projectIds);
-        for (const project in projects) {
-            if (volume.id in project.volumeIds) {
-                await this.removeVolume(project.id, volume.id);
-                await this.update(project);
-            }
-        }
-    }
-
     async addVolume(projectId, volumeId) {
-        const project = this.getById(projectId);
-        project.addVolume(volumeId);
-        await this.update(project);
+        await super.addVolume(Number(projectId), Number(volumeId));
     }
 
     async removeVolume(projectId, volumeId) {
-        const project = this.getById(projectId);
-        project.removeVolume(volumeId);
-        await this.update(project);
+        await super.removeVolume(Number(projectId), Number(volumeId))
     }
 }
 
