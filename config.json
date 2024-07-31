@@ -19,7 +19,8 @@
         "path": "../models/"
     },
     "projects": {
-        "path": "../projects/"
+        "projectsPath": "../database/projects/",
+        "volumesPath": "../database/volumes/"
     },
     "db": {
         "type": "lowdb",

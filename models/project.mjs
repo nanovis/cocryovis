@@ -1,23 +1,20 @@
-import {Volume} from "./volume.mjs";
-import {Model} from "./model.mjs";
 import {fileNameFilter} from "../tools/utils.mjs";
 import path from "path";
 import fileSystem from "fs";
 
 export class Project {
-    subfolders = {
-        volumes: 'volumes',
-        models: 'models'
+    static subfolders = {
+        // volumes: 'volumes',
+        // models: 'models'
     };
 
-    constructor(id, name, description, userId, path = "", volumes = [], models = []) {
+    constructor(id, name, description, userId, path = "", volumeIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.userId = userId;
         this.path = path;
-        this.volumes = volumes;
-        this.models = models;
+        this.volumeIds = volumeIds;
         Object.preventExtensions(this);
     }
 
@@ -36,22 +33,23 @@ export class Project {
         }
         fileSystem.mkdirSync(projectPath, { recursive: true });
 
-        for (const subfolder in this.subfolders) {
-            fileSystem.mkdirSync(path.join(projectPath, this.subfolders[subfolder]));
+        for (const subfolder in Project.subfolders) {
+            fileSystem.mkdirSync(path.join(projectPath, Project.subfolders[subfolder]));
         }
     }
 
+    addVolume(volumeId) {
+        if (!this.volumeIds.includes(volumeId)) {
+            this.volumeIds.push(volumeId);
+        }
+    }
+
+    removeVolume(volumeId) {
+        const index = this.volumeIds.indexOf(volumeId);
+        this.volumeIds.splice(index, 1);
+    }
+
     async delete() {
-        if (this.volumes) {
-            for (const volume of this.volumes) {
-                await volume.delete();
-            }
-        }
-        if (this.models) {
-            for (const model of this.models) {
-                await model.delete();
-            }
-        }
         await fileSystem.rm(this.path, { recursive: true, force: true }, (err) => {
             if (err) {
                 console.log(`Error deleting ${this.name}: ${err}.`);
@@ -60,47 +58,7 @@ export class Project {
     }
 
     static fromReference(dbProject) {
-        const volumes = [];
-        if (dbProject.volumes) {
-            for (const volume of dbProject.volumes) {
-                volumes.push(Volume.fromReference(volume));
-            }
-        }
-        const models = []
-        if (dbProject.models) {
-            for (const model of dbProject.models) {
-                models.push(Model.fromReference(model));
-            }
-        }
         return new Project(dbProject.id, dbProject.name, dbProject.description,
-            dbProject.userId, dbProject.path, volumes, models);
-    }
-
-    findVolume(volumeId) {
-        return this.volumes.find(volume => volume.id === volumeId);
-    }
-
-    async removeVolume(volumeId) {
-        const volumeIndex = this.volumes.findIndex(volume => volume.id === volumeId);
-        if (volumeIndex === -1){
-            throw new Error(`Volume does not exists`);
-        }
-        const volume = this.volumes[volumeIndex];
-        this.volumes.splice(volumeIndex, 1);
-        await volume.delete();
-    }
-
-    findModel(modelId) {
-        return this.models.find(model => model.id === modelId);
-    }
-
-    async removeModel(modelId) {
-        const index = this.models.findIndex(model => model.id === modelId);
-        if (index === -1){
-            throw new Error(`Model does not exists`);
-        }
-        const model = this.models[index];
-        this.models.splice(index, 1);
-        await model.delete();
+            dbProject.userId, dbProject.path, dbProject.volumeIds);
     }
 }

@@ -23,7 +23,8 @@ const db = DatabaseManager.db;
 const models = db.data.models;
 const modelHandler = new ModelHandler(config.models, models);
 
-const projectModel = ModelFactory.createProjectModel(config.db.type, config.projects);
+const projectModel = ModelFactory.createProjectModel(config.db.type);
+const volumeModel = ModelFactory.createVolumeModel(config.db.type);
 
 export const actions = express.Router();
 
@@ -544,7 +545,8 @@ actions.get(`/${projectsActionsPath}/`, restrict, (req, res) => {
 actions.get(`/${projectsActionsPath}/details/:id`, restrict, (req, res) => {
     try {
         const project = projectModel.getById(req.params.id);
-        res.render('project-details', { project: project });
+        const volumes = volumeModel.getByIds(project.volumeIds);
+        res.render('project-details', { project: project, volumes: volumes });
     } catch (err) {
         res.status(500).send(err);
     }
@@ -559,10 +561,10 @@ actions.get(`/${projectsActionsPath}/create-project`, restrict, (req, res) => {
 actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res) => {
     console.log('Creating a new project');
     try {
-        const project = await projectModel.create(req.body.name, req.body.description, req.session.user.id);
+        const projectId = await projectModel.create(req.body.name, req.body.description, req.session.user.id);
 
         console.log("Project successfully created.");
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + project.id);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${projectId}`);
     } catch (err) {
         console.error("Error in creating project:", err);
         res.status(500).send(err);
@@ -573,6 +575,7 @@ actions.post(`/${projectsActionsPath}/create-project`, restrict, async (req, res
 actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, async (req, res) => {
     try {
         await projectModel.delete(req.params.id);
+
         res.redirect(`/api/actions/${projectsActionsPath}/`);
     } catch (err) {
         res.status(500).send(err);
@@ -583,10 +586,10 @@ actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, async (req, 
 actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, async (req, res) => {
     console.log('Creating a new volume');
     try {
-        await projectModel.addVolume(req.params.id, req.body.name, req.body.description);
+        await volumeModel.create(req.body.name, req.body.description, req.session.user.id, req.params.id);
 
         console.log("Volume successfully created.");
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.id);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.id}`);
     } catch (err) {
         console.error("Error in creating volume:", err);
         res.status(500).send(err);
@@ -597,8 +600,9 @@ actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, async (req, 
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restrict, async (req, res) => {
     console.log(`Deleting Volume ${req.params.idVolume}`);
     try {
-        await projectModel.removeVolume(req.params.idProject, req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        await volumeModel.delete(req.params.idVolume);
+
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
     } catch (err) {
         console.error("Error in creating volume:", err);
         res.status(500).send(err);
@@ -607,7 +611,7 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restri
 
 // Upload Raw Data
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-data`, restrict, async (req, res) => {
-    console.log(`Uploading raw data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
+    console.log(`Uploading raw data for volume ${req.params.idVolume}`);
     try {
         if (!req.files || !req.files.files) {
             res.send({
@@ -615,7 +619,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-dat
                 message: 'No file uploaded'
             });
         } else {
-            await projectModel.addRawVolume(req.params.idProject, req.params.idVolume, req.files.files);
+            await volumeModel.addRawVolume(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -625,9 +629,9 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-dat
 
 // Download Raw Data
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data`, restrict, async (req, res) => {
-    console.log(`Downloading raw data for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
     try {
-        const rawVolume = projectModel.getRawVolume(req.params.idProject, req.params.idVolume);
+        const rawVolume = volumeModel.getRawVolume(req.params.idVolume);
         let data = rawVolume.prepareDataForDownload(rawVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
@@ -639,9 +643,9 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data`, rest
 
 // Delete Raw Data
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete-raw-data`, restrict, async (req, res) => {
-    console.log(`Deleting raw data for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+    console.log(`Deleting raw data for volume ${req.params.idVolume}`);
     try {
-        await projectModel.removeRawVolume(req.params.idProject, req.params.idVolume);
+        await volumeModel.removeRawVolume(req.params.idVolume);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
@@ -658,7 +662,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-
                 message: 'No file uploaded'
             });
         } else {
-            await projectModel.addSparseLabeledVolumes(req.params.idProject, req.params.idVolume, req.files.files);
+            await volumeModel.addSparseLabeledVolumes(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -670,8 +674,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/download`, restrict, async (req, res) => {
     console.log(`Downloading sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        const sparseLabeledVolume = projectModel
-            .getSparseLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idSparseLabels);
+        const sparseLabeledVolume = volumeModel.getSparseLabeledVolume(req.params.idVolume, req.params.idSparseLabels);
         let data = sparseLabeledVolume.prepareDataForDownload(sparseLabeledVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
@@ -685,7 +688,7 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/delete`, restrict, async (req, res) => {
     console.log(`Deleting sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        await projectModel.removeSparseLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idSparseLabels);
+        await volumeModel.removeSparseLabeledVolume(req.params.idVolume, req.params.idSparseLabels);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
@@ -702,7 +705,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-
                 message: 'No file uploaded'
             });
         } else {
-            await projectModel.addPseudoLabeledVolumes(req.params.idProject, req.params.idVolume, req.files.files);
+            await volumeModel.addPseudoLabeledVolumes(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -714,8 +717,8 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels/download`, restrict, async (req, res) => {
     console.log(`Downloading pseudo labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        const pseudoLabeledVolume = projectModel
-            .getPseudoLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idPseudoLabels);
+        const pseudoLabeledVolume = volumeModel
+            .getPseudoLabeledVolume(req.params.idVolume, req.params.idPseudoLabels);
         let data = pseudoLabeledVolume.prepareDataForDownload(pseudoLabeledVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
@@ -729,35 +732,35 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels/delete`, restrict, async (req, res) => {
     console.log(`Deleting sparse labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        await projectModel.removePseudoLabeledVolume(req.params.idProject, req.params.idVolume, req.params.idPseudoLabels);
+        await volumeModel.removePseudoLabeledVolume(req.params.idVolume, req.params.idPseudoLabels);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
     }
 });
 
-// Create New Model
-actions.post(`/${projectsActionsPath}/:id/create-model`, restrict, async (req, res) => {
-    console.log('Creating a new model');
-    try {
-        await projectModel.addModel(req.params.id, req.body.name, req.body.description);
-
-        console.log("Model successfully created.");
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.id);
-    } catch (err) {
-        console.error("Error in creating volume:", err);
-        res.status(500).send(err);
-    }
-});
-
-// Remove Volume
-actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, async (req, res) => {
-    console.log(`Deleting Model ${req.params.idModel}`);
-    try {
-        await projectModel.removeModel(req.params.idProject, req.params.idModel);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        console.error("Error in creating model:", err);
-        res.status(500).send(err);
-    }
-});
+// // Create New Model
+// actions.post(`/${projectsActionsPath}/:id/create-model`, restrict, async (req, res) => {
+//     console.log('Creating a new model');
+//     try {
+//         await projectModel.addModel(req.params.id, req.body.name, req.body.description);
+//
+//         console.log("Model successfully created.");
+//         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.id);
+//     } catch (err) {
+//         console.error("Error in creating volume:", err);
+//         res.status(500).send(err);
+//     }
+// });
+//
+// // Remove Model
+// actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, async (req, res) => {
+//     console.log(`Deleting Model ${req.params.idModel}`);
+//     try {
+//         await projectModel.removeModel(req.params.idProject, req.params.idModel);
+//         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+//     } catch (err) {
+//         console.error("Error in creating model:", err);
+//         res.status(500).send(err);
+//     }
+// });

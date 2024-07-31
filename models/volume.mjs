@@ -6,25 +6,28 @@ import path from "path";
 import fileSystem from "fs";
 
 export class Volume {
-    subfolders = {
+    static subfolders = {
         rawData: 'raw-data',
         sparseLabels: 'sparse-labels',
         pseudoLabels: 'pseudo-labels',
     };
 
-    constructor(id, name, description, path = "", rawData = null, sparseLabels = [], pseudoLabels = []) {
+    constructor(id, name, description, userId, path = "", rawData = null, sparseLabels = [], pseudoLabels = [], projectIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.userId = userId;
         this.path = path;
         this.rawData = rawData;
         this.sparseLabels = sparseLabels;
         this.pseudoLabels = pseudoLabels;
+        this.projectIds = projectIds;
         Object.preventExtensions(this);
     }
 
-    static createVolume(id, name, description, basePath) {
-        const volume = new Volume(id, name, description);
+    static createVolume(id, name, description, userId, projectId, basePath) {
+        const volume = new Volume(id, name, description, userId);
+        volume.addProject(projectId);
         volume.createDirectory(basePath);
         return volume;
     }
@@ -38,8 +41,8 @@ export class Volume {
         }
         fileSystem.mkdirSync(volumePath, {recursive: true});
 
-        for (const subfolder in this.subfolders) {
-            fileSystem.mkdirSync(path.join(volumePath, this.subfolders[subfolder]));
+        for (const subfolder in Volume.subfolders) {
+            fileSystem.mkdirSync(path.join(volumePath, Volume.subfolders[subfolder]));
         }
     }
 
@@ -80,13 +83,24 @@ export class Volume {
             pseudoLabels.push(PseudoLabeledVolume.fromReference(pseudoLabel));
         }
 
-        return new Volume(dbVolume.id, dbVolume.name, dbVolume.description,
+        return new Volume(dbVolume.id, dbVolume.name, dbVolume.description, dbVolume.userId,
             dbVolume.path, rawData, sparseLabels, pseudoLabels);
+    }
+
+    addProject(projectId) {
+        if (!this.projectIds.includes(projectId)) {
+            this.projectIds.push(projectId);
+        }
+    }
+
+    removeProject(projectId) {
+        const index = this.projectIds.indexOf(projectId);
+        this.projectIds.splice(index, 1);
     }
 
     async addRawData(file) {
         try {
-            this.rawData = await RawData.createRawData(file, path.join(this.path, this.subfolders.rawData));
+            this.rawData = await RawData.createRawData(file, path.join(this.path, Volume.subfolders.rawData));
         }
         catch (error) {
             throw error;

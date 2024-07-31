@@ -65,13 +65,13 @@
     <input type="submit" value="Add" />
 </form>
 <hr />
-<% for (const volume of project.volumes) { %>
+<% for (const volume of volumes) { %>
     <p>
         <b>Volume:</b> <%= volume.name %>
         <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a>
     </p>
     <h4>Raw Data:</h4>
-    <% if (Object.hasOwn(volume, 'rawData') && volume.rawData == null) { %>
+    <% if (!Object.hasOwn(volume, 'rawData') || volume.rawData == null) { %>
         <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
             <label for="file">Select Raw Data:</label>
             <input type="file" id="rawDataFiles" name="files" accept="application/zip,.raw">
@@ -133,29 +133,6 @@
 <% } %>
 <br />
 <hr />
-<hr />
-<br />
-<h3 style="text-align: left">Models:</h3>
-<button id="createModelToggle" onClick="(() => {
-    const disp = document.getElementById('createVolume').style.display;
-    document.getElementById('createModel').style.display = disp === 'block' ? 'none' : 'block';
-    document.getElementById('createModelToggle').textContent = disp === 'block' ? 'Add New Model &darr;' : 'Add New Model &uarr;';
-    })()">Add New Model &darr;</button>
-<form id="createModel" style="display: none" action="/api/actions/projects/<%= project.id %>/create-model" method="post" enctype="multipart/form-data">
-    <label for="name">Model name:</label>
-    <input type="text" name="name" /> <br />
-    <br />
-    <label for="description">Model description:</label>
-    <textarea name="description" rows="4" cols="25"></textarea>
-    <input type="submit" value="Add" />
-</form>
-<% for (const model of project.models) { %>
-    <p>
-        <b>Model:</b> <%= model.name %>
-        <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/delete">[X]</a>
-    </p>
-<% } %>
-<br />
-<br />
+
 <hr />
 <%- include('foot') -%>

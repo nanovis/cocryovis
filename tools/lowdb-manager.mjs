@@ -14,7 +14,7 @@ class LowdbManager {
 
     static getInstance() {
         if (!this.instance) {
-            this.instance = new LowdbManager();
+            this.instance = new this();
         }
         return this.instance;
     }
