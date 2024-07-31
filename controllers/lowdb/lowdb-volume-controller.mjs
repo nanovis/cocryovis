@@ -128,37 +128,8 @@ class LowdbVolumeController extends AbstractVolumeController {
         return super.getSparseLabeledVolume(Number(volumeId), Number(sparseLabeledVolumeId));
     }
 
-    async addSparseLabeledVolumes(volumeId, files) {
-        volumeId = Number(volumeId);
-        const volume = this.getById(volumeId);
-
-        let nextId = 1;
-        if (volume.sparseLabels.length > 0) {
-            nextId = volume.sparseLabels.at(-1).id + 1;
-        }
-
-        let volumeAdded = false;
-
-        try {
-            const {fileNames, filePaths} = await saveData(files,
-                path.join(volume.path, Volume.subfolders.sparseLabels), [".raw"], false);
-            for (let i = 0; i < fileNames.length; i++) {
-                const newSparseLabeledVolume = SparseLabeledVolume
-                    .createSparseLabeledVolume(nextId, fileNames[i], filePaths[i]);
-                nextId++;
-                volume.addSparseLabel(newSparseLabeledVolume);
-                volumeAdded = true;
-            }
-        }
-        catch (error) {
-            throw error;
-        }
-
-        if (!volumeAdded) {
-            throw new Error(`No valid files found.`);
-        }
-        await this.update(volume);
-        console.log("Sparse Labeled Volumes successfully uploaded.");
+    async addSparseLabeledVolume(volumeId, files) {
+        await super.addSparseLabeledVolume(Number(volumeId), files);
     }
 
     async removeSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
@@ -169,37 +140,8 @@ class LowdbVolumeController extends AbstractVolumeController {
         return super.getPseudoLabeledVolume(Number(volumeId), Number(pseudoLabeledVolumeId));
     }
 
-    async addPseudoLabeledVolumes(volumeId, files) {
-        volumeId = Number(volumeId);
-        const volume = this.getById(volumeId);
-
-        let nextId = 1;
-        if (volume.pseudoLabels.length > 0) {
-            nextId = volume.pseudoLabels.at(-1).id + 1;
-        }
-
-        let volumeAdded = false;
-
-        try {
-            const {fileNames, filePaths} = await saveData(files,
-                path.join(volume.path, Volume.subfolders.pseudoLabels), [".raw"], false);
-            for (let i = 0; i < fileNames.length; i++) {
-                const newPseudoLabeledVolume = PseudoLabeledVolume
-                    .createPseudoLabeledVolume(nextId, fileNames[i], filePaths[i]);
-                volume.addPseudoLabel(newPseudoLabeledVolume);
-                nextId++;
-                volumeAdded = true;
-            }
-        }
-        catch (error) {
-            throw error;
-        }
-
-        if (!volumeAdded) {
-            throw new Error(`No valid files found.`);
-        }
-        await this.update(volume);
-        console.log("Pseudo Labeled Volumes successfully uploaded.");
+    async addPseudoLabeledVolume(volumeId, files) {
+        await super.addPseudoLabeledVolume(Number(volumeId), files);
     }
 
     async removePseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {

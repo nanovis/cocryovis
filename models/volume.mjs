@@ -12,15 +12,16 @@ export class Volume {
         pseudoLabels: 'pseudo-labels',
     };
 
-    constructor(id, name, description, userId, path = "", rawData = null, sparseLabels = [], pseudoLabels = [], projectIds = []) {
+    constructor(id, name, description, userId, path = "", rawData = null, sparseLabeledVolume = null,
+                pseudoLabeledVolume = null, projectIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.userId = userId;
         this.path = path;
         this.rawData = rawData;
-        this.sparseLabels = sparseLabels;
-        this.pseudoLabels = pseudoLabels;
+        this.sparseLabeledVolume = sparseLabeledVolume;
+        this.pseudoLabeledVolume = pseudoLabeledVolume;
         this.projectIds = projectIds;
         Object.preventExtensions(this);
     }
@@ -50,15 +51,11 @@ export class Volume {
         if (this.rawData) {
             await this.rawData.delete();
         }
-        if (this.sparseLabels) {
-            for (const sparseLabel of this.sparseLabels) {
-                await sparseLabel.delete();
-            }
+        if (this.sparseLabeledVolume) {
+            await this.sparseLabeledVolume.delete();
         }
-        if (this.pseudoLabels) {
-            for (const pseudoLabel of this.pseudoLabels) {
-                await pseudoLabel.delete();
-            }
+        if (this.pseudoLabeledVolume) {
+            await this.pseudoLabeledVolume.delete();
         }
         await fileSystem.rm(this.path, { recursive: true, force: true }, (err) => {
             if (err) {
@@ -73,18 +70,18 @@ export class Volume {
             rawData = RawData.fromReference(dbVolume.rawData);
         }
 
-        const sparseLabels = [];
-        for (const sparseLabel of dbVolume.sparseLabels) {
-            sparseLabels.push(SparseLabeledVolume.fromReference(sparseLabel));
+        let sparseLabeledVolume = null;
+        if (dbVolume.sparseLabeledVolume != null) {
+            sparseLabeledVolume = SparseLabeledVolume.fromReference(dbVolume.sparseLabeledVolume);
         }
 
-        const pseudoLabels = [];
-        for (const pseudoLabel of dbVolume.pseudoLabels) {
-            pseudoLabels.push(PseudoLabeledVolume.fromReference(pseudoLabel));
+        let pseudoLabeledVolume = null;
+        if (dbVolume.pseudoLabeledVolume != null) {
+            pseudoLabeledVolume = PseudoLabeledVolume.fromReference(dbVolume.pseudoLabeledVolume);
         }
 
         return new Volume(dbVolume.id, dbVolume.name, dbVolume.description, dbVolume.userId,
-            dbVolume.path, rawData, sparseLabels, pseudoLabels);
+            dbVolume.path, rawData, sparseLabeledVolume, pseudoLabeledVolume);
     }
 
     addProject(projectId) {
@@ -120,43 +117,41 @@ export class Volume {
         }
     }
 
-    findSparseLabel(id) {
-        return this.sparseLabels.find(s => s.id === id);
+    async addSparseLabeledVolume(file) {
+        this.sparseLabeledVolume = await SparseLabeledVolume.createSparseLabeledVolume(
+            file, path.join(this.path, Volume.subfolders.sparseLabels));
     }
 
-    addSparseLabel(sparseLabel) {
-        this.sparseLabels.push(sparseLabel);
-    }
-
-    async removeSparseLabel(id) {
-        const index = this.sparseLabels.findIndex(s => s.id === id);
-
-        if (index === -1) {
-            throw new Error(`Sparse labeled volume ${id} does not exist in volume ${this.name}.`);
+    async removeSparseLabeledVolume() {
+        if(!this.sparseLabeledVolume) {
+            throw new Error(`Volume ${this.name} has no pseudo labels.`);
         }
 
-        const label = this.sparseLabels[index];
-        this.sparseLabels.splice(index, 1);
-        await label.delete();
+        try {
+            this.sparseLabeledVolume.delete();
+            this.sparseLabeledVolume = null;
+        }
+        catch (error) {
+            throw error;
+        }
     }
 
-    findPseudoLabel(id) {
-        return this.pseudoLabels.find(p => p.id === id);
+    async addPseudoLabeledVolume(file) {
+        this.pseudoLabeledVolume = await PseudoLabeledVolume.createPseudoLabeledVolume(
+            file, path.join(this.path, Volume.subfolders.pseudoLabels));
     }
 
-    addPseudoLabel(pseudoLabel) {
-        this.pseudoLabels.push(pseudoLabel);
-    }
-
-    async removePseudoLabel(id) {
-        const index = this.pseudoLabels.findIndex(p => p.id === id);
-
-        if (index === -1) {
-            throw new Error(`Pseudo labeled volume ${id} does not exist in volume ${this.name}.`);
+    async removePseudoLabeledVolume() {
+        if(!this.pseudoLabeledVolume) {
+            throw new Error(`Volume ${this.name} has no pseudo labels.`);
         }
 
-        const label = this.pseudoLabels[index];
-        this.pseudoLabels.splice(index, 1);
-        await label.delete();
+        try {
+            this.pseudoLabeledVolume.delete();
+            this.pseudoLabeledVolume = null;
+        }
+        catch (error) {
+            throw error;
+        }
     }
 }

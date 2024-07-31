@@ -73,36 +73,74 @@ export class AbstractVolumeController extends AbstractController {
     }
 
     getSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
-        return this.getById(volumeId).findSparseLabel(sparseLabeledVolumeId);
+        return this.getById(volumeId).sparseLabeledVolume;
     }
 
-    async addSparseLabeledVolumes(volumeId, files) {
-        throw new Error('Method not implemented');
+    async addSparseLabeledVolume(volumeId, file) {
+        if (Array.isArray(file)) {
+            throw new Error(`Sparse volume has to consist of a single file only.`);
+        }
+
+        try {
+            const volume = this.getById(volumeId);
+
+            await volume.addSparseLabeledVolume(file);
+
+            await this.update(volume);
+            console.log("Raw Data successfully uploaded.");
+        }
+        catch(error) {
+            throw error;
+        }
     }
 
     async removeSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
-        const volume = this.getById(volumeId);
+        try {
+            const volume = this.getById(volumeId);
 
-        await volume.removeSparseLabel(sparseLabeledVolumeId);
+            await volume.removeSparseLabeledVolume();
 
-        await this.update(volume);
-        console.log(`Sparse labeled volume ${sparseLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+            await this.update(volume);
+            console.log(`Sparse labeled volume ${sparseLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+        }
+        catch (error) {
+            throw error;
+        }
     }
 
     getPseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
-        return this.getById(volumeId).findPseudoLabel(pseudoLabeledVolumeId);
+        return this.getById(volumeId).pseudoLabeledVolume;
     }
 
-    async addPseudoLabeledVolumes(volumeId, files) {
-        throw new Error('Method not implemented');
+    async addPseudoLabeledVolume(volumeId, file) {
+        if (Array.isArray(file)) {
+            throw new Error(`Sparse volume has to consist of a single file only.`);
+        }
+
+        try {
+            const volume = this.getById(volumeId);
+
+            await volume.addPseudoLabeledVolume(file);
+
+            await this.update(volume);
+            console.log("Raw Data successfully uploaded.");
+        }
+        catch(error) {
+            throw error;
+        }
     }
 
     async removePseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
-        const volume = this.getById(volumeId);
+        try {
+            const volume = this.getById(volumeId);
 
-        await volume.removePseudoLabel(pseudoLabeledVolumeId);
+            await volume.removePseudoLabeledVolume();
 
-        await this.update(volume);
-        console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+            await this.update(volume);
+            console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+        }
+        catch (error) {
+            throw error;
+        }
     }
 }

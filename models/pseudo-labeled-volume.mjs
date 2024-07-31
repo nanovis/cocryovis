@@ -1,20 +1,24 @@
 import {Downloadable} from "./downloadable.mjs";
 import fileSystem from "fs";
+import {saveData} from "../tools/utils.mjs";
 
 export class PseudoLabeledVolume extends Downloadable {
-    constructor(id, name, path) {
+    constructor(name, path) {
         super(path);
-        this.id = id;
         this.name = name;
         Object.preventExtensions(this);
     }
 
-    static createPseudoLabeledVolume(id, name, path) {
-        return new PseudoLabeledVolume(id, name, path);
+    static async createPseudoLabeledVolume(file, basePath) {
+        const {fileNames, filePaths} = await saveData(file, basePath, [".raw"], true);
+        if (fileNames.length === 0) {
+            throw new Error(`No valid raw file found.`);
+        }
+        return new PseudoLabeledVolume(fileNames[0], filePaths[0]);
     }
 
     static fromReference(dbReference) {
-        return new PseudoLabeledVolume(dbReference.id, dbReference.name, dbReference.path);
+        return new PseudoLabeledVolume(dbReference.name, dbReference.path);
     }
 
     async delete() {

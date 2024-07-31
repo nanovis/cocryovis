@@ -1,20 +1,24 @@
 import {Downloadable} from "./downloadable.mjs";
 import fileSystem from "fs";
+import {saveData} from "../tools/utils.mjs";
 
 export class SparseLabeledVolume extends Downloadable {
-    constructor(id, name, path) {
+    constructor(name, path) {
         super(path);
-        this.id = id;
         this.name = name;
         Object.preventExtensions(this);
     }
 
-    static createSparseLabeledVolume(id, name, path) {
-        return new SparseLabeledVolume(id, name, path);
+    static async createSparseLabeledVolume(file, basePath) {
+        const {fileNames, filePaths} = await saveData(file, basePath, [".raw"], true);
+        if (fileNames.length === 0) {
+            throw new Error(`No valid raw file found.`);
+        }
+        return new SparseLabeledVolume(fileNames[0], filePaths[0]);
     }
 
     static fromReference(dbReference) {
-        return new SparseLabeledVolume(dbReference.id, dbReference.name, dbReference.path);
+        return new SparseLabeledVolume(dbReference.name, dbReference.path);
     }
 
     async delete() {

@@ -662,7 +662,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-
                 message: 'No file uploaded'
             });
         } else {
-            await volumeController.addSparseLabeledVolumes(req.params.idVolume, req.files.files);
+            await volumeController.addSparseLabeledVolume(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -671,10 +671,10 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-
 });
 
 // Download Sparse Label
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/download`, restrict, async (req, res) => {
-    console.log(`Downloading sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels`, restrict, async (req, res) => {
+    console.log(`Downloading sparse labeled volume for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        const sparseLabeledVolume = volumeController.getSparseLabeledVolume(req.params.idVolume, req.params.idSparseLabels);
+        const sparseLabeledVolume = volumeController.getSparseLabeledVolume(req.params.idVolume);
         let data = sparseLabeledVolume.prepareDataForDownload(sparseLabeledVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
@@ -685,10 +685,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:
 });
 
 // Delete Sparse Labels
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse_labels/:idSparseLabels/delete`, restrict, async (req, res) => {
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete-sparse_labels`, restrict, async (req, res) => {
     console.log(`Deleting sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        await volumeController.removeSparseLabeledVolume(req.params.idVolume, req.params.idSparseLabels);
+        await volumeController.removeSparseLabeledVolume(req.params.idVolume);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
@@ -705,7 +705,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-
                 message: 'No file uploaded'
             });
         } else {
-            await volumeController.addPseudoLabeledVolumes(req.params.idVolume, req.files.files);
+            await volumeController.addPseudoLabeledVolume(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -714,11 +714,10 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-
 });
 
 // Download Pseudo Label
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels/download`, restrict, async (req, res) => {
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels`, restrict, async (req, res) => {
     console.log(`Downloading pseudo labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        const pseudoLabeledVolume = volumeController
-            .getPseudoLabeledVolume(req.params.idVolume, req.params.idPseudoLabels);
+        const pseudoLabeledVolume = volumeController.getPseudoLabeledVolume(req.params.idVolume);
         let data = pseudoLabeledVolume.prepareDataForDownload(pseudoLabeledVolume);
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
@@ -729,10 +728,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:
 });
 
 // Delete Pseudo Labels
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo_labels/:idPseudoLabels/delete`, restrict, async (req, res) => {
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete-pseudo_labels`, restrict, async (req, res) => {
     console.log(`Deleting sparse labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
     try {
-        await volumeController.removePseudoLabeledVolume(req.params.idVolume, req.params.idPseudoLabels);
+        await volumeController.removePseudoLabeledVolume(req.params.idVolume);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);

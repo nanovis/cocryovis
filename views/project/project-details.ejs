@@ -96,27 +96,23 @@
         <span id="statusCreateSparseLabels"></span>
     </form>
     <br />
-    <button id="uploadSparseLabelsToggle" onClick="(() => {
-        const disp = document.getElementById('sparseLabelUpload').style.display;
-        document.getElementById('sparseLabelUpload').style.display = disp === 'block' ? 'none' : 'block';
-        document.getElementById('uploadSparseLabelsToggle').textContent = disp === 'block' ? 'Upload Sparse Labeled Volume &darr;' : 'Upload Sparse Labeled Volume &uarr;';
-        })()">Upload Sparse Labeled Volume &darr;</button>
-    <form method="POST" enctype="multipart/form-data" id="sparseLabelUpload" style="display:none;">
+    <% if (!Object.hasOwn(volume, 'sparseLabels') || volume.sparseLabeledVolume == null) { %>
+    <form method="POST" enctype="multipart/form-data" id="sparseLabelUpload">
         <label for="files">Select files:</label>
-        <input type="file" id="sparseLabelsFiles" name="files" accept=".raw,application/zip" multiple>
+        <input type="file" id="sparseLabelsFiles" name="files" accept=".raw,application/zip">
         <input type="button" onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-sparse-labels', 'sparseLabelsFiles', 'progressBarSparseLabels', 'statusSparseLabels')" value="Upload">
         <progress id="progressBarSparseLabels" value="0" max="100" style="width:300px;"></progress>
         <span id="statusSparseLabels"></span>
     </form>
-    <br />
-    <% for (const sparseLabeledVolume of volume.sparseLabels) { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse_labels/<%= sparseLabeledVolume.id %>/download"><%= sparseLabeledVolume.name %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse_labels/<%= sparseLabeledVolume.id %>/delete">[X]</a>
-        <br />
+    <% } else { %>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse_labels"><%= volume.sparseLabeledVolume.name %></a> ...
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-sparse_labels">[X]</a>
     <% } %>
+    <br />
     <hr />
     <h4>Pseudo Labels:</h4>
-    <form method="POST" enctype="multipart/form-data" id="pseudoLabelUpload">
+    <% if (!Object.hasOwn(volume, 'pseudoLabels') || volume.pseudoLabeledVolume == null) { %>
+        <form method="POST" enctype="multipart/form-data" id="pseudoLabelUpload">
         <label for="files">Select files:</label>
         <input type="file" id="pseudoLabelsFiles" name="files" accept=".raw,application/zip" multiple>
         <input type="button" onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-pseudo-labels', 'pseudoLabelsFiles', 'progressBarPseudoLabels', 'statusPseudoLabels')" value="Upload">
@@ -124,9 +120,9 @@
         <span id="statusPseudoLabels"></span>
     </form>
     <br />
-    <% for (const pseudoLabeledVolume of volume.pseudoLabels) { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo_labels/<%= pseudoLabeledVolume.id %>/download"><%= pseudoLabeledVolume.name %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo_labels/<%= pseudoLabeledVolume.id %>/delete">[X]</a>
+    <% } else { %>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo_labels"><%= volume.pseudoLabeledVolume.name %></a> ...
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-pseudo_labels">[X]</a>
         <br />
     <% } %>
     <hr />
