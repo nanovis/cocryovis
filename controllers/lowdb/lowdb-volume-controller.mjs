@@ -92,32 +92,32 @@ class LowdbVolumeController extends AbstractVolumeController {
         return super.getRawVolume(Number(volumeId));
     }
 
-    async addRawVolume(volumeId, file) {
-        return await super.addRawVolume(Number(volumeId), file);
+    async addRawVolumeFiles(volumeId, files) {
+        return await super.addRawVolumeFiles(Number(volumeId), files);
     }
 
     async removeRawVolume(volumeId) {
         await super.removeRawVolume(Number(volumeId));
     }
 
-    getSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
-        return super.getSparseLabeledVolume(Number(volumeId), Number(sparseLabeledVolumeId));
+    getSparseLabeledVolume(volumeId) {
+        return super.getSparseLabeledVolume(Number(volumeId));
     }
 
-    async addSparseLabeledVolume(volumeId, files) {
-        await super.addSparseLabeledVolume(Number(volumeId), files);
+    async addSparseLabeledVolumeFiles(volumeId, files) {
+        await super.addSparseLabeledVolumeFiles(Number(volumeId), files);
     }
 
     async removeSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
         await super.removeSparseLabeledVolume(Number(volumeId), Number(sparseLabeledVolumeId));
     }
 
-    getPseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
-        return super.getPseudoLabeledVolume(Number(volumeId), Number(pseudoLabeledVolumeId));
+    getPseudoLabeledVolume(volumeId) {
+        return super.getPseudoLabeledVolume(Number(volumeId));
     }
 
-    async addPseudoLabeledVolume(volumeId, files) {
-        await super.addPseudoLabeledVolume(Number(volumeId), files);
+    async addPseudoLabeledVolumeFiles(volumeId, files) {
+        await super.addPseudoLabeledVolumeFiles(Number(volumeId), files);
     }
 
     async removePseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {

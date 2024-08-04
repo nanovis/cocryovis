@@ -68,8 +68,11 @@ function authenticate(name, pass, fn) {
     });
 }
 
+app.use(express.static('web',  { index: false }));
+app.use(express.static('data',  { index: false }));
+
 // Handling root route
-app.get('/', restrict, express.static('web'))
+app.get('/', restrict);
  
 // Handling auth route
 app.get('/auth', restrict, function (req, res) {

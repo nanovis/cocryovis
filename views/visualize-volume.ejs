@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title><%= volumeName %></title>
+    <link rel="stylesheet" href="https://unpkg.com/primeflex@3.1.0/themes/arya-blue.css">
+    <link rel="stylesheet" href="https://unpkg.com/primeflex@3.1.0/primeflex.css">
+    <link rel="stylesheet" href="/vis/css/index.css" />
+    <!-- nanovis.org -->
+    <meta http-equiv="origin-trial" content="Aq6Ni7mG3jlNz8LSDcJUoJRzwJpkKMvmNX4ncvpgk0RhqBmKi9sI+pLkN642NV52IpKM/+NneD9ofNdV9Kh0egYAAABieyJvcmlnaW4iOiJodHRwczovL3d3dy5uYW5vdmlzLm9yZzo0NDMiLCJmZWF0dXJlIjoiV2ViR1BVIiwiZXhwaXJ5IjoxNjkxNzExOTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
+    <!-- localhost:5500 -->
+    <!-- <meta http-equiv="origin-trial" content="AgCqLeZDrlcoBR+S3p8SekllqqN81ek8KciDtqMY8FFuHadgBC7fB0EoiYocrgNqd6IE7rFfqHAv1my2hc0jDQEAAABJeyJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjU1MDAiLCJmZWF0dXJlIjoiV2ViR1BVIiwiZXhwaXJ5IjoxNjkxNzExOTk5fQ=="> -->
+    <script>
+        var volumes = "<%= volumes %>"
+        volumes = volumes.replaceAll("&#34;", '"');
+        volumes = JSON.parse(volumes);
+    </script>
+</head>
+
+<body class="text-yellow-100 p-0 m-0">
+    <div id="errorcontainer">
+        <h1>WebGPU not supported.</h1>
+        Use Chrome Canary or Edge Canary.
+    </div>
+    <div class="root">
+        <div class="menubar bg-bluegray-900 p-0 m-0">
+	    <h1 class="title px-2 py-0 m-0">Visualizing results from volume: <i><%= volumeName %></i></h1>
+        </div>
+        <div class="content p-0 m-0 ">
+            <div class="left-panel bg-bluegray-800">
+                <div class="px-2">
+                    <h2 class="mx-0 my-2">Data:</h2>
+                    <input type="file" id="myfile" onchange="useFileInput(this)" multiple class="hidden" />
+                    <label class="custom-file-label" for="myfile">Select files from disk</label>
+                    <input type="button" id="demodata" onclick="loadDemoData()" class="hidden" />
+                    <label class="custom-file-label" for="demodata">Load demo data</label>
+                    <hr class="solid mx-0 my-5">
+                </div>
+                <div class="px-2">
+                    <h2 class="mx-0 my-2">Displayed volumes:</h2>
+                    <input type="checkbox" id="control_enable_volume_a" onclick="enableVolume(0);" value="0" checked>Spikes</input>
+                    <input type="checkbox" id="control_enable_volume_b" onclick="enableVolume(1);" value="1" checked>Membranes</input>
+                    <input type="checkbox" id="control_enable_volume_c" onclick="enableVolume(2);" value="2" checked>Lumen</input>
+                    <hr class="solid mx-0 my-5">
+                </div>
+                <div class="px-2">
+                    <h2 class="mx-0 my-2">Clipping:</h2>
+                    <div class="my-3">
+                        <h3 class="mx-0 my-2">Clipping plane:</h3>
+                        <input type="radio" id="none" onchange="chooseClippingPlane(this);" name="clipping" value="0" checked>
+                        <label for="none">None</label>
+
+                        <input type="radio" id="viewaligned" onchange="chooseClippingPlane(this);" name="clipping" value="1">
+                        <label for="viewaligned">View-aligned</label><br>
+
+                        <input type="radio" id="x" onchange="chooseClippingPlane(this);" name="clipping" value="2">
+                        <label for="x">YZ-plane</label>
+
+                        <input type="radio" id="y" onchange="chooseClippingPlane(this);" name="clipping" value="3">
+                        <label for="y">XZ-plane</label>
+
+                        <input type="radio" id="z" onchange="chooseClippingPlane(this);" name="clipping" value="4">
+                        <label for="z">XY-plane</label>
+                    </div>
+                    <div class="my-3">
+                        <h3 class="mx-0 my-2">Clipped volumes:</h3>
+                        <input type="checkbox" id="control_clip_volume_a" onclick="clipVolume(this);" value="0" checked>Spikes</input>
+                        <input type="checkbox" id="control_clip_volume_b" onclick="clipVolume(this);" value="1" checked>Membranes</input>
+                        <input type="checkbox" id="control_clip_volume_c" onclick="clipVolume(this);" value="2" checked>Lumen</input>
+                    </div>
+                    <hr class="solid mx-0 my-5">
+                </div>
+                <div class="px-2">
+                    <h2 class="mx-0 my-2">Transfer functions:</h2>
+                    <div class="my-3">
+                        <h3 class="m-0">Spikes:</h3>
+                        <div id="tf0" class="slider-div">
+                            <label for="tf0_ramp_low" class="mx-2">Low ramp:</label>
+                            <input type="range" min="0" max="100" value="0" oninput="adjustTransferFunction2(this);" class="slider" id="tf0_ramp_low" />
+                            <input type="color" id="tf0_color" oninput ="adjustTransferFunction2(this);" name="tf0_color" value="#cf1f60" class="p0 mx-5 colorpicker">
+                        </div>
+                    </div>
+                    <div class="my-3">
+                        <h3 class="m-0">Membrane:</h3>
+                        <div id="tf1" class="slider-div">
+                            <label for="tf1_ramp_low" class="mx-2">Low ramp:</label>
+                            <input type="range" min="0" max="100" value="0" oninput="adjustTransferFunction2(this);" class="slider" id="tf1_ramp_low" />
+                            <input type="color" id="tf1_color" oninput ="adjustTransferFunction2(this);" name="tf1_color" value="#c79aab" class="p0 mx-5 colorpicker">
+                        </div>
+                    </div>
+                    <div class="my-3">
+                        <h3 class="m-0">Lumen:</h3>
+                        <div id="tf2" class="slider-div">
+                            <label for="tf2_ramp_low" class="mx-2">Low ramp:</label>
+                            <input type="range" min="0" max="100" value="0" oninput="adjustTransferFunction2(this);" class="slider" id="tf2_ramp_low" />
+                            <input type="color" id="tf2_color" oninput ="adjustTransferFunction2(this);" name="tf2_color" value="#223378" class="p0 mx-5 colorpicker"> 
+                        </div>
+                    </div>
+                    <hr class="solid mx-0 my-5">
+                </div>
+                <div class="px-2">
+                    <h2 class="mx-0 my-2">Other settings:</h2>
+                    <div class="slider-div">
+                        <label for="background_color" class="mx-2">Background Color:</label>
+                        <input type="color" id="background_color" oninput ="updateColor(this);" name="background_color" value="#000000" class="p0 mx-5 colorpicker">
+                    </div>
+                </div>
+                <div class="px-2 logo">
+                    <div class="py-3 text-center">
+                        <a class="nanovis" href="https://www.nanovis.org" target="_blank">
+                            <span class="nvis">NANOVIS</span> <br />
+                            KAUST Nanovisualization <br /> Research Group
+                        </a>
+                    </div>
+                    <div class="">
+                        <a href="https://www.kaust.edu.sa" target="_blank">
+                            <img class="logo-image" src="/vis/img/KAUST-logo.png" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="main-panel" id="main-panel">
+                <div style="width: 100%; height: 100%; position: relative;" class="canvas-container">
+                    <div id="loadingcontainer">
+                        <div id ="loadingcircle">
+                        </div>
+                        <div id="loadingtext" class="loading">Loading...</div>
+                    </div>
+                    <canvas class="emscripten canvas" id="canvas" oncontextmenu="event.preventDefault();"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+	<script src="/vis/js/visualizeVolume.js" type='text/javascript'></script>
+</body>
+
+</html>

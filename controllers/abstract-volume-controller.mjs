@@ -70,15 +70,11 @@ export class AbstractVolumeController extends AbstractController {
         return this.getById(volumeId).rawData;
     }
 
-    async addRawVolume(volumeId, file) {
-        if (Array.isArray(file)) {
-            throw new Error(`Raw data has to consist of a single file only.`);
-        }
-
+    async addRawVolumeFiles(volumeId, files) {
         try {
             const volume = this.getById(volumeId);
 
-            await volume.addRawData(file);
+            await volume.addRawDataFiles(files);
 
             await this.update(volume);
             console.log("Raw Data successfully uploaded.");
@@ -102,19 +98,15 @@ export class AbstractVolumeController extends AbstractController {
         }
     }
 
-    getSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
+    getSparseLabeledVolume(volumeId) {
         return this.getById(volumeId).sparseLabeledVolume;
     }
 
-    async addSparseLabeledVolume(volumeId, file) {
-        if (Array.isArray(file)) {
-            throw new Error(`Sparse volume has to consist of a single file only.`);
-        }
-
+    async addSparseLabeledVolumeFiles(volumeId, files) {
         try {
             const volume = this.getById(volumeId);
 
-            await volume.addSparseLabeledVolume(file);
+            await volume.addSparseLabeledVolumeFiles(files);
 
             await this.update(volume);
             console.log("Raw Data successfully uploaded.");
@@ -124,33 +116,29 @@ export class AbstractVolumeController extends AbstractController {
         }
     }
 
-    async removeSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
+    async removeSparseLabeledVolume(volumeId) {
         try {
             const volume = this.getById(volumeId);
 
             await volume.removeSparseLabeledVolume();
 
             await this.update(volume);
-            console.log(`Sparse labeled volume ${sparseLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+            console.log(`Sparse labeled volume successfully deleted from volume ${volume.name}.`);
         }
         catch (error) {
             throw error;
         }
     }
 
-    getPseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
+    getPseudoLabeledVolume(volumeId) {
         return this.getById(volumeId).pseudoLabeledVolume;
     }
 
-    async addPseudoLabeledVolume(volumeId, file) {
-        if (Array.isArray(file)) {
-            throw new Error(`Sparse volume has to consist of a single file only.`);
-        }
-
+    async addPseudoLabeledVolumeFiles(volumeId, files) {
         try {
             const volume = this.getById(volumeId);
 
-            await volume.addPseudoLabeledVolume(file);
+            await volume.addPseudoLabeledVolumeFiles(files);
 
             await this.update(volume);
             console.log("Raw Data successfully uploaded.");

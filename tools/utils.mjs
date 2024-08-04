@@ -3,7 +3,19 @@ import path from "path";
 import AdmZip from "adm-zip";
 
 export function fileNameFilter(name) {
-    return name.replace(/\s+/g, '_').replace(/[^\da-zA-Z_.]+/g, '');
+    return name.replace(/\s+/g, '_').replace(/[^\da-zA-Z_.-]+/g, '');
+}
+
+export function isFileExtensionAccepted(filename, acceptedFileExtensions) {
+    return acceptedFileExtensions.length === 0 || acceptedFileExtensions.some(extension => filename.endsWith(extension));
+}
+
+export function publicDataPath(currentPath, filePath) {
+    return path.join(path.relative(currentPath, "/"), path.relative("./data", filePath));
+}
+
+export function publicPath(currentPath, filePath) {
+    return path.join(path.relative(currentPath, "/"), filePath);
 }
 
 export async function saveData(files, uploadPath, acceptedFileExtensions = [], singleFileOnly = false) {

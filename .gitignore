@@ -5,4 +5,5 @@ uploads/*
 !uploads/.gitkeep
 .vs
 db.json
+data/
 .idea

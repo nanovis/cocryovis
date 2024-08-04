@@ -1,6 +1,4 @@
-import {RawData} from "./raw-data.mjs";
-import {SparseLabeledVolume} from "./sparse-labeled-volume.mjs";
-import {PseudoLabeledVolume} from "./pseudo-labeled-volume.mjs";
+import {VolumeData} from "./volume-data.mjs";
 import {fileNameFilter} from "../tools/utils.mjs";
 import path from "path";
 import fileSystem from "fs";
@@ -67,17 +65,17 @@ export class Volume {
     static fromReference(dbVolume) {
         let rawData = null;
         if (dbVolume.rawData != null) {
-            rawData = RawData.fromReference(dbVolume.rawData);
+            rawData = VolumeData.fromReference(dbVolume.rawData);
         }
 
         let sparseLabeledVolume = null;
         if (dbVolume.sparseLabeledVolume != null) {
-            sparseLabeledVolume = SparseLabeledVolume.fromReference(dbVolume.sparseLabeledVolume);
+            sparseLabeledVolume = VolumeData.fromReference(dbVolume.sparseLabeledVolume);
         }
 
         let pseudoLabeledVolume = null;
         if (dbVolume.pseudoLabeledVolume != null) {
-            pseudoLabeledVolume = PseudoLabeledVolume.fromReference(dbVolume.pseudoLabeledVolume);
+            pseudoLabeledVolume = VolumeData.fromReference(dbVolume.pseudoLabeledVolume);
         }
 
         return new Volume(dbVolume.id, dbVolume.name, dbVolume.description, dbVolume.userId,
@@ -95,9 +93,12 @@ export class Volume {
         this.projectIds.splice(index, 1);
     }
 
-    async addRawData(file) {
+    async addRawDataFiles(files) {
         try {
-            this.rawData = await RawData.createRawData(file, path.join(this.path, Volume.subfolders.rawData));
+            if (this.rawData == null) {
+                this.rawData = new VolumeData(path.join(this.path, Volume.subfolders.rawData));
+            }
+            await this.rawData.uploadFiles(files);
         }
         catch (error) {
             throw error;
@@ -117,9 +118,16 @@ export class Volume {
         }
     }
 
-    async addSparseLabeledVolume(file) {
-        this.sparseLabeledVolume = await SparseLabeledVolume.createSparseLabeledVolume(
-            file, path.join(this.path, Volume.subfolders.sparseLabels));
+    async addSparseLabeledVolumeFiles(files) {
+        try {
+            if (this.sparseLabeledVolume == null) {
+                this.sparseLabeledVolume = new VolumeData(path.join(this.path, Volume.subfolders.sparseLabels));
+            }
+            await this.sparseLabeledVolume.uploadFiles(files);
+        }
+        catch (error) {
+            throw error;
+        }
     }
 
     async removeSparseLabeledVolume() {
@@ -136,9 +144,16 @@ export class Volume {
         }
     }
 
-    async addPseudoLabeledVolume(file) {
-        this.pseudoLabeledVolume = await PseudoLabeledVolume.createPseudoLabeledVolume(
-            file, path.join(this.path, Volume.subfolders.pseudoLabels));
+    async addPseudoLabeledVolumeFiles(files) {
+        try {
+            if (this.pseudoLabeledVolume == null) {
+                this.pseudoLabeledVolume = new VolumeData(path.join(this.path, Volume.subfolders.pseudoLabels));
+            }
+            await this.pseudoLabeledVolume.uploadFiles(files);
+        }
+        catch (error) {
+            throw error;
+        }
     }
 
     async removePseudoLabeledVolume() {

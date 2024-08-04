@@ -71,23 +71,31 @@
         <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a>
     </p>
     <h4>Raw Data:</h4>
-    <% if (!Object.hasOwn(volume, 'rawData') || volume.rawData == null) { %>
-        <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
-            <label for="file">Select Raw Data:</label>
-            <input type="file" id="rawDataFiles" name="files" accept="application/zip,.raw">
-            <br>
-            <br>
-            <input
-                    type="button"
-                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-raw-data', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
-                    value = "Upload Raw Data to Server">
-            <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
-            <span id="statusRawData"></span>
-        </form>
-    <% } else { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data"><%= volume.rawData.name %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-raw-data">[X]</a>
+    <% if (volume.rawData != null) { %>
+        <% if (volume.rawData.rawFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data"><%= volume.rawData.rawFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-raw-data">[X]</a><br />
+        <% } %>
+        <% if (volume.rawData.settingsFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data"><%= volume.rawData.settingsFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-raw-data">[X]</a><br />
+        <% } %>
+        <% if (volume.rawData.rawFile != null && volume.rawData.settingsFile != null) { %>
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/visualize-raw-data">Visualize Raw Volume</a><br />
+        <% } %>
     <% } %>
+    <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
+        <label for="file">Select Raw Data:</label>
+        <input type="file" id="rawDataFiles" name="files" accept="application/zip,.raw">
+        <br>
+        <br>
+        <input
+                type="button"
+                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-raw-data', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
+                value = "Upload Raw Data to Server">
+        <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusRawData"></span>
+    </form>
     <h4>Sparse Labels:</h4>
     <form method="POST" enctype="multipart/form-data" id="sparseLabelCreate">
         <label for="files">Raw Data:</label>

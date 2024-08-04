@@ -12,6 +12,7 @@ import { restrict } from '../../middleware/restrict.mjs';
 import { ModelHandler } from '../../tools/model-handler.mjs';
 import * as fs from 'fs';
 import { ControllerFactory } from "../../controllers/controller-factory.mjs";
+import {publicDataPath, publicPath} from "../../tools/utils.mjs";
 
 // Config
 const config = JSON.parse(fileSystem.readFileSync('config.json', 'utf8'));
@@ -619,9 +620,31 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-dat
                 message: 'No file uploaded'
             });
         } else {
-            await volumeController.addRawVolume(req.params.idVolume, req.files.files);
+            await volumeController.addRawVolumeFiles(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Vizualize Raw Data
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/visualize-raw-data`, restrict, async (req, res) => {
+    console.log(`Visualizing raw data for volume ${req.params.idVolume}`);
+    try {
+        const rawVolume = volumeController.getRawVolume(req.params.idVolume);
+
+        const visualizationFiles = [];
+
+        visualizationFiles.push( { path: publicDataPath(req.originalUrl, rawVolume.rawFile.filePath), filename: rawVolume.rawFile.fileName } );
+        visualizationFiles.push( { path: publicDataPath(req.originalUrl, rawVolume.settingsFile.filePath), filename: rawVolume.settingsFile.fileName } );
+        visualizationFiles.push( { path: publicDataPath(req.originalUrl, rawVolume.configFile.filePath), filename: rawVolume.configFile.fileName } );
+        visualizationFiles.push( { path: publicPath(req.originalUrl, "data/session.json"), filename: "session.json" } );
+        visualizationFiles.push( { path: publicPath(req.originalUrl, "data/tf-default.json"), filename: "tf-default.json" } );
+
+        const volumesJSON = JSON.stringify(visualizationFiles).replaceAll('\\', '\\\\');
+
+        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON });
     } catch (err) {
         res.status(500).send(err);
     }
@@ -662,7 +685,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-sparse-
                 message: 'No file uploaded'
             });
         } else {
-            await volumeController.addSparseLabeledVolume(req.params.idVolume, req.files.files);
+            await volumeController.addSparseLabeledVolumeFiles(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -705,7 +728,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-pseudo-
                 message: 'No file uploaded'
             });
         } else {
-            await volumeController.addPseudoLabeledVolume(req.params.idVolume, req.files.files);
+            await volumeController.addPseudoLabeledVolumeFiles(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -763,3 +786,43 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete-pseudo_l
 //         res.status(500).send(err);
 //     }
 // });
+
+// Vizualization test
+actions.get(`/visualization-test`, async (req, res) => {
+    try {
+        const basePath = "../../ts_16_256/"
+        const files256 =  [
+            'config.json',
+            'tf-bg.json',
+            'tf-in.json',
+            'tf-memb.json',
+            'tf-raw.json',
+            'tf-spike.json',
+            'ts_16_bin4-256x256.json',
+            'ts_16_bin4-256x256.raw',
+            // 'ts_16_bin4-uint8-inv-mean-3-256x256.json',
+            // 'ts_16_bin4-uint8-inv-mean-3-256x256.raw',
+            // 'ts_16_predictions-Background-256x256.json',
+            // 'ts_16_predictions-Background-256x256.raw',
+            // 'ts_16_predictions-Inner-256x256.json',
+            // 'ts_16_predictions-Inner-256x256.raw',
+            // 'ts_16_predictions-Membrane-256x256.json',
+            // 'ts_16_predictions-Membrane-256x256.raw',
+            // 'ts_16_predictions-Spikes-256x256.json',
+            // 'ts_16_predictions-Spikes-256x256.raw'
+        ];
+
+        const volumes = [];
+        for (const file of files256) {
+            const fileObj = { path: path.join(basePath, file), filename: file };
+            volumes.push(fileObj);
+        }
+        volumes.push({ path: "../../data/session.json", filename: "session.json" })
+
+        const volumesJSON = JSON.stringify(volumes).replaceAll('\\', '\\\\');
+
+        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON });
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
