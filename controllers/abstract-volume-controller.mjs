@@ -98,6 +98,60 @@ export class AbstractVolumeController extends AbstractController {
         }
     }
 
+    async removeRawFileFromRawVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            if (volume.rawData == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
+            }
+
+            await volume.rawData.deleteRawFile();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Raw file successfully removed from raw volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeSettingsFileFromRawVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            if (volume.rawData == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
+            }
+
+            await volume.rawData.deleteSettingsFile();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Settings file successfully removed from raw volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeTiffFilesFromRawVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            if (volume.rawData == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
+            }
+
+            await volume.rawData.deleteTiffFolder();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Tiff files successfully removed from raw volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
     getSparseLabeledVolume(volumeId) {
         return this.getById(volumeId).sparseLabeledVolume;
     }

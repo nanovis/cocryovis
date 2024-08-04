@@ -651,11 +651,65 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/visualize-raw-d
 });
 
 // Download Raw Data
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data`, restrict, async (req, res) => {
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-full`, restrict, async (req, res) => {
     console.log(`Downloading raw data for volume ${req.params.idVolume}`);
     try {
         const rawVolume = volumeController.getRawVolume(req.params.idVolume);
-        let data = rawVolume.prepareDataForDownload(rawVolume);
+        let data = rawVolume.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-raw`, restrict, async (req, res) => {
+    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
+    try {
+        const rawData = volumeController.getRawVolume(req.params.idVolume).rawFile;
+
+        if(rawData == null) {
+            throw new Error("Raw volume does not have a raw file");
+        }
+
+        let data = rawData.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-settings`, restrict, async (req, res) => {
+    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
+    try {
+        const settingsFile = volumeController.getRawVolume(req.params.idVolume).settingsFile;
+
+        if(settingsFile == null) {
+            throw new Error("Raw volume does not have a settings file");
+        }
+
+        let data = settingsFile.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-tiff`, restrict, async (req, res) => {
+    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
+    try {
+        const tiffFolder = volumeController.getRawVolume(req.params.idVolume).tiffFolder;
+
+        if(tiffFolder == null) {
+            throw new Error("Raw volume does not have any tiff files");
+        }
+
+        let data = tiffFolder.prepareDataForDownload();
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
         res.send(data.zipBuffer);
@@ -665,10 +719,40 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data`, rest
 });
 
 // Delete Raw Data
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete-raw-data`, restrict, async (req, res) => {
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-full`, restrict, async (req, res) => {
     console.log(`Deleting raw data for volume ${req.params.idVolume}`);
     try {
         await volumeController.removeRawVolume(req.params.idVolume);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-raw-file`, restrict, async (req, res) => {
+    console.log(`Deleting raw data raw file for volume ${req.params.idVolume}`);
+    try {
+        await volumeController.removeRawFileFromRawVolume(req.params.idVolume);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-settings-file`, restrict, async (req, res) => {
+    console.log(`Deleting raw data settings file for volume ${req.params.idVolume}`);
+    try {
+        await volumeController.removeSettingsFileFromRawVolume(req.params.idVolume);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-tiff-files`, restrict, async (req, res) => {
+    console.log(`Deleting raw data tiff files for volume ${req.params.idVolume}`);
+    try {
+        await volumeController.removeTiffFilesFromRawVolume(req.params.idVolume);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);

@@ -4,15 +4,22 @@ import {RawVolumeFile} from "./raw-volume-file.mjs";
 import {SettingsFile} from "./settings-volume-file.mjs";
 import {StoredFile} from "./stored-file.mjs";
 import {writeFile, rm, access, mkdir} from 'node:fs/promises';
+import {isFileExtensionAccepted} from "../tools/utils.mjs";
+import {StoredFolder} from "./stored-folder.mjs";
 
 export class VolumeData {
     static configFileName = "config.json";
 
-    constructor(path, rawFile = null, settingsFile = null, configFile = null) {
+    static subfolders = {
+        "tiffFiles": "tiff-files"
+    }
+
+    constructor(path, rawFile = null, settingsFile = null, configFile = null, tiffFolder = null) {
         this.path = path;
         this.rawFile = rawFile;
         this.settingsFile = settingsFile;
         this.configFile = configFile;
+        this.tiffFolder = tiffFolder;
     }
 
     async delete() {
@@ -24,6 +31,9 @@ export class VolumeData {
         }
         if (this.configFile) {
             this.configFile.delete();
+        }
+        if (this.tiffFolder) {
+            this.tiffFolder.delete();
         }
         await rm(this.path, { recursive: true, force: true });
     }
@@ -41,12 +51,17 @@ export class VolumeData {
         if (dbReference.configFile) {
             configFile = StoredFile.fromReference(dbReference.configFile);
         }
-        return new VolumeData(dbReference.path, rawFile, settingsFile, configFile);
+        let tiffFolder = null;
+        if (dbReference.tiffFolder) {
+            tiffFolder = StoredFolder.fromReference(dbReference.tiffFolder);
+        }
+        return new VolumeData(dbReference.path, rawFile, settingsFile, configFile, tiffFolder);
     }
 
     async uploadFiles(files) {
         this.rawFileUploaded = false;
         this.settingsFileUploaded = false;
+        this.tiffFileUploaded = false;
 
         try {
             await access(this.path);
@@ -69,19 +84,22 @@ export class VolumeData {
             await this.uploadFile(files, (file, filteredFileName, fullPath) => file.mv(fullPath));
         }
 
-        if (!this.rawFileUploaded && !this.settingsFileUploaded) {
+        if (!this.rawFileUploaded && !this.settingsFileUploaded && !this.tiffFileUploaded) {
             throw new Error("No valid files provided");
         }
 
         delete this.rawFileUploaded;
         delete this.settingsFileUploaded;
+        delete this.tiffFileUploaded;
 
         return this;
     }
 
     async uploadFile(file, moveFunction) {
         if ((this.rawFileUploaded === undefined || !this.rawFileUploaded) && RawVolumeFile.isRawVolumeFile(file.name)) {
-            this.rawFileUploaded = true;
+            if (this.rawFileUploaded !== undefined) {
+                this.rawFileUploaded = true;
+            }
             if (this.rawFile) {
                 this.rawFile.delete();
             }
@@ -89,13 +107,28 @@ export class VolumeData {
             await this.#setRawFilePathInSettings();
         }
         if ((this.settingsFileUploaded === undefined || !this.settingsFileUploaded) && SettingsFile.isSettingsFile(file.name)) {
-            this.settingsFileUploaded = true;
+            if (this.settingsFileUploaded !== undefined) {
+                this.settingsFileUploaded = true;
+            }
             if (this.settingsFile) {
                 this.settingsFile.delete();
             }
             this.settingsFile = await SettingsFile.fromFile(file, this.path, moveFunction);
             await this.createConfigFile();
             await this.#setRawFilePathInSettings();
+        }
+        if (isFileExtensionAccepted(file.name, [".tif,", ".tiff"])) {
+            if (this.tiffFolder == null) {
+                this.tiffFolder =
+                    new StoredFolder(VolumeData.subfolders.tiffFiles, path.join(this.path, VolumeData.subfolders.tiffFiles));
+            }
+            else if (this.tiffFileUploaded !== undefined && !this.tiffFileUploaded) {
+                this.tiffFolder.delete();
+            }
+            if (this.settingsFileUploaded !== undefined) {
+                this.tiffFileUploaded = true;
+            }
+            await this.tiffFolder.addFile(file, moveFunction);
         }
     }
 
@@ -117,5 +150,55 @@ export class VolumeData {
             return;
         }
         await this.settingsFile.setRawFilePath(this.rawFile.fileName);
+    }
+
+    prepareDataForDownload(downloadRawFile = true, downloadSettingsFile = true, downloadTiffFiles = false) {
+        let hasFiles = false;
+
+        const zip = new AdmZip();
+        if (downloadRawFile && this.rawFile != null) {
+            zip.addLocalFile(this.rawFile.filePath);
+            hasFiles = true;
+        }
+        if (downloadSettingsFile && this.settingsFile != null) {
+            zip.addLocalFile(this.settingsFile.filePath);
+            hasFiles = true;
+        }
+        if (downloadTiffFiles && this.tiffFolder != null) {
+            zip.addLocalFolder(this.tiffFolder.folderPath);
+            hasFiles = true;
+        }
+
+        if (!hasFiles) {
+            throw new Error("No files to download.");
+        }
+
+        const outputFileName = path.parse(this.path).name;
+        return {
+            name: `${outputFileName}.zip`,
+            zipBuffer: zip.toBuffer()
+        };
+    }
+
+    async deleteRawFile() {
+        if (this.rawFile == null) {
+            throw new Error("Raw volume does not have a raw file");
+        }
+        this.rawFile.delete();
+        this.rawFile = null;
+    }
+    async deleteSettingsFile() {
+        if (this.settingsFile == null) {
+            throw new Error("Raw volume does not have a settings file");
+        }
+        this.settingsFile.delete();
+        this.settingsFile = null;
+    }
+    async deleteTiffFolder() {
+        if (this.tiffFolder == null) {
+            throw new Error("Raw volume does not have any tiff files");
+        }
+        this.tiffFolder.delete();
+        this.tiffFolder = null;
     }
 }
