@@ -1,7 +1,7 @@
 import {isFileExtensionAccepted} from "../tools/utils.mjs";
-import {UploadableFile} from "./uploadable-file.mjs";
+import {StoredFile} from "./stored-file.mjs";
 
-export class RawVolumeFile extends UploadableFile {
+export class RawVolumeFile extends StoredFile {
     static acceptedFileExtensions = [".raw", ".msc"];
 
     constructor(fileName, filePath) {

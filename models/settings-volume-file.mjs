@@ -1,8 +1,8 @@
 import {isFileExtensionAccepted} from "../tools/utils.mjs";
-import {UploadableFile} from "./uploadable-file.mjs";
 import {readFile, writeFile} from 'node:fs/promises';
+import {StoredFile} from "./stored-file.mjs";
 
-export class SettingsFile extends UploadableFile {
+export class SettingsFile extends StoredFile {
     static acceptedFileExtensions = [".json"];
 
     constructor(fileName, filePath) {
