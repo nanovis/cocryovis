@@ -74,7 +74,9 @@
     <% if (volume.rawData != null) { %>
         <% if (volume.rawData.rawFile != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-raw"><%= volume.rawData.rawFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-raw-file">[X]</a><br />
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-raw-file">[X]</a>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/convert-raw-to-tiff"><button>Convert to tiff slices</button></a>
+            <br />
         <% } %>
         <% if (volume.rawData.settingsFile != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-settings"><%= volume.rawData.settingsFile.fileName %></a> ...
@@ -85,17 +87,15 @@
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-tiff-files">[X]</a><br />
         <% } %>
         <% if (volume.rawData.rawFile != null && volume.rawData.settingsFile != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/visualize-raw-data">Visualize Raw Volume</a><br />
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
         <label for="file">Select Raw Data:</label>
         <input type="file" id="rawDataFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw" multiple>
-        <br>
-        <br>
         <input
                 type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-raw-data', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
+                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/upload', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
                 value = "Upload Raw Data to Server">
         <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
         <span id="statusRawData"></span>

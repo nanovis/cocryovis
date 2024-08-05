@@ -17,10 +17,14 @@ export class SettingsFile extends StoredFile {
         return super.fromFile(file, uploadPath, SettingsFile.acceptedFileExtensions, moveFunction);
     }
 
+    async readFile() {
+        const contents = await readFile(this.filePath, { encoding: 'utf8' });
+        return JSON.parse(contents);
+    }
+
     async setRawFilePath(rawFilePath) {
         try {
-            const contents = await readFile(this.filePath, { encoding: 'utf8' });
-            const settings = JSON.parse(contents);
+            const settings = await this.readFile();
             settings["file"] = rawFilePath;
             if (!Object.hasOwn(settings, 'transferFunction')) {
                 settings["transferFunction"] = "tf-default.json";

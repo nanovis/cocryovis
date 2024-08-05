@@ -84,6 +84,25 @@ export class AbstractVolumeController extends AbstractController {
         }
     }
 
+    async convertRawVolumeRawFilesToTiffSlices(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+            console.log(`Volume ${volume.id} (${volume.name}): Converting raw files to tiff slices.`);
+
+            if (volume.rawData == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
+            }
+
+            await volume.rawData.convertRawToTiff();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Raw files successfully converted to tiff slices.`);
+        }
+        catch(error) {
+            throw error;
+        }
+    }
+
     async removeRawVolume(volumeId) {
         try {
             const volume = this.getById(volumeId);

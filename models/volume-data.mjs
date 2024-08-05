@@ -1,11 +1,12 @@
 import AdmZip from "adm-zip";
 import path from "path";
 import {RawVolumeFile} from "./raw-volume-file.mjs";
-import {SettingsFile} from "./settings-volume-file.mjs";
+import {SettingsFile} from "./settings-file.mjs";
 import {StoredFile} from "./stored-file.mjs";
 import {writeFile, rm, access, mkdir} from 'node:fs/promises';
 import {isFileExtensionAccepted} from "../tools/utils.mjs";
 import {StoredFolder} from "./stored-folder.mjs";
+import {rawToTiff} from "../tools/raw-to-tiff.mjs";
 
 export class VolumeData {
     static configFileName = "config.json";
@@ -101,7 +102,7 @@ export class VolumeData {
                 this.rawFileUploaded = true;
             }
             if (this.rawFile) {
-                this.rawFile.delete();
+                await this.deleteRawFile();
             }
             this.rawFile = await RawVolumeFile.fromFile(file, this.path, moveFunction);
             await this.#setRawFilePathInSettings();
@@ -111,7 +112,7 @@ export class VolumeData {
                 this.settingsFileUploaded = true;
             }
             if (this.settingsFile) {
-                this.settingsFile.delete();
+                await this.deleteSettingsFile();
             }
             this.settingsFile = await SettingsFile.fromFile(file, this.path, moveFunction);
             await this.createConfigFile();
@@ -123,7 +124,7 @@ export class VolumeData {
                     new StoredFolder(VolumeData.subfolders.tiffFiles, path.join(this.path, VolumeData.subfolders.tiffFiles));
             }
             else if (this.tiffFileUploaded !== undefined && !this.tiffFileUploaded) {
-                this.tiffFolder.delete();
+                await this.deleteTiffFolder();
             }
             if (this.settingsFileUploaded !== undefined) {
                 this.tiffFileUploaded = true;
@@ -178,6 +179,36 @@ export class VolumeData {
             name: `${outputFileName}.zip`,
             zipBuffer: zip.toBuffer()
         };
+    }
+
+    async convertRawToTiff() {
+        if (this.rawFile == null) {
+            throw new Error("Volume is missing a raw file.");
+        }
+        if (this.settingsFile == null) {
+            throw new Error("Volume requires a settings file with size property.");
+        }
+        const settings = await this.settingsFile.readFile();
+        if (!Object.hasOwn(settings, "size")) {
+            throw new Error("Volume requires a settings file with size property.");
+        }
+        const width = settings.size.x;
+        const height = settings.size.y;
+        const depth = settings.size.z;
+        let channels = 1;
+        if (Object.hasOwn(settings, "bytesPerVoxel")) {
+            channels = settings["bytesPerVoxel"];
+        }
+        if (this.tiffFolder != null) {
+            await this.deleteTiffFolder();
+        }
+
+        const tiffFolderPath = path.join(this.path, VolumeData.subfolders.tiffFiles);
+
+        await rawToTiff(this.rawFile.filePath, tiffFolderPath, width, height, depth, channels);
+
+        this.tiffFolder =
+            new StoredFolder(VolumeData.subfolders.tiffFiles, tiffFolderPath);
     }
 
     async deleteRawFile() {

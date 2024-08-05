@@ -611,7 +611,7 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restri
 });
 
 // Upload Raw Data
-actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-data`, restrict, async (req, res) => {
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload`, restrict, async (req, res) => {
     console.log(`Uploading raw data for volume ${req.params.idVolume}`);
     try {
         if (!req.files || !req.files.files) {
@@ -628,8 +628,18 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/upload-raw-dat
     }
 });
 
-// Vizualize Raw Data
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/visualize-raw-data`, restrict, async (req, res) => {
+// Create tif files
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/convert-raw-to-tiff`, restrict, async (req, res) => {
+    try {
+        await volumeController.convertRawVolumeRawFilesToTiffSlices(req.params.idVolume);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Visualize Raw Data
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/visualize`, restrict, async (req, res) => {
     console.log(`Visualizing raw data for volume ${req.params.idVolume}`);
     try {
         const rawVolume = volumeController.getRawVolume(req.params.idVolume);

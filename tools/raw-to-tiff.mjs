@@ -38,7 +38,6 @@ export async function rawToTiff(inputFile, outputFolder, width, height, depth, c
             })
             .toFile(`${outputFolder}/slice_${z}.tiff`)
             .then(info => {
-                console.log(z)
                 fs.appendFileSync(`${outputFolder}/conversion.log`,
                     `Slice ${z} created: ${JSON.stringify(info, null, 1)}\n`);
             })

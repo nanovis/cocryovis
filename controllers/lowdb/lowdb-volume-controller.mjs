@@ -96,8 +96,24 @@ class LowdbVolumeController extends AbstractVolumeController {
         return await super.addRawVolumeFiles(Number(volumeId), files);
     }
 
+    async convertRawVolumeRawFilesToTiffSlices(volumeId) {
+        await super.convertRawVolumeRawFilesToTiffSlices(Number(volumeId));
+    }
+
     async removeRawVolume(volumeId) {
         await super.removeRawVolume(Number(volumeId));
+    }
+
+    async removeRawFileFromRawVolume(volumeId) {
+        await super.removeRawFileFromRawVolume(Number(volumeId));
+    }
+
+    async removeSettingsFileFromRawVolume(volumeId) {
+        await super.removeSettingsFileFromRawVolume(Number(volumeId));
+    }
+
+    async removeTiffFilesFromRawVolume(volumeId) {
+        await super.removeTiffFilesFromRawVolume(Number(volumeId));
     }
 
     getSparseLabeledVolume(volumeId) {
