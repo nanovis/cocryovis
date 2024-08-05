@@ -85,7 +85,6 @@ class LowdbVolumeController extends AbstractVolumeController {
 
     async removeProject(volumeId, projectId) {
         await super.removeProject(Number(volumeId), Number(projectId));
-
     }
 
     getRawVolume(volumeId) {
@@ -124,8 +123,24 @@ class LowdbVolumeController extends AbstractVolumeController {
         await super.addSparseLabeledVolumeFiles(Number(volumeId), files);
     }
 
+    async convertSparseLabeledVolumeRawFilesToTiffSlices(volumeId) {
+        await super.convertSparseLabeledVolumeRawFilesToTiffSlices(Number(volumeId));
+    }
+
     async removeSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
         await super.removeSparseLabeledVolume(Number(volumeId), Number(sparseLabeledVolumeId));
+    }
+
+    async removeRawFileFromSparseLabeledVolume(volumeId) {
+        await super.removeRawFileFromSparseLabeledVolume(Number(volumeId));
+    }
+
+    async removeSettingsFileFromSparseLabeledVolume(volumeId) {
+        await super.removeSettingsFileFromSparseLabeledVolume(Number(volumeId));
+    }
+
+    async removeTiffFilesFromSparseLabeledVolume(volumeId) {
+        await super.removeTiffFilesFromSparseLabeledVolume(Number(volumeId));
     }
 
     getPseudoLabeledVolume(volumeId) {
@@ -138,6 +153,18 @@ class LowdbVolumeController extends AbstractVolumeController {
 
     async removePseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
         await super.removePseudoLabeledVolume(Number(volumeId), Number(pseudoLabeledVolumeId));
+    }
+
+    async removeRawFileFromPseudoLabeledVolume(volumeId) {
+        await super.removeRawFileFromPseudoLabeledVolume(Number(volumeId));
+    }
+
+    async removeSettingsFileFromPseudoLabeledVolume(volumeId) {
+        await super.removeSettingsFileFromPseudoLabeledVolume(Number(volumeId));
+    }
+
+    async removeTiffFilesFromPseudoLabeledVolume(volumeId) {
+        await super.removeTiffFilesFromPseudoLabeledVolume(Number(volumeId));
     }
 }
 

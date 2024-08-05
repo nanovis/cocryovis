@@ -75,14 +75,16 @@
         <% if (volume.rawData.rawFile != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-raw"><%= volume.rawData.rawFile.fileName %></a> ...
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-raw-file">[X]</a>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/convert-raw-to-tiff"><button>Convert to tiff slices</button></a>
+            <% if (volume.sparseLabeledVolume.settingsFile != null) { %>
+                <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/convert-raw-to-tiff"><button>Convert to tiff slices</button></a>
+            <% } %>
             <br />
         <% } %>
         <% if (volume.rawData.settingsFile != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-settings"><%= volume.rawData.settingsFile.fileName %></a> ...
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-settings-file">[X]</a><br />
         <% } %>
-        <% if (volume.rawData.tiffFolder != null && volume.rawData.settingsFile != null) { %>
+        <% if (volume.rawData.tiffFolder != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-tiff">Tiff Files</a> ...
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-tiff-files">[X]</a><br />
         <% } %>
@@ -91,52 +93,76 @@
         <% } %>
     <% } %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
-        <label for="file">Select Raw Data:</label>
-        <input type="file" id="rawDataFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw" multiple>
+        <label for="file">Select Raw Data Volume files:</label>
+        <input type="file" id="rawDataFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
         <input
                 type="button"
                 onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/upload', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
-                value = "Upload Raw Data to Server">
+                value = "Upload">
         <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
         <span id="statusRawData"></span>
     </form>
     <h4>Sparse Labels:</h4>
-    <form method="POST" enctype="multipart/form-data" id="sparseLabelCreate">
-        <label for="files">Raw Data:</label>
-        <input type="file" id="createSparseLabelsFile" name="files" accept=".raw,application/zip">
-        <input type="button" value="Create Sparse Labels from Raw Data">
-        <span id="statusCreateSparseLabels"></span>
-    </form>
-    <br />
-    <% if (!Object.hasOwn(volume, 'sparseLabels') || volume.sparseLabeledVolume == null) { %>
-    <form method="POST" enctype="multipart/form-data" id="sparseLabelUpload">
-        <label for="files">Select files:</label>
-        <input type="file" id="sparseLabelsFiles" name="files" accept=".raw,application/zip">
-        <input type="button" onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-sparse-labels', 'sparseLabelsFiles', 'progressBarSparseLabels', 'statusSparseLabels')" value="Upload">
-        <progress id="progressBarSparseLabels" value="0" max="100" style="width:300px;"></progress>
-        <span id="statusSparseLabels"></span>
-    </form>
-    <% } else { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse_labels"><%= volume.sparseLabeledVolume.name %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-sparse_labels">[X]</a>
+    <% if (volume.sparseLabeledVolume != null) { %>
+        <% if (volume.sparseLabeledVolume.rawFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/download-raw"><%= volume.sparseLabeledVolume.rawFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/delete-raw-file">[X]</a>
+            <% if (volume.sparseLabeledVolume.settingsFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/convert-raw-to-tiff"><button>Convert to tiff slices</button></a>
+            <% } %>
+            <br />
+        <% } %>
+        <% if (volume.sparseLabeledVolume.settingsFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/download-settings"><%= volume.sparseLabeledVolume.settingsFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/delete-settings-file">[X]</a><br />
+        <% } %>
+        <% if (volume.sparseLabeledVolume.tiffFolder != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/download-tiff">Tiff Files</a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/delete-tiff-files">[X]</a><br />
+        <% } %>
+        <% if (volume.sparseLabeledVolume.rawFile != null && volume.sparseLabeledVolume.settingsFile != null) { %>
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/visualize">Visualize Raw Volume</a><br />
+        <% } %>
     <% } %>
-    <br />
-    <hr />
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Select Sparse Labeled Volume files:</label>
+        <input type="file" id="sparseLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+        <input
+                type="button"
+                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/upload', 'sparseLabeledVolumeFiles', 'progressBarSparseLabeledVolume', 'statusSparseLabeledVolume')"
+                value = "Upload">
+        <progress id="progressBarSparseLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusSparseLabeledVolume"></span>
+    </form>
     <h4>Pseudo Labels:</h4>
-    <% if (!Object.hasOwn(volume, 'pseudoLabels') || volume.pseudoLabeledVolume == null) { %>
-        <form method="POST" enctype="multipart/form-data" id="pseudoLabelUpload">
-        <label for="files">Select files:</label>
-        <input type="file" id="pseudoLabelsFiles" name="files" accept=".raw,application/zip" multiple>
-        <input type="button" onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/upload-pseudo-labels', 'pseudoLabelsFiles', 'progressBarPseudoLabels', 'statusPseudoLabels')" value="Upload">
-        <progress id="progressBarPseudoLabels" value="0" max="100" style="width:300px;"></progress>
-        <span id="statusPseudoLabels"></span>
-    </form>
-    <br />
-    <% } else { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo_labels"><%= volume.pseudoLabeledVolume.name %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete-pseudo_labels">[X]</a>
-        <br />
+    <% if (volume.pseudoLabeledVolume != null) { %>
+        <% if (volume.pseudoLabeledVolume.rawFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-raw"><%= volume.pseudoLabeledVolume.rawFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/delete-raw-file">[X]</a>
+            <br />
+        <% } %>
+        <% if (volume.pseudoLabeledVolume.settingsFile != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-settings"><%= volume.pseudoLabeledVolume.settingsFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/delete-settings-file">[X]</a><br />
+        <% } %>
+        <% if (volume.pseudoLabeledVolume.tiffFolder != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-tiff">Tiff Files</a> ...
+            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/delete-tiff-files">[X]</a><br />
+        <% } %>
+        <% if (volume.pseudoLabeledVolume.rawFile != null && volume.pseudoLabeledVolume.settingsFile != null) { %>
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/visualize">Visualize Raw Volume</a><br />
+        <% } %>
     <% } %>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Select Pseudo Labeled Volume files:</label>
+        <input type="file" id="pseudoLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+        <input
+                type="button"
+                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/upload', 'pseudoLabeledVolumeFiles', 'progressBarPseudoLabeledVolume', 'pseudoSparseLabeledVolume')"
+                value = "Upload">
+        <progress id="progressBarPseudoLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="pseudoSparseLabeledVolume"></span>
+    </form>
     <hr />
 <% } %>
 <br />

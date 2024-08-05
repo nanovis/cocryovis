@@ -87,7 +87,7 @@ export class AbstractVolumeController extends AbstractController {
     async convertRawVolumeRawFilesToTiffSlices(volumeId) {
         try {
             const volume = this.getById(volumeId);
-            console.log(`Volume ${volume.id} (${volume.name}): Converting raw files to tiff slices.`);
+            console.log(`Volume ${volume.id} (${volume.name}): Converting raw volume raw file to tiff slices.`);
 
             if (volume.rawData == null) {
                 throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
@@ -96,7 +96,7 @@ export class AbstractVolumeController extends AbstractController {
             await volume.rawData.convertRawToTiff();
 
             await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Raw files successfully converted to tiff slices.`);
+            console.log(`Volume ${volume.id} (${volume.name}): Raw volume raw file successfully converted to tiff slices.`);
         }
         catch(error) {
             throw error;
@@ -157,6 +157,8 @@ export class AbstractVolumeController extends AbstractController {
         try {
             const volume = this.getById(volumeId);
 
+            console.log(`Volume ${volume.id} (${volume.name}): Removing tiff slices from raw volume.`);
+
             if (volume.rawData == null) {
                 throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
             }
@@ -164,7 +166,7 @@ export class AbstractVolumeController extends AbstractController {
             await volume.rawData.deleteTiffFolder();
 
             await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Tiff files successfully removed from raw volume.`);
+            console.log(`Volume ${volume.id} (${volume.name}): Tiff slices successfully removed from raw volume.`);
         }
         catch (error) {
             throw error;
@@ -185,6 +187,85 @@ export class AbstractVolumeController extends AbstractController {
             console.log("Raw Data successfully uploaded.");
         }
         catch(error) {
+            throw error;
+        }
+    }
+
+    async convertSparseLabeledVolumeRawFilesToTiffSlices(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+            console.log(`Volume ${volume.id} (${volume.name}): Converting sparse labeled volume raw file to tiff slices.`);
+
+            if (volume.sparseLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
+            }
+
+            await volume.sparseLabeledVolume.convertRawToTiff();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Sparse labeled volume raw file successfully converted to tiff slices.`);
+        }
+        catch(error) {
+            throw error;
+        }
+    }
+
+    async removeRawFileFromSparseLabeledVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            console.log(`Volume ${volume.id} (${volume.name}): Removing raw file from sparse labeled volume.`);
+
+            if (volume.sparseLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
+            }
+
+            await volume.sparseLabeledVolume.deleteRawFile();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Raw file successfully removed from sparse labeled volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeSettingsFileFromSparseLabeledVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            console.log(`Volume ${volume.id} (${volume.name}): Removing settings file from sparse labeled volume.`);
+
+            if (volume.sparseLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
+            }
+
+            await volume.sparseLabeledVolume.deleteSettingsFile();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Settings file successfully removed from sparse labeled volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeTiffFilesFromSparseLabeledVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            console.log(`Volume ${volume.id} (${volume.name}): Removing tiff slices from sparse labeled volume.`);
+
+            if (volume.sparseLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
+            }
+
+            await volume.sparseLabeledVolume.deleteTiffFolder();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Tiff slices successfully removed from sparse labeled volume.`);
+        }
+        catch (error) {
             throw error;
         }
     }
@@ -229,6 +310,66 @@ export class AbstractVolumeController extends AbstractController {
 
             await this.update(volume);
             console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeRawFileFromPseudoLabeledVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            console.log(`Volume ${volume.id} (${volume.name}): Removing raw file from pseudo labeled volume.`);
+
+            if (volume.pseudoLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a pseudo labeled volume.`);
+            }
+
+            await volume.pseudoLabeledVolume.deleteRawFile();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Raw file successfully removed from pseudo labeled volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeSettingsFileFromPseudoLabeledVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            console.log(`Volume ${volume.id} (${volume.name}): Removing settings file from pseudo labeled volume.`);
+
+            if (volume.pseudoLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a pseudo labeled volume.`);
+            }
+
+            await volume.pseudoLabeledVolume.deleteSettingsFile();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Settings file successfully removed from pseudo labeled volume.`);
+        }
+        catch (error) {
+            throw error;
+        }
+    }
+
+    async removeTiffFilesFromPseudoLabeledVolume(volumeId) {
+        try {
+            const volume = this.getById(volumeId);
+
+            console.log(`Volume ${volume.id} (${volume.name}): Removing tiff slices from pseudo labeled volume.`);
+
+            if (volume.pseudoLabeledVolume == null) {
+                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a pseudo labeled volume.`);
+            }
+
+            await volume.pseudoLabeledVolume.deleteTiffFolder();
+
+            await this.update(volume);
+            console.log(`Volume ${volume.id} (${volume.name}): Tiff slices successfully removed from pseudo labeled volume.`);
         }
         catch (error) {
             throw error;
