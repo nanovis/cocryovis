@@ -6,6 +6,7 @@ import cors from 'cors';
 import fileUpload from 'express-fileupload';
 import { DateHandler } from '../../tools/date-handler.mjs';
 import  * as fileSystem from 'fs';
+import { IlastikHandler as ModelBasedIlastikHandler } from '../../tools/ilastik-handler-model-based.mjs';
 import { IlastikHandler } from '../../tools/ilastik-handler.mjs';
 import { NanoOetziHandler } from '../../tools/nano-oetzi-handler.mjs';
 import { restrict } from '../../middleware/restrict.mjs';
@@ -13,10 +14,13 @@ import { ModelHandler } from '../../tools/model-handler.mjs';
 import * as fs from 'fs';
 import { ControllerFactory } from "../../controllers/controller-factory.mjs";
 import {publicDataPath, publicPath} from "../../tools/utils.mjs";
+import {Volume} from "../../models/volume.mjs";
+import {VolumeData} from "../../models/volume-data.mjs";
 
 // Config
 const config = JSON.parse(fileSystem.readFileSync('config.json', 'utf8'));
-const ilastik = new IlastikHandler(config.ilastik);
+const ilastik = new ModelBasedIlastikHandler(config.ilastik);
+const ilastikHandler = new IlastikHandler(config.ilastik);
 const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 
 // DB connection
@@ -313,7 +317,12 @@ actions.get('/delete-ilastik-label/:id/:idIlastikLabel', restrict, async (req, r
 
 // Ilastik actions
 actions.get('/ilastik-version', restrict, (req, res) => {
-    res.send("Ilastik version: " + ilastik.getVersion());
+    try {
+        res.send("Ilastik version: " + ilastikHandler.getVersion());
+    }
+    catch (e) {
+        res.send(e);
+    }
 });
 
 // Nano-Oetzi actions
@@ -948,6 +957,32 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled
             await volumeController.addPseudoLabeledVolumeFiles(req.params.idVolume, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Create Pseudo Labels with Illastik
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/create`, restrict, async (req, res) => {
+    console.log(`Uploading Sparse Data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
+    try {
+        const volume = volumeController.getById(idVolume);
+        if (volume.rawData == null || volume.rawData.tiffFolder == null
+            || volume.sparseLabeledVolume == null || volume.sparseLabeledVolume.tiffFolder == null) {
+            throw Error("Pseudo label inference requires both raw and sparse label volumes with tiff slices.")
+        }
+
+        if (volume.pseudoLabeledVolume != null) {
+            await volumeController.removePseudoLabeledVolume(idVolume);
+        }
+
+        const rawDataPath = path.join(volume.rawData.tiffFolder, "*.tif");
+        const sparseLabelPath = path.join(volume.sparseLabeledVolume.tiffFolder, "*.tif");
+        const modelOutputPath = path.join(volume.path, Volume.subfolders.pseudoLabels);
+        const labelsOutputPath = path.join(volume.path, Volume.subfolders.pseudoLabels, VolumeData.subfolders.tiffFiles);
+
+        ilastikHandler.generateLabels(rawDataPath, sparseLabelPath, modelOutputPath, labelsOutputPath);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
     }

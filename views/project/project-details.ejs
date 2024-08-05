@@ -135,6 +135,9 @@
         <span id="statusSparseLabeledVolume"></span>
     </form>
     <h4>Pseudo Labels:</h4>
+    <% if (volume.rawData.tiffFolder != null && volume.sparseLabeledVolume.tiffFolder != null) { %>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/create"><button>Infer Pseudo Labels with Ilastik</button></a>
+    <% } %>
     <% if (volume.pseudoLabeledVolume != null) { %>
         <% if (volume.pseudoLabeledVolume.rawFile != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-raw"><%= volume.pseudoLabeledVolume.rawFile.fileName %></a> ...

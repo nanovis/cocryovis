@@ -151,8 +151,8 @@ class LowdbVolumeController extends AbstractVolumeController {
         await super.addPseudoLabeledVolumeFiles(Number(volumeId), files);
     }
 
-    async removePseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
-        await super.removePseudoLabeledVolume(Number(volumeId), Number(pseudoLabeledVolumeId));
+    async removePseudoLabeledVolume(volumeId) {
+        await super.removePseudoLabeledVolume(Number(volumeId));
     }
 
     async removeRawFileFromPseudoLabeledVolume(volumeId) {

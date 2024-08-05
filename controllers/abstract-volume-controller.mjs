@@ -302,14 +302,14 @@ export class AbstractVolumeController extends AbstractController {
         }
     }
 
-    async removePseudoLabeledVolume(volumeId, pseudoLabeledVolumeId) {
+    async removePseudoLabeledVolume(volumeId) {
         try {
             const volume = this.getById(volumeId);
 
             await volume.removePseudoLabeledVolume();
 
             await this.update(volume);
-            console.log(`Pseudo labeled volume ${pseudoLabeledVolumeId} successfully deleted from volume ${volume.name}.`);
+            console.log(`Pseudo labeled volume successfully deleted from volume ${volume.name}.`);
         }
         catch (error) {
             throw error;
