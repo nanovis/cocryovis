@@ -18,7 +18,7 @@ export class StoredFile {
             const filteredFileName = fileNameFilter(file.name);
             const fullPath = path.join(uploadPath, filteredFileName);
             await moveFunction(file, filteredFileName, fullPath);
-            return new this(filteredFileName, fullPath);
+            return new StoredFile(filteredFileName, fullPath);
         }
         throw new Error("Incorrect file extension");
     }

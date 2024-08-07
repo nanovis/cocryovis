@@ -1,15 +1,11 @@
 import {AbstractController} from "./abstract-controller.mjs";
 
-export class AbstractModelController extends AbstractController {
+export class AbstractCheckpointController extends AbstractController {
     constructor() {
         super();
-        if(this.constructor === AbstractModelController) {
+        if(this.constructor === AbstractCheckpointController) {
             throw new Error("Class is of abstract type and can't be instantiated");
         }
-    }
-
-    getAllModels() {
-        throw new Error('Method not implemented');
     }
 
     getById(id) {
@@ -29,14 +25,6 @@ export class AbstractModelController extends AbstractController {
     }
 
     async delete(id) {
-        throw new Error('Method not implemented');
-    }
-
-    async addCheckpoint(id, checkpointId) {
-        throw new Error('Method not implemented');
-    }
-
-    async removeCheckpoint(id, checkpointId) {
         throw new Error('Method not implemented');
     }
 }

@@ -67,7 +67,7 @@
 <hr />
 <% for (const volume of volumes) { %>
     <p>
-        <b>Volume:</b> <%= volume.name %>
+        <b>Volume:</b> <%= volume.name %> (<%= volume.id %>)
         <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a>
     </p>
     <h4>Raw Data:</h4>
@@ -170,6 +170,41 @@
 <% } %>
 <br />
 <hr />
-
+<h3 style="text-align: left">Models:</h3>
+<button id="createModelToggle" onClick="(() => {
+    const disp = document.getElementById('createModel').style.display;
+    document.getElementById('createModel').style.display = disp === 'block' ? 'none' : 'block';
+    document.getElementById('createModelToggle').textContent = disp === 'block' ? 'Add New Model &darr;' : 'Add New Model &uarr;';
+    })()">Add New Model &darr;</button>
+<form id="createModel" style="display: none" action="/api/actions/projects/<%= project.id %>/create-model" method="post" enctype="multipart/form-data">
+    <label for="name">Volume name:</label>
+    <input type="text" name="name" /> <br />
+    <br />
+    <label for="description">Volume description:</label>
+    <textarea name="description" rows="4" cols="25"></textarea>
+    <input type="submit" value="Add" />
+</form>
+<% for (let modelIndex = 0; modelIndex < models.length; modelIndex++) { %>
+    <p>
+        <b>Model:</b> <%= models[modelIndex].name %> (<%= models[modelIndex].id %>)
+        <a href="/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/delete">[X]</a>
+    </p>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Select Checkpoint files:</label>
+        <input type="file" id="checkpointFiles" name="files" accept=".ckpt" multiple>
+        <input
+                type="button"
+                onclick="uploadFile('/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/add-checkpoint', 'checkpointFiles', 'progressBarCheckpoint', 'statusCheckpoint')"
+                value = "Upload">
+        <progress id="progressBarCheckpoint" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusCheckpoint"></span>
+    </form>
+    <h4>Checkpoints:</h4>
+    <% for (const checkpoint of checkpoints[modelIndex]) { %>
+        <a href="/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/checkpoint/<%= checkpoint.id %>/download"><%= checkpoint.fileName %></a> ...
+        <a href="/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/checkpoint/<%= checkpoint.id %>/delete">[X]</a>
+        <br />
+    <% } %>
+<% } %>
 <hr />
 <%- include('foot') -%>

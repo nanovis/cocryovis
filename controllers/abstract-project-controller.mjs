@@ -56,8 +56,8 @@ export class AbstractProjectController extends AbstractController {
     }
 
     async onVolumeCreated(volume) {
-        for (const projectId of volume.projectIds) {
-            const project = this.getById(projectId);
+        const projects = this.getByIds(volume.projectIds);
+        for (const project of projects) {
             project.addVolume(volume.id);
             await this.update(project);
         }
@@ -67,7 +67,7 @@ export class AbstractProjectController extends AbstractController {
         const projects = this.getByIds(volume.projectIds);
         for (const project of projects) {
             if (project.volumeIds.includes(volume.id)) {
-                await this.removeVolume(project.id, volume.id);
+                project.removeVolume(volume.id);
                 await this.update(project);
             }
         }

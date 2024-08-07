@@ -21,7 +21,8 @@
     },
     "projects": {
         "projectsPath": "./data/projects/",
-        "volumesPath": "./data/volumes/"
+        "volumesPath": "./data/volumes/",
+        "checkpointsPath": "./data/checkpoints/"
     },
     "db": {
         "type": "lowdb",

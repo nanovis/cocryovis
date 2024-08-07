@@ -9,10 +9,12 @@
       "passwordHash": "nnyqAZ5oZS2OdyleIlL2YyVLdnxQETwpfLtIPxDgkB8AeN13OfN70qk5PQmTOKS7XeNLIviDk08bFCAVHGFAA0K2cN9bwRZHZ/uBSeXWR+016KXeiTOGfVxBfoKcTAlZVUT3TMQeVq43UnwQ/7shqa8Y2deD/RXU2pF+2iEjvA4="
     }
   ],
-  "models": [
-  ],
   "projects": [
   ],
   "volumes" : [
+  ],
+  "models": [
+  ],
+  "checkpoints": [
   ]
 }

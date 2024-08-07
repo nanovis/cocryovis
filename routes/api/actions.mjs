@@ -30,6 +30,8 @@ const modelHandler = new ModelHandler(config.models, models);
 
 const projectController = ControllerFactory.getProjectController(config.db.type);
 const volumeController = ControllerFactory.getVolumeController(config.db.type);
+const modelController = ControllerFactory.getModelController(config.db.type);
+const checkpointController = ControllerFactory.getCheckpointController(config.db.type);
 
 export const actions = express.Router();
 
@@ -556,7 +558,12 @@ actions.get(`/${projectsActionsPath}/details/:id`, restrict, (req, res) => {
     try {
         const project = projectController.getById(req.params.id);
         const volumes = volumeController.getByIds(project.volumeIds);
-        res.render('project-details', { project: project, volumes: volumes });
+        const models = modelController.getByIds(project.modelIds);
+        const checkpoints = [];
+        for (const model of models) {
+            checkpoints.push(checkpointController.getByIds(model.checkpointIds));
+        }
+        res.render('project-details', { project: project, volumes: volumes, models: models, checkpoints: checkpoints });
     } catch (err) {
         res.status(500).send(err);
     }
@@ -1116,33 +1123,79 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-
     }
 });
 
+/////// MODELS
+// Create New Model
+actions.post(`/${projectsActionsPath}/:idProject/create-model`, restrict, async (req, res) => {
+    console.log('Creating a new model');
+    try {
+        await modelController.create(req.body.name, req.body.description, req.session.user.id, req.params.idProject);
 
+        console.log("Model successfully created.");
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
+    } catch (err) {
+        console.error("Error in creating volume:", err);
+        res.status(500).send(err);
+    }
+});
 
-// // Create New Model
-// actions.post(`/${projectsActionsPath}/:id/create-model`, restrict, async (req, res) => {
-//     console.log('Creating a new model');
-//     try {
-//         await projectModel.addModel(req.params.id, req.body.name, req.body.description);
-//
-//         console.log("Model successfully created.");
-//         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.id);
-//     } catch (err) {
-//         console.error("Error in creating volume:", err);
-//         res.status(500).send(err);
-//     }
-// });
-//
-// // Remove Model
-// actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, async (req, res) => {
-//     console.log(`Deleting Model ${req.params.idModel}`);
-//     try {
-//         await projectModel.removeModel(req.params.idProject, req.params.idModel);
-//         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-//     } catch (err) {
-//         console.error("Error in creating model:", err);
-//         res.status(500).send(err);
-//     }
-// });
+// Remove Model
+actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, async (req, res) => {
+    console.log(`Deleting Model ${req.params.idModel}`);
+    try {
+        await modelController.delete(req.params.idModel);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
+    } catch (err) {
+        console.error("Error in creating model:", err);
+        res.status(500).send(err);
+    }
+});
+
+// Upload new checkpoint
+actions.post(`/${projectsActionsPath}/:idProject/model/:idModel/add-checkpoint`, restrict, async (req, res) => {
+    try {
+        if (!req.files || !req.files.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            if (Array.isArray(req.files.files)) {
+                for (const file of req.files.files) {
+                    await checkpointController.create(file, req.params.idModel, req.session.user.id);
+                }
+            }
+            else {
+                await checkpointController.create(req.files.files, req.params.idModel, req.session.user.id);
+            }
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Download checkpoint
+actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/download`, restrict, async (req, res) => {
+    try {
+        const checkpoint = checkpointController.getById(req.params.idCheckpoint);
+        let data = checkpoint.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Delete checkpoint
+actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrict, async (req, res) => {
+    try {
+        await checkpointController.delete(req.params.idCheckpoint);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
 
 // Vizualization test
 actions.get(`/visualization-test`, async (req, res) => {

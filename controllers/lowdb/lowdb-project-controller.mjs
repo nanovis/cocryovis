@@ -2,6 +2,7 @@ import {AbstractProjectController} from "../abstract-project-controller.mjs";
 import {Project} from "../../models/project.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
+import lowdbModelController, {modelCreatedEvent, modelDeletedEvent} from "./lowdb-model-controller.mjs";
 
 class LowdbProjectController extends AbstractProjectController {
     constructor() {
@@ -9,6 +10,13 @@ class LowdbProjectController extends AbstractProjectController {
         this.db = LowdbManager.db;
         this.projects = this.db.data.projects;
         Object.preventExtensions(this);
+
+        globalEventEmitter.on(modelCreatedEvent, async (volume) => {
+            await this.#onModelCreated(volume);
+        });
+        globalEventEmitter.on(modelDeletedEvent, async (volume) => {
+            await this.#onModelDeleted(volume);
+        });
     }
 
     getAllProjects() {
@@ -81,6 +89,38 @@ class LowdbProjectController extends AbstractProjectController {
 
     async removeVolume(projectId, volumeId) {
         await super.removeVolume(Number(projectId), Number(volumeId))
+    }
+
+    async addModelToProject(projectId, modelId) {
+        const project = this.getByIds(projectId);
+        project.addModel(modelId);
+        await lowdbModelController.onAddedToProject(modelId, projectId);
+        await this.update(project);
+    }
+
+    async removeModelFromProject(projectId, modelId) {
+        const project = this.getByIds(projectId);
+        project.removeModel(modelId);
+        await lowdbModelController.onRemovedFromProject(modelId, projectId);
+        await this.update(project);
+    }
+
+    async #onModelCreated(model) {
+        const projects = this.getByIds(model.projectIds);
+        for (const project of projects) {
+            project.addModel(model.id);
+            await this.update(project);
+        }
+    }
+
+    async #onModelDeleted(model) {
+        const projects = this.getByIds(model.projectIds);
+        for (const project of projects) {
+            if (project.modelIds.includes(model.id)) {
+                project.removeModel(model.id);
+                await this.update(project);
+            }
+        }
     }
 }
 

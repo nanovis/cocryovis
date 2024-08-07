@@ -1,10 +1,12 @@
-import lowdbProjectModelController from "./lowdb/lowdb-project-controller.mjs";
-import lowdbVolumeModelController from "./lowdb/lowdb-volume-controller.mjs";
+import lowdbProjectController from "./lowdb/lowdb-project-controller.mjs";
+import lowdbVolumeController from "./lowdb/lowdb-volume-controller.mjs";
+import lowdbModelController from "./lowdb/lowdb-model-controller.mjs";
+import lowdbCheckpointController from "./lowdb/lowdb-checkpoint-controller.mjs";
 
 export class ControllerFactory {
     static getProjectController(type) {
         if (type === 'lowdb') {
-            return lowdbProjectModelController;
+            return lowdbProjectController;
         } else {
             throw new Error('Unsupported repository type');
         }
@@ -12,7 +14,23 @@ export class ControllerFactory {
 
     static getVolumeController(type) {
         if (type === 'lowdb') {
-            return lowdbVolumeModelController;
+            return lowdbVolumeController;
+        } else {
+            throw new Error('Unsupported repository type');
+        }
+    }
+
+    static getModelController(type) {
+        if (type === 'lowdb') {
+            return lowdbModelController;
+        } else {
+            throw new Error('Unsupported repository type');
+        }
+    }
+
+    static getCheckpointController(type) {
+        if (type === 'lowdb') {
+            return lowdbCheckpointController;
         } else {
             throw new Error('Unsupported repository type');
         }

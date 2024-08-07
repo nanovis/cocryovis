@@ -8,13 +8,14 @@ export class Project {
         // models: 'models'
     };
 
-    constructor(id, name, description, userId, path = "", volumeIds = []) {
+    constructor(id, name, description, userId, path = "", volumeIds = [], modelIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.userId = userId;
         this.path = path;
         this.volumeIds = volumeIds;
+        this.modelIds = modelIds;
         Object.preventExtensions(this);
     }
 
@@ -49,6 +50,21 @@ export class Project {
         this.volumeIds.splice(index, 1);
     }
 
+    addModel(modelId) {
+        if (this.modelIds.includes(modelId)) {
+            throw new Error(`Project ${this.id} (${this.name}): Model is already included in the project.`);
+        }
+        this.modelIds.push(modelId);
+    }
+
+    removeModel(modelId) {
+        const index = this.modelIds.indexOf(modelId);
+        if (index === -1) {
+            throw new Error(`Project ${this.id} (${this.name}): Project does not have the model.`);
+        }
+        this.modelIds.splice(index, 1);
+    }
+
     async delete() {
         await fileSystem.rm(this.path, { recursive: true, force: true }, (err) => {
             if (err) {
@@ -59,6 +75,6 @@ export class Project {
 
     static fromReference(dbProject) {
         return new Project(dbProject.id, dbProject.name, dbProject.description,
-            dbProject.userId, dbProject.path, dbProject.volumeIds);
+            dbProject.userId, dbProject.path, dbProject.volumeIds, dbProject.modelIds);
     }
 }

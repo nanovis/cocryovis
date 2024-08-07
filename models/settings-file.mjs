@@ -14,7 +14,8 @@ export class SettingsFile extends StoredFile {
     }
 
     static async fromFile(file, uploadPath, moveFunction) {
-        return super.fromFile(file, uploadPath, SettingsFile.acceptedFileExtensions, moveFunction);
+        const storedFile = await super.fromFile(file, uploadPath, SettingsFile.acceptedFileExtensions, moveFunction);
+        return new SettingsFile(storedFile.fileName, storedFile.filePath);
     }
 
     async readFile() {

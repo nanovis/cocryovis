@@ -1,55 +1,48 @@
-import {fileNameFilter} from "../tools/utils.mjs";
-import path from "path";
-import fileSystem from "fs";
-
 export class Model {
-    subfolders = {
-        checkpoints: 'checkpoints',
-        inferenceData: 'inference-data',
-        predictions: 'predictions',
-    };
-
-    constructor(id, name, description, path, checkpoints, inferenceData, predictions) {
+    constructor(id, name, description, userId, projectIds = [], checkpointIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.path = path;
-        this.checkpoints = checkpoints;
-        this.inferenceData = inferenceData;
-        this.predictions = predictions;
+        this.userId = userId;
+        this.projectIds = projectIds;
+        this.checkpointIds = checkpointIds;
         Object.preventExtensions(this);
     }
 
-    static createModel(id, name, description, basePath) {
-        const model = new Model(id, name, description);
-        model.createDirectory(basePath);
-        return new Model(id, name, description);
+    static fromReference(dbReference) {
+        return Object.assign(new this(), dbReference);
     }
 
-    createDirectory(basePath) {
-        const folderName = this.id + "_" + fileNameFilter(this.name);
-        const folderPath = path.join(basePath, folderName);
-        this.path = folderPath;
-        if (fileSystem.existsSync(folderPath)) {
-            throw new Error(`Model directory already exists`);
+    addToProject(projectId) {
+        if (this.projectIds.includes(projectId)) {
+            throw new Error(`Model ${this.id} (${this.name}): Model is a part of the project.`);
         }
-        fileSystem.mkdirSync(folderPath, {recursive: true});
+        this.projectIds.push(projectId);
+    }
 
-        for (const subfolder in this.subfolders) {
-            fileSystem.mkdirSync(path.join(folderPath, this.subfolders[subfolder]));
+    removedFromProject(projectId) {
+        const index = this.projectIds.indexOf(projectId);
+        if (index === -1) {
+            throw new Error(`Model ${this.id} (${this.name}): Model is not included in the project.`);
         }
+        this.projectIds.splice(index, 1);
+    }
+
+    addCheckpoint(checkpointId) {
+        if (this.checkpointIds.includes(checkpointId)) {
+            throw new Error(`Model ${this.id} (${this.name}): Checkpoint is already included in the model.`);
+        }
+        this.checkpointIds.push(checkpointId);
+    }
+
+    removeCheckpoint(checkpointId) {
+        const index = this.checkpointIds.indexOf(checkpointId);
+        if (index === -1) {
+            throw new Error(`Model ${this.id} (${this.name}): Model does not have the checkpoint.`);
+        }
+        this.checkpointIds.splice(index, 1);
     }
 
     async delete() {
-        await fileSystem.rm(this.path, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.log(`Error deleting ${this.name}: ${err}.`);
-            }
-        });
-    }
-
-    static fromReference(dbModel) {
-        return new Model(dbModel.id, dbModel.name, dbModel.description, dbModel.path, dbModel.checkpoints,
-            dbModel.inferenceData, dbModel.predictions);
     }
 }

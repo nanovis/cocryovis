@@ -13,6 +13,7 @@ export class RawVolumeFile extends StoredFile {
     }
 
     static async fromFile(file, uploadPath, moveFunction) {
-        return super.fromFile(file, uploadPath, RawVolumeFile.acceptedFileExtensions, moveFunction);
+        const storedFile = await super.fromFile(file, uploadPath, RawVolumeFile.acceptedFileExtensions, moveFunction);
+        return new RawVolumeFile(storedFile.fileName, storedFile.filePath);
     }
 }
