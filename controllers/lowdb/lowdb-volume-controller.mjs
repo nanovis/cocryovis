@@ -2,6 +2,8 @@ import {Volume} from "../../models/volume.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import {AbstractVolumeController} from "../abstract-volume-controller.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
+import lowdbVolumeDataController, {volumeDataDeletedEvent} from "./lowdb-volume-data-controller.mjs";
+import {VolumeData} from "../../models/volume-data.mjs";
 
 class LowdbVolumeController extends AbstractVolumeController {
     constructor() {
@@ -9,6 +11,10 @@ class LowdbVolumeController extends AbstractVolumeController {
         this.db = LowdbManager.db;
         this.volumes = this.db.data.volumes;
         Object.preventExtensions(this);
+
+        globalEventEmitter.on(volumeDataDeletedEvent, async (volumeData) => {
+            await this.#onVolumeDataDeleted(volumeData);
+        });
     }
 
     getAllVolumes() {
@@ -27,7 +33,7 @@ class LowdbVolumeController extends AbstractVolumeController {
         return dbReferences.map((v) => Volume.fromReference(v));
     }
 
-    getProjectVolumes(projectId) {
+    getVolumesFromProject(projectId) {
         projectId = Number(projectId);
 
         const dbReferences = this.volumes.filter((v) => v.projectIds.includes(projectId));
@@ -87,84 +93,40 @@ class LowdbVolumeController extends AbstractVolumeController {
         await super.removeProject(Number(volumeId), Number(projectId));
     }
 
-    getRawVolume(volumeId) {
-        return super.getRawVolume(Number(volumeId));
+    async #onVolumeDataDeleted(volumeData) {
+        const volumes = this.getByIds(volumeData.volumeIds);
+        if (volumeData.type === VolumeData.volumeTypes.rawData) {
+            for (const volume of volumes) {
+                if (volume.rawDataId === volumeData.id) {
+                    volume.rawDataId = null;
+                    await this.update(volume);
+                }
+            }
+        }
+        else if (volumeData.type === VolumeData.volumeTypes.sparseLabels) {
+            for (const volume of volumes) {
+                try {
+                    volume.sparseLabeledVolumes.removeVolumeData(volumeData.id);
+                }
+                catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+        else if (volumeData.type === VolumeData.volumeTypes.pseudoLabels) {
+            for (const volume of volumes) {
+                try {
+                    volume.pseudoLabeledVolumes.removeVolumeData(volumeData.id);
+                }
+                catch (e) {
+                    console.error(e);
+                }
+            }
+        }
     }
 
-    async addRawVolumeFiles(volumeId, files) {
-        return await super.addRawVolumeFiles(Number(volumeId), files);
-    }
-
-    async convertRawVolumeRawFilesToTiffSlices(volumeId) {
-        await super.convertRawVolumeRawFilesToTiffSlices(Number(volumeId));
-    }
-
-    async removeRawVolume(volumeId) {
-        await super.removeRawVolume(Number(volumeId));
-    }
-
-    async removeRawFileFromRawVolume(volumeId) {
-        await super.removeRawFileFromRawVolume(Number(volumeId));
-    }
-
-    async removeSettingsFileFromRawVolume(volumeId) {
-        await super.removeSettingsFileFromRawVolume(Number(volumeId));
-    }
-
-    async removeTiffFilesFromRawVolume(volumeId) {
-        await super.removeTiffFilesFromRawVolume(Number(volumeId));
-    }
-
-    getSparseLabeledVolume(volumeId) {
-        return super.getSparseLabeledVolume(Number(volumeId));
-    }
-
-    async addSparseLabeledVolumeFiles(volumeId, files) {
-        await super.addSparseLabeledVolumeFiles(Number(volumeId), files);
-    }
-
-    async convertSparseLabeledVolumeRawFilesToTiffSlices(volumeId) {
-        await super.convertSparseLabeledVolumeRawFilesToTiffSlices(Number(volumeId));
-    }
-
-    async removeSparseLabeledVolume(volumeId, sparseLabeledVolumeId) {
-        await super.removeSparseLabeledVolume(Number(volumeId), Number(sparseLabeledVolumeId));
-    }
-
-    async removeRawFileFromSparseLabeledVolume(volumeId) {
-        await super.removeRawFileFromSparseLabeledVolume(Number(volumeId));
-    }
-
-    async removeSettingsFileFromSparseLabeledVolume(volumeId) {
-        await super.removeSettingsFileFromSparseLabeledVolume(Number(volumeId));
-    }
-
-    async removeTiffFilesFromSparseLabeledVolume(volumeId) {
-        await super.removeTiffFilesFromSparseLabeledVolume(Number(volumeId));
-    }
-
-    getPseudoLabeledVolume(volumeId) {
-        return super.getPseudoLabeledVolume(Number(volumeId));
-    }
-
-    async addPseudoLabeledVolumeFiles(volumeId, files) {
-        await super.addPseudoLabeledVolumeFiles(Number(volumeId), files);
-    }
-
-    async removePseudoLabeledVolume(volumeId) {
-        await super.removePseudoLabeledVolume(Number(volumeId));
-    }
-
-    async removeRawFileFromPseudoLabeledVolume(volumeId) {
-        await super.removeRawFileFromPseudoLabeledVolume(Number(volumeId));
-    }
-
-    async removeSettingsFileFromPseudoLabeledVolume(volumeId) {
-        await super.removeSettingsFileFromPseudoLabeledVolume(Number(volumeId));
-    }
-
-    async removeTiffFilesFromPseudoLabeledVolume(volumeId) {
-        await super.removeTiffFilesFromPseudoLabeledVolume(Number(volumeId));
+    async addRawVolumeFiles(volumeId, userId, files) {
+        await super.addRawVolumeFiles(Number(volumeId), userId, files);
     }
 }
 

@@ -45,9 +45,9 @@
 <a href="/api/actions/projects">Back to projects list.</a>
 <br />
 <h1>Vol Web</h1>
-<h2>Project <%= project.name %>:</h2>
-<p><b>Owner ID:</b> <%= project.userId %></p>
-<p><b>Description:</b> <%= project.description %></p>
+<h2>Project <%= project.details.name %>:</h2>
+<p><b>Owner ID:</b> <%= project.details.userId %></p>
+<p><b>Description:</b> <%= project.details.description %></p>
 
 <br />
 <h3 style="text-align: left">Volumes:</h3>
@@ -56,7 +56,7 @@
     document.getElementById('createVolume').style.display = disp === 'block' ? 'none' : 'block';
     document.getElementById('createVolumeToggle').textContent = disp === 'block' ? 'Add New Volume &darr;' : 'Add New Volume &uarr;';
     })()">Add New Volume &darr;</button>
-<form id="createVolume" style="display: none" action="/api/actions/projects/<%= project.id %>/create-volume" method="post" enctype="multipart/form-data">
+<form id="createVolume" style="display: none" action="/api/actions/projects/<%= project.details.id %>/create-volume" method="post" enctype="multipart/form-data">
     <label for="name">Volume name:</label>
     <input type="text" name="name" /> <br />
     <br />
@@ -65,31 +65,24 @@
     <input type="submit" value="Add" />
 </form>
 <hr />
-<% for (const volume of volumes) { %>
+<% for (const volume of project.volumes) { %>
     <p>
-        <b>Volume:</b> <%= volume.name %> (<%= volume.id %>)
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a>
+        <b>Volume:</b> <%= volume.details.name %> (<%= volume.details.id %>)
+        <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.id %>/delete">[X]</a>
     </p>
     <h4>Raw Data:</h4>
     <% if (volume.rawData != null) { %>
         <% if (volume.rawData.rawFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-raw"><%= volume.rawData.rawFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-raw-file">[X]</a>
-            <% if (volume.sparseLabeledVolume.settingsFile != null) { %>
-                <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/convert-raw-to-tiff"><button>Convert to tiff slices</button></a>
-            <% } %>
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/download-raw-file"><%= volume.rawData.rawFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/delete-raw-file">[X]</a>
             <br />
         <% } %>
         <% if (volume.rawData.settingsFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-settings"><%= volume.rawData.settingsFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-settings-file">[X]</a><br />
-        <% } %>
-        <% if (volume.rawData.tiffFolder != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/download-tiff">Tiff Files</a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/delete-tiff-files">[X]</a><br />
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/download-settings-file"><%= volume.rawData.settingsFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/delete-settings-file">[X]</a><br />
         <% } %>
         <% if (volume.rawData.rawFile != null && volume.rawData.settingsFile != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/visualize">Visualize Raw Volume</a><br />
+            <a target="_blank" href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
@@ -97,75 +90,65 @@
         <input type="file" id="rawDataFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
         <input
                 type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/upload', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
+                onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/raw-data/upload', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
                 value = "Upload">
         <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
         <span id="statusRawData"></span>
     </form>
     <h4>Sparse Labels:</h4>
-    <% if (volume.sparseLabeledVolume != null) { %>
-        <% if (volume.sparseLabeledVolume.rawFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/download-raw"><%= volume.sparseLabeledVolume.rawFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/delete-raw-file">[X]</a>
-            <% if (volume.sparseLabeledVolume.settingsFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/convert-raw-to-tiff"><button>Convert to tiff slices</button></a>
-            <% } %>
+    <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/add-sparse-labeled-volume"><button>Add Sparse Labeled Volume</button></a>
+    <br />
+    <% for (const sparseLabeledVolume of volume.sparseLabeledVolumes) { %>
+        <b>Sparse volume <%= sparseLabeledVolume.id %>:</b>
+        <form method="POST" enctype="multipart/form-data">
+            <label for="file">Select Sparse Labeled Volume files:</label>
+            <input type="file" id="sparseLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+            <input
+                    type="button"
+                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volumeData/<%= sparseLabeledVolume.id %>/upload-files', 'sparseLabeledVolumeFiles', 'progressBarSparseLabeledVolume', 'statusSparseLabeledVolume')"
+                    value = "Upload">
+            <progress id="progressBarSparseLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
+            <span id="statusSparseLabeledVolume"></span>
+        </form>
+        <% if (sparseLabeledVolume.rawFile != null) { %>
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/download-raw-file"><%= sparseLabeledVolume.rawFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/delete-raw-file">[X]</a>
             <br />
         <% } %>
-        <% if (volume.sparseLabeledVolume.settingsFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/download-settings"><%= volume.sparseLabeledVolume.settingsFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/delete-settings-file">[X]</a><br />
+        <% if (sparseLabeledVolume.settingsFile != null) { %>
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/download-settings-file"><%= sparseLabeledVolume.settingsFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/delete-settings-file">[X]</a><br />
         <% } %>
-        <% if (volume.sparseLabeledVolume.tiffFolder != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/download-tiff">Tiff Files</a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/delete-tiff-files">[X]</a><br />
-        <% } %>
-        <% if (volume.sparseLabeledVolume.rawFile != null && volume.sparseLabeledVolume.settingsFile != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/visualize">Visualize Raw Volume</a><br />
+        <% if (sparseLabeledVolume.rawFile != null && sparseLabeledVolume.settingsFile != null) { %>
+            <a target="_blank" href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
-    <form method="POST" enctype="multipart/form-data">
-        <label for="file">Select Sparse Labeled Volume files:</label>
-        <input type="file" id="sparseLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
-        <input
-                type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/sparse-labeled-volume/upload', 'sparseLabeledVolumeFiles', 'progressBarSparseLabeledVolume', 'statusSparseLabeledVolume')"
-                value = "Upload">
-        <progress id="progressBarSparseLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
-        <span id="statusSparseLabeledVolume"></span>
-    </form>
     <h4>Pseudo Labels:</h4>
-    <% if (volume.rawData.tiffFolder != null && volume.sparseLabeledVolume.tiffFolder != null) { %>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/create"><button>Infer Pseudo Labels with Ilastik</button></a>
-    <% } %>
-    <% if (volume.pseudoLabeledVolume != null) { %>
-        <% if (volume.pseudoLabeledVolume.rawFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-raw"><%= volume.pseudoLabeledVolume.rawFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/delete-raw-file">[X]</a>
+    <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/add-pseudo-labeled-volume"><button>Add Pseudo Labeled Volume</button></a>
+    <% for (const pseudoLabeledVolume of volume.pseudoLabeledVolumes) { %>
+        <form method="POST" enctype="multipart/form-data">
+            <label for="file">Select Pseudo Labeled Volume files:</label>
+            <input type="file" id="pseudoLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+            <input
+                    type="button"
+                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volumeData/<%= pseudoLabeledVolume.id %>/upload-files', 'pseudoLabeledVolumeFiles', 'progressBarPseudoLabeledVolume', 'pseudoSparseLabeledVolume')"
+                    value = "Upload">
+            <progress id="progressBarPseudoLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
+            <span id="pseudoSparseLabeledVolume"></span>
+        </form>
+        <% if (pseudoLabeledVolume.rawFile != null) { %>
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/download-raw-file"><%= pseudoLabeledVolume.rawFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/delete-raw-file">[X]</a>
             <br />
         <% } %>
-        <% if (volume.pseudoLabeledVolume.settingsFile != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-settings"><%= volume.pseudoLabeledVolume.settingsFile.fileName %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/delete-settings-file">[X]</a><br />
+        <% if (pseudoLabeledVolume.settingsFile != null) { %>
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/download-settings-file"><%= pseudoLabeledVolume.settingsFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/delete-settings-file">[X]</a><br />
         <% } %>
-        <% if (volume.pseudoLabeledVolume.tiffFolder != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/download-tiff">Tiff Files</a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/delete-tiff-files">[X]</a><br />
-        <% } %>
-        <% if (volume.pseudoLabeledVolume.rawFile != null && volume.pseudoLabeledVolume.settingsFile != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/visualize">Visualize Raw Volume</a><br />
+        <% if (pseudoLabeledVolume.rawFile != null && pseudoLabeledVolume.settingsFile != null) { %>
+            <a target="_blank" href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
-    <form method="POST" enctype="multipart/form-data">
-        <label for="file">Select Pseudo Labeled Volume files:</label>
-        <input type="file" id="pseudoLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
-        <input
-                type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/pseudo-labeled-volume/upload', 'pseudoLabeledVolumeFiles', 'progressBarPseudoLabeledVolume', 'pseudoSparseLabeledVolume')"
-                value = "Upload">
-        <progress id="progressBarPseudoLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
-        <span id="pseudoSparseLabeledVolume"></span>
-    </form>
     <hr />
 <% } %>
 <br />
@@ -176,7 +159,7 @@
     document.getElementById('createModel').style.display = disp === 'block' ? 'none' : 'block';
     document.getElementById('createModelToggle').textContent = disp === 'block' ? 'Add New Model &darr;' : 'Add New Model &uarr;';
     })()">Add New Model &darr;</button>
-<form id="createModel" style="display: none" action="/api/actions/projects/<%= project.id %>/create-model" method="post" enctype="multipart/form-data">
+<form id="createModel" style="display: none" action="/api/actions/projects/<%= project.details.id %>/create-model" method="post" enctype="multipart/form-data">
     <label for="name">Volume name:</label>
     <input type="text" name="name" /> <br />
     <br />
@@ -184,25 +167,25 @@
     <textarea name="description" rows="4" cols="25"></textarea>
     <input type="submit" value="Add" />
 </form>
-<% for (let modelIndex = 0; modelIndex < models.length; modelIndex++) { %>
+<% for (const model of project.models) { %>
     <p>
-        <b>Model:</b> <%= models[modelIndex].name %> (<%= models[modelIndex].id %>)
-        <a href="/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/delete">[X]</a>
+        <b>Model:</b> <%= model.details.name %> (<%= model.details.id %>)
+        <a href="/api/actions/projects/<%= project.details.id %>/model/<%= model.details.id %>/delete">[X]</a>
     </p>
     <form method="POST" enctype="multipart/form-data">
         <label for="file">Select Checkpoint files:</label>
         <input type="file" id="checkpointFiles" name="files" accept=".ckpt" multiple>
         <input
                 type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/add-checkpoint', 'checkpointFiles', 'progressBarCheckpoint', 'statusCheckpoint')"
+                onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/model/<%= model.details.id %>/add-checkpoint', 'checkpointFiles', 'progressBarCheckpoint', 'statusCheckpoint')"
                 value = "Upload">
         <progress id="progressBarCheckpoint" value="0" max="100" style="width:300px; display: none"></progress>
         <span id="statusCheckpoint"></span>
     </form>
     <h4>Checkpoints:</h4>
-    <% for (const checkpoint of checkpoints[modelIndex]) { %>
-        <a href="/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/checkpoint/<%= checkpoint.id %>/download"><%= checkpoint.fileName %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/model/<%= models[modelIndex].id %>/checkpoint/<%= checkpoint.id %>/delete">[X]</a>
+    <% for (const checkpoint of model.checkpoints) { %>
+        <a href="/api/actions/projects/<%= project.details.id %>/model/<%= model.details.id %>/checkpoint/<%= checkpoint.id %>/download"><%= checkpoint.fileName %></a> ...
+        <a href="/api/actions/projects/<%= project.details.id %>/model/<%= model.details.id %>/checkpoint/<%= checkpoint.id %>/delete">[X]</a>
         <br />
     <% } %>
 <% } %>

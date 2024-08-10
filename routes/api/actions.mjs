@@ -30,6 +30,7 @@ const modelHandler = new ModelHandler(config.models, models);
 
 const projectController = ControllerFactory.getProjectController(config.db.type);
 const volumeController = ControllerFactory.getVolumeController(config.db.type);
+const volumeDataController = ControllerFactory.getVolumeDataController(config.db.type);
 const modelController = ControllerFactory.getModelController(config.db.type);
 const checkpointController = ControllerFactory.getCheckpointController(config.db.type);
 
@@ -556,14 +557,29 @@ actions.get(`/${projectsActionsPath}/`, restrict, (req, res) => {
 // Get Project Details
 actions.get(`/${projectsActionsPath}/details/:id`, restrict, (req, res) => {
     try {
-        const project = projectController.getById(req.params.id);
-        const volumes = volumeController.getByIds(project.volumeIds);
-        const models = modelController.getByIds(project.modelIds);
-        const checkpoints = [];
-        for (const model of models) {
-            checkpoints.push(checkpointController.getByIds(model.checkpointIds));
+        const project = {
+            "details": projectController.getById(req.params.id),
+            "volumes": [],
+            "models": []
         }
-        res.render('project-details', { project: project, volumes: volumes, models: models, checkpoints: checkpoints });
+        const volumes = volumeController.getVolumesFromProject(project.details.id)
+        for (const volume of volumes) {
+            let rawData = null;
+            if (volume.rawDataId) {
+                rawData = volumeDataController.getById(volume.rawDataId);
+            }
+            const sparseLabeledVolumes = volumeDataController.getSparseLabeledVolumesFromVolume(volume.id);
+            const pseudoLabeledVolumes = volumeDataController.getPseudoLabeledVolumesFromVolume(volume.id);
+            project.volumes.push({"details": volume, "rawData": rawData,
+                "sparseLabeledVolumes": sparseLabeledVolumes, "pseudoLabeledVolumes": pseudoLabeledVolumes});
+        }
+        const models = modelController.getModelsFromProject(project.details.id);
+        for (const model of models) {
+            const checkpoints = checkpointController.getCheckpointsFromModel(model.id);
+            project.models.push({"details": model, "checkpoints": checkpoints});
+        }
+
+        res.render('project-details', { project: project });
     } catch (err) {
         res.status(500).send(err);
     }
@@ -629,9 +645,6 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restri
     }
 });
 
-
-/////// RAW VOLUME
-
 // Upload Raw Data
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload`, restrict, async (req, res) => {
     console.log(`Uploading raw data for volume ${req.params.idVolume}`);
@@ -642,7 +655,7 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/uploa
                 message: 'No file uploaded'
             });
         } else {
-            await volumeController.addRawVolumeFiles(req.params.idVolume, req.files.files);
+            await volumeController.addRawVolumeFiles(req.params.idVolume, req.session.user.id, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -650,27 +663,43 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/uploa
     }
 });
 
-// Create tif files
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/convert-raw-to-tiff`, restrict, async (req, res) => {
+// Add Sparse Labeled Volume
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-sparse-labeled-volume`, restrict, async (req, res) => {
     try {
-        await volumeController.convertRawVolumeRawFilesToTiffSlices(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        await volumeController.addSparseLabeledVolume(req.params.idVolume, req.session.user.id);
+
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
     } catch (err) {
+        console.error("Error in creating volume:", err);
         res.status(500).send(err);
     }
 });
 
-// Visualize Raw Data
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/visualize`, restrict, async (req, res) => {
-    console.log(`Visualizing raw data for volume ${req.params.idVolume}`);
+// Add Pseudo Labeled Volume
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labeled-volume`, restrict, async (req, res) => {
     try {
-        const rawVolume = volumeController.getRawVolume(req.params.idVolume);
+        await volumeController.addPseudoLabeledVolume(req.params.idVolume, req.session.user.id);
+
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
+    } catch (err) {
+        console.error("Error in creating volume:", err);
+        res.status(500).send(err);
+    }
+});
+
+/////// VOLUME DATA
+
+// Visualize Volume Data
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/visualize`, restrict, async (req, res) => {
+    console.log(`Visualizing volume data ${req.params.idVolumeData}`);
+    try {
+        const volumeData = volumeDataController.getById(req.params.idVolumeData);
 
         const visualizationFiles = [];
 
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, rawVolume.rawFile.filePath), filename: rawVolume.rawFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, rawVolume.settingsFile.filePath), filename: rawVolume.settingsFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, rawVolume.configFile.filePath), filename: rawVolume.configFile.fileName } );
+        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.rawFile.filePath), filename: volumeData.rawFile.fileName } );
+        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.settingsFile.filePath), filename: volumeData.settingsFile.fileName } );
+        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.configFile.filePath), filename: volumeData.configFile.fileName } );
         visualizationFiles.push( { path: publicPath(req.originalUrl, "data/session.json"), filename: "session.json" } );
         visualizationFiles.push( { path: publicPath(req.originalUrl, "data/tf-default.json"), filename: "tf-default.json" } );
 
@@ -682,12 +711,29 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/visual
     }
 });
 
-// Download Raw Data
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-full`, restrict, async (req, res) => {
-    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
+// Add Files to Volume Data
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-files`, restrict, async (req, res) => {
     try {
-        const rawVolume = volumeController.getRawVolume(req.params.idVolume);
-        let data = rawVolume.prepareDataForDownload();
+        if (!req.files || !req.files.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            await volumeDataController.addFiles(req.params.idVolumeData, req.files.files);
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Download Volume Data
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/download-full`, restrict, async (req, res) => {
+    console.log(`Downloading volume data ${req.params.idVolumeData}`);
+    try {
+        const volumeData = volumeDataController.getById(req.params.idVolumeData);
+        let data = volumeData.prepareDataForDownload();
         res.set('Content-Type', 'application/zip');
         res.set('Content-Disposition', 'attachment; filename=' + data.name);
         res.send(data.zipBuffer);
@@ -696,10 +742,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/downlo
     }
 });
 
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-raw`, restrict, async (req, res) => {
-    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/download-raw-file`, restrict, async (req, res) => {
+    console.log(`Downloading raw data for volume data ${req.params.idVolumeData}`);
     try {
-        const rawFile = volumeController.getRawVolume(req.params.idVolume).rawFile;
+        const rawFile = volumeDataController.getById(req.params.idVolumeData).rawFile;
 
         if(rawFile == null) {
             throw new Error("Raw volume does not have a raw file");
@@ -714,10 +760,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/downlo
     }
 });
 
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-settings`, restrict, async (req, res) => {
-    console.log(`Downloading raw data for volume ${req.params.idVolume}`);
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/download-settings-file`, restrict, async (req, res) => {
+    console.log(`Downloading settings file for volume data ${req.params.idVolumeData}`);
     try {
-        const settingsFile = volumeController.getRawVolume(req.params.idVolume).settingsFile;
+        const settingsFile = volumeDataController.getById(req.params.idVolumeData).settingsFile;
 
         if(settingsFile == null) {
             throw new Error("Raw volume does not have a settings file");
@@ -732,391 +778,28 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/downlo
     }
 });
 
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/download-tiff`, restrict, async (req, res) => {
-    console.log(`Downloading tiff slices file from raw volume for volume ${req.params.idVolume}`);
+// Delete Volume Data
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-full`, restrict, async (req, res) => {
     try {
-        const tiffFolder = volumeController.getRawVolume(req.params.idVolume).tiffFolder;
-
-        if(tiffFolder == null) {
-            throw new Error("Pseudo labeled volume does not have any tiff files");
-        }
-
-        let data = tiffFolder.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Delete Raw Data
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-full`, restrict, async (req, res) => {
-    console.log(`Deleting raw data for volume ${req.params.idVolume}`);
-    try {
-        await volumeController.removeRawVolume(req.params.idVolume);
+        await volumeDataController.delete(req.params.idVolumeData);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
     }
 });
 
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-raw-file`, restrict, async (req, res) => {
-    console.log(`Deleting raw data raw file for volume ${req.params.idVolume}`);
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-raw-file`, restrict, async (req, res) => {
     try {
-        await volumeController.removeRawFileFromRawVolume(req.params.idVolume);
+        await volumeDataController.removeRawFile(req.params.idVolumeData);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);
     }
 });
 
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-settings-file`, restrict, async (req, res) => {
-    console.log(`Deleting raw data settings file for volume ${req.params.idVolume}`);
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-settings-file`, restrict, async (req, res) => {
     try {
-        await volumeController.removeSettingsFileFromRawVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/delete-tiff-files`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeTiffFilesFromRawVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-/////// SPARSE LABELED VOLUME
-
-// Upload Sparse Labels
-actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/upload`, restrict, async (req, res) => {
-    console.log(`Uploading Sparse Data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
-    try {
-        if (!req.files || !req.files.files) {
-            res.send({
-                status: false,
-                message: 'No file uploaded'
-            });
-        } else {
-            await volumeController.addSparseLabeledVolumeFiles(req.params.idVolume, req.files.files);
-            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-        }
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Create tif files
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/convert-raw-to-tiff`, restrict, async (req, res) => {
-    try {
-        await volumeController.convertSparseLabeledVolumeRawFilesToTiffSlices(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Visualize Sparse Labeled Volume
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/visualize`, restrict, async (req, res) => {
-    console.log(`Visualizing sparse labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const volumeData = volumeController.getSparseLabeledVolume(req.params.idVolume);
-
-        const visualizationFiles = [];
-
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.rawFile.filePath), filename: volumeData.rawFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.settingsFile.filePath), filename: volumeData.settingsFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.configFile.filePath), filename: volumeData.configFile.fileName } );
-        visualizationFiles.push( { path: publicPath(req.originalUrl, "data/session.json"), filename: "session.json" } );
-        visualizationFiles.push( { path: publicPath(req.originalUrl, "data/tf-default.json"), filename: "tf-default.json" } );
-
-        const volumesJSON = JSON.stringify(visualizationFiles).replaceAll('\\', '\\\\');
-
-        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON });
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Download Sparse Label
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/download-full`, restrict, async (req, res) => {
-    console.log(`Downloading sparse labeled volume for volume ${req.params.idVolume} (project ${req.params.idProject})`);
-    try {
-        const sparseLabeledVolume = volumeController.getSparseLabeledVolume(req.params.idVolume);
-        let data = sparseLabeledVolume.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/download-raw`, restrict, async (req, res) => {
-    console.log(`Downloading raw file from sparse labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const rawFile = volumeController.getSparseLabeledVolume(req.params.idVolume).rawFile;
-
-        if(rawFile == null) {
-            throw new Error("Sparse labeled volume does not have a raw file");
-        }
-
-        let data = rawFile.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/download-settings`, restrict, async (req, res) => {
-    console.log(`Downloading settings file from sparse labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const settingsFile = volumeController.getSparseLabeledVolume(req.params.idVolume).settingsFile;
-
-        if(settingsFile == null) {
-            throw new Error("Sparse labeled volume does not have a settings file");
-        }
-
-        let data = settingsFile.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/download-tiff`, restrict, async (req, res) => {
-    console.log(`Downloading tiff slices file from sparse labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const tiffFolder = volumeController.getSparseLabeledVolume(req.params.idVolume).tiffFolder;
-
-        if(tiffFolder == null) {
-            throw new Error("Sparse labeled volume does not have any tiff files");
-        }
-
-        let data = tiffFolder.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Delete Sparse Labels
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/delete-full`, restrict, async (req, res) => {
-    console.log(`Deleting sparse labeled volume ${req.params.idSparseLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
-    try {
-        await volumeController.removeSparseLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/delete-raw-file`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeRawFileFromSparseLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/delete-settings-file`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeSettingsFileFromSparseLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/sparse-labeled-volume/delete-tiff-files`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeTiffFilesFromSparseLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-
-/////// PSEUDO LABELED VOLUME
-
-// Upload Pseudo Labels
-actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/upload`, restrict, async (req, res) => {
-    console.log(`Uploading Sparse Data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
-    try {
-        if (!req.files || !req.files.files) {
-            res.send({
-                status: false,
-                message: 'No file uploaded'
-            });
-        } else {
-            await volumeController.addPseudoLabeledVolumeFiles(req.params.idVolume, req.files.files);
-            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-        }
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Create Pseudo Labels with Illastik
-actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/create`, restrict, async (req, res) => {
-    console.log(`Uploading Sparse Data for volume ${req.params.idVolume} (project id: ${req.params.idProject})`);
-    try {
-        const volume = volumeController.getById(idVolume);
-        if (volume.rawData == null || volume.rawData.tiffFolder == null
-            || volume.sparseLabeledVolume == null || volume.sparseLabeledVolume.tiffFolder == null) {
-            throw Error("Pseudo label inference requires both raw and sparse label volumes with tiff slices.")
-        }
-
-        if (volume.pseudoLabeledVolume != null) {
-            await volumeController.removePseudoLabeledVolume(idVolume);
-        }
-
-        const rawDataPath = path.join(volume.rawData.tiffFolder, "*.tif");
-        const sparseLabelPath = path.join(volume.sparseLabeledVolume.tiffFolder, "*.tif");
-        const modelOutputPath = path.join(volume.path, Volume.subfolders.pseudoLabels);
-        const labelsOutputPath = path.join(volume.path, Volume.subfolders.pseudoLabels, VolumeData.subfolders.tiffFiles);
-
-        ilastikHandler.generateLabels(rawDataPath, sparseLabelPath, modelOutputPath, labelsOutputPath);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Visualize Sparse Labeled Volume
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/visualize`, restrict, async (req, res) => {
-    console.log(`Visualizing pseudo labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const volumeData = volumeController.getPseudoLabeledVolume(req.params.idVolume);
-
-        const visualizationFiles = [];
-
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.rawFile.filePath), filename: volumeData.rawFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.settingsFile.filePath), filename: volumeData.settingsFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.configFile.filePath), filename: volumeData.configFile.fileName } );
-        visualizationFiles.push( { path: publicPath(req.originalUrl, "data/session.json"), filename: "session.json" } );
-        visualizationFiles.push( { path: publicPath(req.originalUrl, "data/tf-default.json"), filename: "tf-default.json" } );
-
-        const volumesJSON = JSON.stringify(visualizationFiles).replaceAll('\\', '\\\\');
-
-        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON });
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Download Pseudo Label
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/download-full`, restrict, async (req, res) => {
-    console.log(`Downloading pseudo labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
-    try {
-        const pseudoLabeledVolume = volumeController.getPseudoLabeledVolume(req.params.idVolume);
-        let data = pseudoLabeledVolume.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/download-raw`, restrict, async (req, res) => {
-    console.log(`Downloading raw file from pseudo labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const rawFile = volumeController.getPseudoLabeledVolume(req.params.idVolume).rawFile;
-
-        if(rawFile == null) {
-            throw new Error("Pseudo labeled volume does not have a raw file");
-        }
-
-        let data = rawFile.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/download-settings`, restrict, async (req, res) => {
-    console.log(`Downloading settings file from pseudo labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const settingsFile = volumeController.getPseudoLabeledVolume(req.params.idVolume).settingsFile;
-
-        if(settingsFile == null) {
-            throw new Error("Pseudo labeled volume does not have a settings file");
-        }
-
-        let data = settingsFile.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/download-tiff`, restrict, async (req, res) => {
-    console.log(`Downloading tiff slices file from pseudo labeled volume for volume ${req.params.idVolume}`);
-    try {
-        const tiffFolder = volumeController.getPseudoLabeledVolume(req.params.idVolume).tiffFolder;
-
-        if(tiffFolder == null) {
-            throw new Error("Pseudo labeled volume does not have any tiff files");
-        }
-
-        let data = tiffFolder.prepareDataForDownload();
-        res.set('Content-Type', 'application/zip');
-        res.set('Content-Disposition', 'attachment; filename=' + data.name);
-        res.send(data.zipBuffer);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-// Delete Pseudo Labels
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/delete-full`, restrict, async (req, res) => {
-    console.log(`Deleting sparse labeled volume ${req.params.idPseudoLabels} for volume ${req.params.idVolume} (project ${req.params.idProject})`);
-    try {
-        await volumeController.removePseudoLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/delete-raw-file`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeRawFileFromPseudoLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/delete-settings-file`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeSettingsFileFromPseudoLabeledVolume(req.params.idVolume);
-        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/pseudo-labeled-volume/delete-tiff-files`, restrict, async (req, res) => {
-    try {
-        await volumeController.removeTiffFilesFromPseudoLabeledVolume(req.params.idVolume);
+        await volumeDataController.removeSettingsFile(req.params.idVolumeData);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);

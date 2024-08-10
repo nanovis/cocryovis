@@ -1,5 +1,8 @@
 import {AbstractController} from "./abstract-controller.mjs";
 import globalEventEmitter from "../tools/global-event-system.mjs";
+import lowdbVolumeDataController from "./lowdb/lowdb-volume-data-controller.mjs";
+import {VolumeData} from "../models/volume-data.mjs";
+import {VolumeDataStack} from "../models/volume-data-stack.mjs";
 
 export class AbstractVolumeController extends AbstractController {
     constructor() {
@@ -24,7 +27,7 @@ export class AbstractVolumeController extends AbstractController {
         throw new Error('Method not implemented');
     }
 
-    getProjectVolumes(projectId) {
+    getVolumesFromProject(projectId) {
         throw new Error('Method not implemented');
     }
 
@@ -66,313 +69,58 @@ export class AbstractVolumeController extends AbstractController {
         }
     }
 
-    getRawVolume(volumeId) {
-        return this.getById(volumeId).rawData;
+    async addRawVolumeFiles(volumeId, userId, files) {
+        const volume = this.getById(volumeId);
+
+        if (volume.rawDataId == null) {
+            volume.rawDataId = await lowdbVolumeDataController.create(VolumeData.volumeTypes.rawData, volumeId, userId);
+        }
+
+        await lowdbVolumeDataController.addFiles(volume.rawDataId, files);
+
+        await this.update(volume);
+        console.log("Raw Data successfully uploaded.");
     }
 
-    async addRawVolumeFiles(volumeId, files) {
-        try {
-            const volume = this.getById(volumeId);
+    async addSparseLabeledVolume(volumeId, userId){
+        const volume = this.getById(volumeId);
 
-            await volume.addRawDataFiles(files);
+        if (volume.sparseLabeledVolumes == null) {
+            volume.sparseLabeledVolumes = new VolumeDataStack(VolumeData.volumeTypes.sparseLabels,
+                this.config.maxVolumeChannels);
+        }
 
-            await this.update(volume);
-            console.log("Raw Data successfully uploaded.");
+        if (!volume.sparseLabeledVolumes.canAddMoreVolumes()) {
+            throw new Error(
+                `Volume ${volume.id} (${volume.name}): Maximum amount of volumes in a sparse volume stack reached (${this.maxSize})`);
         }
-        catch(error) {
-            throw error;
-        }
+
+        const volumeDataId = await lowdbVolumeDataController.create(VolumeData.volumeTypes.sparseLabels, volumeId, userId);
+
+        volume.sparseLabeledVolumes.addVolumeData(volumeDataId);
+
+        await this.update(volume);
+        console.log(`Volume ${volume.id} (${volume.name}): Sparse labeled volume successfully added.`);
     }
 
-    async convertRawVolumeRawFilesToTiffSlices(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-            console.log(`Volume ${volume.id} (${volume.name}): Converting raw volume raw file to tiff slices.`);
+    async addPseudoLabeledVolume(volumeId, userId){
+        const volume = this.getById(volumeId);
 
-            if (volume.rawData == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
-            }
-
-            await volume.rawData.convertRawToTiff();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Raw volume raw file successfully converted to tiff slices.`);
+        if (volume.pseudoLabeledVolumes == null) {
+            volume.pseudoLabeledVolumes = new VolumeDataStack(VolumeData.volumeTypes.pseudoLabels,
+                this.config.maxVolumeChannels);
         }
-        catch(error) {
-            throw error;
+
+        if (!volume.pseudoLabeledVolumes.canAddMoreVolumes()) {
+            throw new Error(
+                `Volume ${volume.id} (${volume.name}): Maximum amount of volumes in a pseudo volume stack reached (${this.maxSize})`);
         }
-    }
 
-    async removeRawVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
+        const volumeDataId = await lowdbVolumeDataController.create(VolumeData.volumeTypes.pseudoLabels, volumeId, userId);
 
-            await volume.removeRawData();
+        volume.pseudoLabeledVolumes.addVolumeData(volumeDataId);
 
-            await this.update(volume);
-            console.log("Raw Data successfully deleted.");
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeRawFileFromRawVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            if (volume.rawData == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
-            }
-
-            await volume.rawData.deleteRawFile();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Raw file successfully removed from raw volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeSettingsFileFromRawVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            if (volume.rawData == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
-            }
-
-            await volume.rawData.deleteSettingsFile();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Settings file successfully removed from raw volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeTiffFilesFromRawVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing tiff slices from raw volume.`);
-
-            if (volume.rawData == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a raw volume.`);
-            }
-
-            await volume.rawData.deleteTiffFolder();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Tiff slices successfully removed from raw volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    getSparseLabeledVolume(volumeId) {
-        return this.getById(volumeId).sparseLabeledVolume;
-    }
-
-    async addSparseLabeledVolumeFiles(volumeId, files) {
-        try {
-            const volume = this.getById(volumeId);
-
-            await volume.addSparseLabeledVolumeFiles(files);
-
-            await this.update(volume);
-            console.log("Raw Data successfully uploaded.");
-        }
-        catch(error) {
-            throw error;
-        }
-    }
-
-    async convertSparseLabeledVolumeRawFilesToTiffSlices(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-            console.log(`Volume ${volume.id} (${volume.name}): Converting sparse labeled volume raw file to tiff slices.`);
-
-            if (volume.sparseLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
-            }
-
-            await volume.sparseLabeledVolume.convertRawToTiff();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Sparse labeled volume raw file successfully converted to tiff slices.`);
-        }
-        catch(error) {
-            throw error;
-        }
-    }
-
-    async removeRawFileFromSparseLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing raw file from sparse labeled volume.`);
-
-            if (volume.sparseLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
-            }
-
-            await volume.sparseLabeledVolume.deleteRawFile();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Raw file successfully removed from sparse labeled volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeSettingsFileFromSparseLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing settings file from sparse labeled volume.`);
-
-            if (volume.sparseLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
-            }
-
-            await volume.sparseLabeledVolume.deleteSettingsFile();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Settings file successfully removed from sparse labeled volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeTiffFilesFromSparseLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing tiff slices from sparse labeled volume.`);
-
-            if (volume.sparseLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a sparse labeled volume.`);
-            }
-
-            await volume.sparseLabeledVolume.deleteTiffFolder();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Tiff slices successfully removed from sparse labeled volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeSparseLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            await volume.removeSparseLabeledVolume();
-
-            await this.update(volume);
-            console.log(`Sparse labeled volume successfully deleted from volume ${volume.name}.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    getPseudoLabeledVolume(volumeId) {
-        return this.getById(volumeId).pseudoLabeledVolume;
-    }
-
-    async addPseudoLabeledVolumeFiles(volumeId, files) {
-        try {
-            const volume = this.getById(volumeId);
-
-            await volume.addPseudoLabeledVolumeFiles(files);
-
-            await this.update(volume);
-            console.log("Raw Data successfully uploaded.");
-        }
-        catch(error) {
-            throw error;
-        }
-    }
-
-    async removePseudoLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            await volume.removePseudoLabeledVolume();
-
-            await this.update(volume);
-            console.log(`Pseudo labeled volume successfully deleted from volume ${volume.name}.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeRawFileFromPseudoLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing raw file from pseudo labeled volume.`);
-
-            if (volume.pseudoLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a pseudo labeled volume.`);
-            }
-
-            await volume.pseudoLabeledVolume.deleteRawFile();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Raw file successfully removed from pseudo labeled volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeSettingsFileFromPseudoLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing settings file from pseudo labeled volume.`);
-
-            if (volume.pseudoLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a pseudo labeled volume.`);
-            }
-
-            await volume.pseudoLabeledVolume.deleteSettingsFile();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Settings file successfully removed from pseudo labeled volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
-    async removeTiffFilesFromPseudoLabeledVolume(volumeId) {
-        try {
-            const volume = this.getById(volumeId);
-
-            console.log(`Volume ${volume.id} (${volume.name}): Removing tiff slices from pseudo labeled volume.`);
-
-            if (volume.pseudoLabeledVolume == null) {
-                throw new Error(`Volume ${volume.id} (${volume.name}): Volume does not have a pseudo labeled volume.`);
-            }
-
-            await volume.pseudoLabeledVolume.deleteTiffFolder();
-
-            await this.update(volume);
-            console.log(`Volume ${volume.id} (${volume.name}): Tiff slices successfully removed from pseudo labeled volume.`);
-        }
-        catch (error) {
-            throw error;
-        }
+        await this.update(volume);
+        console.log(`Volume ${volume.id} (${volume.name}): Pseudo labeled volume successfully added.`);
     }
 }

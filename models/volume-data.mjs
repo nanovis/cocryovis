@@ -6,21 +6,27 @@ import {StoredFile} from "./stored-file.mjs";
 import {writeFile, rm, access, mkdir} from 'node:fs/promises';
 import {isFileExtensionAccepted} from "../tools/utils.mjs";
 import {StoredFolder} from "./stored-folder.mjs";
-import {rawToTiff} from "../tools/raw-to-tiff.mjs";
+import fileSystem from "fs";
 
 export class VolumeData {
     static configFileName = "config.json";
 
-    static subfolders = {
-        "tiffFiles": "tiff-files"
+    static volumeTypes = {
+        "rawData": "rawData",
+        "sparseLabels": "sparseLabels",
+        "pseudoLabels": "pseudoLabels"
     }
 
-    constructor(path, rawFile = null, settingsFile = null, configFile = null, tiffFolder = null) {
+    constructor(id, type, userId, path, volumeIds = [], rawFile = null, settingsFile = null,
+                configFile = null) {
+        this.id = id;
+        this.type = type;
+        this.userId = userId;
         this.path = path;
+        this.volumeIds = volumeIds;
         this.rawFile = rawFile;
         this.settingsFile = settingsFile;
         this.configFile = configFile;
-        this.tiffFolder = tiffFolder;
     }
 
     async delete() {
@@ -33,10 +39,21 @@ export class VolumeData {
         if (this.configFile) {
             this.configFile.delete();
         }
-        if (this.tiffFolder) {
-            this.tiffFolder.delete();
-        }
         await rm(this.path, { recursive: true, force: true });
+    }
+
+    static createVolumeData(id, type, userId, volumeId, basePath) {
+        const folderPath = path.join(basePath, id.toString());
+        if (fileSystem.existsSync(folderPath)) {
+            throw new Error(`Volume directory already exists`);
+        }
+        fileSystem.mkdirSync(folderPath, {recursive: true});
+
+        for (const subfolder in VolumeData.subfolders) {
+            fileSystem.mkdirSync(path.join(folderPath, VolumeData.subfolders[subfolder]));
+        }
+
+        return new VolumeData(id, type, userId, folderPath, [volumeId]);
     }
 
     static fromReference(dbReference) {
@@ -52,17 +69,17 @@ export class VolumeData {
         if (dbReference.configFile) {
             configFile = StoredFile.fromReference(dbReference.configFile);
         }
-        let tiffFolder = null;
-        if (dbReference.tiffFolder) {
-            tiffFolder = StoredFolder.fromReference(dbReference.tiffFolder);
-        }
-        return new VolumeData(dbReference.path, rawFile, settingsFile, configFile, tiffFolder);
+        return new this(dbReference.id, dbReference.type, dbReference.userId, dbReference.path, dbReference.volumeIds,
+            rawFile, settingsFile, configFile);
+    }
+
+    isMissingFiles() {
+        return this.rawFile == null || this.settingsFile == null;
     }
 
     async uploadFiles(files) {
         this.rawFileUploaded = false;
         this.settingsFileUploaded = false;
-        this.tiffFileUploaded = false;
 
         try {
             await access(this.path);
@@ -85,13 +102,12 @@ export class VolumeData {
             await this.uploadFile(files, (file, filteredFileName, fullPath) => file.mv(fullPath));
         }
 
-        if (!this.rawFileUploaded && !this.settingsFileUploaded && !this.tiffFileUploaded) {
+        if (!this.rawFileUploaded && !this.settingsFileUploaded) {
             throw new Error("No valid files provided");
         }
 
         delete this.rawFileUploaded;
         delete this.settingsFileUploaded;
-        delete this.tiffFileUploaded;
 
         return this;
     }
@@ -118,19 +134,6 @@ export class VolumeData {
             await this.createConfigFile();
             await this.#setRawFilePathInSettings();
         }
-        if (isFileExtensionAccepted(file.name, [".tif,", ".tiff"])) {
-            if (this.tiffFolder == null) {
-                this.tiffFolder =
-                    new StoredFolder(VolumeData.subfolders.tiffFiles, path.join(this.path, VolumeData.subfolders.tiffFiles));
-            }
-            else if (this.tiffFileUploaded !== undefined && !this.tiffFileUploaded) {
-                await this.deleteTiffFolder();
-            }
-            if (this.settingsFileUploaded !== undefined) {
-                this.tiffFileUploaded = true;
-            }
-            await this.tiffFolder.addFile(file, moveFunction);
-        }
     }
 
     async createConfigFile() {
@@ -153,7 +156,7 @@ export class VolumeData {
         await this.settingsFile.setRawFilePath(this.rawFile.fileName);
     }
 
-    prepareDataForDownload(downloadRawFile = true, downloadSettingsFile = true, downloadTiffFiles = false) {
+    prepareDataForDownload(downloadRawFile = true, downloadSettingsFile = true) {
         let hasFiles = false;
 
         const zip = new AdmZip();
@@ -163,10 +166,6 @@ export class VolumeData {
         }
         if (downloadSettingsFile && this.settingsFile != null) {
             zip.addLocalFile(this.settingsFile.filePath);
-            hasFiles = true;
-        }
-        if (downloadTiffFiles && this.tiffFolder != null) {
-            zip.addLocalFolder(this.tiffFolder.folderPath);
             hasFiles = true;
         }
 
@@ -181,55 +180,63 @@ export class VolumeData {
         };
     }
 
-    async convertRawToTiff() {
-        if (this.rawFile == null) {
-            throw new Error("Volume is missing a raw file.");
-        }
-        if (this.settingsFile == null) {
-            throw new Error("Volume requires a settings file with size property.");
-        }
-        const settings = await this.settingsFile.readFile();
-        if (!Object.hasOwn(settings, "size")) {
-            throw new Error("Volume requires a settings file with size property.");
-        }
-        const width = settings.size.x;
-        const height = settings.size.y;
-        const depth = settings.size.z;
-        let channels = 1;
-        if (Object.hasOwn(settings, "bytesPerVoxel")) {
-            channels = settings["bytesPerVoxel"];
-        }
-        if (this.tiffFolder != null) {
-            await this.deleteTiffFolder();
-        }
-
-        const tiffFolderPath = path.join(this.path, VolumeData.subfolders.tiffFiles);
-
-        await rawToTiff(this.rawFile.filePath, tiffFolderPath, width, height, depth, channels);
-
-        this.tiffFolder =
-            new StoredFolder(VolumeData.subfolders.tiffFiles, tiffFolderPath);
-    }
+    // async convertRawToTiff() {
+    //     if (this.rawFile == null) {
+    //         throw new Error("Volume is missing a raw file.");
+    //     }
+    //     if (this.settingsFile == null) {
+    //         throw new Error("Volume requires a settings file with size property.");
+    //     }
+    //     const settings = await this.settingsFile.readFile();
+    //     if (!Object.hasOwn(settings, "size")) {
+    //         throw new Error("Volume requires a settings file with size property.");
+    //     }
+    //     const width = settings.size.x;
+    //     const height = settings.size.y;
+    //     const depth = settings.size.z;
+    //     let channels = 1;
+    //     if (Object.hasOwn(settings, "bytesPerVoxel")) {
+    //         channels = settings["bytesPerVoxel"];
+    //     }
+    //     if (this.tiffFolder != null) {
+    //         await this.deleteTiffFolder();
+    //     }
+    //
+    //     const tiffFolderPath = path.join(this.path, VolumeData.subfolders.tiffFiles);
+    //
+    //     await rawToTiff(this.rawFile.filePath, tiffFolderPath, width, height, depth, channels);
+    //
+    //     this.tiffFolder =
+    //         new StoredFolder(VolumeData.subfolders.tiffFiles, tiffFolderPath);
+    // }
 
     async deleteRawFile() {
         if (this.rawFile == null) {
             throw new Error("Raw volume does not have a raw file");
         }
-        this.rawFile.delete();
+        await this.rawFile.delete();
         this.rawFile = null;
     }
     async deleteSettingsFile() {
         if (this.settingsFile == null) {
             throw new Error("Raw volume does not have a settings file");
         }
-        this.settingsFile.delete();
+        await this.settingsFile.delete();
         this.settingsFile = null;
     }
-    async deleteTiffFolder() {
-        if (this.tiffFolder == null) {
-            throw new Error("Raw volume does not have any tiff files");
+
+    addToVolume(volumeId) {
+        if (this.volumeIds.includes(volumeId)) {
+            throw new Error(`Volume Data ${this.id}: Volume data is already included in the volume.`);
         }
-        this.tiffFolder.delete();
-        this.tiffFolder = null;
+        this.volumeIds.push(volumeId);
+    }
+
+    removeFromVolume(volumeId) {
+        const index = this.volumeIds.indexOf(volumeId);
+        if (index === -1) {
+            throw new Error(`Volume Data ${this.id} (${this.fileName}): Volume data is not included in the volume.`);
+        }
+        this.volumeIds.splice(index, 1);
     }
 }

@@ -2,6 +2,7 @@ import LowdbManager from "../../tools/lowdb-manager.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
 import {AbstractCheckpointController} from "../abstract-checkpoint-controller.mjs";
 import {Checkpoint} from "../../models/checkpoint.mjs";
+import {Model} from "../../models/model.mjs";
 
 export const checkpointCreatedEvent = "checkpointCreated";
 export const checkpointDeletedEvent = "checkpointDeleted";
@@ -27,6 +28,13 @@ class LowdbCheckpointController extends AbstractCheckpointController {
 
     getByIds(ids) {
         const dbReferences = this.checkpoints.filter((p) => ids.includes(p.id));
+        return dbReferences.map((p) => Checkpoint.fromReference(p));
+    }
+
+    getCheckpointsFromModel(projectId) {
+        projectId = Number(projectId);
+
+        const dbReferences = this.checkpoints.filter((p) => p.modelIds.includes(projectId));
         return dbReferences.map((p) => Checkpoint.fromReference(p));
     }
 

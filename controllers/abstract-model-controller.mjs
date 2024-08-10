@@ -20,6 +20,10 @@ export class AbstractModelController extends AbstractController {
         throw new Error('Method not implemented');
     }
 
+    getModelsFromProject(projectId) {
+        throw new Error('Method not implemented');
+    }
+
     async create(name, description, userId) {
         throw new Error('Method not implemented');
     }

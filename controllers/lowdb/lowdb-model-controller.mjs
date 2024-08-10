@@ -6,6 +6,7 @@ import lowdbCheckpointController, {
     checkpointCreatedEvent,
     checkpointDeletedEvent
 } from "./lowdb-checkpoint-controller.mjs";
+import {Volume} from "../../models/volume.mjs";
 
 export const modelCreatedEvent = "modelCreated";
 export const modelDeletedEvent = "modelDeleted";
@@ -42,6 +43,13 @@ class LowdbModelController extends AbstractModelController {
 
     getByIds(ids) {
         const dbReferences = this.models.filter((p) => ids.includes(p.id));
+        return dbReferences.map((p) => Model.fromReference(p));
+    }
+
+    getModelsFromProject(projectId) {
+        projectId = Number(projectId);
+
+        const dbReferences = this.models.filter((p) => p.projectIds.includes(projectId));
         return dbReferences.map((p) => Model.fromReference(p));
     }
 

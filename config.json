@@ -22,7 +22,9 @@
     "projects": {
         "projectsPath": "./data/projects/",
         "volumesPath": "./data/volumes/",
-        "checkpointsPath": "./data/checkpoints/"
+        "volumeDataPath": "./data/volumeData/",
+        "checkpointsPath": "./data/checkpoints/",
+        "maxVolumeChannels": 4
     },
     "db": {
         "type": "lowdb",

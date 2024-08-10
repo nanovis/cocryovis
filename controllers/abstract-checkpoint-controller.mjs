@@ -16,6 +16,10 @@ export class AbstractCheckpointController extends AbstractController {
         throw new Error('Method not implemented');
     }
 
+    getCheckpointsFromModel(modelId) {
+        throw new Error('Method not implemented');
+    }
+
     async create(name, description, userId) {
         throw new Error('Method not implemented');
     }
