@@ -49,7 +49,7 @@ class LowdbVolumeController extends AbstractVolumeController {
                 newId = this.volumes.at(-1).id + 1;
             }
 
-            const volume = Volume.createVolume(newId, name, description, userId, projectId, this.config.volumesPath);
+            const volume = Volume.createVolume(newId, name, description, userId, projectId);
 
             globalEventEmitter.emit('volumeCreated', volume);
 

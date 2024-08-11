@@ -49,7 +49,7 @@ class LowdbProjectController extends AbstractProjectController {
                 newId = this.projects.at(-1).id + 1;
             }
 
-            const project = Project.createProject(newId, name, description, userId, this.config.projectsPath);
+            const project = Project.createProject(newId, name, description, userId);
 
             await this.db.update(({projects}) => projects.push(project))
             return project.id;

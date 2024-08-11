@@ -20,9 +20,7 @@
         "path": "../models/"
     },
     "projects": {
-        "projectsPath": "./data/projects/",
-        "volumesPath": "./data/volumes/",
-        "volumeDataPath": "./data/volumeData/",
+        "volumeDataPath": "./data/volume-data/",
         "checkpointsPath": "./data/checkpoints/",
         "maxVolumeChannels": 4
     },
