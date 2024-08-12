@@ -4,8 +4,6 @@ import {RawVolumeFile} from "./raw-volume-file.mjs";
 import {SettingsFile} from "./settings-file.mjs";
 import {StoredFile} from "./stored-file.mjs";
 import {writeFile, rm, access, mkdir} from 'node:fs/promises';
-import {isFileExtensionAccepted} from "../tools/utils.mjs";
-import {StoredFolder} from "./stored-folder.mjs";
 import fileSystem from "fs";
 
 export class VolumeData {
@@ -48,10 +46,6 @@ export class VolumeData {
             throw new Error(`Volume directory already exists`);
         }
         fileSystem.mkdirSync(folderPath, {recursive: true});
-
-        for (const subfolder in VolumeData.subfolders) {
-            fileSystem.mkdirSync(path.join(folderPath, VolumeData.subfolders[subfolder]));
-        }
 
         return new VolumeData(id, type, userId, folderPath, [volumeId]);
     }
@@ -179,36 +173,6 @@ export class VolumeData {
             zipBuffer: zip.toBuffer()
         };
     }
-
-    // async convertRawToTiff() {
-    //     if (this.rawFile == null) {
-    //         throw new Error("Volume is missing a raw file.");
-    //     }
-    //     if (this.settingsFile == null) {
-    //         throw new Error("Volume requires a settings file with size property.");
-    //     }
-    //     const settings = await this.settingsFile.readFile();
-    //     if (!Object.hasOwn(settings, "size")) {
-    //         throw new Error("Volume requires a settings file with size property.");
-    //     }
-    //     const width = settings.size.x;
-    //     const height = settings.size.y;
-    //     const depth = settings.size.z;
-    //     let channels = 1;
-    //     if (Object.hasOwn(settings, "bytesPerVoxel")) {
-    //         channels = settings["bytesPerVoxel"];
-    //     }
-    //     if (this.tiffFolder != null) {
-    //         await this.deleteTiffFolder();
-    //     }
-    //
-    //     const tiffFolderPath = path.join(this.path, VolumeData.subfolders.tiffFiles);
-    //
-    //     await rawToTiff(this.rawFile.filePath, tiffFolderPath, width, height, depth, channels);
-    //
-    //     this.tiffFolder =
-    //         new StoredFolder(VolumeData.subfolders.tiffFiles, tiffFolderPath);
-    // }
 
     async deleteRawFile() {
         if (this.rawFile == null) {

@@ -3,8 +3,13 @@ import  * as fileSystem from 'fs';
 import path, { resolve } from 'path';
 import {StoredFolder} from "../models/stored-folder.mjs";
 import fs from "fs";
+import {rm} from "node:fs/promises";
+import {rawToTiff} from "./raw-to-tiff.mjs";
 
 class IlastikHandler {
+    static rawTiffFolder = "raw"
+    static sparseLabelsTiffFolder = "sparse-labels";
+
     constructor(config) {
         this.config = config;
         this.inferenceRunning = false;
@@ -120,9 +125,26 @@ class IlastikHandler {
         return this.finished;
     }
 
-    generateLabels(rawDataPath, sparseLabelPath, modelOutputPath, labelsOutputPath) {
-        // Create Ilastik project and inference
-        this.createIlastikProject(rawDataPath, sparseLabelPath, modelOutputPath, labelsOutputPath);
+    async generateLabels(rawData, sparseLabelsStack, modelOutputPath, labelsOutputPath) {
+        const rawTiffFolderPath = path.join(this.config.tiffCacheFolder, IlastikHandler.rawTiffFolder);
+        const sparseLabelsTiffFolderPath = path.join(this.config.tiffCacheFolder, IlastikHandler.sparseLabelsTiffFolder);
+
+        await this.convertDataToTiff(rawData, sparseLabelsStack, rawTiffFolderPath, sparseLabelsTiffFolderPath);
+
+        this.createIlastikProject(path.join(rawTiffFolderPath, "*.tiff"),
+            path.join(sparseLabelsTiffFolderPath, "*.tiff"), modelOutputPath, labelsOutputPath);
+    }
+
+    async convertDataToTiff(rawData, sparseLabelsStack, rawTiffFolderPath, sparseLabelsTiffFolderPath) {
+        if (fileSystem.existsSync(rawTiffFolderPath)) {
+            await rm(rawTiffFolderPath, { recursive: true, force: true });
+        }
+        if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
+            await rm(sparseLabelsTiffFolderPath, { recursive: true, force: true });
+        }
+
+        await rawToTiff(rawData, rawTiffFolderPath);
+        await rawToTiff(sparseLabelsStack, rawTiffFolderPath);
     }
 }
 

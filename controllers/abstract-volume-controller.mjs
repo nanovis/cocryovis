@@ -3,6 +3,10 @@ import globalEventEmitter from "../tools/global-event-system.mjs";
 import lowdbVolumeDataController from "./lowdb/lowdb-volume-data-controller.mjs";
 import {VolumeData} from "../models/volume-data.mjs";
 import {VolumeDataStack} from "../models/volume-data-stack.mjs";
+import path from "path";
+import fileSystem from "fs";
+import {rm} from "node:fs/promises";
+import {rawToTiff} from "../tools/raw-to-tiff.mjs";
 
 export class AbstractVolumeController extends AbstractController {
     constructor() {
@@ -122,5 +126,31 @@ export class AbstractVolumeController extends AbstractController {
 
         await this.update(volume);
         console.log(`Volume ${volume.id} (${volume.name}): Pseudo labeled volume successfully added.`);
+    }
+
+    async testTiffConversion(volumeId) {
+        const volume = this.getById(volumeId);
+
+        const rawData = await lowdbVolumeDataController.getById(volume.rawDataId);
+        const sparseLabels = await lowdbVolumeDataController.getSparseLabeledVolumesFromVolume(volumeId);
+
+        const rawTiffFolderPath = path.join("./", "data", "tiff-test", "raw");
+        const sparseLabelsTiffFolderPath = path.join("./", "data", "tiff-test", "sparseLabels");
+
+        if (fileSystem.existsSync(rawTiffFolderPath)) {
+            await rm(rawTiffFolderPath, { recursive: true, force: true });
+        }
+        if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
+            await rm(sparseLabelsTiffFolderPath, { recursive: true, force: true });
+        }
+        const promises = []
+        if (rawData != null) {
+            promises.push(rawToTiff(rawData, rawTiffFolderPath));
+        }
+        if (sparseLabels != null && sparseLabels.length > 0) {
+            promises.push(rawToTiff(sparseLabels, sparseLabelsTiffFolderPath));
+        }
+
+        await Promise.all(promises);
     }
 }

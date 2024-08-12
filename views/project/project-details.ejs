@@ -68,7 +68,10 @@
 <% for (const volume of project.volumes) { %>
     <p>
         <b>Volume:</b> <%= volume.details.name %> (<%= volume.details.id %>)
-        <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.id %>/delete">[X]</a>
+        <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/delete">[X]</a>
+    </p>
+    <p>
+        <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/test-tiff">Tiff Test</a>
     </p>
     <h4>Raw Data:</h4>
     <% if (volume.rawData != null) { %>

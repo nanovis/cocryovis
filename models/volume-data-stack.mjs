@@ -1,6 +1,3 @@
-import {VolumeData} from "./volume-data.mjs";
-import path from "path";
-
 export class VolumeDataStack {
     constructor(type, maxSize, ids = []) {
         this.type = type;
@@ -29,6 +26,9 @@ export class VolumeDataStack {
             throw new Error(`Volume does not contain volume data ${volumeDataId}.`);
         }
         this.ids.splice(index, 1);
+    }
+
+    async delete() {
     }
 
     // static isValidFile(fileName) {
@@ -134,35 +134,5 @@ export class VolumeDataStack {
     //         name: `${outputFileName}.zip`,
     //         zipBuffer: zip.toBuffer()
     //     };
-    // }
-
-    // async convertRawToTiff() {
-    //     if (this.rawFile == null) {
-    //         throw new Error("Volume is missing a raw file.");
-    //     }
-    //     if (this.settingsFile == null) {
-    //         throw new Error("Volume requires a settings file with size property.");
-    //     }
-    //     const settings = await this.settingsFile.readFile();
-    //     if (!Object.hasOwn(settings, "size")) {
-    //         throw new Error("Volume requires a settings file with size property.");
-    //     }
-    //     const width = settings.size.x;
-    //     const height = settings.size.y;
-    //     const depth = settings.size.z;
-    //     let channels = 1;
-    //     if (Object.hasOwn(settings, "bytesPerVoxel")) {
-    //         channels = settings["bytesPerVoxel"];
-    //     }
-    //     if (this.tiffFolder != null) {
-    //         await this.deleteTiffFolder();
-    //     }
-    //
-    //     const tiffFolderPath = path.join(this.path, VolumeData.subfolders.tiffFiles);
-    //
-    //     await rawToTiff(this.rawFile.filePath, tiffFolderPath, width, height, depth, channels);
-    //
-    //     this.tiffFolder =
-    //         new StoredFolder(VolumeData.subfolders.tiffFiles, tiffFolderPath);
     // }
 }

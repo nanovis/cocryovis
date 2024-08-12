@@ -687,6 +687,18 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labe
     }
 });
 
+// Test Tiff Conversion
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/test-tiff`, restrict, async (req, res) => {
+    try {
+        await volumeController.testTiffConversion(req.params.idVolume);
+
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
+    } catch (err) {
+        console.error("Error in creating volume:", err);
+        res.status(500).send(err);
+    }
+});
+
 /////// VOLUME DATA
 
 // Visualize Volume Data

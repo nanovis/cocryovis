@@ -5,7 +5,8 @@
         "python": "../ilastik/bin/python",
         "inference": "run_ilastik.sh",
         "create_project_command": "train_headless.py",
-        "model_file_name": "model_project.ilp"
+        "model_file_name": "model_project.ilp",
+        "tiffCacheFolder": "./data/ilastik/tiff_cache"
     },
     "nanoOetzi" : {
         "path": "../nano-oetzi/",
