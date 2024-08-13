@@ -27,6 +27,13 @@ export class StoredFile {
         await rm(this.filePath, { recursive: true, force: true });
     }
 
+    getFileExtension() {
+        if (!this.filePath) {
+            return null;
+        }
+        return path.extname(this.filePath);
+    }
+
     prepareDataForDownload() {
         const zip = new AdmZip();
         zip.addLocalFile(this.filePath);

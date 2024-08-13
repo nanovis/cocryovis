@@ -1,6 +1,11 @@
 import fileSystem from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
+import {exec} from "child_process";
+import appConfig from "./config.mjs";
+import * as util from "node:util";
+import fs from "fs";
+const execPromise = util.promisify(exec);
 
 export function fileNameFilter(name) {
     return name.replace(/\s+/g, '_').replace(/[^\da-zA-Z_.-]+/g, '');
@@ -69,4 +74,16 @@ export async function saveData(files, uploadPath, acceptedFileExtensions = [], s
     await Promise.all(promises);
 
     return {fileNames: fileNames, filePaths: filePaths};
+}
+
+export async function mrcToRaw(inputFile, outputPath) {
+    const command =
+        `${appConfig.nanoOetzi.command} \"${path.join("tools-python", "mrc-to-raw.py")}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
+    const { stdout, stderr } = await execPromise(command);
+    fs.writeFileSync(path.join(outputPath, "mrc-to-raw.log"),
+        `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`);
+    return {
+        "rawFilePath": path.join(outputPath, `${path.parse(inputFile).name}.raw`),
+        "settingsFilePath": path.join(outputPath, `${path.parse(inputFile).name}.json`),
+    }
 }

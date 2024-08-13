@@ -5,6 +5,8 @@ import {SettingsFile} from "./settings-file.mjs";
 import {StoredFile} from "./stored-file.mjs";
 import {writeFile, rm, access, mkdir} from 'node:fs/promises';
 import fileSystem from "fs";
+import {MrcVolumeFile} from "./mrc-volume-file.mjs";
+import {mrcToRaw} from "../tools/utils.mjs";
 
 export class VolumeData {
     static configFileName = "config.json";
@@ -16,7 +18,7 @@ export class VolumeData {
     }
 
     constructor(id, type, userId, path, volumeIds = [], rawFile = null, settingsFile = null,
-                configFile = null) {
+                configFile = null, mrcFile = null) {
         this.id = id;
         this.type = type;
         this.userId = userId;
@@ -25,6 +27,7 @@ export class VolumeData {
         this.rawFile = rawFile;
         this.settingsFile = settingsFile;
         this.configFile = configFile;
+        this.mrcFile = mrcFile;
     }
 
     async delete() {
@@ -36,6 +39,9 @@ export class VolumeData {
         }
         if (this.configFile) {
             this.configFile.delete();
+        }
+        if (this.mrcFile) {
+            this.mrcFile.delete();
         }
         await rm(this.path, { recursive: true, force: true });
     }
@@ -63,8 +69,12 @@ export class VolumeData {
         if (dbReference.configFile) {
             configFile = StoredFile.fromReference(dbReference.configFile);
         }
+        let mrcFile = null;
+        if (dbReference.mrcFile) {
+            mrcFile = MrcVolumeFile.fromReference(dbReference.mrcFile);
+        }
         return new this(dbReference.id, dbReference.type, dbReference.userId, dbReference.path, dbReference.volumeIds,
-            rawFile, settingsFile, configFile);
+            rawFile, settingsFile, configFile, mrcFile);
     }
 
     isMissingFiles() {
@@ -102,12 +112,13 @@ export class VolumeData {
 
         delete this.rawFileUploaded;
         delete this.settingsFileUploaded;
-
-        return this;
     }
 
     async uploadFile(file, moveFunction) {
-        if ((this.rawFileUploaded === undefined || !this.rawFileUploaded) && RawVolumeFile.isRawVolumeFile(file.name)) {
+        if ((this.rawFileUploaded === undefined || !this.rawFileUploaded) &&
+            RawVolumeFile.isRawVolumeFile(file.name) &&
+            (this.type === VolumeData.volumeTypes.rawData || path.extname(file.name) === '.raw'))
+        {
             if (this.rawFileUploaded !== undefined) {
                 this.rawFileUploaded = true;
             }
@@ -117,7 +128,9 @@ export class VolumeData {
             this.rawFile = await RawVolumeFile.fromFile(file, this.path, moveFunction);
             await this.#setRawFilePathInSettings();
         }
-        if ((this.settingsFileUploaded === undefined || !this.settingsFileUploaded) && SettingsFile.isSettingsFile(file.name)) {
+        if ((this.settingsFileUploaded === undefined || !this.settingsFileUploaded) &&
+            SettingsFile.isSettingsFile(file.name))
+        {
             if (this.settingsFileUploaded !== undefined) {
                 this.settingsFileUploaded = true;
             }
@@ -128,6 +141,58 @@ export class VolumeData {
             await this.createConfigFile();
             await this.#setRawFilePathInSettings();
         }
+    }
+
+    async uploadMrcFile(file) {
+        if (this.type !== VolumeData.volumeTypes.rawData) {
+            throw new Error("Only Raw Data supports MRC files.");
+        }
+
+        if (!fileSystem.existsSync(this.path)) {
+            fileSystem.mkdirSync(this.path, { recursive: true });
+        }
+
+        let uploadSuccessful = false;
+
+        if (Array.isArray(file)) {
+            throw new Error("When adding MRC data, only a single file can be selected.");
+        } else if (file.name.endsWith('.zip')) {
+            let zip = new AdmZip(file.data);
+            const zipEntries = zip.getEntries();
+            for (const entry of zipEntries) {
+                if (MrcVolumeFile.isMrcVolumeFile(entry.name)) {
+                    if (this.mrcFile) {
+                        await this.deleteMrcFile();
+                    }
+                    this.mrcFile = await MrcVolumeFile.fromFile(file, this.path, (file, filteredFileName, fullPath) =>
+                        zip.extractEntryTo(entry, this.path, false, true, false, filteredFileName));
+                    uploadSuccessful = true;
+                    break;
+                }
+            }
+        } else if (MrcVolumeFile.isMrcVolumeFile(file.name)) {
+            if (this.mrcFile) {
+                await this.deleteMrcFile();
+            }
+            this.mrcFile = await MrcVolumeFile.fromFile(file, this.path,
+                (file, filteredFileName, fullPath) => file.mv(fullPath));
+            uploadSuccessful = true;
+        }
+
+        if (!uploadSuccessful) {
+            throw new Error("No valid MRC file found.");
+        }
+
+        if (this.rawFile) {
+            await this.deleteRawFile();
+        }
+        if (this.settingsFile) {
+            await this.deleteSettingsFile();
+        }
+
+        const {rawFilePath, settingsFilePath} = await mrcToRaw(this.mrcFile.filePath, this.path);
+        this.rawFile = new RawVolumeFile(path.parse(rawFilePath).base, rawFilePath);
+        this.settingsFile = new SettingsFile(path.parse(settingsFilePath).base, settingsFilePath);
     }
 
     async createConfigFile() {
@@ -181,12 +246,21 @@ export class VolumeData {
         await this.rawFile.delete();
         this.rawFile = null;
     }
+
     async deleteSettingsFile() {
         if (this.settingsFile == null) {
             throw new Error("Raw volume does not have a settings file");
         }
         await this.settingsFile.delete();
         this.settingsFile = null;
+    }
+
+    async deleteMrcFile() {
+        if (this.mrcFile == null) {
+            throw new Error("Raw volume does not have a mrc file");
+        }
+        await this.mrcFile.delete();
+        this.mrcFile = null;
     }
 
     addToVolume(volumeId) {

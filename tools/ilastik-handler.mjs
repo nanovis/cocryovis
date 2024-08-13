@@ -126,6 +126,16 @@ class IlastikHandler {
     }
 
     async generateLabels(rawData, sparseLabelsStack, modelOutputPath, labelsOutputPath) {
+        if (!rawData) {
+            throw new Error("Pseudo Labels Generation: Raw Data is missing.");
+        }
+        if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
+            throw new Error("Pseudo Labels Generation: Sparse Label Data is missing.");
+        }
+        if (rawData.getExtension() !== ".raw") {
+            throw new Error("Pseudo Labels Generation: Raw Data must be in .raw format.");
+        }
+
         const rawTiffFolderPath = path.join(this.config.tiffCacheFolder, IlastikHandler.rawTiffFolder);
         const sparseLabelsTiffFolderPath = path.join(this.config.tiffCacheFolder, IlastikHandler.sparseLabelsTiffFolder);
 

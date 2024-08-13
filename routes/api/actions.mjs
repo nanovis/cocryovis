@@ -14,11 +14,10 @@ import { ModelHandler } from '../../tools/model-handler.mjs';
 import * as fs from 'fs';
 import { ControllerFactory } from "../../controllers/controller-factory.mjs";
 import {publicDataPath, publicPath} from "../../tools/utils.mjs";
-import {Volume} from "../../models/volume.mjs";
-import {VolumeData} from "../../models/volume-data.mjs";
+import appConfig from "../../tools/config.mjs";
 
 // Config
-const config = JSON.parse(fileSystem.readFileSync('config.json', 'utf8'));
+const config = appConfig;
 const ilastik = new ModelBasedIlastikHandler(config.ilastik);
 const ilastikHandler = new IlastikHandler(config.ilastik);
 const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
@@ -663,6 +662,23 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/uploa
     }
 });
 
+// Upload Mrc File to Raw Data
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload-mrc-file`, restrict, async (req, res) => {
+    try {
+        if (!req.files || !req.files.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            await volumeController.addRawVolumeMrcFile(req.params.idVolume, req.session.user.id, req.files.files);
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 // Add Sparse Labeled Volume
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-sparse-labeled-volume`, restrict, async (req, res) => {
     try {
@@ -707,6 +723,18 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/visuali
     try {
         const volumeData = volumeDataController.getById(req.params.idVolumeData);
 
+        if (!volumeData.rawFile) {
+            throw new Error('Visualisation requires the volume data to contain a .raw file.');
+        }
+
+        if (!volumeData.settingsFile) {
+            throw new Error('Visualisation requires the volume data to contain a settings file.');
+        }
+
+        if (volumeData.rawFile.getFileExtension() !== ".raw") {
+            throw new Error('Web renderer currently only supports the visualisation of .raw files.');
+        }
+
         const visualizationFiles = [];
 
         visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.rawFile.filePath), filename: volumeData.rawFile.fileName } );
@@ -733,6 +761,23 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-
             });
         } else {
             await volumeDataController.addFiles(req.params.idVolumeData, req.files.files);
+            res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// Add Mrc File to Volume Data
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-mrc-file`, restrict, async (req, res) => {
+    try {
+        if (!req.files || !req.files.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            await volumeDataController.addMrcFile(req.params.idVolumeData, req.files.files);
             res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
         }
     } catch (err) {
@@ -790,6 +835,24 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/downloa
     }
 });
 
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/download-mrc-file`, restrict, async (req, res) => {
+    console.log(`Downloading mrc file for volume data ${req.params.idVolumeData}`);
+    try {
+        const mrcFile = volumeDataController.getById(req.params.idVolumeData).mrcFile;
+
+        if(mrcFile == null) {
+            throw new Error("Raw volume does not have a mrc file");
+        }
+
+        let data = mrcFile.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
 // Delete Volume Data
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-full`, restrict, async (req, res) => {
     try {
@@ -812,6 +875,15 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-settings-file`, restrict, async (req, res) => {
     try {
         await volumeDataController.removeSettingsFile(req.params.idVolumeData);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/delete-mrc-file`, restrict, async (req, res) => {
+    try {
+        await volumeDataController.removeMrcFile(req.params.idVolumeData);
         res.redirect(`/api/actions/${projectsActionsPath}/details/` + req.params.idProject);
     } catch (err) {
         res.status(500).send(err);

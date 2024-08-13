@@ -128,6 +128,10 @@ class LowdbVolumeController extends AbstractVolumeController {
     async addRawVolumeFiles(volumeId, userId, files) {
         await super.addRawVolumeFiles(Number(volumeId), userId, files);
     }
+
+    async addRawVolumeMrcFile(volumeId, userId, file) {
+        await super.addRawVolumeMrcFile(Number(volumeId), userId, file);
+    }
 }
 
 const lowdbVolumeControllerInstance = LowdbVolumeController.getInstance();

@@ -43,6 +43,16 @@ export class AbstractVolumeDataController extends AbstractController {
         await this.update(volumeDataObj);
     }
 
+    async addMrcFile(id, file) {
+        console.log(`Volume Data ${id}: Adding MRC file.`);
+
+        const volumeDataObj = this.getById(id);
+        await volumeDataObj.uploadMrcFile(file);
+        await this.update(volumeDataObj);
+
+        console.log(`Volume Data ${id}: MRC file successfully added.`);
+    }
+
     async removeRawFile(id) {
         console.log(`Volume Data ${id}: Removing raw volume file.`);
         const volumeDataObj = this.getById(id);
@@ -61,5 +71,15 @@ export class AbstractVolumeDataController extends AbstractController {
 
         await this.update(volumeDataObj);
         console.log(`Volume Data ${id}: Settings file successfully deleted.`);
+    }
+
+    async removeMrcFile(id) {
+        console.log(`Volume Data ${id}: Removing MRC file.`);
+        const volumeDataObj = this.getById(id);
+
+        await volumeDataObj.deleteMrcFile();
+
+        await this.update(volumeDataObj);
+        console.log(`Volume Data ${id}: MRC file successfully deleted.`);
     }
 }

@@ -118,12 +118,20 @@ class LowdbVolumeDataController extends AbstractVolumeDataController {
         await super.addFiles(Number(id), files);
     }
 
+    async addMrcFile(id, file) {
+        await super.addMrcFile(Number(id), file);
+    }
+
     async removeRawFile(id) {
         await super.removeRawFile(Number(id));
     }
 
     async removeSettingsFile(id) {
         await super.removeSettingsFile(Number(id));
+    }
+
+    async removeMrcFile(id) {
+        await super.removeMrcFile(Number(id));
     }
 }
 

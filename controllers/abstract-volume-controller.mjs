@@ -76,13 +76,36 @@ export class AbstractVolumeController extends AbstractController {
     async addRawVolumeFiles(volumeId, userId, files) {
         const volume = this.getById(volumeId);
 
+        let updateVolume = false;
         if (volume.rawDataId == null) {
             volume.rawDataId = await lowdbVolumeDataController.create(VolumeData.volumeTypes.rawData, volumeId, userId);
+            updateVolume = true;
         }
 
         await lowdbVolumeDataController.addFiles(volume.rawDataId, files);
 
-        await this.update(volume);
+        if (updateVolume) {
+            await this.update(volume);
+        }
+        console.log("Raw Data successfully uploaded.");
+    }
+
+    async addRawVolumeMrcFile(volumeId, userId, file) {
+        console.log(`Uploading raw data for volume ${volumeId}`);
+
+        const volume = this.getById(volumeId);
+
+        let updateVolume = false;
+        if (volume.rawDataId == null) {
+            volume.rawDataId = await lowdbVolumeDataController.create(VolumeData.volumeTypes.rawData, volumeId, userId);
+            updateVolume = true;
+        }
+
+        await lowdbVolumeDataController.addMrcFile(volume.rawDataId, file);
+
+        if (updateVolume) {
+            await this.update(volume);
+        }
         console.log("Raw Data successfully uploaded.");
     }
 

@@ -2,7 +2,7 @@ import {isFileExtensionAccepted} from "../tools/utils.mjs";
 import {StoredFile} from "./stored-file.mjs";
 
 export class RawVolumeFile extends StoredFile {
-    static acceptedFileExtensions = [".raw", ".msc"];
+    static acceptedFileExtensions = [".raw"];
 
     constructor(fileName, filePath) {
         super(fileName, filePath);

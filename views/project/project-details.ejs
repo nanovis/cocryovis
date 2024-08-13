@@ -75,6 +75,11 @@
     </p>
     <h4>Raw Data:</h4>
     <% if (volume.rawData != null) { %>
+        <% if (volume.rawData.mrcFile != null) { %>
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/download-mrc-file"><%= volume.rawData.mrcFile.fileName %></a> ...
+            <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/delete-mrc-file">[X]</a>
+            <br />
+        <% } %>
         <% if (volume.rawData.rawFile != null) { %>
             <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/download-raw-file"><%= volume.rawData.rawFile.fileName %></a> ...
             <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= volume.rawData.id %>/delete-raw-file">[X]</a>
@@ -90,13 +95,23 @@
     <% } %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
         <label for="file">Select Raw Data Volume files:</label>
-        <input type="file" id="rawDataFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+        <input type="file" id="rawDataFiles_<%= volume.details.id %>" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
         <input
                 type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/raw-data/upload', 'rawDataFiles', 'progressBarRawData', 'statusRawData')"
+                onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/raw-data/upload', 'rawDataFiles_<%= volume.details.id %>', 'progressBarRawData_<%= volume.details.id %>', 'statusRawData_<%= volume.details.id %>')"
                 value = "Upload">
-        <progress id="progressBarRawData" value="0" max="100" style="width:300px; display: none"></progress>
-        <span id="statusRawData"></span>
+        <progress id="progressBarRawData_<%= volume.details.id %>" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusRawData_<%= volume.details.id %>"></span>
+    </form>
+    <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
+        <label for="file">Select MRC file:</label>
+        <input type="file" id="mrcFile_<%= volume.details.id %>" name="files" accept=".mrc">
+        <input
+            type="button"
+            onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/raw-data/upload-mrc-file', 'mrcFile_<%= volume.details.id %>', 'progressBarMrcFile_<%= volume.details.id %>', 'statusMrcFile_<%= volume.details.id %>')"
+            value = "Upload">
+        <progress id="progressBarMrcFile_<%= volume.details.id %>" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusMrcFile_<%= volume.details.id %>"></span>
     </form>
     <h4>Sparse Labels:</h4>
     <a href="/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/add-sparse-labeled-volume"><button>Add Sparse Labeled Volume</button></a>
