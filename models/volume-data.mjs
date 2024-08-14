@@ -9,16 +9,14 @@ import {MrcVolumeFile} from "./mrc-volume-file.mjs";
 import {mrcToRaw} from "../tools/utils.mjs";
 
 export class VolumeData {
-    static configFileName = "config.json";
-
     static volumeTypes = {
         "rawData": "rawData",
         "sparseLabels": "sparseLabels",
         "pseudoLabels": "pseudoLabels"
     }
 
-    constructor(id, type, userId, path, volumeIds = [], rawFile = null, settingsFile = null,
-                configFile = null, mrcFile = null) {
+    constructor(id, type, userId, path, volumeIds = [], rawFile = null,
+                settingsFile = null, mrcFile = null) {
         this.id = id;
         this.type = type;
         this.userId = userId;
@@ -26,7 +24,6 @@ export class VolumeData {
         this.volumeIds = volumeIds;
         this.rawFile = rawFile;
         this.settingsFile = settingsFile;
-        this.configFile = configFile;
         this.mrcFile = mrcFile;
     }
 
@@ -36,9 +33,6 @@ export class VolumeData {
         }
         if (this.settingsFile) {
             this.settingsFile.delete();
-        }
-        if (this.configFile) {
-            this.configFile.delete();
         }
         if (this.mrcFile) {
             this.mrcFile.delete();
@@ -65,16 +59,12 @@ export class VolumeData {
         if (dbReference.settingsFile) {
             settingsFile = SettingsFile.fromReference(dbReference.settingsFile);
         }
-        let configFile = null;
-        if (dbReference.configFile) {
-            configFile = StoredFile.fromReference(dbReference.configFile);
-        }
         let mrcFile = null;
         if (dbReference.mrcFile) {
             mrcFile = MrcVolumeFile.fromReference(dbReference.mrcFile);
         }
         return new this(dbReference.id, dbReference.type, dbReference.userId, dbReference.path, dbReference.volumeIds,
-            rawFile, settingsFile, configFile, mrcFile);
+            rawFile, settingsFile, mrcFile);
     }
 
     isMissingFiles() {
@@ -138,7 +128,6 @@ export class VolumeData {
                 await this.deleteSettingsFile();
             }
             this.settingsFile = await SettingsFile.fromFile(file, this.path, moveFunction);
-            await this.createConfigFile();
             await this.#setRawFilePathInSettings();
         }
     }
@@ -193,19 +182,6 @@ export class VolumeData {
         const {rawFilePath, settingsFilePath} = await mrcToRaw(this.mrcFile.filePath, this.path);
         this.rawFile = new RawVolumeFile(path.parse(rawFilePath).base, rawFilePath);
         this.settingsFile = new SettingsFile(path.parse(settingsFilePath).base, settingsFilePath);
-    }
-
-    async createConfigFile() {
-        if (this.configFile != null) {
-            await this.configFile.delete();
-        }
-        const config = { "files": [] };
-        for (let i = 0; i < 5; i++) {
-            config.files.push(this.settingsFile.fileName);
-        }
-        const systemFilePath = path.join(this.path, VolumeData.configFileName);
-        await writeFile(systemFilePath, JSON.stringify(config, null, 2));
-        this.configFile = new StoredFile(VolumeData.configFileName, systemFilePath);
     }
 
     async #setRawFilePathInSettings() {

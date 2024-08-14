@@ -2,13 +2,12 @@ import fileSystem from "fs";
 import {VolumeDataStack} from "./volume-data-stack.mjs";
 
 export class Volume {
-    constructor(id, name, description, userId, path = "", rawDataId = null, sparseLabeledVolumes = [],
+    constructor(id, name, description, userId, rawDataId = null, sparseLabeledVolumes = [],
                 pseudoLabeledVolumes = [], projectIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.userId = userId;
-        this.path = path;
         this.rawDataId = rawDataId;
         this.sparseLabeledVolumes = sparseLabeledVolumes;
         this.pseudoLabeledVolumes = pseudoLabeledVolumes;
@@ -29,11 +28,6 @@ export class Volume {
         if (this.pseudoLabeledVolumes) {
             await this.pseudoLabeledVolumes.delete();
         }
-        await fileSystem.rm(this.path, { recursive: true, force: true }, (err) => {
-            if (err) {
-                console.log(`Error deleting ${this.name}: ${err}.`);
-            }
-        });
     }
 
     static fromReference(dbVolume) {
@@ -48,7 +42,7 @@ export class Volume {
         }
 
         return new Volume(dbVolume.id, dbVolume.name, dbVolume.description, dbVolume.userId,
-            dbVolume.path, dbVolume.rawDataId, sparseLabeledVolumes, pseudoLabeledVolumes, dbVolume.projectIds);
+            dbVolume.rawDataId, sparseLabeledVolumes, pseudoLabeledVolumes, dbVolume.projectIds);
     }
 
     addProject(projectId) {

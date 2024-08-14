@@ -157,23 +157,23 @@ export class AbstractVolumeController extends AbstractController {
         const rawData = await lowdbVolumeDataController.getById(volume.rawDataId);
         const sparseLabels = await lowdbVolumeDataController.getSparseLabeledVolumesFromVolume(volumeId);
 
-        const rawTiffFolderPath = path.join("./", "data", "tiff-test", "raw");
-        const sparseLabelsTiffFolderPath = path.join("./", "data", "tiff-test", "sparseLabels");
-
-        if (fileSystem.existsSync(rawTiffFolderPath)) {
-            await rm(rawTiffFolderPath, { recursive: true, force: true });
-        }
-        if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
-            await rm(sparseLabelsTiffFolderPath, { recursive: true, force: true });
-        }
         const promises = []
         if (rawData != null) {
+            const rawTiffFolderPath = path.join(rawData.path, "tiff-test", "raw");
+            if (fileSystem.existsSync(rawTiffFolderPath)) {
+                await rm(rawTiffFolderPath, { recursive: true, force: true });
+            }
             promises.push(rawToTiff(rawData, rawTiffFolderPath));
         }
         if (sparseLabels != null && sparseLabels.length > 0) {
+            const sparseLabelsTiffFolderPath = path.join(sparseLabels[0].path, "tiff-test", "sparseLabels");
+            if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
+                await rm(sparseLabelsTiffFolderPath, { recursive: true, force: true });
+            }
             promises.push(rawToTiff(sparseLabels, sparseLabelsTiffFolderPath));
         }
 
         await Promise.all(promises);
+        console.log(`Volume ${volume.id} (${volume.name}): Tiff conversion test done.`);
     }
 }

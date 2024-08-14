@@ -739,13 +739,19 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/visuali
 
         visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.rawFile.filePath), filename: volumeData.rawFile.fileName } );
         visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.settingsFile.filePath), filename: volumeData.settingsFile.fileName } );
-        visualizationFiles.push( { path: publicDataPath(req.originalUrl, volumeData.configFile.filePath), filename: volumeData.configFile.fileName } );
         visualizationFiles.push( { path: publicPath(req.originalUrl, "data/session.json"), filename: "session.json" } );
         visualizationFiles.push( { path: publicPath(req.originalUrl, "data/tf-default.json"), filename: "tf-default.json" } );
 
-        const volumesJSON = JSON.stringify(visualizationFiles).replaceAll('\\', '\\\\');
+        const configData = { "files": [] }
 
-        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON });
+        for (let i = 0; i < 5; i++) {
+            configData["files"].push(volumeData.settingsFile.fileName);
+        }
+
+        const volumesJSON = JSON.stringify(visualizationFiles).replaceAll('\\', '\\\\');
+        const configJSON = JSON.stringify(configData);
+
+        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON, config: configJSON });
     } catch (err) {
         res.status(500).send(err);
     }

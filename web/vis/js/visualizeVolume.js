@@ -29,8 +29,8 @@ var Module;
 		},
 		onRuntimeInitialized: function() {
 			console.log("initialized");
-            document.getElementById("loadingtext").innerHTML = "initialized";
-            loadVolWebData(volumes);
+			document.getElementById("loadingtext").innerHTML = "initialized";
+			loadVolWebData(config, volumes);
 		}
 	};
 	window.onerror = function(){
@@ -172,17 +172,18 @@ function hardInitTFValues() {
 }
 
 function useFileInput(fileInput) {
-	if (fileInput.files.length == 0) {
+	if (fileInput.files.length === 0) {
 		return;
 	}
 
 	Module.start_app();
 
-	var loadingGif = document.getElementById('loadingcontainer');
+	const loadingGif = document.getElementById('loadingcontainer');
 	loadingGif.style.display = 'block';
-	var loadCounter = 0;
-	var numFiles = fileInput.files.length;
+	let loadCounter = 0;
+	let numFiles = fileInput.files.length;
 	for (let i = 0; i < numFiles; i++) {
+
 		let fr = new FileReader();
 		let file = fileInput.files[i];
 
@@ -193,7 +194,7 @@ function useFileInput(fileInput) {
 
 			fileInput.value = '';
 			loadCounter++;
-			if(loadCounter == numFiles)
+			if(loadCounter === numFiles)
 			{
 				Module.open_volume();
                 hardInitTFValues();
@@ -203,71 +204,41 @@ function useFileInput(fileInput) {
 	}
 }
 
-function loadFile(url, filename, numFiles) {
-    fetch(url)
-    .then(response => response.arrayBuffer())
-    .then(loadedData => {
-        console.log("Reading file #" + loadCounter + ": " + filename);
-        document.getElementById("loadingtext").innerHTML = "Reading file #" + loadCounter + ": " + filename;
-        var data = new Uint8Array(loadedData);
-
-        FS.writeFile(filename, data);
-        loadCounter++;
-        if(loadCounter == numFiles) {
-            console.log("File reading done.");
-            document.getElementById("loadingtext").innerHTML = "File reading done.";
-            Module.open_volume();
-            hardInitTFValues();
-        }
-    });
+async function loadFile(url, filename) {
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`Response status: ${response.status}`);
+	}
+	const loadedData = await response.arrayBuffer();
+	console.log("Reading file " + filename);
+	const data = new Uint8Array(loadedData);
+	FS.writeFile(filename, data);
 }
 
-var loadCounter = 0;
-function loadDemoData() {
-    files = [];
-
-    var path = "/data/ts_16_256/";
-    var files256 =  [
-        'config.json',
-        'session.json',
-        'tf-bg.json',
-        'tf-in.json',
-        'tf-memb.json',
-        'tf-raw.json',
-        'tf-spike.json',
-        'ts_16_bin4-256x256.json',
-        'ts_16_bin4-256x256.raw',
-        'ts_16_bin4-uint8-inv-mean-3-256x256.json',
-        'ts_16_bin4-uint8-inv-mean-3-256x256.raw',
-        'ts_16_predictions-Background-256x256.json',
-        'ts_16_predictions-Background-256x256.raw',
-        'ts_16_predictions-Inner-256x256.json',
-        'ts_16_predictions-Inner-256x256.raw',
-        'ts_16_predictions-Membrane-256x256.json',
-        'ts_16_predictions-Membrane-256x256.raw',
-        'ts_16_predictions-Spikes-256x256.json',
-        'ts_16_predictions-Spikes-256x256.raw'
-    ];
-
-	Module.start_app();
-
-	var loadingGif = document.getElementById('loadingcontainer');
-	loadingGif.style.display = 'block';
-
-    for (let filename in files256) {
-        loadFile(path + files256[filename], files256[filename], files256.length);
-    }
+function loadConfig(configData) {
+	FS.writeFile("config.json", configData);
 }
 
-function loadVolWebData(files) {
+async function loadVolWebData(config, files) {
 	Module.start_app();
 
-	var loadingGif = document.getElementById('loadingcontainer');
+	let loadingGif = document.getElementById('loadingcontainer');
 	loadingGif.style.display = 'block';
+
+	const promises = []
+
+	loadConfig(config);
 
     for (let file of files) {
-        loadFile(file.path, file.filename, files.length);
+		promises.push(loadFile(file.path, file.filename));
     }
+
+	await Promise.all(promises);
+
+	console.log("File reading done.");
+	document.getElementById("loadingtext").innerHTML = "File reading done.";
+	Module.open_volume();
+	hardInitTFValues();
 }
 
 function uploadAnnotations(elem) {

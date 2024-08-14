@@ -37,7 +37,7 @@ export async function rawToTiff(volumeDataInstances, outputFolder, resetLog = tr
     for (const inputInstance of inputInstances) {
         channels += inputInstance.channels;
         rawDataBuffers.push(fs.readFileSync(inputInstance.path));
-        if (inputInstance.width !== width || inputInstance.width !== height || inputInstance.depth !== depth) {
+        if (inputInstance.width !== width || inputInstance.height !== height || inputInstance.depth !== depth) {
             throw new Error(`Raw-To-Tiff Conversion: All volumes must have the same dimensions.`);
         }
     }
