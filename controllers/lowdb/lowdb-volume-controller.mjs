@@ -1,8 +1,11 @@
 import {Volume} from "../../models/volume.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import {AbstractVolumeController} from "../abstract-volume-controller.mjs";
-import globalEventEmitter from "../../tools/global-event-system.mjs";
-import {volumeDataDeletedEvent} from "./lowdb-volume-data-controller.mjs";
+import globalEventEmitter, {
+    volumeCreatedEvent,
+    volumeDeletedEvent,
+    volumeDataDeletedEvent, projectDeletedEvent
+} from "../../tools/global-event-system.mjs";
 import {VolumeData} from "../../models/volume-data.mjs";
 
 class LowdbVolumeController extends AbstractVolumeController {
@@ -12,6 +15,9 @@ class LowdbVolumeController extends AbstractVolumeController {
         this.volumes = this.db.data.volumes;
         Object.preventExtensions(this);
 
+        globalEventEmitter.on(projectDeletedEvent, async (project) => {
+            await this.#onProjectDeleted(project);
+        });
         globalEventEmitter.on(volumeDataDeletedEvent, async (volumeData) => {
             await this.#onVolumeDataDeleted(volumeData);
         });
@@ -51,7 +57,7 @@ class LowdbVolumeController extends AbstractVolumeController {
 
             const volume = Volume.createVolume(newId, name, description, userId, projectId);
 
-            globalEventEmitter.emit('volumeCreated', volume);
+            globalEventEmitter.emit(volumeCreatedEvent, volume);
 
             await this.db.update(({volumes}) => volumes.push(volume));
             return volume.id;
@@ -79,7 +85,7 @@ class LowdbVolumeController extends AbstractVolumeController {
 
         const volume = Volume.fromReference(this.volumes[index]);
 
-        globalEventEmitter.emit('volumeDeleted', volume);
+        globalEventEmitter.emit(volumeDeletedEvent, volume);
 
         await volume.delete();
         await this.db.update(({ volumes }) => volumes.splice(index, 1));
@@ -91,6 +97,15 @@ class LowdbVolumeController extends AbstractVolumeController {
 
     async removeProject(volumeId, projectId) {
         await super.removeProject(Number(volumeId), Number(projectId));
+    }
+
+    async #onProjectDeleted(project) {
+        const volumes = this.getByIds(project.volumeIds);
+        for (const volume of volumes) {
+            if (volume.projectIds.includes(project.id)) {
+                await this.removeProject(volume.id, project.id);
+            }
+        }
     }
 
     async #onVolumeDataDeleted(volumeData) {

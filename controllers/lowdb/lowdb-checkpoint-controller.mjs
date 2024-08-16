@@ -1,10 +1,7 @@
 import LowdbManager from "../../tools/lowdb-manager.mjs";
-import globalEventEmitter from "../../tools/global-event-system.mjs";
+import globalEventEmitter, {checkpointCreatedEvent, checkpointDeletedEvent} from "../../tools/global-event-system.mjs";
 import {AbstractCheckpointController} from "../abstract-checkpoint-controller.mjs";
 import {Checkpoint} from "../../models/checkpoint.mjs";
-
-export const checkpointCreatedEvent = "checkpointCreated";
-export const checkpointDeletedEvent = "checkpointDeleted";
 
 class LowdbCheckpointController extends AbstractCheckpointController {
     constructor() {

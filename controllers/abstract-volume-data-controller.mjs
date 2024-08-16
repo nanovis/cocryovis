@@ -1,5 +1,4 @@
 import {AbstractController} from "./abstract-controller.mjs";
-import {VolumeData} from "../models/volume-data.mjs";
 
 export class AbstractVolumeDataController extends AbstractController {
     constructor() {

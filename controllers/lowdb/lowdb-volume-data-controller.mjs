@@ -1,9 +1,8 @@
 import LowdbManager from "../../tools/lowdb-manager.mjs";
-import globalEventEmitter from "../../tools/global-event-system.mjs";
+import globalEventEmitter, {volumeDataDeletedEvent, volumeDeletedEvent} from "../../tools/global-event-system.mjs";
 import {AbstractVolumeDataController} from "../abstract-volume-data-controller.mjs";
 import {VolumeData} from "../../models/volume-data.mjs";
 
-export const volumeDataDeletedEvent = "volumeDataDeleted";
 
 class LowdbVolumeDataController extends AbstractVolumeDataController {
     constructor() {
@@ -11,6 +10,10 @@ class LowdbVolumeDataController extends AbstractVolumeDataController {
         this.db = LowdbManager.db;
         this.dbData = this.db.data.volumeData;
         Object.preventExtensions(this);
+
+        globalEventEmitter.on(volumeDeletedEvent, async (volume) => {
+            await this.#onVolumeDeleted(volume);
+        });
     }
 
     #getIndex(id) {
@@ -31,6 +34,11 @@ class LowdbVolumeDataController extends AbstractVolumeDataController {
 
     getByIds(ids) {
         const dbReferences = this.dbData.filter((p) => ids.includes(p.id));
+        return dbReferences.map((p) => VolumeData.fromReference(p));
+    }
+
+    getVolumeDataFromVolume(volumeId) {
+        const dbReferences = this.dbData.filter((p) => p.volumeIds.includes(volumeId));
         return dbReferences.map((p) => VolumeData.fromReference(p));
     }
 
@@ -111,6 +119,20 @@ class LowdbVolumeDataController extends AbstractVolumeDataController {
         }
         else {
             await this.update(volumeDataObj);
+        }
+    }
+
+    async #onVolumeDeleted(volume) {
+        const volumeDataObjs = this.getVolumeDataFromVolume(volume.id);
+
+        for (const volumeDataObj in volumeDataObjs) {
+            volumeDataObj.removeFromVolume(volume.id);
+            if (volumeDataObj.volumeIds.length === 0) {
+                await this.delete(volumeDataObj.id);
+            }
+            else {
+                await this.update(volumeDataObj);
+            }
         }
     }
 

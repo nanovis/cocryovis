@@ -1,5 +1,5 @@
 import {AbstractController} from "./abstract-controller.mjs";
-import globalEventEmitter from "../tools/global-event-system.mjs";
+import globalEventEmitter, {projectDeletedEvent} from "../tools/global-event-system.mjs";
 import lowdbVolumeDataController from "./lowdb/lowdb-volume-data-controller.mjs";
 import {VolumeData} from "../models/volume-data.mjs";
 import {VolumeDataStack} from "../models/volume-data-stack.mjs";
@@ -14,9 +14,6 @@ export class AbstractVolumeController extends AbstractController {
         if(this.constructor === AbstractVolumeController) {
             throw new Error("Class is of abstract type and can't be instantiated");
         }
-        globalEventEmitter.on('projectDeleted', async (project) => {
-            await this.onProjectDeleted(project);
-        });
     }
 
     getAllVolumes() {
@@ -45,15 +42,6 @@ export class AbstractVolumeController extends AbstractController {
 
     async delete(id) {
         throw new Error('Method not implemented');
-    }
-
-    async onProjectDeleted(project) {
-        const volumes = this.getByIds(project.volumeIds);
-        for (const volume of volumes) {
-            if (volume.projectIds.includes(project.id)) {
-                await this.removeProject(volume.id, project.id);
-            }
-        }
     }
 
     async addProject(volumeId, projectId) {

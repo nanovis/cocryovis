@@ -1,8 +1,11 @@
 import {AbstractProjectController} from "../abstract-project-controller.mjs";
 import {Project} from "../../models/project.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
-import globalEventEmitter from "../../tools/global-event-system.mjs";
-import lowdbModelController, {modelCreatedEvent, modelDeletedEvent} from "./lowdb-model-controller.mjs";
+import globalEventEmitter, {
+    modelCreatedEvent, modelDeletedEvent, projectDeletedEvent,
+    volumeCreatedEvent, volumeDeletedEvent
+} from "../../tools/global-event-system.mjs";
+import lowdbModelController from "./lowdb-model-controller.mjs";
 
 class LowdbProjectController extends AbstractProjectController {
     constructor() {
@@ -10,6 +13,13 @@ class LowdbProjectController extends AbstractProjectController {
         this.db = LowdbManager.db;
         this.projects = this.db.data.projects;
         Object.preventExtensions(this);
+
+        globalEventEmitter.on(volumeCreatedEvent, async (volume) => {
+            await this.#onVolumeCreated(volume);
+        });
+        globalEventEmitter.on(volumeDeletedEvent, async (volume) => {
+            await this.#onVolumeDeleted(volume);
+        });
 
         globalEventEmitter.on(modelCreatedEvent, async (volume) => {
             await this.#onModelCreated(volume);
@@ -77,7 +87,7 @@ class LowdbProjectController extends AbstractProjectController {
 
         const project = Project.fromReference(this.projects[index]);
 
-        globalEventEmitter.emit('projectDeleted', project);
+        globalEventEmitter.emit(projectDeletedEvent, project);
 
         await project.delete();
         await this.db.update(({ projects }) => projects.splice(index, 1));
@@ -103,6 +113,24 @@ class LowdbProjectController extends AbstractProjectController {
         project.removeModel(modelId);
         await lowdbModelController.onRemovedFromProject(modelId, projectId);
         await this.update(project);
+    }
+
+    async #onVolumeCreated(volume) {
+        const projects = this.getByIds(volume.projectIds);
+        for (const project of projects) {
+            project.addVolume(volume.id);
+            await this.update(project);
+        }
+    }
+
+    async #onVolumeDeleted(volume) {
+        const projects = this.getByIds(volume.projectIds);
+        for (const project of projects) {
+            if (project.volumeIds.includes(volume.id)) {
+                project.removeVolume(volume.id);
+                await this.update(project);
+            }
+        }
     }
 
     async #onModelCreated(model) {

@@ -10,9 +10,9 @@ export class Result {
     static acceptedFileExtensions
         = ['.log'].concat(RawVolumeFile.acceptedFileExtensions, SettingsFile.acceptedFileExtensions);
 
-    constructor(id, volumeId, modelId, checkpointId, userId, path, files = [], rawVolumeChannel = -1) {
+    constructor(id, volumeIds, modelId, checkpointId, userId, path, files = [], rawVolumeChannel = -1) {
         this.id = id;
-        this.volumeId = volumeId;
+        this.volumeIds = volumeIds;
         this.modelId = modelId;
         this.checkpointId = checkpointId;
         this.userId = userId;
@@ -36,7 +36,7 @@ export class Result {
             }
         }
 
-        return new Result(dbReference.id, dbReference.volumeId, dbReference.modelId, dbReference.checkpointId,
+        return new Result(dbReference.id, dbReference.volumeIds, dbReference.modelId, dbReference.checkpointId,
             dbReference.userId,dbReference. path, files, dbReference.rawVolumeChannel)
     }
 
@@ -49,7 +49,25 @@ export class Result {
         }
         fileSystem.mkdirSync(folderPath, {recursive: true});
 
-        return new Result(id, volumeId, modelId, checkpointId, userId, folderPath);
+        return new Result(id, [volumeId], modelId, checkpointId, userId, folderPath);
+    }
+
+    addToVolume(volumeId) {
+        if (this.volumeIds.includes(volumeId)) {
+            throw new Error(`Result ${this.id} is already part of the volume with id ${volumeId}.`);
+        }
+
+        this.volumeIds.push(volumeId);
+    }
+
+    removeFromVolume(volumeId) {
+        const index = this.volumeIds.indexOf(volumeId);
+
+        if (index === -1) {
+            throw new Error(`Result ${this.id} is not included in ${volumeId}.`);
+        }
+
+        this.volumeIds.splice(index, 1);
     }
 
     addFile(filePath) {

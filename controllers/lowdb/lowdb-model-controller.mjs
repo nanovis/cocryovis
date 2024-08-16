@@ -1,20 +1,17 @@
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import {AbstractModelController} from "../abstract-model-controller.mjs";
 import {Model} from "../../models/model.mjs";
-import globalEventEmitter from "../../tools/global-event-system.mjs";
-import lowdbCheckpointController, {
-    checkpointCreatedEvent,
-    checkpointDeletedEvent
-} from "./lowdb-checkpoint-controller.mjs";
+import globalEventEmitter, {
+    checkpointCreatedEvent, checkpointDeletedEvent,
+    modelCreatedEvent, modelDeletedEvent
+} from "../../tools/global-event-system.mjs";
+import lowdbCheckpointController from "./lowdb-checkpoint-controller.mjs";
 import lowdbVolumeDataController from "./lowdb-volume-data-controller.mjs";
 import path from "path";
 import lowdbResultController from "./lowdb-result-controller.mjs";
 import {Result} from "../../models/result.mjs";
 import lowdbVolumeController from "./lowdb-volume-controller.mjs";
 import { readdir } from 'node:fs/promises';
-
-export const modelCreatedEvent = "modelCreated";
-export const modelDeletedEvent = "modelDeleted";
 
 class LowdbModelController extends AbstractModelController {
     constructor() {

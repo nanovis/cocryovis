@@ -1,9 +1,7 @@
 import LowdbManager from "../../tools/lowdb-manager.mjs";
-import globalEventEmitter from "../../tools/global-event-system.mjs";
+import globalEventEmitter, {resultDeletedEvent, volumeDeletedEvent} from "../../tools/global-event-system.mjs";
 import {AbstractResultController} from "../abstract-result-controller.mjs";
 import {Result} from "../../models/result.mjs";
-
-export const resultDeletedEvent = "resultDeleted";
 
 class LowdbResultController extends AbstractResultController {
     constructor() {
@@ -11,6 +9,10 @@ class LowdbResultController extends AbstractResultController {
         this.db = LowdbManager.db;
         this.dbData = this.db.data.results;
         Object.preventExtensions(this);
+
+        globalEventEmitter.on(volumeDeletedEvent, async (volume) => {
+            await this.#onVolumeDeleted(volume);
+        });
     }
 
     #getIndex(id) {
@@ -35,7 +37,7 @@ class LowdbResultController extends AbstractResultController {
     }
 
     getResultsVolumesFromVolume(volumeId) {
-        const dbReferences = this.dbData.filter((p) => p.volumeId === volumeId);
+        const dbReferences = this.dbData.filter((p) => p.volumeIds.includes(volumeId));
         return dbReferences.map((p) => Result.fromReference(p));
     }
 
@@ -87,6 +89,20 @@ class LowdbResultController extends AbstractResultController {
 
         await result.delete();
         await this.db.update(({ results }) => results.splice(index, 1));
+    }
+
+    async #onVolumeDeleted(volume) {
+        const results = this.getResultsVolumesFromVolume(volume.id);
+
+        for (const result in results) {
+            result.removeFromVolume(volume.id);
+            if (result.volumeIds.length === 0) {
+                await this.delete(result.id);
+            }
+            else {
+                await this.update(result);
+            }
+        }
     }
 }
 
