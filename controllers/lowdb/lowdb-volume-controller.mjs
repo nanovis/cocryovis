@@ -2,7 +2,7 @@ import {Volume} from "../../models/volume.mjs";
 import LowdbManager from "../../tools/lowdb-manager.mjs";
 import {AbstractVolumeController} from "../abstract-volume-controller.mjs";
 import globalEventEmitter from "../../tools/global-event-system.mjs";
-import lowdbVolumeDataController, {volumeDataDeletedEvent} from "./lowdb-volume-data-controller.mjs";
+import {volumeDataDeletedEvent} from "./lowdb-volume-data-controller.mjs";
 import {VolumeData} from "../../models/volume-data.mjs";
 
 class LowdbVolumeController extends AbstractVolumeController {

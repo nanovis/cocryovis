@@ -1,21 +1,40 @@
-import { exec } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
+import path from 'path';
+import fileSystem from "fs";
+import {promisify} from "node:util";
+import {exec} from 'child_process';
+const execPromise = promisify(exec);
 
 class NanoOetziHandler {
     constructor(config) {
         this.config = config;
         this.inferenceRunning = false;
-        this.output = '';
-        this.finished = false;
     }
 
-    runInference(inferenceDataPath, outputPath, checkpointFilename) {
-        this.output = '';
+    async runInference(inferenceDataPath, checkpointFilename, outputPath) {
+        if (this.inferenceRunning) {
+            throw new Error("Inference in progress.");
+        }
+
+        if (!fileSystem.existsSync(inferenceDataPath)) {
+            throw new Error("Inference data does not exist");
+        }
+        if (!fileSystem.existsSync(checkpointFilename)) {
+            throw new Error("Checkpoint file does not exist");
+        }
+        if (!fileSystem.existsSync(outputPath)) {
+            fileSystem.mkdirSync(outputPath, {recursive: true});
+        }
+
+        const logPath = path.join(outputPath, '!inference.log');
+        fileSystem.writeFileSync(logPath, 'Nano-Oetzi inference started\n--------------\n');
+
         this.inferenceRunning = true;
         let inferenceDataAbsolutePath = path.resolve(inferenceDataPath);
         let outputAbsolutePath = path.resolve(outputPath);
-        fs.mkdirSync(outputAbsolutePath, { recursive: true });
+
+        if (!fileSystem.existsSync(outputAbsolutePath)) {
+            fileSystem.mkdirSync(outputAbsolutePath, {recursive: true});
+        }
 
         let checkpointAbsolutePath = path.resolve(checkpointFilename);
         let params = [
@@ -26,34 +45,25 @@ class NanoOetziHandler {
         let command = this.config.command + ' ' + params[0] + ' ' + params[1] + ' ' + params[2];
         console.log(command);
 
-        exec(command, {cwd: path.resolve(this.config.scripts) }, (error, stdout, stderr) => {
-            this.inferenceRunning = false;
-            if (error) {
-                this.output = `exec error: ${error}`;
-            //   console.error(`exec error: ${error}`);
-              return;
-            }
-            this.output += '\n\n';
-            this.output += `stdout: \n${stdout}`;
-            this.output += '\n\n';
-            this.output += `stderr: \n${stderr}`;
-            console.log(`stdout: ${stdout}`);
-            // console.error(`stderr: ${stderr}`);
-            this.finished = true;
+        try {
+            const {stdout, stderr} = await execPromise(command, {cwd: path.resolve(this.config.scripts)});
+            fileSystem.appendFileSync(logPath, `\nstdout: \n${stdout}`);
+            fileSystem.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
             console.log('NanoOetzi inference finished');
-          });
+            fileSystem.appendFileSync(logPath, `\n--------------\nNanoOetzi inference finished`);
+        }
+        catch (error) {
+            fileSystem.appendFileSync(logPath, `\nERROR: \n${error}`);
+            console.log(`NanoOetzi inference error: ${error}`);
+            throw error;
+        }
+        finally {
+            this.inferenceRunning = false;
+        }
     }
 
     isInferenceRunning() {
         return this.inferenceRunning;
-    }
-
-    isFinished() {
-        return this.finished;
-    }
-
-    getOutput() {
-        return this.output;
     }
 }
 

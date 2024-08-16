@@ -32,6 +32,7 @@ const volumeController = ControllerFactory.getVolumeController(config.db.type);
 const volumeDataController = ControllerFactory.getVolumeDataController(config.db.type);
 const modelController = ControllerFactory.getModelController(config.db.type);
 const checkpointController = ControllerFactory.getCheckpointController(config.db.type);
+const resultController = ControllerFactory.getResultController(config.db.type);
 
 export const actions = express.Router();
 
@@ -569,8 +570,9 @@ actions.get(`/${projectsActionsPath}/details/:id`, restrict, (req, res) => {
             }
             const sparseLabeledVolumes = volumeDataController.getSparseLabeledVolumesFromVolume(volume.id);
             const pseudoLabeledVolumes = volumeDataController.getPseudoLabeledVolumesFromVolume(volume.id);
+            const results = resultController.getResultsVolumesFromVolume(volume.id);
             project.volumes.push({"details": volume, "rawData": rawData,
-                "sparseLabeledVolumes": sparseLabeledVolumes, "pseudoLabeledVolumes": pseudoLabeledVolumes});
+                "sparseLabeledVolumes": sparseLabeledVolumes, "pseudoLabeledVolumes": pseudoLabeledVolumes, "results": results});
         }
         const models = modelController.getModelsFromProject(project.details.id);
         for (const model of models) {
@@ -970,41 +972,50 @@ actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idChe
     }
 });
 
-// Vizualization test
-actions.get(`/visualization-test`, async (req, res) => {
+/////// RESULTS
+// Remove Result
+actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/delete`, restrict, async (req, res) => {
+    console.log(`Deleting Result ${req.params.idResult}`);
     try {
-        const basePath = "../../ts_16_256/"
-        const files256 =  [
-            'config.json',
-            'tf-bg.json',
-            'tf-in.json',
-            'tf-memb.json',
-            'tf-raw.json',
-            'tf-spike.json',
-            'ts_16_bin4-256x256.json',
-            'ts_16_bin4-256x256.raw',
-            // 'ts_16_bin4-uint8-inv-mean-3-256x256.json',
-            // 'ts_16_bin4-uint8-inv-mean-3-256x256.raw',
-            // 'ts_16_predictions-Background-256x256.json',
-            // 'ts_16_predictions-Background-256x256.raw',
-            // 'ts_16_predictions-Inner-256x256.json',
-            // 'ts_16_predictions-Inner-256x256.raw',
-            // 'ts_16_predictions-Membrane-256x256.json',
-            // 'ts_16_predictions-Membrane-256x256.raw',
-            // 'ts_16_predictions-Spikes-256x256.json',
-            // 'ts_16_predictions-Spikes-256x256.raw'
-        ];
+        await resultController.delete(req.params.idResult);
+        res.redirect(`/api/actions/${projectsActionsPath}/details/${req.params.idProject}`);
+    } catch (err) {
+        console.error("Error in creating model:", err);
+        res.status(500).send(err);
+    }
+});
 
-        const volumes = [];
-        for (const file of files256) {
-            const fileObj = { path: path.join(basePath, file), filename: file };
-            volumes.push(fileObj);
-        }
-        volumes.push({ path: "../../data/session.json", filename: "session.json" })
+// Download Result
+actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download`, restrict, async (req, res) => {
+    try {
+        const result = resultController.getById(req.params.idResult);
+        let data = result.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
 
-        const volumesJSON = JSON.stringify(volumes).replaceAll('\\', '\\\\');
+// Download Result File
+actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download/:fileIndex`, restrict, async (req, res) => {
+    try {
+        const result = resultController.getById(req.params.idResult);
+        const file = result.getFile(Number(req.params.fileIndex));
+        let data = file.prepareDataForDownload();
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', 'attachment; filename=' + data.name);
+        res.send(data.zipBuffer);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
 
-        res.render('visualize-volume', { volumeName: "test", volumes: volumesJSON });
+// Inference test
+actions.get(`/inference-test`, async (req, res) => {
+    try {
+        await modelController.runInference(1, 1, 1, 1, nanoOetzi);
     } catch (err) {
         res.status(500).send(err);
     }

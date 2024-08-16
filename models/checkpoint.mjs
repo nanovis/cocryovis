@@ -1,7 +1,6 @@
 import {StoredFile} from "./stored-file.mjs";
 import AdmZip from "adm-zip";
 import path from "path";
-import {fileNameFilter} from "../tools/utils.mjs";
 import {rm} from "node:fs/promises";
 
 export class Checkpoint extends StoredFile {
@@ -18,7 +17,7 @@ export class Checkpoint extends StoredFile {
     }
 
     static fromReference(dbReference) {
-        return new Object.assign(new Checkpoint(), dbReference);
+        return Object.assign(new Checkpoint(), dbReference);
     }
 
     static async fromFile(file, uploadPath, id, userId, modelId) {
@@ -26,7 +25,7 @@ export class Checkpoint extends StoredFile {
             throw new Error(`Checkpoint has to consist of single file only.`);
         }
 
-        const fullUploadPath = path.join(uploadPath, id);
+        const fullUploadPath = path.join(uploadPath, id.toString());
 
         let storedFile = null;
 

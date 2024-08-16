@@ -1,15 +1,11 @@
 import {AbstractController} from "./abstract-controller.mjs";
 
-export class AbstractModelController extends AbstractController {
+export class AbstractResultController extends AbstractController {
     constructor() {
         super();
-        if(this.constructor === AbstractModelController) {
+        if(this.constructor === AbstractResultController) {
             throw new Error("Class is of abstract type and can't be instantiated");
         }
-    }
-
-    getAllModels() {
-        throw new Error('Method not implemented');
     }
 
     getById(id) {
@@ -20,11 +16,19 @@ export class AbstractModelController extends AbstractController {
         throw new Error('Method not implemented');
     }
 
-    getModelsFromProject(projectId) {
+    getResultsVolumesFromVolume(volumeId) {
         throw new Error('Method not implemented');
     }
 
-    async create(name, description, userId) {
+    getResultsVolumesFromModel(modelId) {
+        throw new Error('Method not implemented');
+    }
+
+    getResultsVolumesFromCheckpoint(checkpointId) {
+        throw new Error('Method not implemented');
+    }
+
+    async create(volumeId, modelId, checkpointId, userId) {
         throw new Error('Method not implemented');
     }
 
@@ -33,22 +37,6 @@ export class AbstractModelController extends AbstractController {
     }
 
     async delete(id) {
-        throw new Error('Method not implemented');
-    }
-
-    async hasCheckpoint(id, checkpointId) {
-        throw new Error('Method not implemented');
-    }
-
-    async addCheckpoint(id, checkpointId) {
-        throw new Error('Method not implemented');
-    }
-
-    async removeCheckpoint(id, checkpointId) {
-        throw new Error('Method not implemented');
-    }
-
-    async runInference(id, checkpointId, volumeId, userId, nanoOetzi) {
         throw new Error('Method not implemented');
     }
 }

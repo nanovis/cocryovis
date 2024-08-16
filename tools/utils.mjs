@@ -3,9 +3,9 @@ import path from "path";
 import AdmZip from "adm-zip";
 import {exec} from "child_process";
 import appConfig from "./config.mjs";
-import * as util from "node:util";
+import {promisify} from "node:util";
 import fs from "fs";
-const execPromise = util.promisify(exec);
+const execPromise = promisify(exec);
 
 export function fileNameFilter(name) {
     return name.replace(/\s+/g, '_').replace(/[^\da-zA-Z_.-]+/g, '');

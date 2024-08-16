@@ -6,7 +6,12 @@ import lowdbCheckpointController, {
     checkpointCreatedEvent,
     checkpointDeletedEvent
 } from "./lowdb-checkpoint-controller.mjs";
-import {Volume} from "../../models/volume.mjs";
+import lowdbVolumeDataController from "./lowdb-volume-data-controller.mjs";
+import path from "path";
+import lowdbResultController from "./lowdb-result-controller.mjs";
+import {Result} from "../../models/result.mjs";
+import lowdbVolumeController from "./lowdb-volume-controller.mjs";
+import { readdir } from 'node:fs/promises';
 
 export const modelCreatedEvent = "modelCreated";
 export const modelDeletedEvent = "modelDeleted";
@@ -127,6 +132,13 @@ class LowdbModelController extends AbstractModelController {
         }
     }
 
+    async hasCheckpoint(id, checkpointId) {
+        id = Number(id);
+        const model = this.getById(id);
+
+        return model.checkpointIds.includes(checkpointId);
+    }
+
     async addCheckpoint(id, checkpointId) {
         id = Number(id);
         checkpointId = Number(checkpointId);
@@ -163,6 +175,38 @@ class LowdbModelController extends AbstractModelController {
                 await this.update(model);
             }
         }
+    }
+
+    async runInference(id, checkpointId, volumeId, userId, nanoOetzi) {
+        const model = this.getById(id);
+
+        if(!model.checkpointIds.includes(checkpointId)) {
+            throw new Error(`Model ${id} (${model.name}): Inference checkpoint must be included in the model.`);
+        }
+
+        const volume = lowdbVolumeController.getById(volumeId);
+
+        const volumeData = lowdbVolumeDataController.getById(volume.rawDataId);
+
+        if(!volumeData.settingsFile) {
+            throw new Error(`Model ${id} (${model.name}): Selected Volume Data must contain a settings file.`);
+        }
+
+        const checkpoint = lowdbCheckpointController.getById(checkpointId);
+
+        const result = await lowdbResultController.create(volumeId, model.id, checkpointId, userId);
+
+        await nanoOetzi.runInference(volumeData.settingsFile.filePath, checkpoint.filePath, result.path);
+
+        const files = await readdir(result.path);
+        for (const fileName of files) {
+            const filePath = path.join(result.path, fileName);
+            if (Result.acceptedFileExtensions.includes(path.extname(fileName))) {
+                result.addFile(filePath);
+            }
+        }
+
+        lowdbResultController.update(result);
     }
 }
 

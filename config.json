@@ -23,6 +23,7 @@
     "projects": {
         "volumeDataPath": "./data/volume-data/",
         "checkpointsPath": "./data/checkpoints/",
+        "resultsPath": "./data/results/",
         "maxVolumeChannels": 4
     },
     "db": {

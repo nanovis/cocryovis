@@ -167,6 +167,19 @@
             <a target="_blank" href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
+    <h4>Results:</h4>
+    <% for (const result of volume.results) { %>
+        <p>
+            <b>Result id:</b> <%= result.id %>
+            <a href="/api/actions/projects/<%= project.details.id %>/result/<%= result.id %>/delete">[X]</a><br />
+            <a href="/api/actions/projects/<%= project.details.id %>/result/<%= result.id %>/download">Download</a><br />
+            <b>Model id:</b> <%= result.modelId %><br />
+            <b>Checkpoint id:</b> <%= result.modelId %><br />
+        </p>
+        <% for (let i = 0; i < result.files.length; i++) { %>
+            <a href="/api/actions/projects/<%= project.details.id %>/result/<%= result.id %>/download/<%= i %>"><%= result.files[i].fileName %></a><br />
+        <% } %>
+    <% } %>
     <hr />
 <% } %>
 <br />
