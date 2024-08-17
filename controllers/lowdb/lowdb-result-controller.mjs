@@ -2,6 +2,7 @@ import LowdbManager from "../../tools/lowdb-manager.mjs";
 import globalEventEmitter, {resultDeletedEvent, volumeDeletedEvent} from "../../tools/global-event-system.mjs";
 import {AbstractResultController} from "../abstract-result-controller.mjs";
 import {Result} from "../../models/result.mjs";
+import fileSystem from "fs";
 
 class LowdbResultController extends AbstractResultController {
     constructor() {
@@ -59,6 +60,10 @@ class LowdbResultController extends AbstractResultController {
         let newId = 1;
         if (this.dbData.length > 0) {
             newId = this.dbData.at(-1).id + 1;
+        }
+
+        if (!fileSystem.existsSync(this.config.resultsPath)) {
+            fileSystem.mkdirSync(this.config.resultsPath, {recursive: true});
         }
 
         const result =
