@@ -40,14 +40,16 @@ export class Result {
             dbReference.userId,dbReference. path, files, dbReference.rawVolumeChannel)
     }
 
-    static createResult(id, volumeId, modelId, checkpointId, userId, basePath) {
+    static createResult(id, volumeId, modelId, checkpointId, userId, basePath, createFolder = false) {
         console.log(`Creating new Result object with id ${id}.`);
 
         const folderPath = path.join(basePath, id.toString());
         if (fileSystem.existsSync(folderPath)) {
             throw new Error(`Result directory already exists`);
         }
-        fileSystem.mkdirSync(folderPath, {recursive: true});
+        if (createFolder) {
+            fileSystem.mkdirSync(folderPath, {recursive: true});
+        }
 
         return new Result(id, [volumeId], modelId, checkpointId, userId, folderPath);
     }

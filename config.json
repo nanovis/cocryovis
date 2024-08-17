@@ -15,7 +15,9 @@
         "scripts": "../nano-oetzi/segmentation/",
         "command": "python",
         "inferenceCommand": "inference_script.py",
-        "defaultModel": "four_classes_model.ckpt"
+        "defaultModel": "four_classes_model.ckpt",
+        "workCache": "cache/nano-oetzi",
+        "maxQueueSize": 20
     },
     "models": {
         "path": "../models/"

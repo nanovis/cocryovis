@@ -11,7 +11,8 @@ import path from "path";
 import lowdbResultController from "./lowdb-result-controller.mjs";
 import {Result} from "../../models/result.mjs";
 import lowdbVolumeController from "./lowdb-volume-controller.mjs";
-import { readdir } from 'node:fs/promises';
+import { readdir, rename } from 'node:fs/promises';
+import fs from "fs";
 
 class LowdbModelController extends AbstractModelController {
     constructor() {
@@ -191,9 +192,11 @@ class LowdbModelController extends AbstractModelController {
 
         const checkpoint = lowdbCheckpointController.getById(checkpointId);
 
+        let outputPath = await nanoOetzi.queueInference(volumeData.settingsFile.filePath, checkpoint.filePath);
+
         const result = await lowdbResultController.create(volumeId, model.id, checkpointId, userId);
 
-        await nanoOetzi.runInference(volumeData.settingsFile.filePath, checkpoint.filePath, result.path);
+        await rename(outputPath, result.path);
 
         const files = await readdir(result.path);
         for (const fileName of files) {

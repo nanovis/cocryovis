@@ -51,7 +51,7 @@ class LowdbResultController extends AbstractResultController {
         return dbReferences.map((p) => Result.fromReference(p));
     }
 
-    async create(volumeId, modelId, checkpointId, userId) {
+    async create(volumeId, modelId, checkpointId, userId, createFolder = false) {
         volumeId = Number(volumeId);
         modelId = Number(modelId);
         checkpointId = Number(checkpointId);
@@ -62,7 +62,7 @@ class LowdbResultController extends AbstractResultController {
         }
 
         const result =
-            await Result.createResult(newId, volumeId, modelId, checkpointId, userId, this.config.resultsPath);
+            await Result.createResult(newId, volumeId, modelId, checkpointId, userId, this.config.resultsPath, createFolder);
 
         await this.db.update(({results}) => results.push(result));
         return result;
