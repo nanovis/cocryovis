@@ -78,7 +78,7 @@ export class NanoOetziHandler {
         catch (error) {
             await appendFile(logPath, `\nERROR: \n${error}`);
             console.log(`NanoOetzi inference error: ${error}`);
-            await rm(outputPath, {force: true});
+            await rm(outputPath, {recursive: true, force: true});
             throw error;
         }
     }

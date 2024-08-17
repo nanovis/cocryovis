@@ -527,6 +527,7 @@ actions.get(`/inference-test`, async (req, res) => {
     try {
         await modelController.runInference(1, 1, 1, 1, nanoOetzi);
     } catch (err) {
+        console.log(err)
         res.status(500).send(err);
     }
 });
