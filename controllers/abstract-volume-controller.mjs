@@ -4,7 +4,6 @@ import lowdbVolumeDataController from "./lowdb/lowdb-volume-data-controller.mjs"
 import {VolumeData} from "../models/volume-data.mjs";
 import {VolumeDataStack} from "../models/volume-data-stack.mjs";
 import path from "path";
-import fileSystem from "fs";
 import {rm} from "node:fs/promises";
 import {rawToTiff} from "../tools/raw-to-tiff.mjs";
 
@@ -163,5 +162,10 @@ export class AbstractVolumeController extends AbstractController {
 
         await Promise.all(promises);
         console.log(`Volume ${volume.id} (${volume.name}): Tiff conversion test done.`);
+    }
+
+    async createPseudoLabels(volumeId, illastik) {
+        throw new Error('Method not implemented');
+
     }
 }

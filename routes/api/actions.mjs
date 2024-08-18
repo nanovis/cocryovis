@@ -270,9 +270,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/visuali
 });
 
 // Add Files to Volume Data
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-files`, restrict, async (req, res) => {
+actions.post(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-files`, restrict, async (req, res) => {
     try {
         if (!req.files || !req.files.files) {
+            console.log(req)
             res.send({
                 status: false,
                 message: 'No file uploaded'
@@ -283,11 +284,12 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-
         }
     } catch (err) {
         res.status(500).send(err);
+        console.log(err)
     }
 });
 
 // Add Mrc File to Volume Data
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-mrc-file`, restrict, async (req, res) => {
+actions.post(`/${projectsActionsPath}/:idProject/volumeData/:idVolumeData/upload-mrc-file`, restrict, async (req, res) => {
     try {
         if (!req.files || !req.files.files) {
             res.send({
@@ -526,6 +528,16 @@ actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download/:fileI
 actions.get(`/inference-test`, async (req, res) => {
     try {
         await modelController.runInference(1, 1, 1, 1, nanoOetzi);
+    } catch (err) {
+        console.log(err)
+        res.status(500).send(err);
+    }
+});
+
+// Ilastik Inference test
+actions.get(`/ilastik-test`, async (req, res) => {
+    try {
+        await volumeController.createPseudoLabels(1, ilastikHandler);
     } catch (err) {
         console.log(err)
         res.status(500).send(err);

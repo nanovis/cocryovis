@@ -7,6 +7,9 @@ import globalEventEmitter, {
     volumeDataDeletedEvent, projectDeletedEvent
 } from "../../tools/global-event-system.mjs";
 import {VolumeData} from "../../models/volume-data.mjs";
+import path from "path";
+import fileSystem from "fs";
+import lowdbVolumeDataController from "./lowdb-volume-data-controller.mjs";
 
 class LowdbVolumeController extends AbstractVolumeController {
     constructor() {
@@ -146,6 +149,21 @@ class LowdbVolumeController extends AbstractVolumeController {
 
     async addRawVolumeMrcFile(volumeId, userId, file) {
         await super.addRawVolumeMrcFile(Number(volumeId), userId, file);
+    }
+
+    async createPseudoLabels(volumeId, illastik) {
+        volumeId = Number(volumeId);
+
+        const outputPath = path.join("data", "pseudoTest");
+        if (!fileSystem.existsSync(outputPath)) {
+            fileSystem.mkdirSync(outputPath, {recursive: true});
+        }
+        const volume = this.getById(volumeId);
+        const rawData = lowdbVolumeDataController.getById(volume.rawDataId);
+        const sparseLabelStack = lowdbVolumeDataController.getByIds(volume.sparseLabeledVolumes.ids)
+        
+        console.log(rawData)
+        illastik.generateLabels(rawData, sparseLabelStack, outputPath, outputPath);
     }
 }
 

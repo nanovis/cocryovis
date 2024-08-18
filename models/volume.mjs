@@ -2,8 +2,8 @@ import fileSystem from "fs";
 import {VolumeDataStack} from "./volume-data-stack.mjs";
 
 export class Volume {
-    constructor(id, name, description, userId, rawDataId = null, sparseLabeledVolumes = [],
-                pseudoLabeledVolumes = [], projectIds = []) {
+    constructor(id, name, description, userId, rawDataId = null, sparseLabeledVolumes = null,
+                pseudoLabeledVolumes = null, projectIds = []) {
         this.id = id;
         this.name = name;
         this.description = description;

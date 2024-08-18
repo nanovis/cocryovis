@@ -41,7 +41,7 @@ class IlastikHandler {
         this.isInferenceRunning = true;
         this.inferenceRunning = true;
 
-        const logPath = path.join(labelsOutputPath, '!inference.log)');
+        const logPath = path.join(labelsOutputPath, '!inference.log');
         fs.writeFileSync(logPath, 'Ilastik inference started\n\n');
 
         const ilastikLabels = new StoredFolder(path.basename(labelsOutputPath), labelsOutputPath);
@@ -85,7 +85,7 @@ class IlastikHandler {
 
     createIlastikProject(rawDataPath, sparseLabelPath, modelOutputPath, labelsOutputPath) {
         console.log('Creating Ilastik project');
-        const logPath = path.join(labelsOutputPath, '!projectCreation.log)');
+        const logPath = path.join(labelsOutputPath, '!projectCreation.log');
         fs.writeFileSync(logPath, 'Creating Ilastik project\n\n');
 
         this.finished = false;
@@ -126,13 +126,13 @@ class IlastikHandler {
     }
 
     async generateLabels(rawData, sparseLabelsStack, modelOutputPath, labelsOutputPath) {
-        if (!rawData) {
+        if (!rawData || !rawData.rawFile) {
             throw new Error("Pseudo Labels Generation: Raw Data is missing.");
         }
         if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
             throw new Error("Pseudo Labels Generation: Sparse Label Data is missing.");
         }
-        if (rawData.getExtension() !== ".raw") {
+        if (rawData.rawFile.getFileExtension() !== ".raw") {
             throw new Error("Pseudo Labels Generation: Raw Data must be in .raw format.");
         }
 
@@ -154,7 +154,7 @@ class IlastikHandler {
         }
 
         await rawToTiff(rawData, rawTiffFolderPath);
-        await rawToTiff(sparseLabelsStack, rawTiffFolderPath);
+        await rawToTiff(sparseLabelsStack, sparseLabelsTiffFolderPath);
     }
 }
 

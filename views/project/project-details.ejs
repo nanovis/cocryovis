@@ -95,7 +95,7 @@
     <% } %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
         <label for="file">Select Raw Data Volume files:</label>
-        <input type="file" id="rawDataFiles_<%= volume.details.id %>" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+        <input type="file" id="rawDataFiles_<%= volume.details.id %>" name="files" accept="application/zip,.raw,.json" multiple>
         <input
                 type="button"
                 onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volume/<%= volume.details.id %>/raw-data/upload', 'rawDataFiles_<%= volume.details.id %>', 'progressBarRawData_<%= volume.details.id %>', 'statusRawData_<%= volume.details.id %>')"
@@ -120,13 +120,13 @@
         <b>Sparse volume <%= sparseLabeledVolume.id %>:</b>
         <form method="POST" enctype="multipart/form-data">
             <label for="file">Select Sparse Labeled Volume files:</label>
-            <input type="file" id="sparseLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+            <input type="file" id="sparseLabeledVolumeFiles_<%= volume.details.id %>_<%= sparseLabeledVolume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
             <input
                     type="button"
-                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volumeData/<%= sparseLabeledVolume.id %>/upload-files', 'sparseLabeledVolumeFiles', 'progressBarSparseLabeledVolume', 'statusSparseLabeledVolume')"
+                    onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/upload-files', 'sparseLabeledVolumeFiles_<%= volume.details.id %>_<%= sparseLabeledVolume.id %>', 'progressBarSparseLabeledVolume_<%= volume.details.id %>_<%= sparseLabeledVolume.id %>', 'statusSparseLabeledVolume_<%= volume.details.id %>_<%= sparseLabeledVolume.id %>')"
                     value = "Upload">
-            <progress id="progressBarSparseLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
-            <span id="statusSparseLabeledVolume"></span>
+            <progress id="progressBarSparseLabeledVolume_<%= volume.details.id %>_<%= sparseLabeledVolume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
+            <span id="statusSparseLabeledVolume_<%= volume.details.id %>_<%= sparseLabeledVolume.id %>"></span>
         </form>
         <% if (sparseLabeledVolume.rawFile != null) { %>
             <a href="/api/actions/projects/<%= project.details.id %>/volumeData/<%= sparseLabeledVolume.id %>/download-raw-file"><%= sparseLabeledVolume.rawFile.fileName %></a> ...
@@ -146,10 +146,10 @@
     <% for (const pseudoLabeledVolume of volume.pseudoLabeledVolumes) { %>
         <form method="POST" enctype="multipart/form-data">
             <label for="file">Select Pseudo Labeled Volume files:</label>
-            <input type="file" id="pseudoLabeledVolumeFiles" name="files" accept="image/tif,image/tiff,application/zip,.raw,.json" multiple>
+            <input type="file" id="pseudoLabeledVolumeFiles" name="files" accept="application/zip,.raw,.json" multiple>
             <input
                     type="button"
-                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volumeData/<%= pseudoLabeledVolume.id %>/upload-files', 'pseudoLabeledVolumeFiles', 'progressBarPseudoLabeledVolume', 'pseudoSparseLabeledVolume')"
+                    onclick="uploadFile('/api/actions/projects/<%= project.details.id %>/volumeData/<%= pseudoLabeledVolume.id %>/upload-files', 'pseudoLabeledVolumeFiles', 'progressBarPseudoLabeledVolume', 'pseudoSparseLabeledVolume')"
                     value = "Upload">
             <progress id="progressBarPseudoLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
             <span id="pseudoSparseLabeledVolume"></span>
