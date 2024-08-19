@@ -23,9 +23,17 @@ To install the app, you need node.js. In the project folder run:
 
 ```npm install```
 
+To setup the database run:
+
+```npm run prisma:init```
+
 To run the server run:
 
 ```nodemon index.mjs```
+
+## Default User Credentials
+Username: ciril
+Password: nanovis
 
 ## Ilastik
 The Ilastik used in our setup is standard Ilastik version with adapted script for headless operation which was provided to us by the Ilastik developer.

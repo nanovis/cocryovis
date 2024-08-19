@@ -1,117 +1,200 @@
-import {rm} from "node:fs/promises";
+// @ts-check
+
+import { RawVolumeFile, SettingsFile } from "./volume-data.mjs";
+import { BaseModel } from "./base-model.mjs";
+import prismaManager from "../tools/prisma-manager.mjs";
+import { rm } from "node:fs/promises";
+import appConfig from "../tools/config.mjs";
 import path from "path";
 import fileSystem from "fs";
-import AdmZip from "adm-zip";
-import {SettingsFile} from "./settings-file.mjs";
-import {RawVolumeFile} from "./raw-volume-file.mjs";
-import {StoredFile} from "./stored-file.mjs";
+import { readdir, rename } from "node:fs/promises";
+import { isFileExtensionAccepted } from "../tools/utils.mjs";
 
-export class Result {
-    static acceptedFileExtensions
-        = ['.log'].concat(RawVolumeFile.acceptedFileExtensions, SettingsFile.acceptedFileExtensions);
+/**
+ * @typedef { import("@prisma/client").Result } ResultDB
+ */
 
-    constructor(id, volumeIds, modelId, checkpointId, userId, path, files = [], rawVolumeChannel = -1) {
-        this.id = id;
-        this.volumeIds = volumeIds;
-        this.modelId = modelId;
-        this.checkpointId = checkpointId;
-        this.userId = userId;
-        this.path = path;
+/**
+ * @extends BaseModel
+ */
+export class Result extends BaseModel {
+    static acceptedFileExtensions = [".log"].concat(
+        RawVolumeFile.acceptedFileExtensions,
+        SettingsFile.acceptedFileExtensions
+    );
 
-        this.files = files
-        this.rawVolumeChannel = rawVolumeChannel;
+    /**
+     * @return {String}
+     */
+    static get modelName() {
+        return "result";
     }
 
-    static fromReference(dbReference) {
-        const files = []
-        for (const dbFile of dbReference.files) {
-            if (SettingsFile.acceptedFileExtensions.includes(path.extname(dbFile.fileName))) {
-                files.push(new SettingsFile(dbFile.fileName, dbFile.filePath))
-            }
-            else if (RawVolumeFile.acceptedFileExtensions.includes(path.extname(dbFile.fileName))) {
-                files.push(new RawVolumeFile(dbFile.fileName, dbFile.filePath))
-            }
-            else {
-                files.push(new StoredFile(dbFile.fileName, dbFile.filePath))
-            }
+    static get db() {
+        return prismaManager.db.result;
+    }
+
+    /**
+     * @param {Number} id
+     * @return {Promise<ResultDB>}
+     */
+    static async getById(id) {
+        return await super.getById(id);
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} checkpointId
+     * @param {Number} volumeDataId
+     */
+    static async create(ownerId, checkpointId, volumeDataId) {
+        return await this.db.create({
+            data: {
+                ownerId: ownerId,
+                checkpointId: checkpointId,
+                volumeDataId: volumeDataId,
+            },
+        });
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} checkpointId
+     * @param {Number} volumeDataId
+     * @param {String} folderPath
+     */
+    static async createFromFolder(
+        ownerId,
+        checkpointId,
+        volumeDataId,
+        folderPath
+    ) {
+        if (!fileSystem.existsSync(appConfig.projects.resultsPath)) {
+            fileSystem.mkdirSync(appConfig.projects.resultsPath, {
+                recursive: true,
+            });
         }
 
-        return new Result(dbReference.id, dbReference.volumeIds, dbReference.modelId, dbReference.checkpointId,
-            dbReference.userId,dbReference. path, files, dbReference.rawVolumeChannel)
+        try {
+            return await prismaManager.db.$transaction(
+                async (tx) => {
+                    /** @type {ResultDB} */
+                    let result = await tx.result.create({
+                        data: {
+                            ownerId: ownerId,
+                            checkpointId: checkpointId,
+                            volumeDataId: volumeDataId,
+                        },
+                    });
+
+                    const resultPath = await Result.reserveFolderName(
+                        result.id
+                    );
+                    await rename(folderPath, resultPath);
+
+                    let visualizationFileIndex = 0;
+                    let rawVolumeChannel = -1;
+
+                    const filePaths = [];
+
+                    const files = await readdir(resultPath);
+                    for (const fileName of files) {
+                        const filePath = path.join(resultPath, fileName);
+                        if (
+                            isFileExtensionAccepted(
+                                fileName,
+                                this.acceptedFileExtensions
+                            )
+                        ) {
+                            filePaths.push(filePath);
+
+                            if (filePath.endsWith("_inverted.json")) {
+                                rawVolumeChannel = filePaths.length - 1;
+                            } else if (
+                                SettingsFile.acceptedFileExtensions ||
+                                RawVolumeFile.acceptedFileExtensions
+                            ) {
+                                visualizationFileIndex++;
+                            }
+                        }
+                    }
+
+                    const filePathsJSON = JSON.stringify(filePaths);
+
+                    try {
+                        result = await tx.result.update({
+                            where: { id: result.id },
+                            data: {
+                                folderPath: resultPath,
+                                rawVolumeChannel: rawVolumeChannel,
+                                files: filePathsJSON,
+                            },
+                        });
+                    } catch (error) {
+                        await rm(resultPath, {
+                            recursive: true,
+                            force: true,
+                        });
+                        throw error;
+                    }
+                    return result;
+                },
+                {
+                    timeout: 60000,
+                }
+            );
+        } catch (error) {
+            await rm(folderPath, {
+                recursive: true,
+                force: true,
+            });
+        }
     }
 
-    static createResult(id, volumeId, modelId, checkpointId, userId, basePath, createFolder = false) {
-        console.log(`Creating new Result object with id ${id}.`);
+    /**
+     * @param {Number} id
+     * @typedef {Object} Changes
+     * @property {Number} [ownerId]
+     * @property {Number} [checkpointId]
+     * @property {Number} [volumeDataId]
+     * @property {String?} [folderPath]
+     * @property {String?} [files]
+     * @property {Number?} [rawVolumeChannel]
+     * @param {Changes} changes
+     * @return {Promise<ResultDB>}
+     */
+    static async update(id, changes) {
+        return await super.update(id, changes);
+    }
 
-        const folderPath = path.join(basePath, id.toString());
+    /**
+     * @param {Number} id
+     * @return {Promise<ResultDB>}
+     */
+    static async del(id) {
+        const result = await super.del(id);
+        if (result.folderPath) {
+            await rm(result.folderPath, { recursive: true, force: true });
+        }
+        return result;
+    }
+
+    /**
+     * @param {Number} id
+     * @return {Promise<String>}
+     */
+    static async reserveFolderName(id) {
+        const folderPath = path.join(
+            appConfig.projects.resultsPath,
+            id.toString()
+        );
         if (fileSystem.existsSync(folderPath)) {
-            throw new Error(`Result directory already exists`);
+            if (appConfig.safeMode) {
+                throw new Error(`Result directory already exists`);
+            } else {
+                await rm(folderPath, { recursive: true, force: true });
+            }
         }
-        if (createFolder) {
-            fileSystem.mkdirSync(folderPath, {recursive: true});
-        }
-
-        return new Result(id, [volumeId], modelId, checkpointId, userId, folderPath);
-    }
-
-    addToVolume(volumeId) {
-        if (this.volumeIds.includes(volumeId)) {
-            throw new Error(`Result ${this.id} is already part of the volume with id ${volumeId}.`);
-        }
-
-        this.volumeIds.push(volumeId);
-    }
-
-    removeFromVolume(volumeId) {
-        const index = this.volumeIds.indexOf(volumeId);
-
-        if (index === -1) {
-            throw new Error(`Result ${this.id} is not included in ${volumeId}.`);
-        }
-
-        this.volumeIds.splice(index, 1);
-    }
-
-    addFile(filePath) {
-        if (SettingsFile.acceptedFileExtensions.includes(path.extname(filePath))) {
-            this.files.push(new SettingsFile(path.basename(filePath), filePath));
-        }
-        else if (RawVolumeFile.acceptedFileExtensions.includes(path.extname(filePath))) {
-            this.files.push(new RawVolumeFile(path.basename(filePath), filePath));
-        }
-        else {
-            this.files.push(new StoredFile(path.basename(filePath), filePath));
-        }
-
-        if (filePath.endsWith("_inverted.json")) {
-            this.rawVolumeChannel = this.files.length - 1;
-        }
-    }
-
-    getFile(index) {
-        if (index >= this.files.length) {
-            throw new Error(`Result ${this.id} does not have a file with index ${index}`);
-        }
-
-        return this.files[index];
-    }
-
-    prepareDataForDownload() {
-        if (this.files.length === 0) {
-            throw new Error(`Result ${this.id} has no associated files`);
-        }
-        const zip = new AdmZip();
-        for (const file of this.files) {
-            zip.addLocalFile(file.filePath);
-        }
-        const outputFileName = `Result_${this.id}`;
-        return {
-            name: `${outputFileName}.zip`,
-            zipBuffer: zip.toBuffer()
-        };
-    }
-
-    async delete() {
-        await rm(this.path, { recursive: true, force: true });
+        return folderPath;
     }
 }

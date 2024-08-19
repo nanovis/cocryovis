@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  name          String
+  email         String
+  passwordSalt  String
+  passwordHash  String
+  projects      Project[]
+  volumes       Volume[]
+  rawVolumeData         RawVolumeData[]
+  sparseLabelVolumeData SparseLabelVolumeData[]
+  pseudoLabelVolumeData PseudoLabelVolumeData[]
+  models      Model[]
+  checkpoints Checkpoint[]
+  results     Result[]
+}
+
+model Project {
+  id            Int       @id @default(autoincrement())
+  name          String
+  description   String
+  owner         User      @relation(fields: [ownerId], references: [id])
+  ownerId       Int
+  volumes       Volume[]
+  models        Model[]
+}
+
+model Volume {
+  id            Int             @id @default(autoincrement())
+  name          String
+  description   String
+  owner         User            @relation(fields: [ownerId], references: [id])
+  ownerId       Int
+  projects      Project[]
+  rawData       RawVolumeData?  @relation(fields: [rawDataId], references: [id])  
+  rawDataId     Int?
+  sparseVolumes SparseLabelVolumeData[]
+  pseudoVolumes PseudoLabelVolumeData[]
+}
+
+model RawVolumeData {
+  id                Int     @id @default(autoincrement())
+  path              String?
+  owner             User    @relation(fields: [ownerId], references: [id])
+  ownerId           Int
+  rawFilePath       String?
+  settingsFilePath  String?
+  mrcFilePath       String?
+  volumes           Volume[]
+  results           Result[]
+}
+
+model SparseLabelVolumeData {
+  id                Int     @id @default(autoincrement())
+  path              String?
+  owner             User    @relation(fields: [ownerId], references: [id])
+  ownerId           Int
+  rawFilePath       String?
+  settingsFilePath  String?
+  volumes           Volume[]
+}
+
+model PseudoLabelVolumeData {
+  id                Int     @id @default(autoincrement())
+  path              String?
+  owner             User    @relation(fields: [ownerId], references: [id])
+  ownerId           Int
+  rawFilePath       String?
+  settingsFilePath  String?
+  volumes           Volume[]
+}
+
+model Model {
+  id            Int             @id @default(autoincrement())
+  name          String
+  description   String
+  owner         User            @relation(fields: [ownerId], references: [id])
+  ownerId       Int
+  projects      Project[]
+  checkpoints   Checkpoint[]
+}
+
+model Checkpoint {
+  id            Int             @id @default(autoincrement())
+  filePath      String?
+  folderPath    String?
+  owner         User            @relation(fields: [ownerId], references: [id])
+  ownerId       Int
+  models        Model[]
+  results       Result[]
+}
+
+model Result {
+  id                Int             @id @default(autoincrement())
+  folderPath        String?
+  /// List of files attached to result in stringified JSON format.
+  files             String?
+  rawVolumeChannel  Int?
+  owner             User            @relation(fields: [ownerId], references: [id])
+  ownerId           Int
+  checkpoint        Checkpoint      @relation(fields: [checkpointId], references: [id])
+  checkpointId      Int
+  volumeData        RawVolumeData   @relation(fields: [volumeDataId], references: [id])
+  volumeDataId      Int
+}

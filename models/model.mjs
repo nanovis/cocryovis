@@ -1,48 +1,109 @@
-export class Model {
-    constructor(id, name, description, userId, projectIds = [], checkpointIds = []) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.userId = userId;
-        this.projectIds = projectIds;
-        this.checkpointIds = checkpointIds;
-        Object.preventExtensions(this);
+// @ts-check
+
+import { BaseModel } from "./base-model.mjs";
+import prismaManager from "../tools/prisma-manager.mjs";
+import { Checkpoint } from "./checkpoint.mjs";
+
+/**
+ * @typedef { import("@prisma/client").Model } ModelDB
+ */
+
+export class Model extends BaseModel {
+    /**
+     * @return {String}
+     */
+    static get modelName() {
+        return "model";
     }
 
-    static fromReference(dbReference) {
-        return Object.assign(new this(), dbReference);
+    static get db() {
+        return prismaManager.db.model;
     }
 
-    addToProject(projectId) {
-        if (this.projectIds.includes(projectId)) {
-            throw new Error(`Model ${this.id} (${this.name}): Model is a part of the project.`);
+    /**
+     * @param {Number} id
+     * @return {Promise<ModelDB>}
+     */
+    static async getById(id) {
+        return await super.getById(id);
+    }
+
+    /**
+     * @param {Number} id
+     */
+    static async getByIdDeep(id) {
+        let entry = await this.db.findUnique({
+            where: { id: id },
+            include: {
+                checkpoints: true,
+            },
+        });
+        if (!entry) {
+            throw new Error(`Cannot find ${this.modelName} with ID ${id}`);
         }
-        this.projectIds.push(projectId);
+        return entry;
     }
 
-    removedFromProject(projectId) {
-        const index = this.projectIds.indexOf(projectId);
-        if (index === -1) {
-            throw new Error(`Model ${this.id} (${this.name}): Model is not included in the project.`);
+    /**
+     * @param {String} name
+     * @param {String} description
+     * @param {Number} ownerId
+     * @param {Number} projectId
+     * @return {Promise<ModelDB>}
+     */
+    static async create(name, description, ownerId, projectId) {
+        return await this.db.create({
+            data: {
+                name: name,
+                description: description,
+                ownerId: ownerId,
+                projects: {
+                    connect: { id: projectId },
+                },
+            },
+        });
+    }
+
+    /**
+     * @param {Number} id
+     * @typedef {Object} Changes
+     * @property {String} [name]
+     * @property {String} [description]
+     * @property {Number} [ownerId]
+     * @param {Changes} changes
+     * @return {Promise<ModelDB>}
+     */
+    static async update(id, changes) {
+        return await super.update(id, changes);
+    }
+
+    // /**
+    //  * @return {import("@prisma/client").PrismaPromise<any>}
+    //  */
+    static async deleteZombies() {
+        const res = await this.db.deleteMany({
+            where: {
+                NOT: {
+                    projects: { some: {} },
+                },
+            },
+        });
+        let deletedCheckpoints = 0;
+        if (res.count > 0) {
+            deletedCheckpoints = (await Checkpoint.deleteZombies()).count;
         }
-        this.projectIds.splice(index, 1);
+
+        return {
+            deletedModels: res.count,
+            deletedCheckpoints: deletedCheckpoints,
+        };
     }
 
-    addCheckpoint(checkpointId) {
-        if (this.checkpointIds.includes(checkpointId)) {
-            throw new Error(`Model ${this.id} (${this.name}): Checkpoint is already included in the model.`);
-        }
-        this.checkpointIds.push(checkpointId);
-    }
-
-    removeCheckpoint(checkpointId) {
-        const index = this.checkpointIds.indexOf(checkpointId);
-        if (index === -1) {
-            throw new Error(`Model ${this.id} (${this.name}): Model does not have the checkpoint.`);
-        }
-        this.checkpointIds.splice(index, 1);
-    }
-
-    async delete() {
+    /**
+     * @param {Number} id
+     * @return {Promise<ModelDB>}
+     */
+    static async del(id) {
+        return await super.del(id);
     }
 }

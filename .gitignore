@@ -8,3 +8,8 @@ db.json
 data/
 .idea
 cache/
+*.sqlite3
+*.sqlite
+*.sqlite-journal
+.env
+prisma/migrations/

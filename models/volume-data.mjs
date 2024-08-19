@@ -1,70 +1,317 @@
+// @ts-check
+
 import AdmZip from "adm-zip";
 import path from "path";
-import {RawVolumeFile} from "./raw-volume-file.mjs";
-import {SettingsFile} from "./settings-file.mjs";
-import {StoredFile} from "./stored-file.mjs";
-import {writeFile, rm, access, mkdir} from 'node:fs/promises';
+import { rm, access, mkdir, readFile, writeFile } from "node:fs/promises";
 import fileSystem from "fs";
-import {MrcVolumeFile} from "./mrc-volume-file.mjs";
-import {mrcToRaw} from "../tools/utils.mjs";
+import { BaseModel } from "./base-model.mjs";
+import appConfig from "../tools/config.mjs";
+import prismaManager from "../tools/prisma-manager.mjs";
+import { fileNameFilter, isFileExtensionAccepted } from "../tools/utils.mjs";
 
-export class VolumeData {
-    static volumeTypes = {
-        "rawData": "rawData",
-        "sparseLabels": "sparseLabels",
-        "pseudoLabels": "pseudoLabels"
+export class StoredFile {
+    /**
+     * @param {String} filePath
+     */
+    constructor(filePath) {
+        /** @type {String} */
+        this.filePath = filePath;
     }
 
-    constructor(id, type, userId, path, volumeIds = [], rawFile = null,
-                settingsFile = null, mrcFile = null) {
-        this.id = id;
-        this.type = type;
-        this.userId = userId;
-        this.path = path;
-        this.volumeIds = volumeIds;
-        this.rawFile = rawFile;
-        this.settingsFile = settingsFile;
-        this.mrcFile = mrcFile;
+    static async fromFile(
+        file,
+        uploadPath,
+        acceptedFileExtensions,
+        moveFunction
+    ) {
+        if (isFileExtensionAccepted(file.name, acceptedFileExtensions)) {
+            const filteredFileName = fileNameFilter(file.name);
+            const fullPath = path.join(uploadPath, filteredFileName);
+            await moveFunction(file, filteredFileName, fullPath);
+            return new StoredFile(fullPath);
+        }
+        throw new Error("Incorrect file extension");
     }
 
     async delete() {
+        await rm(this.filePath, { recursive: true, force: true });
+    }
+
+    get fileName() {
+        if (!this.filePath) {
+            return null;
+        }
+        return path.basename(this.filePath);
+    }
+
+    get fileExtension() {
+        if (!this.filePath) {
+            return null;
+        }
+        return path.extname(this.filePath);
+    }
+
+    prepareDataForDownload() {
+        const zip = new AdmZip();
+        zip.addLocalFile(this.filePath);
+        const outputFileName = path.parse(this.filePath).name;
+        return {
+            name: `${outputFileName}.zip`,
+            zipBuffer: zip.toBuffer(),
+        };
+    }
+}
+
+export class RawVolumeFile extends StoredFile {
+    static acceptedFileExtensions = [".raw"];
+
+    /**
+     * @param {String} filePath
+     */
+    constructor(filePath) {
+        super(filePath);
+    }
+
+    static isRawVolumeFile(fileName) {
+        return isFileExtensionAccepted(
+            fileName,
+            RawVolumeFile.acceptedFileExtensions
+        );
+    }
+
+    static async fromFile(file, uploadPath, moveFunction) {
+        const storedFile = await super.fromFile(
+            file,
+            uploadPath,
+            RawVolumeFile.acceptedFileExtensions,
+            moveFunction
+        );
+        return new RawVolumeFile(storedFile.filePath);
+    }
+}
+
+export class SettingsFile extends StoredFile {
+    static acceptedFileExtensions = [".json"];
+
+    /**
+     * @param {String} filePath
+     */
+    constructor(filePath) {
+        super(filePath);
+    }
+
+    static isSettingsFile(fileName) {
+        return isFileExtensionAccepted(
+            fileName,
+            SettingsFile.acceptedFileExtensions
+        );
+    }
+
+    static async fromFile(file, uploadPath, moveFunction) {
+        const storedFile = await super.fromFile(
+            file,
+            uploadPath,
+            SettingsFile.acceptedFileExtensions,
+            moveFunction
+        );
+        return new SettingsFile(storedFile.filePath);
+    }
+
+    async readFile() {
+        const contents = await readFile(this.filePath, { encoding: "utf8" });
+        return JSON.parse(contents);
+    }
+
+    async setRawFilePath(rawFilePath) {
+        try {
+            const settings = await this.readFile();
+            settings["file"] = rawFilePath;
+            if (!Object.hasOwn(settings, "transferFunction")) {
+                settings["transferFunction"] = "tf-default.json";
+            }
+            await writeFile(this.filePath, JSON.stringify(settings, null, 2));
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
+}
+
+export class VolumeData extends BaseModel {
+    /**
+     * @return {String}
+     */
+    static get folderPath() {
+        throw new Error("Method not implemented");
+    }
+
+    /**
+     * @param {Number} id
+     * @param {Number} ownerId
+     * @param {String} path
+     * @param {RawVolumeFile} rawFile
+     * @param {SettingsFile} settingsFile
+     */
+    constructor(id, ownerId, path, rawFile = null, settingsFile = null) {
+        super();
+
+        /** @type {Number} */
+        this.id = id;
+        /** @type {Number} */
+        this.ownerId = ownerId;
+        /** @type {String} */
+        this.path = path;
+        /** @type {RawVolumeFile} */
+        this.rawFile = rawFile;
+        /** @type {SettingsFile} */
+        this.settingsFile = settingsFile;
+    }
+
+    /**
+     * @param {Number} id
+     * @return {Promise<VolumeData>}
+     */
+    static async getById(id) {
+        const volumeDataReference = await super.getById(id);
+        return this.fromReference(volumeDataReference);
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @return {Promise<VolumeData>}
+     */
+    static async create(ownerId, volumeId) {
+        return await prismaManager.db.$transaction(async (tx) => {
+            const volumeDataReference = await tx[this.modelName].create({
+                data: {
+                    ownerId: ownerId,
+                    volumes: {
+                        connect: { id: volumeId },
+                    },
+                },
+            });
+
+            const volumeData = this.fromReference(volumeDataReference);
+            await volumeData.createVolumeDataFolder();
+
+            try {
+                await tx[this.modelName].update({
+                    where: { id: volumeData.id },
+                    data: { path: volumeData.path },
+                });
+            } catch (error) {
+                await volumeData.deleteVolumeDataFiles();
+                throw error;
+            }
+            return volumeData;
+        });
+    }
+
+    /**
+     * @param {Number} id
+     * @typedef {Object} Changes
+     * @property {Number} [ownerId]
+     * @property {String?} [path]
+     * @property {String?} [rawFilePath]
+     * @property {String?} [settingsFilePath]
+     * @param {Changes} changes
+     * @return {Promise<VolumeData>}
+     */
+    static async update(id, changes) {
+        const volumeDataReference = await super.update(id, changes);
+        return this.fromReference(volumeDataReference);
+    }
+
+    /**
+     * @param {Number} id
+     * @return {Promise<VolumeData>}
+     */
+    static async del(id) {
+        const volumeDataReference = await super.del(id);
+        const volumeData = this.fromReference(volumeDataReference);
+        volumeData.deleteVolumeDataFiles();
+        return volumeData;
+    }
+
+    /**
+     * @param {Number} id
+     */
+    static async removeRawFile(id) {
+        const volumeData = await this.getById(id);
+        await volumeData.deleteRawFile();
+        await this.db.update({
+            where: { id: id },
+            data: { rawFilePath: null },
+        });
+        return volumeData;
+    }
+
+    /**
+     * @param {Number} id
+     */
+    static async removeSettingsFile(id) {
+        const volumeData = await this.getById(id);
+        await volumeData.deleteSettingsFile();
+        await this.db.update({
+            where: { id: id },
+            data: { settingsFilePath: null },
+        });
+        return volumeData;
+    }
+
+    /**
+     * @typedef {Object} dbReferenceObj
+     * @property {Number} id
+     * @property {Number} ownerId
+     * @property {String} path
+     * @property {String?} rawFilePath
+     * @property {String?} settingsFilePath
+     * @param {dbReferenceObj} dbReference
+     * @returns {VolumeData}
+     */
+    static fromReference(dbReference) {
+        let rawFile = null;
+        if (dbReference.rawFilePath) {
+            rawFile = new RawVolumeFile(dbReference.rawFilePath);
+        }
+        let settingsFile = null;
+        if (dbReference.settingsFilePath) {
+            rawFile = new SettingsFile(dbReference.settingsFilePath);
+        }
+        return new this(
+            dbReference.id,
+            dbReference.ownerId,
+            dbReference.path,
+            rawFile,
+            settingsFile
+        );
+    }
+
+    async createVolumeDataFolder() {
+        const folderPath = path.join(
+            appConfig.projects.volumeDataPath,
+            Object.getPrototypeOf(this).constructor.folderPath,
+            this.id.toString()
+        );
+        if (fileSystem.existsSync(folderPath)) {
+            if (appConfig.safeMode) {
+                throw new Error(`Volume directory already exists`);
+            } else {
+                await rm(folderPath, { recursive: true, force: true });
+            }
+        }
+        fileSystem.mkdirSync(folderPath, { recursive: true });
+        this.path = folderPath;
+    }
+
+    async deleteVolumeDataFiles() {
         if (this.rawFile) {
             this.rawFile.delete();
         }
         if (this.settingsFile) {
             this.settingsFile.delete();
         }
-        if (this.mrcFile) {
-            this.mrcFile.delete();
-        }
         await rm(this.path, { recursive: true, force: true });
-    }
-
-    static createVolumeData(id, type, userId, volumeId, basePath) {
-        const folderPath = path.join(basePath, id.toString());
-        if (fileSystem.existsSync(folderPath)) {
-            throw new Error(`Volume directory already exists`);
-        }
-        fileSystem.mkdirSync(folderPath, {recursive: true});
-
-        return new VolumeData(id, type, userId, folderPath, [volumeId]);
-    }
-
-    static fromReference(dbReference) {
-        let rawFile = null;
-        if (dbReference.rawFile) {
-            rawFile = RawVolumeFile.fromReference(dbReference.rawFile);
-        }
-        let settingsFile = null;
-        if (dbReference.settingsFile) {
-            settingsFile = SettingsFile.fromReference(dbReference.settingsFile);
-        }
-        let mrcFile = null;
-        if (dbReference.mrcFile) {
-            mrcFile = MrcVolumeFile.fromReference(dbReference.mrcFile);
-        }
-        return new this(dbReference.id, dbReference.type, dbReference.userId, dbReference.path, dbReference.volumeIds,
-            rawFile, settingsFile, mrcFile);
     }
 
     isMissingFiles() {
@@ -78,110 +325,94 @@ export class VolumeData {
         try {
             await access(this.path);
         } catch (error) {
-            await mkdir(this.path, {recursive: true});
+            await mkdir(this.path, { recursive: true });
         }
 
         if (Array.isArray(files)) {
             for (const file of files) {
-                await this.uploadFile(file, (file, filteredFileName, fullPath) => file.mv(fullPath));
+                await this.uploadFile(
+                    file,
+                    (file, filteredFileName, fullPath) => file.mv(fullPath)
+                );
             }
-        } else if (files.name.endsWith('.zip')) {
+        } else if (files.name.endsWith(".zip")) {
             let zip = new AdmZip(files.data);
             const zipEntries = zip.getEntries();
             for (const entry of zipEntries) {
-                await this.uploadFile(entry, (file, filteredFileName, fullPath) =>
-                    zip.extractEntryTo(entry, this.path, false, true, false, filteredFileName));
+                await this.uploadFile(
+                    entry,
+                    (file, filteredFileName, fullPath) =>
+                        zip.extractEntryTo(
+                            entry,
+                            this.path,
+                            false,
+                            true,
+                            false,
+                            filteredFileName
+                        )
+                );
             }
         } else {
-            await this.uploadFile(files, (file, filteredFileName, fullPath) => file.mv(fullPath));
+            await this.uploadFile(files, (file, filteredFileName, fullPath) =>
+                file.mv(fullPath)
+            );
         }
 
         if (!this.rawFileUploaded && !this.settingsFileUploaded) {
             throw new Error("No valid files provided");
         }
 
+        const changes = {};
+        if (this.rawFileUploaded && this.rawFile) {
+            changes.rawFilePath = this.rawFile.filePath;
+        }
+
+        if (this.settingsFileUploaded && this.settingsFile) {
+            changes.settingsFilePath = this.settingsFile.filePath;
+        }
+
+        await Object.getPrototypeOf(this).constructor.update(this.id, changes);
+
         delete this.rawFileUploaded;
         delete this.settingsFileUploaded;
     }
 
     async uploadFile(file, moveFunction) {
-        if ((this.rawFileUploaded === undefined || !this.rawFileUploaded) &&
-            RawVolumeFile.isRawVolumeFile(file.name) &&
-            (this.type === VolumeData.volumeTypes.rawData || path.extname(file.name) === '.raw'))
-        {
+        if (
+            (this.rawFileUploaded === undefined || !this.rawFileUploaded) &&
+            RawVolumeFile.isRawVolumeFile(file.name)
+        ) {
             if (this.rawFileUploaded !== undefined) {
                 this.rawFileUploaded = true;
             }
             if (this.rawFile) {
                 await this.deleteRawFile();
             }
-            this.rawFile = await RawVolumeFile.fromFile(file, this.path, moveFunction);
+            this.rawFile = await RawVolumeFile.fromFile(
+                file,
+                this.path,
+                moveFunction
+            );
             await this.#setRawFilePathInSettings();
         }
-        if ((this.settingsFileUploaded === undefined || !this.settingsFileUploaded) &&
-            SettingsFile.isSettingsFile(file.name))
-        {
+        if (
+            (this.settingsFileUploaded === undefined ||
+                !this.settingsFileUploaded) &&
+            SettingsFile.isSettingsFile(file.name)
+        ) {
             if (this.settingsFileUploaded !== undefined) {
                 this.settingsFileUploaded = true;
             }
             if (this.settingsFile) {
                 await this.deleteSettingsFile();
             }
-            this.settingsFile = await SettingsFile.fromFile(file, this.path, moveFunction);
+            this.settingsFile = await SettingsFile.fromFile(
+                file,
+                this.path,
+                moveFunction
+            );
             await this.#setRawFilePathInSettings();
         }
-    }
-
-    async uploadMrcFile(file) {
-        if (this.type !== VolumeData.volumeTypes.rawData) {
-            throw new Error("Only Raw Data supports MRC files.");
-        }
-
-        if (!fileSystem.existsSync(this.path)) {
-            fileSystem.mkdirSync(this.path, { recursive: true });
-        }
-
-        let uploadSuccessful = false;
-
-        if (Array.isArray(file)) {
-            throw new Error("When adding MRC data, only a single file can be selected.");
-        } else if (file.name.endsWith('.zip')) {
-            let zip = new AdmZip(file.data);
-            const zipEntries = zip.getEntries();
-            for (const entry of zipEntries) {
-                if (MrcVolumeFile.isMrcVolumeFile(entry.name)) {
-                    if (this.mrcFile) {
-                        await this.deleteMrcFile();
-                    }
-                    this.mrcFile = await MrcVolumeFile.fromFile(file, this.path, (file, filteredFileName, fullPath) =>
-                        zip.extractEntryTo(entry, this.path, false, true, false, filteredFileName));
-                    uploadSuccessful = true;
-                    break;
-                }
-            }
-        } else if (MrcVolumeFile.isMrcVolumeFile(file.name)) {
-            if (this.mrcFile) {
-                await this.deleteMrcFile();
-            }
-            this.mrcFile = await MrcVolumeFile.fromFile(file, this.path,
-                (file, filteredFileName, fullPath) => file.mv(fullPath));
-            uploadSuccessful = true;
-        }
-
-        if (!uploadSuccessful) {
-            throw new Error("No valid MRC file found.");
-        }
-
-        if (this.rawFile) {
-            await this.deleteRawFile();
-        }
-        if (this.settingsFile) {
-            await this.deleteSettingsFile();
-        }
-
-        const {rawFilePath, settingsFilePath} = await mrcToRaw(this.mrcFile.filePath, this.path);
-        this.rawFile = new RawVolumeFile(path.parse(rawFilePath).base, rawFilePath);
-        this.settingsFile = new SettingsFile(path.parse(settingsFilePath).base, settingsFilePath);
     }
 
     async #setRawFilePathInSettings() {
@@ -191,7 +422,10 @@ export class VolumeData {
         await this.settingsFile.setRawFilePath(this.rawFile.fileName);
     }
 
-    prepareDataForDownload(downloadRawFile = true, downloadSettingsFile = true) {
+    prepareDataForDownload(
+        downloadRawFile = true,
+        downloadSettingsFile = true
+    ) {
         let hasFiles = false;
 
         const zip = new AdmZip();
@@ -211,7 +445,7 @@ export class VolumeData {
         const outputFileName = path.parse(this.path).name;
         return {
             name: `${outputFileName}.zip`,
-            zipBuffer: zip.toBuffer()
+            zipBuffer: zip.toBuffer(),
         };
     }
 
@@ -231,26 +465,18 @@ export class VolumeData {
         this.settingsFile = null;
     }
 
-    async deleteMrcFile() {
-        if (this.mrcFile == null) {
-            throw new Error("Raw volume does not have a mrc file");
-        }
-        await this.mrcFile.delete();
-        this.mrcFile = null;
-    }
+    /**
+     * @return {Promise<Number>}
+     */
+    static async deleteZombies() {
+        const res = await this.db.deleteMany({
+            where: {
+                NOT: {
+                    projects: { some: {} },
+                },
+            },
+        });
 
-    addToVolume(volumeId) {
-        if (this.volumeIds.includes(volumeId)) {
-            throw new Error(`Volume Data ${this.id}: Volume data is already included in the volume.`);
-        }
-        this.volumeIds.push(volumeId);
-    }
-
-    removeFromVolume(volumeId) {
-        const index = this.volumeIds.indexOf(volumeId);
-        if (index === -1) {
-            throw new Error(`Volume Data ${this.id} (${this.fileName}): Volume data is not included in the volume.`);
-        }
-        this.volumeIds.splice(index, 1);
+        return res.count;
     }
 }

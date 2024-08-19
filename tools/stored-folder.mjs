@@ -1,7 +1,7 @@
 import AdmZip from "adm-zip";
 import path from "path";
-import {rm} from 'node:fs/promises';
-import {fileNameFilter, isFileExtensionAccepted} from "../tools/utils.mjs";
+import { rm } from "node:fs/promises";
+import { fileNameFilter, isFileExtensionAccepted } from "./utils.mjs";
 
 export class StoredFolder {
     constructor(folderName, folderPath) {
@@ -26,7 +26,7 @@ export class StoredFolder {
         const outputFileName = path.parse(this.folderPath).name;
         return {
             name: `${outputFileName}.zip`,
-            zipBuffer: zip.toBuffer()
+            zipBuffer: zip.toBuffer(),
         };
     }
 

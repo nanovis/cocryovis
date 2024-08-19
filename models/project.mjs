@@ -1,53 +1,114 @@
-import {fileNameFilter} from "../tools/utils.mjs";
-import path from "path";
-import fileSystem from "fs";
+// @ts-check
 
-export class Project {
-    constructor(id, name, description, userId, volumeIds = [], modelIds = []) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.userId = userId;
-        this.volumeIds = volumeIds;
-        this.modelIds = modelIds;
-        Object.preventExtensions(this);
+import { BaseModel } from "./base-model.mjs";
+import { Volume } from "./volume.mjs";
+import prismaManager from "../tools/prisma-manager.mjs";
+import { Model } from "./model.mjs";
+
+/**
+ * @typedef { import("@prisma/client").Project } ProjectDB
+ */
+
+export class Project extends BaseModel {
+    /**
+     * @return {String}
+     */
+    static get modelName() {
+        return "project";
     }
 
-    static createProject(id, name, description, userId) {
-        return new Project(id, name, description, userId);
+    static get db() {
+        return prismaManager.db.project;
     }
 
-    static fromReference(dbProject) {
-        return new Project(dbProject.id, dbProject.name, dbProject.description,
-            dbProject.userId, dbProject.volumeIds, dbProject.modelIds);
+    /**
+     * @param {Number} userId
+     * @return {Promise<ProjectDB[]>}
+     */
+    static async getUserProjects(userId) {
+        return await this.db.findMany({
+            where: {
+                ownerId: userId,
+            },
+        });
     }
 
-    addVolume(volumeId) {
-        if (!this.volumeIds.includes(volumeId)) {
-            this.volumeIds.push(volumeId);
-        }
+    /**
+     * @param {Number} id
+     * @return {Promise<ProjectDB>}
+     */
+    static async getById(id) {
+        return await super.getById(id);
     }
 
-    removeVolume(volumeId) {
-        const index = this.volumeIds.indexOf(volumeId);
-        this.volumeIds.splice(index, 1);
+    /**
+     * @param {Number} id
+     * @return {Promise<ProjectDB>}
+     */
+    static async getByIdDeep(id) {
+        return await this.db.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                volumes: {
+                    include: {
+                        rawData: {
+                            include: {
+                                results: true,
+                            },
+                        },
+                        sparseVolumes: true,
+                        pseudoVolumes: true,
+                    },
+                },
+                models: {
+                    include: {
+                        checkpoints: true,
+                    },
+                },
+            },
+        });
     }
 
-    addModel(modelId) {
-        if (this.modelIds.includes(modelId)) {
-            throw new Error(`Project ${this.id} (${this.name}): Model is already included in the project.`);
-        }
-        this.modelIds.push(modelId);
+    /**
+     * @param {String} name
+     * @param {String} description
+     * @param {Number} ownerId
+     * @return {Promise<ProjectDB>}
+     */
+    static async create(name, description, ownerId) {
+        return await prismaManager.db.project.create({
+            data: { name: name, description: description, ownerId: ownerId },
+        });
     }
 
-    removeModel(modelId) {
-        const index = this.modelIds.indexOf(modelId);
-        if (index === -1) {
-            throw new Error(`Project ${this.id} (${this.name}): Project does not have the model.`);
-        }
-        this.modelIds.splice(index, 1);
+    /**
+     * @param {Number} id
+     * @typedef {Object} Changes
+     * @property {String?} name
+     * @property {String?} description
+     * @property {Number} userId
+     * @param {Changes} changes
+     * @return {Promise<ProjectDB>}
+     */
+    static async update(id, changes) {
+        return await super.update(id, changes);
     }
 
-    async delete() {
+    /**
+     * @param {Number} id
+     * @return {Promise<ProjectDB>}
+     */
+    static async del(id) {
+        // const [project, volumes] = await prismaManager.db.$transaction([
+        //     this.db.delete({ where: { id: id } }),
+        //     Volume.deleteZombieVolumes(),
+        // ]);
+        const project = this.db.delete({ where: { id: id } });
+        Volume.deleteZombies();
+        Model.deleteZombies();
+
+        return project;
     }
 }

@@ -1,7 +1,7 @@
 import { exec, spawnSync } from 'child_process';
 import  * as fileSystem from 'fs';
 import path, { resolve } from 'path';
-import {StoredFolder} from "../models/stored-folder.mjs";
+import {StoredFolder} from "./stored-folder.mjs";
 import fs from "fs";
 import {rm} from "node:fs/promises";
 import {rawToTiff} from "./raw-to-tiff.mjs";
@@ -132,7 +132,7 @@ class IlastikHandler {
         if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
             throw new Error("Pseudo Labels Generation: Sparse Label Data is missing.");
         }
-        if (rawData.rawFile.getFileExtension() !== ".raw") {
+        if (rawData.rawFile.fileExtension !== ".raw") {
             throw new Error("Pseudo Labels Generation: Raw Data must be in .raw format.");
         }
 

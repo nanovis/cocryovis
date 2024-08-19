@@ -12,16 +12,16 @@ import session from 'express-session';
 import { actions } from './routes/api/actions.mjs';
 import bodyParser from 'body-parser';
 import { argv } from 'process';
-import { readFileSync } from 'fs';
 import cors from 'cors';
 import { restrict } from './middleware/restrict.mjs';
-import DatabaseManager from "./tools/lowdb-manager.mjs";
+import appConfig from "./tools/config.mjs";
+import {UserController} from "./controllers/user-controller.mjs";
 
 const port = argv[2] || 8080;
 const app = express(express.json());
 
 // config
-const config = JSON.parse(readFileSync('config.json', 'utf8'));
+const config = appConfig;
 app.set('view engine', 'ejs');
 app.set('views', [path.join('.', 'views'), path.join('.', 'views', 'project')]);
 const hash = pkg();
@@ -53,20 +53,6 @@ app.use(function (req, res, next) {
     next();
 });
 
-// DB middleware
-const db = DatabaseManager.db;
-const users = db.data.users;
-
-// Authenticate user in DB
-function authenticate(name, pass, fn) {
-    const user = users.find(user => user.username === name);
-    if (!user) return fn(new Error('cannot find user'));
-    hash({ password: pass, salt: user.passworSalt }, function (err, pass, salt, hash) {
-        if (err) return fn(err);
-        if (hash === user.passwordHash) return fn(null, user);
-        fn(new Error('invalid password'));
-    });
-}
 
 app.use(express.static('web',  { index: false }));
 app.use(express.static('data',  { index: false }));
@@ -83,37 +69,14 @@ app.get('/auth', restrict, function (req, res) {
 });
 
 // Handling logout route
-app.get('/logout', function (req, res) {
-    // destroy the user's session to log them out will be re-created next request
-    req.session.destroy(function () {
-        res.redirect('/');
-        // res.send({success: true})
-    });
-});
+app.get('/logout', UserController.logout);
 
 // Handling login route
 app.get('/login', function (req, res) {
     res.render('login');
 });
 
-app.post('/login', function (req, res) {
-    authenticate(req.body.username, req.body.password, function (err, user) {
-        if (user) {
-            // Regenerate session when signing in to prevent fixation
-            req.session.regenerate(function () {
-                // Store the user's primary key in the session store to be retrieved,
-                // or in this case the entire user object
-                req.session.user = user;
-                res.redirect('/auth');
-                // res.send({ success: true });
-            });
-        } else {
-            req.session.error = 'Authentication failed!';
-            res.send({ success: false });
-            // res.redirect('/login');
-        }
-    });
-});
+app.post('/login', UserController.login);
 
 app.get('/test', function (req, res) {
     console.log("Test request initiated...");

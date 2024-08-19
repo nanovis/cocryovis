@@ -1,3 +1,5 @@
+// @ts-check
+
 import path from 'path';
 import fileSystem from "fs";
 import {promisify} from "node:util";
@@ -29,7 +31,20 @@ export class NanoOetziHandler {
         return tempFolderPath;
     }
 
+    /**
+     * @param {String} inferenceDataPath
+     * @param {String} checkpointFilename
+     * @param {String?} outputPath
+     * @returns {Promise<String>}
+     */
     queueInference(inferenceDataPath, checkpointFilename, outputPath = null) {
+        if (!inferenceDataPath) {
+            throw new Error("Failed Attempt to start inference: Missing inference data path.")
+        }
+        if (!checkpointFilename) {
+            throw new Error("Failed Attempt to start inference: Missing checkpoint data path.")
+        }
+
         if (!outputPath) {
             outputPath = this.#createTemporaryOutputPath();
         }
@@ -37,6 +52,12 @@ export class NanoOetziHandler {
             () => this.#runInference(inferenceDataPath, checkpointFilename, outputPath));
     }
 
+    /**
+     * @param {String} inferenceDataPath
+     * @param {String} checkpointFilename
+     * @param {String} outputPath
+     * @returns {Promise<String>}
+     */
     async #runInference(inferenceDataPath, checkpointFilename, outputPath) {
         const logPath = path.join(outputPath, '!inference.log');
 
