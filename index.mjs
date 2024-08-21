@@ -14,17 +14,14 @@ import bodyParser from 'body-parser';
 import { argv } from 'process';
 import cors from 'cors';
 import { restrict } from './middleware/restrict.mjs';
-import appConfig from "./tools/config.mjs";
 import {UserController} from "./controllers/user-controller.mjs";
 
 const port = argv[2] || 8080;
 const app = express(express.json());
 
 // config
-const config = appConfig;
 app.set('view engine', 'ejs');
 app.set('views', [path.join('.', 'views'), path.join('.', 'views', 'project')]);
-const hash = pkg();
 
 // middleware
 app.use(express.urlencoded({ extended: true }));
