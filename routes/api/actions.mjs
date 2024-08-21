@@ -1,5 +1,4 @@
 import express from 'express';
-import DatabaseManager from "../../tools/lowdb-manager.mjs";
 import { spawn } from 'child_process';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
