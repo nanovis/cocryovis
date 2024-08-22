@@ -52,6 +52,11 @@ export class VolumeController {
                     message: "No file uploaded",
                 });
             } else {
+                let files = req.files.files;
+                if (!Array.isArray(files)) {
+                    files = [files];
+                }
+
                 const volume = await Volume.getByIdDeep(
                     Number(req.params.idVolume),
                     { rawData: true }
@@ -65,7 +70,7 @@ export class VolumeController {
                 } else {
                     rawVolumeData = RawVolumeData.fromReference(volume.rawData);
                 }
-                await rawVolumeData.uploadFiles(req.files.files);
+                await RawVolumeData.uploadFiles(rawVolumeData.id, files);
 
                 res.redirect(
                     `/api/actions/projects/details/` + req.params.idProject

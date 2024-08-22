@@ -156,3 +156,20 @@ export function getInverseDateString(date = new Date()) {
         ("0" + date.getUTCMilliseconds()).slice(-3)
     );
 }
+
+/**
+ * @param {String} filePath
+ */
+export function generateUniqueFileName(filePath) {
+    const folder = path.dirname(filePath);
+    const fileName = path.parse(filePath).name;
+    const extension = path.extname(filePath);
+    let counter = 1;
+
+    while (fs.existsSync(filePath)) {
+        filePath = path.join(folder, `${fileName}-${counter}${extension}`);
+        counter++;
+    }
+
+    return path.basename(filePath);
+}

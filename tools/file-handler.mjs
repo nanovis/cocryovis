@@ -4,6 +4,9 @@ import { fileNameFilter, isFileExtensionAccepted } from "./utils.mjs";
 import path from "path";
 import AdmZip from "adm-zip";
 import fileUpload from "express-fileupload";
+import fileSystem from "fs";
+import appConfig from "../tools/config.mjs";
+import { rm } from "node:fs/promises";
 
 export class PendingUpload {
     /**
@@ -16,15 +19,23 @@ export class PendingUpload {
     /**
      * @return {String}
      */
+    get filteredFileName() {
+        throw new Error("Method not implemented");
+    }
+
+    /**
+     * @return {String}
+     */
     get fileExtension() {
         throw new Error("Method not implemented");
     }
 
     /**
      * @param {String} folderPath
+     * @param {String?} fileNameOverride
      * @return {Promise<String>}
      */
-    async saveAs(folderPath) {
+    async saveAs(folderPath, fileNameOverride = null) {
         throw new Error("Method not implemented");
     }
 }
@@ -53,6 +64,13 @@ export class PendingFile extends PendingUpload {
     /**
      * @return {String}
      */
+    get filteredFileName() {
+        return fileNameFilter(this.file.name);
+    }
+
+    /**
+     * @return {String}
+     */
     get fileExtension() {
         return path.extname(this.file.name);
     }
@@ -60,9 +78,21 @@ export class PendingFile extends PendingUpload {
     /**
      * @return {Promise<String>}
      */
-    async saveAs(folderPath) {
-        const filteredFileName = fileNameFilter(this.file.name);
+    async saveAs(folderPath, fileNameOverride = null) {
+        const filteredFileName =
+            fileNameOverride != null
+                ? fileNameOverride
+                : fileNameFilter(this.file.name);
         const fullPath = path.join(folderPath, filteredFileName);
+        if (fileSystem.existsSync(fullPath)) {
+            if (appConfig.safeMode) {
+                throw new Error(
+                    `Error saving file: File with the same name already exists.`
+                );
+            } else {
+                await rm(fullPath, { recursive: true, force: true });
+            }
+        }
         await this.file.mv(fullPath);
         return fullPath;
     }
@@ -95,6 +125,13 @@ export class PendingZipFile extends PendingUpload {
     /**
      * @return {String}
      */
+    get filteredFileName() {
+        return fileNameFilter(this.entry.name);
+    }
+
+    /**
+     * @return {String}
+     */
     get fileExtension() {
         return path.extname(this.entry.name);
     }
@@ -102,9 +139,21 @@ export class PendingZipFile extends PendingUpload {
     /**
      * @return {Promise<String>}
      */
-    async saveAs(folderPath) {
-        const filteredFileName = fileNameFilter(this.entry.name);
-
+    async saveAs(folderPath, fileNameOverride = null) {
+        const filteredFileName =
+            fileNameOverride != null
+                ? fileNameOverride
+                : fileNameFilter(this.entry.name);
+        const fullPath = path.join(folderPath, filteredFileName);
+        if (fileSystem.existsSync(fullPath)) {
+            if (appConfig.safeMode) {
+                throw new Error(
+                    `Error saving file: File with the same name already exists.`
+                );
+            } else {
+                await rm(fullPath, { recursive: true, force: true });
+            }
+        }
         this.zip.extractEntryTo(
             this.entry,
             folderPath,
@@ -114,7 +163,7 @@ export class PendingZipFile extends PendingUpload {
             filteredFileName
         );
 
-        return path.join(folderPath, filteredFileName);
+        return fullPath;
     }
 }
 

@@ -92,10 +92,15 @@ export class VolumeDataController {
                     message: "No file uploaded",
                 });
             } else {
+                let files = req.files.files;
+                if (!Array.isArray(files)) {
+                    files = [files];
+                }
+
                 const volumeData = await VolumeDataFactory.getClass(
                     type
-                ).getById(Number(req.params.idVolumeData));
-                volumeData.uploadFiles(req.files.files);
+                ).uploadFiles(Number(req.params.idVolumeData), files);
+
                 res.redirect(
                     `/api/actions/projects/details/` + req.params.idProject
                 );

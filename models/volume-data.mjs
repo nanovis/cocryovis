@@ -2,12 +2,25 @@
 
 import AdmZip from "adm-zip";
 import path from "path";
-import { rm, access, mkdir, readFile, writeFile } from "node:fs/promises";
+import {
+    rm,
+    access,
+    mkdir,
+    readFile,
+    writeFile,
+    rename,
+} from "node:fs/promises";
 import fileSystem from "fs";
 import { BaseModel } from "./base-model.mjs";
 import appConfig from "../tools/config.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import { fileNameFilter, isFileExtensionAccepted } from "../tools/utils.mjs";
+import {
+    fileNameFilter,
+    generateUniqueFileName,
+    isFileExtensionAccepted,
+} from "../tools/utils.mjs";
+import fileUpload from "express-fileupload";
+import { unpackFiles } from "../tools/file-handler.mjs";
 
 export class StoredFile {
     /**
@@ -137,6 +150,12 @@ export class SettingsFile extends StoredFile {
 }
 
 export class VolumeData extends BaseModel {
+    static rawFileExtensions = [".raw"];
+    static settingFileExtensions = [".json"];
+    static acceptedFileExtensions = this.rawFileExtensions.concat(
+        this.settingFileExtensions
+    );
+
     /**
      * @return {String}
      */
@@ -318,108 +337,185 @@ export class VolumeData extends BaseModel {
         return this.rawFile == null || this.settingsFile == null;
     }
 
-    async uploadFiles(files) {
-        this.rawFileUploaded = false;
-        this.settingsFileUploaded = false;
+    /**
+     * @param {Number} id
+     * @param {fileUpload.UploadedFile[]} files
+     */
+    static async uploadFiles(id, files) {
+        const unpackedFiles = unpackFiles(files, this.acceptedFileExtensions);
 
-        try {
-            await access(this.path);
-        } catch (error) {
-            await mkdir(this.path, { recursive: true });
-        }
+        const {volumeData, oldRawFilePath, oldSettingsFilePath} = await prismaManager.db.$transaction(
+            async (tx) => {
+                let volumeData = await tx[this.modelName].findUnique({
+                    where: { id: id },
+                });
 
-        if (Array.isArray(files)) {
-            for (const file of files) {
-                await this.uploadFile(
-                    file,
-                    (file, filteredFileName, fullPath) => file.mv(fullPath)
-                );
-            }
-        } else if (files.name.endsWith(".zip")) {
-            let zip = new AdmZip(files.data);
-            const zipEntries = zip.getEntries();
-            for (const entry of zipEntries) {
-                await this.uploadFile(
-                    entry,
-                    (file, filteredFileName, fullPath) =>
-                        zip.extractEntryTo(
-                            entry,
-                            this.path,
-                            false,
-                            true,
-                            false,
-                            filteredFileName
+                let newRawFile = null;
+                let newSettingFile = null;
+
+                let rawFileNameOverride = null;
+                let settingsFileNameOverride = null;
+
+                for (const unpackedFile of unpackedFiles) {
+                    if (
+                        !newRawFile &&
+                        isFileExtensionAccepted(
+                            unpackedFile.fileName,
+                            this.rawFileExtensions
                         )
-                );
+                    ) {
+                        newRawFile = unpackedFile;
+                        rawFileNameOverride = this.checkFilePath(volumeData.path, newRawFile.filteredFileName);
+                    } else if (
+                        !newSettingFile &&
+                        isFileExtensionAccepted(
+                            unpackedFile.fileName,
+                            this.settingFileExtensions
+                        )
+                    ) {
+                        newSettingFile = unpackedFile;
+                        settingsFileNameOverride = this.checkFilePath(volumeData.path, newSettingFile.filteredFileName);
+                    }
+                }
+
+                // if (newRawFile && volumeData.rawFilePath) {
+                //     throw new Error("Once Raw File is uploaded to a Raw Volume Data it cannot be changed.");
+                // }
+
+                if (!newRawFile && !newSettingFile) {
+                    throw new Error("No valid files provided");
+                }
+
+                if (!fileSystem.existsSync(volumeData.path)) {
+                    fileSystem.mkdirSync(volumeData.path, { recursive: true });
+                }
+
+                const changes = {};
+
+                let oldRawFilePath = null;
+                let oldSettingsFilePath = null;
+                let correctedOldSettingsFile = false;
+
+                try {
+                    if (newRawFile) {
+                        if (volumeData.rawFilePath) {
+                            oldRawFilePath = volumeData.rawFilePath;
+                        }
+                        changes.rawFilePath = await newRawFile.saveAs(
+                            volumeData.path,
+                            rawFileNameOverride
+                        );
+                    } else if (newSettingFile) {
+                        if (volumeData.settingsFilePath) {
+                            oldSettingsFilePath = volumeData.settingsFilePath;
+                        }
+                        changes.settingsFilePath = await newSettingFile.saveAs(
+                            volumeData.path,
+                            settingsFileNameOverride
+                        );
+                    }
+    
+                    if (newRawFile || volumeData.rawFilePath && newSettingFile || volumeData.settingsFilePath) {
+                        let rawFilePath = newRawFile != null ? changes.rawFilePath : volumeData.rawFilePath;
+                        let settingsFilePath = newSettingFile != null ? changes.settingsFilePath : volumeData.settingsFilePath;
+                        
+                        await this.correctRawFilePathInSettings(
+                            settingsFilePath,
+                            path.basename(rawFilePath)
+                        );
+                        if (!newSettingFile) {
+                            correctedOldSettingsFile = true;
+                        }
+                    }
+
+                    volumeData = await tx[this.modelName].update({
+                        where: { id: volumeData.id },
+                        data: changes,
+                    });
+                } catch (error) {
+                    try {
+                        if (Object.hasOwn(changes, "rawFilePath")) {
+                            await rm(changes.rawFilePath, {
+                                force: true,
+                            });
+                        }
+                    }
+                    catch(error) {
+                        console.error("Failed Volume Data Upload: Some files failed to be deleted.");
+                    }
+                    try {
+                        if (Object.hasOwn(changes, "settingsFilePath")) {
+                            await rm(changes.settingsFilePath, {
+                                force: true,
+                            });
+                        }
+                    }
+                    catch(error) {
+                        console.error("Failed Volume Data Upload: Some files failed to be deleted.");
+                    }
+
+                    if (correctedOldSettingsFile && volumeData.rawFilePath) {
+                        await this.correctRawFilePathInSettings(
+                            volumeData.settingsFilePath,
+                            path.basename(volumeData.rawFilePath)
+                        );
+                    }
+                    throw error;
+                }
+                return {volumeData: volumeData, oldRawFilePath: oldRawFilePath, oldSettingsFilePath: oldSettingsFilePath};
+            },
+            {
+                timeout: 60000,
             }
-        } else {
-            await this.uploadFile(files, (file, filteredFileName, fullPath) =>
-                file.mv(fullPath)
-            );
+        );
+
+        if (oldRawFilePath) {
+            try {
+                await rm(oldRawFilePath, {
+                    force: true,
+                });
+            }
+            catch(error) {
+                console.error("Volume Data Upload: Some old files failed to be deleted");
+            }
         }
-
-        if (!this.rawFileUploaded && !this.settingsFileUploaded) {
-            throw new Error("No valid files provided");
+        if (oldSettingsFilePath) {
+            try {
+                await rm(oldSettingsFilePath, {
+                    force: true,
+                });
+            }
+            catch(error) {
+                console.error("Volume Data Upload: Some old files failed to be deleted");
+            }
         }
-
-        const changes = {};
-        if (this.rawFileUploaded && this.rawFile) {
-            changes.rawFilePath = this.rawFile.filePath;
-        }
-
-        if (this.settingsFileUploaded && this.settingsFile) {
-            changes.settingsFilePath = this.settingsFile.filePath;
-        }
-
-        await Object.getPrototypeOf(this).constructor.update(this.id, changes);
-
-        delete this.rawFileUploaded;
-        delete this.settingsFileUploaded;
     }
 
-    async uploadFile(file, moveFunction) {
-        if (
-            (this.rawFileUploaded === undefined || !this.rawFileUploaded) &&
-            RawVolumeFile.isRawVolumeFile(file.name)
-        ) {
-            if (this.rawFileUploaded !== undefined) {
-                this.rawFileUploaded = true;
-            }
-            if (this.rawFile) {
-                await this.deleteRawFile();
-            }
-            this.rawFile = await RawVolumeFile.fromFile(
-                file,
-                this.path,
-                moveFunction
-            );
-            await this.#setRawFilePathInSettings();
+    /**
+     * @param {String} settingsFilePath
+     * @param {String} rawFileName
+     */
+    static async correctRawFilePathInSettings(settingsFilePath, rawFileName) {
+        const contents = await readFile(settingsFilePath, { encoding: "utf8" });
+        const settings = JSON.parse(contents);
+        settings["file"] = rawFileName;
+        if (!Object.hasOwn(settings, "transferFunction")) {
+            settings["transferFunction"] = "tf-default.json";
         }
-        if (
-            (this.settingsFileUploaded === undefined ||
-                !this.settingsFileUploaded) &&
-            SettingsFile.isSettingsFile(file.name)
-        ) {
-            if (this.settingsFileUploaded !== undefined) {
-                this.settingsFileUploaded = true;
-            }
-            if (this.settingsFile) {
-                await this.deleteSettingsFile();
-            }
-            this.settingsFile = await SettingsFile.fromFile(
-                file,
-                this.path,
-                moveFunction
-            );
-            await this.#setRawFilePathInSettings();
-        }
+        await writeFile(settingsFilePath, JSON.stringify(settings, null, 2));
     }
 
-    async #setRawFilePathInSettings() {
-        if (this.rawFile == null || this.settingsFile == null) {
-            return;
+    /**
+     * @param {String} folderPath
+     * @param {String} fileName
+     */
+    static checkFilePath(folderPath, fileName) {
+        let fileNameOverride = null;
+        const potentialSettingFilePath = path.join(folderPath, fileName);
+        if (fileSystem.existsSync(potentialSettingFilePath)) {
+            fileNameOverride = generateUniqueFileName(potentialSettingFilePath);
         }
-        await this.settingsFile.setRawFilePath(this.rawFile.fileName);
+        return fileNameOverride;
     }
 
     prepareDataForDownload(
