@@ -31,6 +31,13 @@ export class PendingUpload {
     }
 
     /**
+     * @return {Buffer}
+     */
+    get data() {
+        throw new Error("Method not implemented");
+    }
+
+    /**
      * @param {String} folderPath
      * @param {String?} fileNameOverride
      * @return {Promise<String>}
@@ -73,6 +80,13 @@ export class PendingFile extends PendingUpload {
      */
     get fileExtension() {
         return path.extname(this.file.name);
+    }
+
+    /**
+     * @return {Buffer}
+     */
+    get data() {
+        return this.file.data;
     }
 
     /**
@@ -137,6 +151,13 @@ export class PendingZipFile extends PendingUpload {
     }
 
     /**
+     * @return {Buffer}
+     */
+    get data() {
+        return this.entry.getData();
+    }
+
+    /**
      * @return {Promise<String>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
@@ -145,6 +166,11 @@ export class PendingZipFile extends PendingUpload {
                 ? fileNameOverride
                 : fileNameFilter(this.entry.name);
         const fullPath = path.join(folderPath, filteredFileName);
+
+        if (!fileSystem.existsSync(folderPath)) {
+            fileSystem.mkdirSync(folderPath, { recursive: true });
+        }
+
         if (fileSystem.existsSync(fullPath)) {
             if (appConfig.safeMode) {
                 throw new Error(

@@ -1,6 +1,5 @@
 // @ts-check
 
-import { RawVolumeFile, SettingsFile } from "./volume-data.mjs";
 import { BaseModel } from "./base-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import { rm } from "node:fs/promises";
@@ -18,10 +17,7 @@ import { isFileExtensionAccepted } from "../tools/utils.mjs";
  * @extends BaseModel
  */
 export class Result extends BaseModel {
-    static acceptedFileExtensions = [".log"].concat(
-        RawVolumeFile.acceptedFileExtensions,
-        SettingsFile.acceptedFileExtensions
-    );
+    static acceptedFileExtensions = [".log", ".raw", ".json"];
 
     /**
      * @return {String}
@@ -111,8 +107,10 @@ export class Result extends BaseModel {
                             if (filePath.endsWith("_inverted.json")) {
                                 rawVolumeChannel = filePaths.length - 1;
                             } else if (
-                                SettingsFile.acceptedFileExtensions ||
-                                RawVolumeFile.acceptedFileExtensions
+                                isFileExtensionAccepted(fileName, [
+                                    ".raw",
+                                    ".json",
+                                ])
                             ) {
                                 visualizationFileIndex++;
                             }

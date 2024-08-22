@@ -94,11 +94,10 @@ getNameFromPath = function(path) {
             <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/delete-raw-file">[X]</a>
             <br />
         <% } %>
-        <% if (volume.rawData.settingsFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-settings-file"><%= getNameFromPath(volume.rawData.settingsFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/delete-settings-file">[X]</a><br />
+        <% if (volume.rawData.settings != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-settings-file">Download Settings</a> <br />
         <% } %>
-        <% if (volume.rawData.rawFilePath != null && volume.rawData.settingsFilePath != null) { %>
+        <% if (volume.rawData.rawFilePath != null && volume.rawData.settings != null) { %>
             <a target="_blank" href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
@@ -142,11 +141,10 @@ getNameFromPath = function(path) {
             <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/delete-raw-file">[X]</a>
             <br />
         <% } %>
-        <% if (sparseLabeledVolume.settingsFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/download-settings-file"><%= getNameFromPath(sparseLabeledVolume.settingsFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/delete-settings-file">[X]</a><br />
+        <% if (sparseLabeledVolume.settings != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/download-settings-file">Download Settings</a> <br />
         <% } %>
-        <% if (sparseLabeledVolume.rawFilePath != null && sparseLabeledVolume.settingsFilePath != null) { %>
+        <% if (sparseLabeledVolume.rawFilePath != null && sparseLabeledVolume.settings != null) { %>
             <a target="_blank" href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
@@ -163,16 +161,15 @@ getNameFromPath = function(path) {
             <progress id="progressBarPseudoLabeledVolume" value="0" max="100" style="width:300px; display: none"></progress>
             <span id="pseudoSparseLabeledVolume"></span>
         </form>
-        <% if (pseudoLabeledVolume.rawFile.rawFilePath != null) { %>
+        <% if (pseudoLabeledVolume.rawFilePath != null) { %>
             <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/download-raw-file"><%= getNameFromPath(pseudoLabeledVolume.rawFilePath) %></a> ...
             <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/delete-raw-file">[X]</a>
             <br />
         <% } %>
-        <% if (pseudoLabeledVolume.settingsFile.settingsFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/download-settings-file"><%= getNameFromPath(pseudoLabeledVolume.settingsFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/delete-settings-file">[X]</a><br />
+        <% if (pseudoLabeledVolume.settings != null) { %>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/download-settings-file">Download Settings</a> <br />
         <% } %>
-        <% if (pseudoLabeledVolume.rawFile != null && pseudoLabeledVolume.settingsFile != null) { %>
+        <% if (pseudoLabeledVolume.rawFilePath != null && pseudoLabeledVolume.settings != null) { %>
             <a target="_blank" href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
@@ -225,7 +222,7 @@ getNameFromPath = function(path) {
     <% for (const checkpoint of model.checkpoints) { %>
         <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/download"><%= getNameFromPath(checkpoint.filePath) %></a> ...
         <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/delete">[X]</a>
-        <% if (project.volumes.length > 0 && project.volumes[0].rawData != null && project.volumes[0].rawData.rawFilePath != null && project.volumes[0].rawData.settingsFilePath != null) { %>
+        <% if (project.volumes.length > 0 && project.volumes[0].rawData != null && project.volumes[0].rawData.rawFilePath != null && project.volumes[0].rawData.settings != null) { %>
             <a href="/api/actions/inference-test/<%= project.volumes[0].rawData.id %>/<%= checkpoint.id %>">   Test Inference</a>
         <% } %>
         <br />

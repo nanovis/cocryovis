@@ -6,6 +6,19 @@ from pathlib import Path
 import numpy as np
 
 
+def generate_unique_filename(directory, filename):
+    name, extension = os.path.splitext(filename)
+    
+    unique_filename = filename
+    counter = 1
+
+    while os.path.exists(os.path.join(directory, unique_filename)):
+        unique_filename = f"{name}_{counter}{extension}"
+        counter += 1
+
+    return unique_filename
+
+
 def mrc_to_raw(mrc_file_path, output_path):
     with mrcfile.open(mrc_file_path, mode='r+', permissive=True) as mrc:
         data = mrc.data
@@ -14,7 +27,7 @@ def mrc_to_raw(mrc_file_path, output_path):
             raise TypeError("Data is not a numpy array")
 
         raw_file_output = f"{Path(mrc_file_path).stem}.raw"
-        json_file_output = f"{Path(mrc_file_path).stem}.json"
+        # json_file_output = f"{Path(mrc_file_path).stem}.json"
 
         mrc.update_header_from_data()
 
@@ -42,11 +55,13 @@ def mrc_to_raw(mrc_file_path, output_path):
             is_signed = False
         else:
             raise Exception("MRC file data is in incompatible format.")
+        
+        raw_filename = generate_unique_filename(output_path, raw_file_output)
 
-        data.tofile(os.path.join(output_path, raw_file_output))
+        data.tofile(os.path.join(output_path, raw_filename))
 
         json_output = {
-            "file": raw_file_output,
+            "file": raw_filename,
             "size": {
                 "x": mrc.header.nx.item(),
                 "y": mrc.header.ny.item(),
@@ -66,8 +81,9 @@ def mrc_to_raw(mrc_file_path, output_path):
             "transferFunction": "tf-default.json"
         }
 
-        with open(os.path.join(output_path, json_file_output), "w") as outfile:
-            outfile.write(json.dumps(json_output, indent=2))
+        # with open(os.path.join(output_path, json_file_output), "w") as outfile:
+        #     outfile.write(json.dumps(json_output, indent=2))
+        print(json.dumps(json_output))
 
 
 if __name__ == '__main__':

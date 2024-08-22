@@ -17,6 +17,10 @@
 
         var config = "<%= config %>"
         config = config.replaceAll("&#34;", '"');
+
+        var settingsReference = "<%= settingsReference %>"
+        settingsReference = settingsReference.replaceAll("&#34;", '"');
+        settingsReference = JSON.parse(settingsReference);
     </script>
 </head>
 

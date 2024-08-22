@@ -30,7 +30,7 @@ var Module;
 		onRuntimeInitialized: function() {
 			console.log("initialized");
 			document.getElementById("loadingtext").innerHTML = "initialized";
-			loadVolWebData(config, volumes);
+			loadVolWebData(config, settingsReference, volumes);
 		}
 	};
 	window.onerror = function(){
@@ -219,7 +219,7 @@ function loadConfig(configData) {
 	FS.writeFile("config.json", configData);
 }
 
-async function loadVolWebData(config, files) {
+async function loadVolWebData(config, settingsReference, files) {
 	Module.start_app();
 
 	let loadingGif = document.getElementById('loadingcontainer');
@@ -227,6 +227,7 @@ async function loadVolWebData(config, files) {
 
 	const promises = []
 
+	FS.writeFile(settingsReference.filename, settingsReference.data);
 	loadConfig(config);
 
     for (let file of files) {

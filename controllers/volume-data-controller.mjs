@@ -6,6 +6,7 @@ import {
     VolumeDataFactory,
     VolumeDataType,
 } from "../models/volume-data-factory.mjs";
+import path from "path";
 
 export class VolumeDataController {
     /**
@@ -16,40 +17,30 @@ export class VolumeDataController {
             const volumeData = await VolumeDataFactory.getClass(type).getById(
                 Number(req.params.idVolumeData)
             );
-            if (!volumeData.rawFile) {
+            if (!volumeData.rawFilePath) {
                 throw new Error(
                     "Visualisation requires the volume data to contain a .raw file."
                 );
             }
 
-            if (!volumeData.settingsFile) {
+            if (!volumeData.settings) {
                 throw new Error(
                     "Visualisation requires the volume data to contain a settings file."
                 );
             }
 
-            if (volumeData.rawFile.fileExtension !== ".raw") {
-                throw new Error(
-                    "Web renderer currently only supports the visualisation of .raw files."
-                );
-            }
-
             const visualizationFiles = [];
 
-            visualizationFiles.push({
-                path: publicDataPath(
-                    req.originalUrl,
-                    volumeData.rawFile.filePath
-                ),
-                filename: volumeData.rawFile.fileName,
-            });
-            visualizationFiles.push({
-                path: publicDataPath(
-                    req.originalUrl,
-                    volumeData.settingsFile.filePath
-                ),
-                filename: volumeData.settingsFile.fileName,
-            });
+            const rawFileReference = {
+                path: publicDataPath(req.originalUrl, volumeData.rawFilePath),
+                filename: path.basename(volumeData.rawFilePath),
+            };
+            const settingsReference = {
+                data: volumeData.settings,
+                filename: `${path.parse(volumeData.rawFilePath).name}.json`,
+            };
+
+            visualizationFiles.push(rawFileReference);
             visualizationFiles.push({
                 path: publicPath(req.originalUrl, "data/session.json"),
                 filename: "session.json",
@@ -62,7 +53,7 @@ export class VolumeDataController {
             const configData = { files: [] };
 
             for (let i = 0; i < 5; i++) {
-                configData["files"].push(volumeData.settingsFile.fileName);
+                configData["files"].push(settingsReference.filename);
             }
 
             const volumesJSON = JSON.stringify(visualizationFiles).replaceAll(
@@ -70,9 +61,13 @@ export class VolumeDataController {
                 "\\\\"
             );
             const configJSON = JSON.stringify(configData);
+            const settingsReferenceJSON = JSON.stringify(
+                settingsReference
+            ).replaceAll("\\", "\\\\");
 
             res.render("visualize-volume", {
                 volumeName: "test",
+                settingsReference: settingsReferenceJSON,
                 volumes: volumesJSON,
                 config: configJSON,
             });
@@ -125,10 +120,10 @@ export class VolumeDataController {
                     message: "No file uploaded",
                 });
             } else {
-                const volumeData = await RawVolumeData.getById(
-                    Number(req.params.idVolumeData)
+                RawVolumeData.uploadMrcFile(
+                    Number(req.params.idVolumeData),
+                    req.files.files
                 );
-                volumeData.uploadMrcFile(req.files.files);
                 res.redirect(
                     `/api/actions/projects/details/` + req.params.idProject
                 );
@@ -144,10 +139,9 @@ export class VolumeDataController {
      */
     static async downloadFullVolumeData(type, req, res) {
         try {
-            const volumeData = await VolumeDataFactory.getClass(type).getById(
-                Number(req.params.idVolumeData)
-            );
-            let data = volumeData.prepareDataForDownload();
+            let data = await VolumeDataFactory.getClass(
+                type
+            ).prepareDataForDownload(Number(req.params.idVolumeData));
             res.set("Content-Type", "application/zip");
             res.set("Content-Disposition", "attachment; filename=" + data.name);
             res.send(data.zipBuffer);
@@ -161,10 +155,14 @@ export class VolumeDataController {
      */
     static async downloadRawFile(type, req, res) {
         try {
-            const volumeData = await VolumeDataFactory.getClass(type).getById(
-                Number(req.params.idVolumeData)
+            let data = await VolumeDataFactory.getClass(
+                type
+            ).prepareDataForDownload(
+                Number(req.params.idVolumeData),
+                true,
+                false,
+                false
             );
-            let data = volumeData.rawFile.prepareDataForDownload();
             res.set("Content-Type", "application/zip");
             res.set("Content-Disposition", "attachment; filename=" + data.name);
             res.send(data.zipBuffer);
@@ -178,10 +176,14 @@ export class VolumeDataController {
      */
     static async downloadSettingsFile(type, req, res) {
         try {
-            const volumeData = await VolumeDataFactory.getClass(type).getById(
-                Number(req.params.idVolumeData)
+            let data = await VolumeDataFactory.getClass(
+                type
+            ).prepareDataForDownload(
+                Number(req.params.idVolumeData),
+                false,
+                true,
+                false
             );
-            let data = volumeData.settingsFile.prepareDataForDownload();
             res.set("Content-Type", "application/zip");
             res.set("Content-Disposition", "attachment; filename=" + data.name);
             res.send(data.zipBuffer);
@@ -198,10 +200,12 @@ export class VolumeDataController {
             if (type != VolumeDataType.RawVolumeData) {
                 throw Error("This operation is only avaliable on Raw Volumes.");
             }
-            const volumeData = await RawVolumeData.getById(
-                Number(req.params.idVolumeData)
+            let data = await RawVolumeData.prepareDataForDownload(
+                Number(req.params.idVolumeData),
+                false,
+                false,
+                true
             );
-            let data = volumeData.mrcFile.prepareDataForDownload();
             res.set("Content-Type", "application/zip");
             res.set("Content-Disposition", "attachment; filename=" + data.name);
             res.send(data.zipBuffer);
@@ -232,22 +236,6 @@ export class VolumeDataController {
     static async removeRawFile(type, req, res) {
         try {
             await VolumeDataFactory.getClass(type).removeRawFile(
-                Number(req.params.idVolumeData)
-            );
-            res.redirect(
-                `/api/actions/projects/details/` + req.params.idProject
-            );
-        } catch (err) {
-            res.status(500).send(err);
-        }
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     */
-    static async removeSettingsFile(type, req, res) {
-        try {
-            await VolumeDataFactory.getClass(type).removeSettingsFile(
                 Number(req.params.idVolumeData)
             );
             res.redirect(

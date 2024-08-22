@@ -130,12 +130,10 @@ export async function mrcToRaw(inputFile, outputPath) {
         path.join(outputPath, "mrc-to-raw.log"),
         `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
     );
+    const data = JSON.parse(stdout);
     return {
-        rawFilePath: path.join(outputPath, `${path.parse(inputFile).name}.raw`),
-        settingsFilePath: path.join(
-            outputPath,
-            `${path.parse(inputFile).name}.json`
-        ),
+        rawFileName: data["file"],
+        settings: data,
     };
 }
 

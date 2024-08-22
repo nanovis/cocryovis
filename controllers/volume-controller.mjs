@@ -57,20 +57,20 @@ export class VolumeController {
                     files = [files];
                 }
 
-                const volume = await Volume.getByIdDeep(
-                    Number(req.params.idVolume),
-                    { rawData: true }
+                const volume = await Volume.getById(
+                    Number(req.params.idVolume)
                 );
-                let rawVolumeData;
-                if (!volume.rawData) {
-                    rawVolumeData = await RawVolumeData.create(
-                        Number(req.session.user.id),
-                        Number(req.params.idVolume)
-                    );
-                } else {
-                    rawVolumeData = RawVolumeData.fromReference(volume.rawData);
+                let rawDataId = volume.rawDataId;
+                if (!rawDataId) {
+                    rawDataId = (
+                        await RawVolumeData.create(
+                            Number(req.session.user.id),
+                            Number(req.params.idVolume)
+                        )
+                    ).id;
                 }
-                await RawVolumeData.uploadFiles(rawVolumeData.id, files);
+
+                await RawVolumeData.uploadFiles(rawDataId, files);
 
                 res.redirect(
                     `/api/actions/projects/details/` + req.params.idProject
@@ -95,17 +95,17 @@ export class VolumeController {
                     Number(req.params.idVolume),
                     { rawData: true }
                 );
-                let rawVolumeData;
+                let rawDataId = volume.rawDataId;
                 if (!volume.rawData) {
-                    rawVolumeData = await RawVolumeData.create(
-                        Number(req.session.user.id),
-                        Number(req.params.idVolume)
-                    );
-                } else {
-                    rawVolumeData = RawVolumeData.fromReference(volume.rawData);
+                    rawDataId = (
+                        await RawVolumeData.create(
+                            Number(req.session.user.id),
+                            Number(req.params.idVolume)
+                        )
+                    ).id;
                 }
 
-                await rawVolumeData.uploadMrcFile(req.files.files);
+                await RawVolumeData.uploadMrcFile(rawDataId, req.files.files);
 
                 console.log("Mrc Data successfully uploaded.");
 
@@ -199,15 +199,18 @@ export class VolumeController {
                         force: true,
                     });
                 }
-                const rawData = RawVolumeData.fromReference(volume.rawData);
-                promises.push(rawToTiff(rawData, rawTiffFolderPath));
+                promises.push(rawToTiff([volume.rawData], rawTiffFolderPath));
             }
-            if (
-                volume.sparseVolumes != null &&
-                volume.sparseVolumes.length > 0
-            ) {
+
+            const validSparseVolumes = [];
+            for (const sparseVolume of volume.sparseVolumes) {
+                if (sparseVolume.rawFilePath && sparseVolume.settings) {
+                    validSparseVolumes.push(sparseVolume);
+                }
+            }
+            if (validSparseVolumes.length > 0) {
                 const sparseLabelsTiffFolderPath = path.join(
-                    volume.sparseVolumes[0].path,
+                    validSparseVolumes[0].path,
                     "tiff-test",
                     "sparseLabels"
                 );
@@ -217,14 +220,8 @@ export class VolumeController {
                         force: true,
                     });
                 }
-                const sparseVolumes = [];
-                for (const sparseVolume of volume.sparseVolumes) {
-                    sparseVolumes.push(
-                        SparseLabeledVolumeData.fromReference(sparseVolume)
-                    );
-                }
                 promises.push(
-                    rawToTiff(sparseVolumes, sparseLabelsTiffFolderPath)
+                    rawToTiff(validSparseVolumes, sparseLabelsTiffFolderPath)
                 );
             }
             await Promise.all(promises);

@@ -52,36 +52,4 @@ export class VolumeDataFactory {
         }
         throw new Error("Volume Data Type Not Found");
     }
-
-    /**
-     * @param {Number} id
-     * @param {VolumeDataType} type
-     */
-    static async getById(id, type) {
-        switch (type) {
-            case VolumeDataType.RawVolumeData:
-                return await RawVolumeData.getById(id);
-            case VolumeDataType.SparseLabeledVolumeData:
-                return await SparseLabeledVolumeData.getById(id);
-            case VolumeDataType.PseudoLabeledVolumeData:
-                return await PseudoLabeledVolumeData.getById(id);
-        }
-        throw new Error("Volume Data Not Found");
-    }
-
-    /**
-     * @param {Number} id
-     * @param {VolumeDataType} type
-     */
-    static async del(id, type) {
-        switch (type) {
-            case VolumeDataType.RawVolumeData:
-                return await RawVolumeData.del(id);
-            case VolumeDataType.SparseLabeledVolumeData:
-                return await SparseLabeledVolumeData.del(id);
-            case VolumeDataType.PseudoLabeledVolumeData:
-                return await PseudoLabeledVolumeData.del(id);
-        }
-        throw new Error("Volume Data Not Found");
-    }
 }

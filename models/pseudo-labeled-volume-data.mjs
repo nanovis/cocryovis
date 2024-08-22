@@ -1,8 +1,14 @@
 // @ts-check
 
-import { VolumeData, RawVolumeFile, SettingsFile } from "./volume-data.mjs";
+import { VolumeData } from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
+/**
+ * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
+ */
 
+/**
+ * @extends {VolumeData}
+ */
 export class PseudoLabeledVolumeData extends VolumeData {
     /**
      * @return {String}
@@ -15,24 +21,13 @@ export class PseudoLabeledVolumeData extends VolumeData {
         return prismaManager.db.pseudoLabelVolumeData;
     }
 
-    static get getFolderPath() {
+    static get folderPath() {
         return "pseudo-labeled-volume-data";
     }
 
     /**
      * @param {Number} id
-     * @param {Number} userId
-     * @param {String} path
-     * @param {RawVolumeFile} rawFile
-     * @param {SettingsFile} settingsFile
-     */
-    constructor(id, userId, path, rawFile = null, settingsFile = null) {
-        super(id, userId, path, rawFile, settingsFile);
-    }
-
-    /**
-     * @param {Number} id
-     * @return {Promise<PseudoLabeledVolumeData>}
+     * @return {Promise<PseudoVolumeDataDB>}
      */
     static async getById(id) {
         return await super.getById(id);
@@ -41,7 +36,7 @@ export class PseudoLabeledVolumeData extends VolumeData {
     /**
      * @param {Number} ownerId
      * @param {Number} volumeId
-     * @return {Promise<PseudoLabeledVolumeData>}
+     * @return {Promise<PseudoVolumeDataDB>}
      */
     static async create(ownerId, volumeId) {
         return await super.create(ownerId, volumeId);
@@ -57,7 +52,7 @@ export class PseudoLabeledVolumeData extends VolumeData {
      * @property {String?} [settingsFilePath]
      * @property {String?} [settingsFileName]
      * @param {Changes} changes
-     * @return {Promise<PseudoLabeledVolumeData>}
+     * @return {Promise<PseudoVolumeDataDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
@@ -65,7 +60,7 @@ export class PseudoLabeledVolumeData extends VolumeData {
 
     /**
      * @param {Number} id
-     * @return {Promise<PseudoLabeledVolumeData>}
+     * @return {Promise<PseudoVolumeDataDB>}
      */
     static async del(id) {
         return await super.del(id);

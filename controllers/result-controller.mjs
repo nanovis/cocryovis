@@ -5,6 +5,8 @@ import { RawVolumeData } from "../models/raw-volume-data.mjs";
 import { Result } from "../models/result.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import { NanoOetziHandler } from "../tools/nano-oetzi-handler.mjs";
+import { writeFile, rm } from "node:fs/promises";
+import path from "path";
 
 export class ResultController {
     static async downloadResult(req, res) {
@@ -73,7 +75,7 @@ export class ResultController {
 
             const volumeData = await RawVolumeData.getById(volumeDataId);
 
-            if (!volumeData.settingsFile) {
+            if (!volumeData.settings) {
                 throw new Error(
                     `Inference: Selected Volume Data must contain a settings file.`
                 );
@@ -81,36 +83,40 @@ export class ResultController {
 
             const checkpoint = await Checkpoint.getById(checkpointId);
 
-            const outputPath = await nanoOetzi.queueInference(
-                volumeData.settingsFile.filePath,
-                checkpoint.filePath
+            const tempSettingsFileName = "settings.json";
+            const tempSettingsPath = path.join(
+                volumeData.path,
+                tempSettingsFileName
             );
+            await writeFile(tempSettingsPath, volumeData.settings, "utf8");
 
-            await Result.createFromFolder(
-                Number(req.session.user.id),
-                checkpointId,
-                volumeDataId,
-                outputPath
-            );
+            try {
+                const outputPath = await nanoOetzi.queueInference(
+                    tempSettingsPath,
+                    checkpoint.filePath
+                );
+
+                await Result.createFromFolder(
+                    Number(req.session.user.id),
+                    checkpointId,
+                    volumeDataId,
+                    outputPath
+                );
+            } finally {
+                try {
+                    await rm(path.join(volumeData.path, tempSettingsFileName), {
+                        force: true,
+                    });
+                } catch {
+                    console.error(
+                        "Inference: Failed to remove the temporary setting file."
+                    );
+                }
+            }
 
             res.redirect(
                 `/api/actions/projects/details/` + req.params.idProject
             );
-            // const result = await Result.create(Number(req.session.user.id), checkpointId, volumeDataId);
-
-            // const resultPath = await Result.reserveFolderName(result.id);
-
-            // await rename(outputPath, resultPath);
-
-            // const files = await readdir(resultPath);
-            // for (const fileName of files) {
-            //     const filePath = path.join(resultPath, fileName);
-            //     if (Result.acceptedFileExtensions.includes(path.extname(fileName))) {
-            //         result.addFile(filePath);
-            //     }
-            // }
-
-            // await Result.update(result);
         } catch (err) {
             console.log(err);
             res.status(500).send(err);

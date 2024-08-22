@@ -56,7 +56,7 @@ model RawVolumeData {
   owner             User    @relation(fields: [ownerId], references: [id])
   ownerId           Int
   rawFilePath       String?
-  settingsFilePath  String?
+  settings          String?
   mrcFilePath       String?
   volumes           Volume[]
   results           Result[]
@@ -68,7 +68,7 @@ model SparseLabelVolumeData {
   owner             User    @relation(fields: [ownerId], references: [id])
   ownerId           Int
   rawFilePath       String?
-  settingsFilePath  String?
+  settings          String?
   volumes           Volume[]
 }
 
@@ -78,7 +78,7 @@ model PseudoLabelVolumeData {
   owner             User    @relation(fields: [ownerId], references: [id])
   ownerId           Int
   rawFilePath       String?
-  settingsFilePath  String?
+  settings          String?
   volumes           Volume[]
 }
 
