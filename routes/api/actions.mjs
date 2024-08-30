@@ -147,6 +147,10 @@ actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idChe
 // Delete checkpoint
 actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrict, CheckpointController.deleteCheckpoint);
 
+// Run training
+actions.post(`/${projectsActionsPath}/:idProject/run-training`, restrict, 
+    async (req, res) => CheckpointController.runTraining(nanoOetzi, req, res));
+
 /////// RESULTS
 // Remove Result
 actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/delete`, restrict, ResultController.deleteResult);

@@ -80,6 +80,7 @@ model PseudoLabelVolumeData {
   rawFilePath       String?
   settings          String?
   volumes           Volume[]
+  checkpoints       Checkpoint[]
 }
 
 model Model {
@@ -100,6 +101,7 @@ model Checkpoint {
   ownerId       Int
   models        Model[]
   results       Result[]
+  labels        PseudoLabelVolumeData[]
 }
 
 model Result {

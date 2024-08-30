@@ -156,7 +156,7 @@ export class VolumeController {
                 { pseudoVolumes: true }
             );
             if (
-                volume.sparseVolumes.length >=
+                volume.pseudoVolumes.length >=
                 appConfig.projects.maxVolumeChannels
             ) {
                 throw new Error(

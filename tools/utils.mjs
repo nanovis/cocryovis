@@ -171,3 +171,14 @@ export function generateUniqueFileName(filePath) {
 
     return path.basename(filePath);
 }
+
+/**
+ * @param {String[]} array
+ */
+export function parseStringArray(array) {
+    if (!Array.isArray(array)) {
+        array = [array];
+    }
+
+    return array.map((s) => Number(s));
+}

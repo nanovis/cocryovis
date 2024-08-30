@@ -14,10 +14,17 @@
         "models": "../nano-oetzi/models/",
         "scripts": "../nano-oetzi/segmentation/",
         "command": "python",
-        "inferenceCommand": "inference_script.py",
-        "defaultModel": "four_classes_model.ckpt",
         "workCache": "cache/nano-oetzi",
-        "maxQueueSize": 20
+        "maxQueueSize": 20,
+        "inference": {
+            "command": "inference_script.py",
+            "defaultModel": "four_classes_model.ckpt"
+        },
+        "training": {
+            "command": "train.py",
+            "min_epochs": 1,
+            "max_epochs": 1
+        }
     },
     "models": {
         "path": "../models/"

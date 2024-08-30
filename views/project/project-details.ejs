@@ -229,4 +229,40 @@ getNameFromPath = function(path) {
     <% } %>
 <% } %>
 <hr />
+<hr />
+<h3 style="text-align: left">Training:</h3>
+<form id="training" action="/api/actions/projects/<%= project.id %>/run-training" method="post" enctype="multipart/form-data">
+    <label for="trainingModel">Model:</label>
+    <select id="trainingModel" name="modelId" required>
+        <% for (const model of project.models) { %>
+        <option type="number" value="<%= model.id %>"><%= model.name %> (<%= model.id %>)</option>
+        <% } %>
+    </select><br />
+    <label for="trainingVolumes">Training Volumes:</label>
+    <select id="trainingVolumes" name="trainingVolumes" size="5" multiple required>
+        <% for (const volume of project.volumes) { %>
+            <% if (volume.pseudoVolumes.length > 0) { %>
+                <option value="<%= volume.id %>"> <%= volume.name %> (<%= volume.id %>)</option>
+            <% } %>
+        <% } %>
+    </select>
+    <label for="validationVolumes">Validation Volumes:</label>
+    <select id="validationVolumes" name="validationVolumes" size="5" multiple required>
+        <% for (const volume of project.volumes) { %>
+            <% if (volume.pseudoVolumes.length > 0) { %>
+                <option value="<%= volume.id %>"> <%= volume.name %> (<%= volume.id %>)</option>
+            <% } %>
+        <% } %>
+    </select>
+    <label for="testingVolumes">Testing Volumes:</label>
+    <select id="testingVolumes" name="testingVolumes" size="5" multiple required>
+        <% for (const volume of project.volumes) { %>
+            <% if (volume.pseudoVolumes.length > 0) { %>
+                <option value="<%= volume.id %>"> <%= volume.name %> (<%= volume.id %>)</option>
+            <% } %>
+        <% } %>
+    </select><br />
+    <input type="submit" value="Submit" />
+</form>
+<hr />
 <%- include('foot') -%>

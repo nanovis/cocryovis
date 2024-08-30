@@ -52,6 +52,24 @@ export class Volume extends BaseModel {
     }
 
     /**
+     * @param {Number[]} ids
+     */
+    static async getMultipleByIdDeep(
+        ids,
+        { rawData = false, sparseVolumes = false, pseudoVolumes = false }
+    ) {
+        let entry = await this.db.findMany({
+            where: { id: { in: ids } },
+            include: {
+                rawData: rawData,
+                sparseVolumes: sparseVolumes,
+                pseudoVolumes: pseudoVolumes,
+            },
+        });
+        return entry;
+    }
+
+    /**
      * @param {Number} id
      * @return {Promise<VolumeDB>}
      */

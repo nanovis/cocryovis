@@ -2,7 +2,7 @@
 
 import { BaseModel } from "./base-model.mjs";
 import path from "path";
-import { rm } from "node:fs/promises";
+import fsPromises from "node:fs/promises";
 import prismaManager from "../tools/prisma-manager.mjs";
 import appConfig from "../tools/config.mjs";
 import fileSystem from "fs";
@@ -59,7 +59,7 @@ export class Checkpoint extends BaseModel {
                     data: { folderPath: folderPath },
                 });
             } catch (error) {
-                await rm(checkpoint.folderPath, {
+                await fsPromises.rm(checkpoint.folderPath, {
                     recursive: true,
                     force: true,
                 });
@@ -106,7 +106,7 @@ export class Checkpoint extends BaseModel {
                                 },
                             });
                         } catch (error) {
-                            await rm(folderPath, {
+                            await fsPromises.rm(folderPath, {
                                 recursive: true,
                                 force: true,
                             });
@@ -122,6 +122,74 @@ export class Checkpoint extends BaseModel {
         }
 
         return result;
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} modelId
+     * @param {Number[]} labelIds
+     * @param {String} folderPath
+     * @param {String} filePath
+     */
+    static async createFromFolder(
+        ownerId,
+        modelId,
+        labelIds,
+        folderPath,
+        filePath
+    ) {
+        try {
+            return await prismaManager.db.$transaction(
+                async (tx) => {
+                    /** @type {CheckpointDB} */
+                    let checkpoint = await tx.checkpoint.create({
+                        data: {
+                            ownerId: ownerId,
+                            models: {
+                                connect: { id: modelId },
+                            },
+                            labels: {
+                                connect: labelIds.map((id) => ({ id })),
+                            },
+                        },
+                    });
+
+                    const checkpointPath = await Checkpoint.reserveFolderName(
+                        checkpoint.id
+                    );
+                    await fsPromises.rename(folderPath, checkpointPath);
+                    const checkpointFilePath = path.join(
+                        checkpointPath,
+                        path.basename(filePath)
+                    );
+
+                    try {
+                        checkpoint = await tx.checkpoint.update({
+                            where: { id: checkpoint.id },
+                            data: {
+                                folderPath: checkpointPath,
+                                filePath: checkpointFilePath,
+                            },
+                        });
+                    } catch (error) {
+                        await fsPromises.rm(checkpointPath, {
+                            recursive: true,
+                            force: true,
+                        });
+                        throw error;
+                    }
+                    return checkpoint;
+                },
+                {
+                    timeout: 60000,
+                }
+            );
+        } catch (error) {
+            await fsPromises.rm(folderPath, {
+                recursive: true,
+                force: true,
+            });
+        }
     }
 
     /**
@@ -157,7 +225,10 @@ export class Checkpoint extends BaseModel {
     static async del(id) {
         const checkpoint = await super.del(id);
         if (checkpoint.folderPath) {
-            await rm(checkpoint.folderPath, { recursive: true, force: true });
+            await fsPromises.rm(checkpoint.folderPath, {
+                recursive: true,
+                force: true,
+            });
         }
         return checkpoint;
     }
@@ -174,10 +245,35 @@ export class Checkpoint extends BaseModel {
             if (appConfig.safeMode) {
                 throw new Error(`Checkpoint directory already exists`);
             } else {
-                await rm(folderPath, { recursive: true, force: true });
+                await fsPromises.rm(folderPath, {
+                    recursive: true,
+                    force: true,
+                });
             }
         }
         fileSystem.mkdirSync(folderPath, { recursive: true });
+        return folderPath;
+    }
+
+    /**
+     * @param {Number} id
+     * @return {Promise<String>}
+     */
+    static async reserveFolderName(id) {
+        const folderPath = path.join(
+            appConfig.projects.checkpointsPath,
+            id.toString()
+        );
+        if (fileSystem.existsSync(folderPath)) {
+            if (appConfig.safeMode) {
+                throw new Error(`Checkpoint directory already exists`);
+            } else {
+                await fsPromises.rm(folderPath, {
+                    recursive: true,
+                    force: true,
+                });
+            }
+        }
         return folderPath;
     }
 }
