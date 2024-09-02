@@ -192,7 +192,7 @@ export class VolumeData extends BaseModel {
                         where: { id: id },
                     });
 
-                    if (preventRawFileOverride && newRawFile) {
+                    if (preventRawFileOverride && newRawFile && volumeData.rawFilePath) {
                         throw new Error(
                             "Once Raw File is uploaded to a Raw Volume Data it cannot be changed."
                         );
