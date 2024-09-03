@@ -89,6 +89,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labe
 // Test Tiff Conversion
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/test-tiff`, restrict, VolumeController.testTiffConversion);
 
+// Run Ilastik inference
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
+    async (req, res) => VolumeController.createPseudoLabels(ilastikHandler, req, res));
+
 /////// RAW VOLUME DATA
 
 // Visualize Raw Volume Data
@@ -128,7 +132,7 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/d
 
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-mrc-file`, restrict, 
     async (req, res) => VolumeDataController.removeMrcFile(VolumeDataType.mapName(req.params.type), req, res));
-
+  
 /////// MODELS
 // Create New Model
 actions.post(`/${projectsActionsPath}/:idProject/create-model`, restrict, ModelController.createModel);
@@ -164,13 +168,3 @@ actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download/:fileI
 // Inference test
 actions.get(`/inference-test/:idVolumeData/:idCheckpoint`, restrict,
     async (req, res) => ResultController.runInference(nanoOetzi, req, res));
-
-// // Ilastik Inference test
-// actions.get(`/ilastik-test`, async (req, res) => {
-//     try {
-//         await volumeController.createPseudoLabels(1, ilastikHandler);
-//     } catch (err) {
-//         console.log(err)
-//         res.status(500).send(err);
-//     }
-// });

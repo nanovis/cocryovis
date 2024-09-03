@@ -13,3 +13,4 @@ cache/
 *.sqlite-journal
 .env
 prisma/migrations/
+.vscode/

@@ -1,13 +1,20 @@
-import { exec, spawnSync } from 'child_process';
-import  * as fileSystem from 'fs';
-import path, { resolve } from 'path';
-import {StoredFolder} from "./stored-folder.mjs";
-import fs from "fs";
-import {rm} from "node:fs/promises";
-import {rawToTiff} from "./raw-to-tiff.mjs";
+// @ts-check
 
-class IlastikHandler {
-    static rawTiffFolder = "raw"
+import { exec, spawnSync } from "child_process";
+import * as fileSystem from "fs";
+import path, { resolve } from "path";
+import { StoredFolder } from "./stored-folder.mjs";
+import fs from "fs";
+import fsPromises from "node:fs/promises";
+import { rawToTiff } from "./raw-to-tiff.mjs";
+
+/**
+ * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
+ * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
+ */
+
+export class IlastikHandler {
+    static rawTiffFolder = "raw";
     static sparseLabelsTiffFolder = "sparse-labels";
 
     constructor(config) {
@@ -17,49 +24,63 @@ class IlastikHandler {
     }
 
     getVersion() {
-        let result = spawnSync(this.config.python, ['-c', 'import ilastik; print ilastik.__version__']);
+        let result = spawnSync(this.config.python, [
+            "-c",
+            "import ilastik; print ilastik.__version__",
+        ]);
         return result.stdout;
         // return result.stdout.toString().split('\n')[0];
     }
 
-    getIlastikPath() {
-        return this.config.path;
-    }
-
-    getIlastikDataPath() {
-        return this.config.data;
-    }
-/*
+    /*
 ./python ./train_headless.py /home/bohakc/crop/ts_16_crop_test_project.ilp "/home/bohakc/crop/input/*.tif" "/home/bohakc/crop/labels/*.tiff"
 
 ./run_ilastik.sh --headless --project=/home/bohakc/crop/ts_16_crop_test_project.ilp --output_format="tif sequence" --export_source="Probabilities" --export_dtype=uint8 --pipeline_result_drange="(0.0,1.0)" --export_drange="(0,255)" --output_filename_format=/home/bohakc/crop/ts_16_crop_output/{nickname}_{slice_index}_results.tiff "/home/bohakc/crop/input/*.tif"
 
 ../ilastik/run_ilastik.sh --headless --project=/home/bohakc/volWeb/models/2-Ilastik_test/model_project.ilp --output_format="tif sequence" --export_source="Probabilities" --export_dtype=uint8 --pipeline_result_drange="(0.0,1.0)" --export_drange="(0,255)" --output_filename_format=/home/bohakc/volWeb/models/2-Ilastik_test/ilastik-labels/tif/{nickname}_{slice_index}_results.tif /home/bohakc/volWeb/models/2-Ilastik_test/raw-data/tif/*.tif
 */
-    runIlastikInference(rawDataPath, sparseLabelPath, modelPath, labelsOutputPath) {
-        console.log('Running Ilastik inference');
-        this.isInferenceRunning = true;
+    /**
+     * @param {String} rawDataPath
+     * @param {String} sparseLabelPath
+     * @param {String} modelPath
+     * @param {String} labelsOutputPath
+     */
+    runIlastikInference(
+        rawDataPath,
+        sparseLabelPath,
+        modelPath,
+        labelsOutputPath
+    ) {
+        console.log("Running Ilastik inference");
         this.inferenceRunning = true;
 
-        const logPath = path.join(labelsOutputPath, '!inference.log');
-        fs.writeFileSync(logPath, 'Ilastik inference started\n\n');
+        const logPath = path.join(labelsOutputPath, "!inference.log");
+        fs.writeFileSync(logPath, "Ilastik inference started\n\n");
 
-        const ilastikLabels = new StoredFolder(path.basename(labelsOutputPath), labelsOutputPath);
+        const ilastikLabels = new StoredFolder(
+            path.basename(labelsOutputPath),
+            labelsOutputPath
+        );
         const rawDataFullPath = resolve(rawDataPath);
 
         const modelFullPath = resolve(modelPath);
         let params = [
-            '--headless',
-            '--project=' + modelFullPath,
+            "--headless",
+            "--project=" + modelFullPath,
             '--output_format="tif sequence"',
             '--export_source="Probabilities"',
-            '--export_dtype=uint8',
+            "--export_dtype=uint8",
             '--pipeline_result_drange="(0.0,1.0)"',
             '--export_drange="(0,255)"',
-            '--output_filename_format=' + path.join(ilastikLabels.folderPath, '{nickname}_{slice_index}_results.tif'),
-            '"' + rawDataFullPath + '"'
+            "--output_filename_format=" +
+                path.join(
+                    ilastikLabels.folderPath,
+                    "{nickname}_{slice_index}_results.tif"
+                ),
+            '"' + rawDataFullPath + '"',
         ];
-        const command = this.config.path + this.config.inference + ' ' + params.join(' ');
+        const command =
+            this.config.path + this.config.inference + " " + params.join(" ");
         console.log(command);
 
         if (!fileSystem.existsSync(ilastikLabels.folderPath)) {
@@ -76,29 +97,43 @@ class IlastikHandler {
             }
             fs.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
             fs.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
-            console.log('Ilastik inference finished');
+            console.log("Ilastik inference finished");
 
             Promise.resolve(ilastikLabels);
             console.log("Ilastik labels successfully generated.");
         });
     }
 
-    createIlastikProject(rawDataPath, sparseLabelPath, modelOutputPath, labelsOutputPath) {
-        console.log('Creating Ilastik project');
-        const logPath = path.join(labelsOutputPath, '!projectCreation.log');
-        fs.writeFileSync(logPath, 'Creating Ilastik project\n\n');
+    /**
+     * @param {String} rawDataPath
+     * @param {String} sparseLabelPath
+     * @param {String} modelOutputPath
+     * @param {String} labelsOutputPath
+     */
+    createIlastikProject(
+        rawDataPath,
+        sparseLabelPath,
+        modelOutputPath,
+        labelsOutputPath
+    ) {
+        console.log("Creating Ilastik project");
+        const logPath = path.join(labelsOutputPath, "!projectCreation.log");
+        fs.writeFileSync(logPath, "Creating Ilastik project\n\n");
 
         this.finished = false;
-        const modelOutputFullPath = path.join(resolve(modelOutputPath), this.config.model_file_name);
+        const modelOutputFullPath = path.join(
+            resolve(modelOutputPath),
+            this.config.model_file_name
+        );
         const rawDataFullPath = resolve(rawDataPath);
         const sparseLabelFullPath = resolve(sparseLabelPath);
         let params = [
             this.config.scripts_path + this.config.create_project_command,
             modelOutputFullPath,
             '"' + rawDataFullPath + '"',
-            '"' + sparseLabelFullPath + '"'
+            '"' + sparseLabelFullPath + '"',
         ];
-        const command = this.config.python + ' ' + params.join(' ');
+        const command = this.config.python + " " + params.join(" ");
         console.log(command);
 
         exec(command, (error, stdout, stderr) => {
@@ -110,10 +145,15 @@ class IlastikHandler {
             }
             fs.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
             fs.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
-            console.log('Ilastik project created');
+            console.log("Ilastik project created");
 
             // Run Ilastik inference
-            this.runIlastikInference(rawDataPath, sparseLabelPath, modelOutputFullPath, labelsOutputPath);
+            this.runIlastikInference(
+                rawDataPath,
+                sparseLabelPath,
+                modelOutputFullPath,
+                labelsOutputPath
+            );
         });
     }
 
@@ -125,37 +165,77 @@ class IlastikHandler {
         return this.finished;
     }
 
-    async generateLabels(rawData, sparseLabelsStack, modelOutputPath, labelsOutputPath) {
-        if (!rawData || !rawData.rawFile) {
+    /**
+     * @param {RawVolumeDataDB} rawData
+     * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
+     * @param {String} modelOutputPath
+     * @param {String} labelsOutputPath
+     */
+    async generateLabels(
+        rawData,
+        sparseLabelsStack,
+        modelOutputPath,
+        labelsOutputPath
+    ) {
+        if (!rawData || !rawData.rawFilePath) {
             throw new Error("Pseudo Labels Generation: Raw Data is missing.");
         }
         if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
-            throw new Error("Pseudo Labels Generation: Sparse Label Data is missing.");
+            throw new Error(
+                "Pseudo Labels Generation: Sparse Label Data is missing."
+            );
         }
-        if (rawData.rawFile.fileExtension !== ".raw") {
-            throw new Error("Pseudo Labels Generation: Raw Data must be in .raw format.");
-        }
 
-        const rawTiffFolderPath = path.join(this.config.tiffCacheFolder, IlastikHandler.rawTiffFolder);
-        const sparseLabelsTiffFolderPath = path.join(this.config.tiffCacheFolder, IlastikHandler.sparseLabelsTiffFolder);
+        const rawTiffFolderPath = path.join(
+            this.config.tiffCacheFolder,
+            IlastikHandler.rawTiffFolder
+        );
+        const sparseLabelsTiffFolderPath = path.join(
+            this.config.tiffCacheFolder,
+            IlastikHandler.sparseLabelsTiffFolder
+        );
 
-        await this.convertDataToTiff(rawData, sparseLabelsStack, rawTiffFolderPath, sparseLabelsTiffFolderPath);
+        await this.convertDataToTiff(
+            rawData,
+            sparseLabelsStack,
+            rawTiffFolderPath,
+            sparseLabelsTiffFolderPath
+        );
 
-        this.createIlastikProject(path.join(rawTiffFolderPath, "*.tiff"),
-            path.join(sparseLabelsTiffFolderPath, "*.tiff"), modelOutputPath, labelsOutputPath);
+        this.createIlastikProject(
+            path.join(rawTiffFolderPath, "*.tiff"),
+            path.join(sparseLabelsTiffFolderPath, "*.tiff"),
+            modelOutputPath,
+            labelsOutputPath
+        );
     }
 
-    async convertDataToTiff(rawData, sparseLabelsStack, rawTiffFolderPath, sparseLabelsTiffFolderPath) {
+    /**
+     * @param {RawVolumeDataDB} rawData
+     * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
+     * @param {String} rawTiffFolderPath
+     * @param {String} sparseLabelsTiffFolderPath
+     */
+    async convertDataToTiff(
+        rawData,
+        sparseLabelsStack,
+        rawTiffFolderPath,
+        sparseLabelsTiffFolderPath
+    ) {
         if (fileSystem.existsSync(rawTiffFolderPath)) {
-            await rm(rawTiffFolderPath, { recursive: true, force: true });
+            await fsPromises.rm(rawTiffFolderPath, {
+                recursive: true,
+                force: true,
+            });
         }
         if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
-            await rm(sparseLabelsTiffFolderPath, { recursive: true, force: true });
+            await fsPromises.rm(sparseLabelsTiffFolderPath, {
+                recursive: true,
+                force: true,
+            });
         }
 
-        await rawToTiff(rawData, rawTiffFolderPath);
+        await rawToTiff([rawData], rawTiffFolderPath);
         await rawToTiff(sparseLabelsStack, sparseLabelsTiffFolderPath);
     }
 }
-
-export {IlastikHandler};

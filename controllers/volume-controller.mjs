@@ -238,18 +238,34 @@ export class VolumeController {
         }
     }
 
-    // async createPseudoLabels(volumeId, illastik) {
-    //     volumeId = Number(volumeId);
+    static async createPseudoLabels(illastik, req, res) {
+        try {
+            const volumeId = Number(req.params.idVolume);
 
-    //     const outputPath = path.join("data", "pseudoTest");
-    //     if (!fileSystem.existsSync(outputPath)) {
-    //         fileSystem.mkdirSync(outputPath, {recursive: true});
-    //     }
-    //     const volume = this.getById(volumeId);
-    //     const rawData = lowdbVolumeDataController.getById(volume.rawDataId);
-    //     const sparseLabelStack = lowdbVolumeDataController.getByIds(volume.sparseLabeledVolumes.ids)
+            const outputPath = path.join("data", "pseudoTest");
+            if (!fileSystem.existsSync(outputPath)) {
+                fileSystem.mkdirSync(outputPath, { recursive: true });
+            }
 
-    //     console.log(rawData)
-    //     illastik.generateLabels(rawData, sparseLabelStack, outputPath, outputPath);
-    // }
+            const volume = await Volume.getByIdDeep(volumeId, {
+                rawData: true,
+                sparseVolumes: true,
+                pseudoVolumes: true,
+            });
+
+            if (volume.pseudoVolumes.length > 0) {
+                throw new Error("Volume already has pseudo labels.");
+            }
+
+            await illastik.generateLabels(
+                volume.rawData,
+                volume.sparseVolumes,
+                outputPath,
+                outputPath
+            );
+        } catch (err) {
+            console.error("Error in pseudo labels:", err);
+            res.status(500).send(err);
+        }
+    }
 }
