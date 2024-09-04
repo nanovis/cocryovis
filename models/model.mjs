@@ -3,6 +3,8 @@
 import { BaseModel } from "./base-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import { Checkpoint } from "./checkpoint.mjs";
+import fsPromises from "fs/promises";
+import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
@@ -77,33 +79,127 @@ export class Model extends BaseModel {
         return await super.update(id, changes);
     }
 
-    // /**
-    //  * @return {import("@prisma/client").PrismaPromise<any>}
-    //  */
-    static async deleteZombies() {
-        const res = await this.db.deleteMany({
-            where: {
-                NOT: {
-                    projects: { some: {} },
-                },
-            },
-        });
-        let deletedCheckpoints = 0;
-        if (res.count > 0) {
-            deletedCheckpoints = (await Checkpoint.deleteZombies()).count;
-        }
-
-        return {
-            deletedModels: res.count,
-            deletedCheckpoints: deletedCheckpoints,
-        };
-    }
-
     /**
      * @param {Number} id
      * @return {Promise<ModelDB>}
      */
     static async del(id) {
-        return await super.del(id);
+        return this.#del(id);
+    }
+
+    /**
+     * @param {Number} id
+     * @param {Number} projectId
+     * @return {Promise<ModelDB>}
+     */
+    static async removeFromProject(id, projectId) {
+        return this.#del(id, projectId);
+    }
+
+    /**
+     * @param { Number } modelId
+     * @param { Number? } projectId
+     * @returns { Promise<ModelDB> }
+     */
+    static async #del(modelId, projectId = null) {
+        const fileDeleteStack = [];
+
+        const model = await prismaManager.db.$transaction(
+            async (tx) => {
+                let model = await tx.model.findUnique({
+                    where: { id: modelId },
+                    include: {
+                        projects: projectId !== null,
+                        checkpoints: {
+                            include: {
+                                labels: true,
+                            },
+                        },
+                    },
+                });
+
+                if (
+                    projectId &&
+                    !model.projects.some((m) => m.id === projectId)
+                ) {
+                    throw new Error("Model is not part of the project.");
+                }
+
+                if (projectId && model.projects.length > 1) {
+                    await tx.model.update({
+                        where: {
+                            id: modelId,
+                        },
+                        data: {
+                            projects: {
+                                disconnect: { id: projectId },
+                            },
+                        },
+                    });
+                } else {
+                    await tx.model.delete({
+                        where: { id: modelId },
+                    });
+
+                    fileDeleteStack.push(
+                        ...(await Checkpoint.deleteZombies(
+                            model.checkpoints.map((m) => m.id),
+                            tx
+                        ))
+                    );
+
+                    const allPseudoVolumes = [];
+                    model.checkpoints.forEach((v) =>
+                        allPseudoVolumes.push(...v.labels)
+                    );
+                    fileDeleteStack.push(
+                        ...(await PseudoLabeledVolumeData.deleteZombies(
+                            allPseudoVolumes,
+                            tx
+                        ))
+                    );
+
+                    return model;
+                }
+
+                return model;
+            },
+            {
+                timeout: 60000,
+            }
+        );
+
+        for (const file of fileDeleteStack) {
+            fsPromises
+                .rm(file, { recursive: true, force: true })
+                .catch((error) => {
+                    console.error(`Failed to delete ${file}: ${error}`);
+                });
+        }
+
+        return model;
+    }
+
+    /**
+     * @param {Number[]} ids
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<void>}
+     */
+    static async deleteZombies(ids, tx) {
+        if (ids.length === 0) {
+            return;
+        }
+        await tx.model.deleteMany({
+            where: {
+                AND: {
+                    id: {
+                        in: ids,
+                    },
+                    projects: {
+                        none: {},
+                    },
+                },
+            },
+        });
     }
 }

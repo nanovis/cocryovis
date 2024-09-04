@@ -262,4 +262,21 @@ export class VolumeDataController {
             res.status(500).send(err);
         }
     }
+
+    /**
+     * @param {VolumeDataType} type
+     */
+    static async removeFromVolume(type, req, res) {
+        try {
+            await VolumeDataFactory.getClass(type).removeFromVolume(
+                Number(req.params.idVolumeData),
+                Number(req.params.idVolume)
+            );
+            res.redirect(
+                `/api/actions/projects/details/` + req.params.idProject
+            );
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    }
 }

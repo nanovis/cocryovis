@@ -1,6 +1,6 @@
 // @ts-check
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 class PrismaManager {
     /**
@@ -9,7 +9,13 @@ class PrismaManager {
     db;
 
     constructor() {
-        this.db = new PrismaClient();
+        this.db = new PrismaClient({
+            transactionOptions: {
+                isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+                maxWait: 5000,
+                timeout: 10000,
+            },
+        });
     }
 
     /**

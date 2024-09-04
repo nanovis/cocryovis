@@ -1,7 +1,7 @@
 // @ts-check
 
 import path from "path";
-import { rm } from "node:fs/promises";
+import fsPromises from "node:fs/promises";
 import fileSystem from "fs";
 import { BaseModel } from "./base-model.mjs";
 import appConfig from "../tools/config.mjs";
@@ -15,7 +15,11 @@ import { unpackFiles } from "../tools/file-handler.mjs";
 import AdmZip from "adm-zip";
 
 /**
- * @typedef { import("@prisma/client").PseudoLabelVolumeData } VolumeDataDB
+ * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
+ * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
+ * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
+ * @typedef { RawVolumeDataDB | SparseLabelVolumeDataDB | PseudoLabelVolumeDataDB } VolumeDataDB
+ * @typedef { import("@prisma/client").Volume } VolumeDB
  */
 
 /**
@@ -49,29 +53,36 @@ export class VolumeData extends BaseModel {
      * @return {Promise<VolumeDataDB>}
      */
     static async create(ownerId, volumeId) {
-        return await prismaManager.db.$transaction(async (tx) => {
-            const volumeData = await tx[this.modelName].create({
-                data: {
-                    ownerId: ownerId,
-                    volumes: {
-                        connect: { id: volumeId },
+        return await prismaManager.db.$transaction(
+            async (tx) => {
+                const volumeData = await tx[this.modelName].create({
+                    data: {
+                        ownerId: ownerId,
+                        volumes: {
+                            connect: { id: volumeId },
+                        },
                     },
-                },
-            });
-
-            const folderPath = await this.createVolumeDataFolder(volumeData.id);
-
-            try {
-                await tx[this.modelName].update({
-                    where: { id: volumeData.id },
-                    data: { path: folderPath },
                 });
-            } catch (error) {
-                await this.deleteVolumeDataFiles(volumeData);
-                throw error;
+
+                const folderPath = await this.createVolumeDataFolder(
+                    volumeData.id
+                );
+
+                try {
+                    await tx[this.modelName].update({
+                        where: { id: volumeData.id },
+                        data: { path: folderPath },
+                    });
+                } catch (error) {
+                    await this.deleteVolumeDataFiles(volumeData);
+                    throw error;
+                }
+                return volumeData;
+            },
+            {
+                timeout: 60000,
             }
-            return volumeData;
-        });
+        );
     }
 
     /**
@@ -93,9 +104,56 @@ export class VolumeData extends BaseModel {
      * @return {Promise<VolumeDataDB>}
      */
     static async del(id) {
-        const volumeData = await super.del(id);
-        this.deleteVolumeDataFiles(volumeData);
+        const volumeData = await this.db.delete({
+            where: { id: id },
+        });
+        await this.deleteVolumeDataFiles(volumeData);
         return volumeData;
+    }
+
+    /**
+     * @param {Number} id
+     * @param {Number} volumeId
+     * @return {Promise<VolumeDataDB>}
+     */
+    static async removeFromVolume(id, volumeId) {
+        return await prismaManager.db.$transaction(
+            async (tx) => {
+                /** @type {VolumeDataDB & {volumes: VolumeDB[]}} */
+                let volumeData = await tx[this.modelName].findUnique({
+                    where: { id: id },
+                    include: {
+                        volumes: true,
+                    },
+                });
+
+                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                    throw new Error("Volume Data is not part of the volume.");
+                }
+
+                if (volumeData.volumes.length > 1) {
+                    await tx[this.modelName].update({
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            volumes: {
+                                disconnect: { id: volumeId },
+                            },
+                        },
+                    });
+                } else {
+                    await tx[this.modelName].delete({
+                        where: { id: id },
+                    });
+                    await this.deleteVolumeDataFiles(volumeData);
+                }
+                return volumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
     }
 
     /**
@@ -112,7 +170,7 @@ export class VolumeData extends BaseModel {
             data: { rawFilePath: null },
         });
         try {
-            await rm(rawFilePath, { recursive: true, force: true });
+            await fsPromises.rm(rawFilePath, { recursive: true, force: true });
         } catch (error) {
             console.error(
                 `Failed to remove raw file ${rawFilePath} from disk.\n${error.toString()}`
@@ -134,7 +192,10 @@ export class VolumeData extends BaseModel {
             if (appConfig.safeMode) {
                 throw new Error(`Volume directory already exists`);
             } else {
-                await rm(folderPath, { recursive: true, force: true });
+                await fsPromises.rm(folderPath, {
+                    recursive: true,
+                    force: true,
+                });
             }
         }
         fileSystem.mkdirSync(folderPath, { recursive: true });
@@ -143,13 +204,34 @@ export class VolumeData extends BaseModel {
 
     /**
      * @param {VolumeDataDB} volumeData
+     * @returns {String[]}
+     */
+    static getFilePaths(volumeData) {
+        const files = [];
+        if (volumeData.rawFilePath) {
+            files.push(volumeData.rawFilePath);
+        }
+        if (volumeData.path) {
+            files.push(volumeData.path);
+        }
+        return files;
+    }
+
+    /**
+     * @param {VolumeDataDB} volumeData
      */
     static async deleteVolumeDataFiles(volumeData) {
         if (volumeData.rawFilePath) {
-            await rm(volumeData.rawFilePath, { recursive: true, force: true });
+            await fsPromises.rm(volumeData.rawFilePath, {
+                recursive: true,
+                force: true,
+            });
         }
         if (volumeData.path) {
-            await rm(volumeData.path, { recursive: true, force: true });
+            await fsPromises.rm(volumeData.path, {
+                recursive: true,
+                force: true,
+            });
         }
     }
 
@@ -192,7 +274,11 @@ export class VolumeData extends BaseModel {
                         where: { id: id },
                     });
 
-                    if (preventRawFileOverride && newRawFile && volumeData.rawFilePath) {
+                    if (
+                        preventRawFileOverride &&
+                        newRawFile &&
+                        volumeData.rawFilePath
+                    ) {
                         throw new Error(
                             "Once Raw File is uploaded to a Raw Volume Data it cannot be changed."
                         );
@@ -247,7 +333,7 @@ export class VolumeData extends BaseModel {
                     } catch (error) {
                         try {
                             if (Object.hasOwn(changes, "rawFilePath")) {
-                                await rm(changes.rawFilePath, {
+                                await fsPromises.rm(changes.rawFilePath, {
                                     force: true,
                                 });
                             }
@@ -270,7 +356,7 @@ export class VolumeData extends BaseModel {
 
         if (oldRawFilePath) {
             try {
-                await rm(oldRawFilePath, {
+                await fsPromises.rm(oldRawFilePath, {
                     force: true,
                 });
             } catch (error) {
@@ -309,21 +395,6 @@ export class VolumeData extends BaseModel {
             fileNameOverride = generateUniqueFileName(potentialSettingFilePath);
         }
         return fileNameOverride;
-    }
-
-    /**
-     * @return {Promise<Number>}
-     */
-    static async deleteZombies() {
-        const res = await this.db.deleteMany({
-            where: {
-                NOT: {
-                    projects: { some: {} },
-                },
-            },
-        });
-
-        return res.count;
     }
 
     /**

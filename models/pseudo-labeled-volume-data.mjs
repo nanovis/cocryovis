@@ -65,4 +65,92 @@ export class PseudoLabeledVolumeData extends VolumeData {
     static async del(id) {
         return await super.del(id);
     }
+
+    /**
+     * @param {Number} id
+     * @param {Number} volumeId
+     * @return {Promise<PseudoVolumeDataDB>}
+     */
+    static async removeFromVolume(id, volumeId) {
+        return await prismaManager.db.$transaction(
+            async (tx) => {
+                let volumeData = await tx.pseudoLabelVolumeData.findUnique({
+                    where: { id: id },
+                    include: {
+                        volumes: true,
+                        checkpoints: true,
+                    },
+                });
+
+                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                    throw new Error("Volume Data is not part of the volume.");
+                }
+
+                if (
+                    volumeData.volumes.length > 1 ||
+                    volumeData.checkpoints.length > 0
+                ) {
+                    await tx.pseudoLabelVolumeData.update({
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            volumes: {
+                                disconnect: { id: volumeId },
+                            },
+                        },
+                    });
+                } else {
+                    await tx.pseudoLabelVolumeData.delete({
+                        where: { id: id },
+                    });
+                    await this.deleteVolumeDataFiles(volumeData);
+                }
+                return volumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
+    }
+
+    /**
+     * @param {Number[]} ids
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<String[]>}
+     */
+    static async deleteZombies(ids, tx) {
+        if (ids.length === 0) {
+            return [];
+        }
+        const fileDeleteStack = [];
+
+        const pseudoVolumes = await tx.pseudoLabelVolumeData.findMany({
+            where: {
+                AND: {
+                    id: {
+                        in: ids,
+                    },
+                    volumes: {
+                        none: {},
+                    },
+                    checkpoints: {
+                        none: {},
+                    },
+                },
+            },
+        });
+        await tx.pseudoLabelVolumeData.deleteMany({
+            where: {
+                id: {
+                    in: pseudoVolumes.map((v) => v.id),
+                },
+            },
+        });
+        pseudoVolumes.forEach((v) =>
+            fileDeleteStack.push(...this.getFilePaths(v))
+        );
+
+        return fileDeleteStack;
+    }
 }

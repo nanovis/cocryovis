@@ -62,6 +62,20 @@ export class CheckpointController {
         }
     }
 
+    static async removeFromModel(req, res) {
+        try {
+            await Checkpoint.removeFromModel(
+                Number(req.params.idCheckpoint),
+                Number(req.params.idModel)
+            );
+            res.redirect(
+                `/api/actions/projects/details/` + req.params.idProject
+            );
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    }
+
     /**
      * @param {NanoOetziHandler} nanoOetzi
      */

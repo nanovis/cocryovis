@@ -40,7 +40,7 @@ export class ProjectController {
 
     static async deleteProject(req, res) {
         try {
-            await Project.del(Number(req.params.id));
+            await Project.del(Number(req.params.idProject));
 
             res.redirect(`/api/actions/projects/`);
         } catch (err) {

@@ -65,6 +65,20 @@ export class ResultController {
         }
     }
 
+    static async removeFromVolume(req, res) {
+        try {
+            await Result.removeFromVolume(
+                Number(req.params.idResult),
+                Number(req.params.idVolume)
+            );
+            res.redirect(
+                `/api/actions/projects/details/` + req.params.idProject
+            );
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    }
+
     /**
      * @param {NanoOetziHandler} nanoOetzi
      */
@@ -72,6 +86,7 @@ export class ResultController {
         try {
             const volumeDataId = Number(req.params.idVolumeData);
             const checkpointId = Number(req.params.idCheckpoint);
+            const volumeId = Number(req.params.idVolume);
 
             const volumeData = await RawVolumeData.getById(volumeDataId);
 
@@ -100,6 +115,7 @@ export class ResultController {
                     Number(req.session.user.id),
                     checkpointId,
                     volumeDataId,
+                    volumeId,
                     outputPath
                 );
             } finally {

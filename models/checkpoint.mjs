@@ -8,6 +8,7 @@ import appConfig from "../tools/config.mjs";
 import fileSystem from "fs";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import fileUpload from "express-fileupload";
+import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
 
 /**
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
@@ -205,17 +206,42 @@ export class Checkpoint extends BaseModel {
         return await super.update(id, changes);
     }
 
-    // /**
-    //  * @return {import("@prisma/client").PrismaPromise<any>}
-    //  */
-    static deleteZombies() {
-        return this.db.deleteMany({
+    /**
+     * @param {Number[]} ids
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<String[]>}
+     */
+    static async deleteZombies(ids, tx) {
+        if (ids.length === 0) {
+            return [];
+        }
+        const fileDeleteStack = [];
+
+        const checkpoints = await tx.checkpoint.findMany({
             where: {
-                NOT: {
-                    models: { some: {} },
+                AND: {
+                    id: {
+                        in: ids,
+                    },
+                    models: {
+                        none: {},
+                    },
+                    results: {
+                        none: {},
+                    },
                 },
             },
         });
+        await tx.checkpoint.deleteMany({
+            where: {
+                id: {
+                    in: checkpoints.map((c) => c.id),
+                },
+            },
+        });
+        checkpoints.forEach((c) => fileDeleteStack.push(...this.getFilePaths(c)));
+
+        return fileDeleteStack;
     }
 
     /**
@@ -223,13 +249,99 @@ export class Checkpoint extends BaseModel {
      * @return {Promise<CheckpointDB>}
      */
     static async del(id) {
-        const checkpoint = await super.del(id);
-        if (checkpoint.folderPath) {
-            await fsPromises.rm(checkpoint.folderPath, {
-                recursive: true,
-                force: true,
-            });
+        return this.#del(id);
+    }
+
+    /**
+     * @param {Number} checkpointId
+     * @param {Number?} modelId
+     * @return {Promise<CheckpointDB>}
+     */
+    static async removeFromModel(checkpointId, modelId) {
+        return this.#del(checkpointId, modelId);
+    }
+
+    /**
+     * @param {Number} checkpointId
+     * @param {Number?} modelId
+     * @return {Promise<CheckpointDB>}
+     */
+    static async #del(checkpointId, modelId = null) {
+        const fileDeleteStack = [];
+
+        const checkpoint = await prismaManager.db.$transaction(
+            async (tx) => {
+                let checkpoint = await tx.checkpoint.findUnique({
+                    where: { id: checkpointId },
+                    include: {
+                        models: modelId !== null,
+                        results: true,
+                        labels: true,
+                    },
+                });
+
+                if (
+                    modelId &&
+                    !checkpoint.models.some((m) => m.id === modelId)
+                ) {
+                    throw new Error("Checkpoint is not part of the model.");
+                }
+
+                if (!modelId && checkpoint.results.length > 0) {
+                    throw new Error(
+                        "Cannot remove checkpoint as long as its referenced in at least one result."
+                    );
+                }
+
+                if (
+                    modelId &&
+                    (checkpoint.models.length > 1 ||
+                        checkpoint.results.length > 0)
+                ) {
+                    await tx.checkpoint.update({
+                        where: {
+                            id: checkpointId,
+                        },
+                        data: {
+                            models: {
+                                disconnect: { id: modelId },
+                            },
+                        },
+                    });
+                } else {
+                    await tx.checkpoint.delete({
+                        where: { id: checkpointId },
+                    });
+
+                    fileDeleteStack.push(
+                        ...(await PseudoLabeledVolumeData.deleteZombies(
+                            checkpoint.labels.map((l) => l.id),
+                            tx
+                        ))
+                    );
+
+                    if (checkpoint.folderPath) {
+                        await fsPromises.rm(checkpoint.folderPath, {
+                            recursive: true,
+                            force: true,
+                        });
+                    }
+                }
+                return checkpoint;
+            },
+            {
+                timeout: 60000,
+            }
+        );
+
+        for (const file of fileDeleteStack) {
+            fsPromises
+                .rm(file, { recursive: true, force: true })
+                .catch((error) => {
+                    console.error(`Failed to delete ${file}: ${error}`);
+                });
         }
+
         return checkpoint;
     }
 
@@ -253,6 +365,14 @@ export class Checkpoint extends BaseModel {
         }
         fileSystem.mkdirSync(folderPath, { recursive: true });
         return folderPath;
+    }
+
+    /**
+     * @param {CheckpointDB} checkpoint
+     * @returns {String[]}
+     */
+    static getFilePaths(checkpoint) {
+        return [checkpoint.folderPath];
     }
 
     /**

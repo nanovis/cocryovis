@@ -63,7 +63,7 @@ actions.get(`/${projectsActionsPath}/create-project`, restrict, (req, res) => {
 actions.post(`/${projectsActionsPath}/create-project`, restrict, ProjectController.createProject);
 
 // Delete Project
-actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, ProjectController.deleteProject);
+actions.get(`/${projectsActionsPath}/:idProject/delete`, restrict, ProjectController.deleteProject);
 
 
 /////// VOLUMES
@@ -72,7 +72,8 @@ actions.get(`/${projectsActionsPath}/delete-project/:id`, restrict, ProjectContr
 actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, VolumeController.createVolume);
 
 // Remove Volume
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restrict, VolumeController.removeVolume);
+// actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restrict, VolumeController.removeVolume);
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/removeFromProject`, restrict, VolumeController.removeFromProject);
 
 // Upload Raw Data
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload`, VolumeController.uploadRawData);
@@ -121,8 +122,10 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/d
     async (req, res) => VolumeDataController.downloadMrcFile(VolumeDataType.mapName(req.params.type), req, res));
 
 // Delete Volume Data
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-full`, restrict, 
-    async (req, res) => VolumeDataController.deleteFullVolumeData(VolumeDataType.mapName(req.params.type), req, res));
+// actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-full`, restrict, 
+//     async (req, res) => VolumeDataController.deleteFullVolumeData(VolumeDataType.mapName(req.params.type), req, res));
+actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/removeFromVolume/:idVolume`, restrict, 
+    async (req, res) => VolumeDataController.removeFromVolume(VolumeDataType.mapName(req.params.type), req, res));
 
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-raw-file`, restrict, 
     async (req, res) => VolumeDataController.removeRawFile(VolumeDataType.mapName(req.params.type), req, res));
@@ -138,7 +141,8 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/d
 actions.post(`/${projectsActionsPath}/:idProject/create-model`, restrict, ModelController.createModel);
 
 // Remove Model
-actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, ModelController.removeModel);
+// actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/delete`, restrict, ModelController.removeModel);
+actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/removeFromProject`, restrict, ModelController.removeFromProject);
 
 /////// CHECKPOINTS
 
@@ -149,7 +153,8 @@ actions.post(`/${projectsActionsPath}/:idProject/model/:idModel/add-checkpoint`,
 actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/download`, CheckpointController.downloadCheckpoint);
 
 // Delete checkpoint
-actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrict, CheckpointController.deleteCheckpoint);
+// actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrict, CheckpointController.deleteCheckpoint);
+actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/removeFromModel`, restrict, CheckpointController.removeFromModel);
 
 // Run training
 actions.post(`/${projectsActionsPath}/:idProject/run-training`, restrict, 
@@ -157,7 +162,8 @@ actions.post(`/${projectsActionsPath}/:idProject/run-training`, restrict,
 
 /////// RESULTS
 // Remove Result
-actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/delete`, restrict, ResultController.deleteResult);
+// actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/delete`, restrict, ResultController.deleteResult);
+actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/removeFromVolume/:idVolume`, restrict, ResultController.removeFromVolume);
 
 // Download Result
 actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download`, restrict, ResultController.downloadResult);
@@ -166,5 +172,5 @@ actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download`, rest
 actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download/:fileIndex`, restrict, ResultController.downloadResultFile);
 
 // Inference test
-actions.get(`/inference-test/:idVolumeData/:idCheckpoint`, restrict,
+actions.get(`/inference-test/:idVolumeData/:idCheckpoint/:idVolume`, restrict,
     async (req, res) => ResultController.runInference(nanoOetzi, req, res));

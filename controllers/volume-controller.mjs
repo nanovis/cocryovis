@@ -43,6 +43,25 @@ export class VolumeController {
         }
     }
 
+    static async removeFromProject(req, res) {
+        console.log(
+            `Removing Volume ${req.params.idVolume} from Project ${req.params.idProject}`
+        );
+        try {
+            await Volume.removeFromProject(
+                Number(req.params.idVolume),
+                Number(req.params.idProject)
+            );
+
+            res.redirect(
+                `/api/actions/projects/details/${req.params.idProject}`
+            );
+        } catch (err) {
+            console.error("Error:", err);
+            res.status(500).send(err);
+        }
+    }
+
     static async uploadRawData(req, res) {
         console.log(`Uploading raw data for volume ${req.params.idVolume}`);
         try {

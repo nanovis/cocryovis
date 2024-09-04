@@ -48,6 +48,7 @@ model Volume {
   rawDataId     Int?
   sparseVolumes SparseLabelVolumeData[]
   pseudoVolumes PseudoLabelVolumeData[]
+  results       Result[]
 }
 
 model RawVolumeData {
@@ -116,4 +117,5 @@ model Result {
   checkpointId      Int
   volumeData        RawVolumeData   @relation(fields: [volumeDataId], references: [id])
   volumeDataId      Int
+  volumes           Volume[]
 }

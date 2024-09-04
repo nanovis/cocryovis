@@ -5,8 +5,7 @@ import path from "path";
 import { mrcToRaw } from "../tools/utils.mjs";
 import { VolumeData } from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import { BaseModel } from "./base-model.mjs";
-import { rm } from "node:fs/promises";
+import fsPromises from "node:fs/promises";
 import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
 
@@ -73,12 +72,50 @@ export class RawVolumeData extends VolumeData {
 
     /**
      * @param {Number} id
+     * @param {Number} volumeId
      * @return {Promise<RawVolumeDataDB>}
      */
-    static async del(id) {
-        const volumeData = await BaseModel.del(id);
-        this.deleteVolumeDataFiles(volumeData);
-        return volumeData;
+    static async removeFromVolume(id, volumeId) {
+        return await prismaManager.db.$transaction(
+            async (tx) => {
+                let volumeData = await tx.rawVolumeData.findUnique({
+                    where: { id: id },
+                    include: {
+                        volumes: true,
+                        results: true,
+                    },
+                });
+
+                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                    throw new Error("Volume Data is not part of the volume.");
+                }
+
+                if (
+                    volumeData.volumes.length > 1 ||
+                    volumeData.results.length > 0
+                ) {
+                    await tx.rawVolumeData.update({
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            volumes: {
+                                disconnect: { id: volumeId },
+                            },
+                        },
+                    });
+                } else {
+                    await tx.rawVolumeData.delete({
+                        where: { id: id },
+                    });
+                    await this.deleteVolumeDataFiles(volumeData);
+                }
+                return volumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
     }
 
     /**
@@ -96,7 +133,7 @@ export class RawVolumeData extends VolumeData {
             data: { mrcFilePath: null },
         });
         try {
-            await rm(mrcFilePath, { recursive: true, force: true });
+            await fsPromises.rm(mrcFilePath, { recursive: true, force: true });
         } catch (error) {
             console.error(
                 `Failed to remove raw file ${mrcFilePath} from disk.\n${error.toString()}`
@@ -105,9 +142,24 @@ export class RawVolumeData extends VolumeData {
         return volumeData;
     }
 
+    /**
+     * @param {RawVolumeDataDB} volumeData
+     * @returns {String[]}
+     */
+    static getFilePaths(volumeData) {
+        const files = super.getFilePaths(volumeData);
+        if (volumeData.mrcFilePath) {
+            files.push(volumeData.mrcFilePath);
+        }
+        return files;
+    }
+
     static async deleteVolumeDataFiles(volumeData) {
         if (volumeData.mrcFilePath) {
-            await rm(volumeData.mrcFilePath, { recursive: true, force: true });
+            await fsPromises.rm(volumeData.mrcFilePath, {
+                recursive: true,
+                force: true,
+            });
         }
         super.deleteVolumeDataFiles(volumeData);
     }
@@ -165,7 +217,7 @@ export class RawVolumeData extends VolumeData {
                 volumeData = await this.update(id, changes);
             } catch (error) {
                 try {
-                    await rm(rawFileName, {
+                    await fsPromises.rm(rawFileName, {
                         force: true,
                     });
                 } catch (error) {
@@ -177,7 +229,7 @@ export class RawVolumeData extends VolumeData {
             }
         } catch (error) {
             try {
-                await rm(mrcFilePath, {
+                await fsPromises.rm(mrcFilePath, {
                     force: true,
                 });
             } catch (error) {
@@ -236,5 +288,45 @@ export class RawVolumeData extends VolumeData {
             name: `${outputFileName}.zip`,
             zipBuffer: zip.toBuffer(),
         };
+    }
+
+    /**
+     * @param {Number[]} ids
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<String[]>}
+     */
+    static async deleteZombies(ids, tx) {
+        if (ids.length === 0) {
+            return [];
+        }
+        const fileDeleteStack = [];
+
+        const rawVolumes = await tx.rawVolumeData.findMany({
+            where: {
+                AND: {
+                    id: {
+                        in: ids,
+                    },
+                    volumes: {
+                        none: {},
+                    },
+                    results: {
+                        none: {},
+                    },
+                },
+            },
+        });
+        await tx.rawVolumeData.deleteMany({
+            where: {
+                id: {
+                    in: rawVolumes.map((v) => v.id),
+                },
+            },
+        });
+        rawVolumes.forEach((v) =>
+            fileDeleteStack.push(...RawVolumeData.getFilePaths(v))
+        );
+
+        return fileDeleteStack;
     }
 }

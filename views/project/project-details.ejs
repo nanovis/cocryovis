@@ -57,6 +57,7 @@ getNameFromPath = function(path) {
 <h2>Project <%= project.name %>:</h2>
 <p><b>Owner ID:</b> <%= project.userId %></p>
 <p><b>Description:</b> <%= project.description %></p>
+<p><a href="/api/actions/projects/<%= project.id %>/delete">[Delete] <%= project.description %></a></p>
 
 <br />
 <h3 style="text-align: left">Volumes:</h3>
@@ -77,7 +78,7 @@ getNameFromPath = function(path) {
 <% for (const volume of project.volumes) { %>
     <p>
         <b>Volume:</b> <%= volume.name %> (<%= volume.id %>)
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/delete">[X]</a>
+        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/removeFromProject">[X]</a>
     </p>
     <p>
         <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/test-tiff">Tiff Test</a>
@@ -125,7 +126,7 @@ getNameFromPath = function(path) {
     <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/add-sparse-labeled-volume"><button>Add Sparse Labeled Volume</button></a>
     <br />
     <% for (const sparseLabeledVolume of volume.sparseVolumes) { %>
-        <b>Sparse volume <%= sparseLabeledVolume.id %>:</b> <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/delete-full">[X]</a>
+        <b>Sparse volume <%= sparseLabeledVolume.id %>:</b> <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/removeFromVolume/<%= volume.id %>">[X]</a>
         <form method="POST" enctype="multipart/form-data">
             <label for="file">Files:</label>
             <input type="file" id="sparseLabeledVolumeFiles_<%= volume.id %>_<%= sparseLabeledVolume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
@@ -153,7 +154,7 @@ getNameFromPath = function(path) {
     <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/add-pseudo-labeled-volume"><button>Add Pseudo Labeled Volume</button></a>
     <br />
     <% for (const pseudoLabeledVolume of volume.pseudoVolumes) { %>
-        <b>Pseudo volume <%= pseudoLabeledVolume.id %>:</b> <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/delete-full">[X]</a>
+        <b>Pseudo volume <%= pseudoLabeledVolume.id %>:</b> <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/removeFromVolume/<%= volume.id %>">[X]</a>
         <form method="POST" enctype="multipart/form-data">
             <label for="file">Files:</label>
             <input type="file" id="pseudoLabeledVolumeFiles_<%= volume.id %>_<%= pseudoLabeledVolume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
@@ -177,16 +178,14 @@ getNameFromPath = function(path) {
         <% } %>
     <% } %>
     <h4>Results:</h4>
-    <% if (volume.rawData != null) { %>
-        <% for (const result of volume.rawData.results) { %>
-            <p>
-                <b>Result id:</b> <%= result.id %>
-                <a href="/api/actions/projects/<%= project.id %>/result/<%= result.id %>/delete">[X]</a><br />
-                <a href="/api/actions/projects/<%= project.id %>/result/<%= result.id %>/download">Download</a><br />
-                <b>Volume Data id:</b> <%= result.volumeDataId %><br />
-                <b>Checkpoint id:</b> <%= result.checkpointId %><br />
-            </p>
-        <% } %>
+    <% for (const result of volume.results) { %>
+        <p>
+            <b>Result id:</b> <%= result.id %>
+            <a href="/api/actions/projects/<%= project.id %>/result/<%= result.id %>/removeFromVolume/<%= volume.id %>">[X]</a><br />
+            <a href="/api/actions/projects/<%= project.id %>/result/<%= result.id %>/download">Download</a><br />
+            <b>Volume Data id:</b> <%= result.volumeDataId %><br />
+            <b>Checkpoint id:</b> <%= result.checkpointId %><br />
+        </p>
     <% } %>
     <hr />
 <% } %>
@@ -209,7 +208,7 @@ getNameFromPath = function(path) {
 <% for (const model of project.models) { %>
     <p>
         <b>Model:</b> <%= model.name %> (<%= model.id %>)
-        <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/delete">[X]</a>
+        <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/removeFromProject">[X]</a>
     </p>
     <form method="POST" enctype="multipart/form-data">
         <label for="file">Select Checkpoint files:</label>
@@ -224,7 +223,7 @@ getNameFromPath = function(path) {
     <h4>Checkpoints:</h4>
     <% for (const checkpoint of model.checkpoints) { %>
         <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/download"><%= getNameFromPath(checkpoint.filePath) %></a> ...
-        <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/delete">[X]</a>
+        <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/removeFromModel">[X]</a>
         <% if (project.volumes.length > 0 && project.volumes[0].rawData != null && project.volumes[0].rawData.rawFilePath != null && project.volumes[0].rawData.settings != null) { %>
             <a href="/api/actions/inference-test/<%= project.volumes[0].rawData.id %>/<%= checkpoint.id %>">   Test Inference</a>
         <% } %>

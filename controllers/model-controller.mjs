@@ -35,4 +35,18 @@ export class ModelController {
             res.status(500).send(err);
         }
     }
+
+    static async removeFromProject(req, res) {
+        try {
+            await Model.removeFromProject(
+                Number(req.params.idModel),
+                Number(req.params.idProject)
+            );
+            res.redirect(
+                `/api/actions/projects/details/` + req.params.idProject
+            );
+        } catch (err) {
+            res.status(500).send(err);
+        }
+    }
 }

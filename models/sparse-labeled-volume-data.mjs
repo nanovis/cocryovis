@@ -22,7 +22,7 @@ export class SparseLabeledVolumeData extends VolumeData {
     }
 
     static get folderPath() {
-        return "pseudo-labeled-volume-data";
+        return "sparse-labeled-volume-data";
     }
 
     /**
@@ -64,5 +64,41 @@ export class SparseLabeledVolumeData extends VolumeData {
      */
     static async del(id) {
         return await super.del(id);
+    }
+
+    /**
+     * @param {Number[]} ids
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<String[]>}
+     */
+    static async deleteZombies(ids, tx) {
+        if (ids.length === 0) {
+            return [];
+        }
+        const sparseVolumes = await tx.sparseLabelVolumeData.findMany({
+            where: {
+                AND: {
+                    id: {
+                        in: ids,
+                    },
+                    volumes: {
+                        none: {},
+                    },
+                },
+            },
+        });
+        await tx.sparseLabelVolumeData.deleteMany({
+            where: {
+                id: {
+                    in: sparseVolumes.map((v) => v.id),
+                },
+            },
+        });
+        const fileDeleteStack = [];
+        sparseVolumes.forEach((v) =>
+            fileDeleteStack.push(...this.getFilePaths(v))
+        );
+
+        return fileDeleteStack;
     }
 }
