@@ -6,7 +6,7 @@ import path, { resolve } from "path";
 import { StoredFolder } from "./stored-folder.mjs";
 import fs from "fs";
 import fsPromises from "node:fs/promises";
-import { rawToTiff } from "./raw-to-tiff.mjs";
+// import { rawToTiff } from "./raw-to-tiff.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -235,7 +235,7 @@ export class IlastikHandler {
             });
         }
 
-        await rawToTiff([rawData], rawTiffFolderPath);
-        await rawToTiff(sparseLabelsStack, sparseLabelsTiffFolderPath);
+        // await rawToTiff([rawData], rawTiffFolderPath);
+        // await rawToTiff(sparseLabelsStack, sparseLabelsTiffFolderPath);
     }
 }

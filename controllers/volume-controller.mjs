@@ -8,7 +8,7 @@ import { PseudoLabeledVolumeData } from "../models/pseudo-labeled-volume-data.mj
 import path from "path";
 import fileSystem from "fs";
 import { rm } from "node:fs/promises";
-import { rawToTiff } from "../tools/raw-to-tiff.mjs";
+// import { rawToTiff } from "../tools/raw-to-tiff.mjs";
 
 export class VolumeController {
     static async createVolume(req, res) {
@@ -200,61 +200,61 @@ export class VolumeController {
     }
 
     static async testTiffConversion(req, res) {
-        try {
-            const volume = await Volume.getByIdDeep(
-                Number(req.params.idVolume),
-                { rawData: true, sparseVolumes: true }
-            );
-            const promises = [];
-            if (volume.rawData != null) {
-                const rawTiffFolderPath = path.join(
-                    volume.rawData.path,
-                    "tiff-test",
-                    "raw"
-                );
-                if (fileSystem.existsSync(rawTiffFolderPath)) {
-                    await rm(rawTiffFolderPath, {
-                        recursive: true,
-                        force: true,
-                    });
-                }
-                promises.push(rawToTiff([volume.rawData], rawTiffFolderPath));
-            }
+        // try {
+        //     const volume = await Volume.getByIdDeep(
+        //         Number(req.params.idVolume),
+        //         { rawData: true, sparseVolumes: true }
+        //     );
+        //     const promises = [];
+        //     if (volume.rawData != null) {
+        //         const rawTiffFolderPath = path.join(
+        //             volume.rawData.path,
+        //             "tiff-test",
+        //             "raw"
+        //         );
+        //         if (fileSystem.existsSync(rawTiffFolderPath)) {
+        //             await rm(rawTiffFolderPath, {
+        //                 recursive: true,
+        //                 force: true,
+        //             });
+        //         }
+        //         promises.push(rawToTiff([volume.rawData], rawTiffFolderPath));
+        //     }
 
-            const validSparseVolumes = [];
-            for (const sparseVolume of volume.sparseVolumes) {
-                if (sparseVolume.rawFilePath && sparseVolume.settings) {
-                    validSparseVolumes.push(sparseVolume);
-                }
-            }
-            if (validSparseVolumes.length > 0) {
-                const sparseLabelsTiffFolderPath = path.join(
-                    validSparseVolumes[0].path,
-                    "tiff-test",
-                    "sparseLabels"
-                );
-                if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
-                    await rm(sparseLabelsTiffFolderPath, {
-                        recursive: true,
-                        force: true,
-                    });
-                }
-                promises.push(
-                    rawToTiff(validSparseVolumes, sparseLabelsTiffFolderPath)
-                );
-            }
-            await Promise.all(promises);
-            console.log(
-                `Volume ${volume.id} (${volume.name}): Tiff conversion test done.`
-            );
+        //     const validSparseVolumes = [];
+        //     for (const sparseVolume of volume.sparseVolumes) {
+        //         if (sparseVolume.rawFilePath && sparseVolume.settings) {
+        //             validSparseVolumes.push(sparseVolume);
+        //         }
+        //     }
+        //     if (validSparseVolumes.length > 0) {
+        //         const sparseLabelsTiffFolderPath = path.join(
+        //             validSparseVolumes[0].path,
+        //             "tiff-test",
+        //             "sparseLabels"
+        //         );
+        //         if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
+        //             await rm(sparseLabelsTiffFolderPath, {
+        //                 recursive: true,
+        //                 force: true,
+        //             });
+        //         }
+        //         promises.push(
+        //             rawToTiff(validSparseVolumes, sparseLabelsTiffFolderPath)
+        //         );
+        //     }
+        //     await Promise.all(promises);
+        //     console.log(
+        //         `Volume ${volume.id} (${volume.name}): Tiff conversion test done.`
+        //     );
 
-            res.redirect(
-                `/api/actions/projects/details/${req.params.idProject}`
-            );
-        } catch (err) {
-            console.error("Error in creating volume:", err);
-            res.status(500).send(err);
-        }
+        //     res.redirect(
+        //         `/api/actions/projects/details/${req.params.idProject}`
+        //     );
+        // } catch (err) {
+        //     console.error("Error in creating volume:", err);
+        //     res.status(500).send(err);
+        // }
     }
 
     static async createPseudoLabels(illastik, req, res) {
