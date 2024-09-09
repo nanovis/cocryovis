@@ -1,7 +1,9 @@
+// @ts-check
+
 import AdmZip from "adm-zip";
 import path from "path";
 import { rm } from "node:fs/promises";
-import { fileNameFilter, isFileExtensionAccepted } from "./utils.mjs";
+import Utils from "./utils.mjs";
 
 export class StoredFolder {
     constructor(folderName, folderPath) {
@@ -14,7 +16,7 @@ export class StoredFolder {
     }
 
     async addFile(file, moveFunction) {
-        const filteredFileName = fileNameFilter(file.name);
+        const filteredFileName = Utils.fileNameFilter(file.name);
         const fullPath = path.join(this.folderPath, filteredFileName);
         await moveFunction(file, filteredFileName, fullPath);
         return this;
