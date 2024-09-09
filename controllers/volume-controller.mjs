@@ -1,17 +1,14 @@
 // @ts-check
 
-import { Volume } from "../models/volume.mjs";
-import { RawVolumeData } from "../models/raw-volume-data.mjs";
+import Volume from "../models/volume.mjs";
+import RawVolumeData from "../models/raw-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
-import { SparseLabeledVolumeData } from "../models/sparse-labeled-volume-data.mjs";
-import { PseudoLabeledVolumeData } from "../models/pseudo-labeled-volume-data.mjs";
+import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
+import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import path from "path";
 import fileSystem from "fs";
-import fsPromises from "node:fs/promises";
-import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
-// import { rawToTiff } from "../tools/raw-to-tiff.mjs";
 
-export class VolumeController {
+export default class VolumeController {
     static async createVolume(req, res) {
         console.log("Creating a new volume");
         try {

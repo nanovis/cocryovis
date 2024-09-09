@@ -1,14 +1,14 @@
 // @ts-check
 
-import { Checkpoint } from "../models/checkpoint.mjs";
-import { RawVolumeData } from "../models/raw-volume-data.mjs";
-import { Result } from "../models/result.mjs";
+import Checkpoint from "../models/checkpoint.mjs";
+import RawVolumeData from "../models/raw-volume-data.mjs";
+import Result from "../models/result.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
-import { NanoOetziHandler } from "../tools/nano-oetzi-handler.mjs";
+import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
 import { writeFile, rm } from "node:fs/promises";
 import path from "path";
 
-export class ResultController {
+export default class ResultController {
     static async downloadResult(req, res) {
         try {
             const result = await Result.getById(Number(req.params.idResult));

@@ -1,6 +1,6 @@
 // @ts-check
 
-import { BaseModel } from "./base-model.mjs";
+import DatabaseModel from "./base-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "node:fs/promises";
 import appConfig from "../tools/config.mjs";
@@ -8,18 +8,18 @@ import path from "path";
 import fileSystem from "fs";
 import { readdir, rename } from "node:fs/promises";
 import { isFileExtensionAccepted } from "../tools/utils.mjs";
-import { Checkpoint } from "./checkpoint.mjs";
-import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
-import { RawVolumeData } from "./raw-volume-data.mjs";
+import Checkpoint from "./checkpoint.mjs";
+import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
+import RawVolumeData from "./raw-volume-data.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
  */
 
 /**
- * @extends BaseModel
+ * @extends DatabaseModel
  */
-export class Result extends BaseModel {
+export default class Result extends DatabaseModel {
     static acceptedFileExtensions = [".log", ".raw", ".json"];
 
     /**

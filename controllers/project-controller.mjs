@@ -1,8 +1,8 @@
 // @ts-check
 
-import { Project } from "../models/project.mjs";
+import Project from "../models/project.mjs";
 
-export class ProjectController {
+export default class ProjectController {
     static async getAllUserProjects(req, res) {
         try {
             const projects = await Project.getUserProjects(req.session.user.id);

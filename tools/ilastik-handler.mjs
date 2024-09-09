@@ -1,10 +1,9 @@
 // @ts-check
 
 import { exec, spawnSync } from "child_process";
-import * as fileSystem from "fs";
+import fileSystem from "fs";
 import path, { resolve } from "path";
 import { StoredFolder } from "./stored-folder.mjs";
-import fs from "fs";
 import fsPromises from "node:fs/promises";
 // import { rawToTiff } from "./raw-to-tiff.mjs";
 
@@ -13,7 +12,7 @@ import fsPromises from "node:fs/promises";
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
 
-export class IlastikHandler {
+export default class IlastikHandler {
     static rawTiffFolder = "raw";
     static sparseLabelsTiffFolder = "sparse-labels";
 
@@ -55,7 +54,7 @@ export class IlastikHandler {
         this.inferenceRunning = true;
 
         const logPath = path.join(labelsOutputPath, "!inference.log");
-        fs.writeFileSync(logPath, "Ilastik inference started\n\n");
+        fileSystem.writeFileSync(logPath, "Ilastik inference started\n\n");
 
         const ilastikLabels = new StoredFolder(
             path.basename(labelsOutputPath),
@@ -92,11 +91,11 @@ export class IlastikHandler {
             this.finished = true;
             if (error) {
                 console.log(`exec error: ${error}`);
-                fs.appendFileSync(logPath, `\n\nexec error: ${error}`);
+                fileSystem.appendFileSync(logPath, `\n\nexec error: ${error}`);
                 throw error;
             }
-            fs.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
-            fs.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
+            fileSystem.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
+            fileSystem.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
             console.log("Ilastik inference finished");
 
             Promise.resolve(ilastikLabels);
@@ -118,7 +117,7 @@ export class IlastikHandler {
     ) {
         console.log("Creating Ilastik project");
         const logPath = path.join(labelsOutputPath, "!projectCreation.log");
-        fs.writeFileSync(logPath, "Creating Ilastik project\n\n");
+        fileSystem.writeFileSync(logPath, "Creating Ilastik project\n\n");
 
         this.finished = false;
         const modelOutputFullPath = path.join(
@@ -140,11 +139,11 @@ export class IlastikHandler {
             if (error) {
                 this.finished = false;
                 console.log(`exec error: ${error}`);
-                fs.appendFileSync(logPath, `\n\nexec error: ${error}`);
+                fileSystem.appendFileSync(logPath, `\n\nexec error: ${error}`);
                 throw error;
             }
-            fs.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
-            fs.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
+            fileSystem.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
+            fileSystem.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
             console.log("Ilastik project created");
 
             // Run Ilastik inference

@@ -1,6 +1,6 @@
 // @ts-check
 
-import { BaseModel } from "./base-model.mjs";
+import DatabaseModel from "./base-model.mjs";
 import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
 
@@ -8,7 +8,7 @@ import prismaManager from "../tools/prisma-manager.mjs";
  * @typedef { import("@prisma/client").User } UserDB
  */
 
-export class User extends BaseModel {
+export default class User extends DatabaseModel {
     static hasher = bkfd2Password();
     /**
      * @return {String}

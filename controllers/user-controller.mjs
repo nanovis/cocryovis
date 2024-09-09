@@ -1,8 +1,8 @@
 // @ts-check
 
-import { User } from "../models/user.mjs";
+import User from "../models/user.mjs";
 
-export class UserController {
+export default class UserController {
     static async login(req, res) {
         try {
             let user = await User.authenticate(

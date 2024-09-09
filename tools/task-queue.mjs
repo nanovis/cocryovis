@@ -1,4 +1,4 @@
-export class TaskQueue {
+export default class TaskQueue {
     #queue = []
     #pendingProcess = false;
 

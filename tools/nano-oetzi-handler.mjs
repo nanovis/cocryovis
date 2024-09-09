@@ -5,7 +5,7 @@ import fileSystem from "fs";
 import { promisify } from "node:util";
 import { exec } from "child_process";
 const execPromise = promisify(exec);
-import { TaskQueue } from "./task-queue.mjs";
+import TaskQueue from "./task-queue.mjs";
 import { getInverseDateString } from "./utils.mjs";
 import fsPromises from "node:fs/promises";
 
@@ -19,7 +19,7 @@ import fsPromises from "node:fs/promises";
  * @typedef { VolumeDB & DeepVolumeProperties } DeepVolume
  */
 
-export class NanoOetziHandler {
+export default class NanoOetziHandler {
     constructor(config) {
         this.config = config;
         this.taskQueue = new TaskQueue();

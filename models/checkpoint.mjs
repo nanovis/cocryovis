@@ -1,6 +1,6 @@
 // @ts-check
 
-import { BaseModel } from "./base-model.mjs";
+import DatabaseModel from "./base-model.mjs";
 import path from "path";
 import fsPromises from "node:fs/promises";
 import prismaManager from "../tools/prisma-manager.mjs";
@@ -8,13 +8,13 @@ import appConfig from "../tools/config.mjs";
 import fileSystem from "fs";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import fileUpload from "express-fileupload";
-import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
+import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 
 /**
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
  */
 
-export class Checkpoint extends BaseModel {
+export default class Checkpoint extends DatabaseModel {
     static acceptedFileExtensions = [".ckpt"];
 
     /**

@@ -1,13 +1,13 @@
 // @ts-check
 
-import { Checkpoint } from "../models/checkpoint.mjs";
-import { Volume } from "../models/volume.mjs";
+import Checkpoint from "../models/checkpoint.mjs";
+import Volume from "../models/volume.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
-import { NanoOetziHandler } from "../tools/nano-oetzi-handler.mjs";
+import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
 import { parseStringArray } from "../tools/utils.mjs";
 
-export class CheckpointController {
+export default class CheckpointController {
     static async uploadCheckpoints(req, res) {
         try {
             if (!req.files || !req.files.files) {

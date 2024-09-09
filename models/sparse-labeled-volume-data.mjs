@@ -1,6 +1,6 @@
 // @ts-check
 
-import { VolumeData } from "./volume-data.mjs";
+import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "fs/promises";
 import path from "path";
@@ -13,7 +13,7 @@ import fileUpload from "express-fileupload";
 /**
  * @extends {VolumeData}
  */
-export class SparseLabeledVolumeData extends VolumeData {
+export default class SparseLabeledVolumeData extends VolumeData {
     /**
      * @return {String}
      */

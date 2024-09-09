@@ -1,8 +1,8 @@
 // @ts-check
 
-import { Model } from "../models/model.mjs";
+import Model from "../models/model.mjs";
 
-export class ModelController {
+export default class ModelController {
     static async createModel(req, res) {
         console.log("Creating a new model");
         try {

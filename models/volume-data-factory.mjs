@@ -1,8 +1,8 @@
 // @ts-check
 
-import { RawVolumeData } from "./raw-volume-data.mjs";
-import { SparseLabeledVolumeData } from "./sparse-labeled-volume-data.mjs";
-import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
+import RawVolumeData from "./raw-volume-data.mjs";
+import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
+import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 
 export class VolumeDataType {
     static RawVolumeData = new VolumeDataType("RawVolumeData");

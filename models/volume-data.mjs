@@ -3,7 +3,7 @@
 import path from "path";
 import fsPromises from "node:fs/promises";
 import fileSystem from "fs";
-import { BaseModel } from "./base-model.mjs";
+import DatabaseModel from "./base-model.mjs";
 import appConfig from "../tools/config.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import {
@@ -23,9 +23,9 @@ import AdmZip from "adm-zip";
  */
 
 /**
- * @extends {BaseModel}
+ * @extends {DatabaseModel}
  */
-export class VolumeData extends BaseModel {
+export default class VolumeData extends DatabaseModel {
     static rawFileExtensions = [".raw"];
     static settingFileExtensions = [".json"];
     static acceptedFileExtensions = this.rawFileExtensions.concat(

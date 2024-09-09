@@ -1,16 +1,16 @@
 // @ts-check
 
-import { BaseModel } from "./base-model.mjs";
+import DatabaseModel from "./base-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import { Checkpoint } from "./checkpoint.mjs";
+import Checkpoint from "./checkpoint.mjs";
 import fsPromises from "fs/promises";
-import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
+import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
  */
 
-export class Model extends BaseModel {
+export default class Model extends DatabaseModel {
     /**
      * @return {String}
      */

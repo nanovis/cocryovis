@@ -2,17 +2,17 @@ import express from 'express';
 import { spawn } from 'child_process';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
-import { IlastikHandler } from '../../tools/ilastik-handler.mjs';
-import { NanoOetziHandler } from '../../tools/nano-oetzi-handler.mjs';
+import IlastikHandler from '../../tools/ilastik-handler.mjs';
+import NanoOetziHandler from '../../tools/nano-oetzi-handler.mjs';
 import { restrict } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
-import { ProjectController } from '../../controllers/project-controller.mjs';
-import { VolumeController } from '../../controllers/volume-controller.mjs';
-import { VolumeDataController } from '../../controllers/volume-data-controller.mjs';
+import ProjectController from '../../controllers/project-controller.mjs';
+import VolumeController from '../../controllers/volume-controller.mjs';
+import VolumeDataController from '../../controllers/volume-data-controller.mjs';
 import { VolumeDataType } from '../../models/volume-data-factory.mjs';
-import { ModelController } from '../../controllers/model-controller.mjs';
-import { CheckpointController } from '../../controllers/checkpoint-controller.mjs';
-import { ResultController } from '../../controllers/result-controller.mjs';
+import ModelController from '../../controllers/model-controller.mjs';
+import CheckpointController from '../../controllers/checkpoint-controller.mjs';
+import ResultController from '../../controllers/result-controller.mjs';
 
 // Config
 const config = appConfig;

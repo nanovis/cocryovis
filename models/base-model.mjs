@@ -1,6 +1,6 @@
 // @ts-check
 
-export class BaseModel {
+export default class DatabaseModel {
     /**
      * @return {String}
      */

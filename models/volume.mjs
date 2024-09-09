@@ -1,12 +1,12 @@
 // @ts-check
 
-import { BaseModel } from "./base-model.mjs";
+import DatabaseModel from "./base-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import { RawVolumeData } from "./raw-volume-data.mjs";
-import { SparseLabeledVolumeData } from "./sparse-labeled-volume-data.mjs";
-import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
+import RawVolumeData from "./raw-volume-data.mjs";
+import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
+import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
-import { Result } from "./result.mjs";
+import Result from "./result.mjs";
 import appConfig from "../tools/config.mjs";
 import { createTemporaryFolder } from "../tools/utils.mjs";
 import path from "path";
@@ -17,7 +17,7 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
 
-export class Volume extends BaseModel {
+export default class Volume extends DatabaseModel {
     /**
      * @return {String}
      */

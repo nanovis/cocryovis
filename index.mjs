@@ -13,7 +13,7 @@ import bodyParser from 'body-parser';
 import { argv } from 'process';
 import cors from 'cors';
 import { restrict } from './middleware/restrict.mjs';
-import {UserController} from "./controllers/user-controller.mjs";
+import UserController from "./controllers/user-controller.mjs";
 
 const port = argv[2] || 8080;
 const app = express(express.json());

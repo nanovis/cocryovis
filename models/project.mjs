@@ -1,21 +1,21 @@
 // @ts-check
 
-import { BaseModel } from "./base-model.mjs";
-import { Volume } from "./volume.mjs";
+import DatabaseModel from "./base-model.mjs";
+import Volume from "./volume.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import { Model } from "./model.mjs";
-import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
-import { SparseLabeledVolumeData } from "./sparse-labeled-volume-data.mjs";
-import { RawVolumeData } from "./raw-volume-data.mjs";
-import { Checkpoint } from "./checkpoint.mjs";
-import { Result } from "./result.mjs";
+import Model from "./model.mjs";
+import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
+import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
+import RawVolumeData from "./raw-volume-data.mjs";
+import Checkpoint from "./checkpoint.mjs";
+import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
  */
 
-export class Project extends BaseModel {
+export default class Project extends DatabaseModel {
     /**
      * @return {String}
      */

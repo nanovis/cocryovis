@@ -3,7 +3,7 @@
 import AdmZip from "adm-zip";
 import path from "path";
 import { mrcToRaw } from "../tools/utils.mjs";
-import { VolumeData } from "./volume-data.mjs";
+import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "node:fs/promises";
 import fileUpload from "express-fileupload";
@@ -16,7 +16,7 @@ import { unpackFiles } from "../tools/file-handler.mjs";
 /**
  * @extends {VolumeData}
  */
-export class RawVolumeData extends VolumeData {
+export default class RawVolumeData extends VolumeData {
     /**
      * @return {String}
      */

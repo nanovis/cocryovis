@@ -1,6 +1,6 @@
 // @ts-check
 
-import { VolumeData } from "./volume-data.mjs";
+import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fileUpload from "express-fileupload";
 
@@ -11,7 +11,7 @@ import fileUpload from "express-fileupload";
 /**
  * @extends {VolumeData}
  */
-export class PseudoLabeledVolumeData extends VolumeData {
+export default class PseudoLabeledVolumeData extends VolumeData {
     /**
      * @return {String}
      */

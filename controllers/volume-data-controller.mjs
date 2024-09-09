@@ -1,18 +1,14 @@
 // @ts-check
 
-import { RawVolumeData } from "../models/raw-volume-data.mjs";
-import {
-    createTemporaryFolder,
-    publicDataPath,
-    publicPath,
-} from "../tools/utils.mjs";
+import RawVolumeData from "../models/raw-volume-data.mjs";
+import { publicDataPath, publicPath } from "../tools/utils.mjs";
 import {
     VolumeDataFactory,
     VolumeDataType,
 } from "../models/volume-data-factory.mjs";
 import path from "path";
 
-export class VolumeDataController {
+export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
      */
