@@ -1,9 +1,8 @@
 export default class TaskQueue {
-    #queue = []
+    #queue = [];
     #pendingProcess = false;
 
-    constructor() {
-    }
+    constructor() {}
 
     get size() {
         return this.#queue.length;
@@ -13,18 +12,17 @@ export default class TaskQueue {
         return this.#pendingProcess;
     }
 
-
     enqueue(action) {
         return new Promise((resolve, reject) => {
-            this.#queue.push({action, resolve, reject});
+            this.#queue.push({ action, resolve, reject });
             this.dequeue();
-        })
+        });
     }
 
     async dequeue() {
         if (this._pendingProcess) return false;
 
-        const task = this.#queue.shift()
+        const task = this.#queue.shift();
 
         if (!task) return false;
 

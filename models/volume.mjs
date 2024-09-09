@@ -265,7 +265,7 @@ export default class Volume extends DatabaseModel {
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async addAnnotations(id, ownerId, annotations) {
-        const tempFolderPath = createTemporaryFolder(
+        const tempFolderPath = Utils.createTemporaryFolder(
             appConfig.annotationsCachePath
         );
         try {

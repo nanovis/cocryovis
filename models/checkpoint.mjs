@@ -235,7 +235,9 @@ export default class Checkpoint extends DatabaseModel {
                 },
             },
         });
-        checkpoints.forEach((c) => fileDeleteStack.push(...this.getFilePaths(c)));
+        checkpoints.forEach((c) =>
+            fileDeleteStack.push(...this.getFilePaths(c))
+        );
 
         return fileDeleteStack;
     }

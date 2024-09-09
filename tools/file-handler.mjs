@@ -206,11 +206,18 @@ export function unpackFiles(files, acceptedExtensions = []) {
             let zip = new AdmZip(files[0].data);
             const zipEntries = zip.getEntries();
             for (const entry of zipEntries) {
-                if (Utils.isFileExtensionAccepted(entry.name, acceptedExtensions)) {
+                if (
+                    Utils.isFileExtensionAccepted(
+                        entry.name,
+                        acceptedExtensions
+                    )
+                ) {
                     result.push(new PendingZipFile(zip, entry));
                 }
             }
-        } else if (Utils.isFileExtensionAccepted(file.name, acceptedExtensions)) {
+        } else if (
+            Utils.isFileExtensionAccepted(file.name, acceptedExtensions)
+        ) {
             result.push(new PendingFile(file));
         }
     }
