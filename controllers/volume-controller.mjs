@@ -7,7 +7,8 @@ import { SparseLabeledVolumeData } from "../models/sparse-labeled-volume-data.mj
 import { PseudoLabeledVolumeData } from "../models/pseudo-labeled-volume-data.mjs";
 import path from "path";
 import fileSystem from "fs";
-import { rm } from "node:fs/promises";
+import fsPromises from "node:fs/promises";
+import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 // import { rawToTiff } from "../tools/raw-to-tiff.mjs";
 
 export class VolumeController {
@@ -220,7 +221,6 @@ export class VolumeController {
         //         }
         //         promises.push(rawToTiff([volume.rawData], rawTiffFolderPath));
         //     }
-
         //     const validSparseVolumes = [];
         //     for (const sparseVolume of volume.sparseVolumes) {
         //         if (sparseVolume.rawFilePath && sparseVolume.settings) {
@@ -247,7 +247,6 @@ export class VolumeController {
         //     console.log(
         //         `Volume ${volume.id} (${volume.name}): Tiff conversion test done.`
         //     );
-
         //     res.redirect(
         //         `/api/actions/projects/details/${req.params.idProject}`
         //     );
@@ -284,6 +283,26 @@ export class VolumeController {
             );
         } catch (err) {
             console.error("Error in pseudo labels:", err);
+            res.status(500).send(err);
+        }
+    }
+
+    static async addAnnotations(req, res) {
+        try {
+            console.log(`Starting annotation conversion...`);
+            if (!Array.isArray(req.body)) {
+                throw new Error("No annotations found.");
+            }
+
+            const spareLabel = await Volume.addAnnotations(
+                Number(req.params.idVolume),
+                Number(req.session.user.id),
+                req.body[0]
+            );
+
+            console.log(`Annotated Volume saved to ${spareLabel.rawFilePath}`);
+        } catch (err) {
+            console.error(err);
             res.status(500).send(err);
         }
     }

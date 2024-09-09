@@ -1,7 +1,11 @@
 // @ts-check
 
 import { RawVolumeData } from "../models/raw-volume-data.mjs";
-import { publicDataPath, publicPath } from "../tools/utils.mjs";
+import {
+    createTemporaryFolder,
+    publicDataPath,
+    publicPath,
+} from "../tools/utils.mjs";
 import {
     VolumeDataFactory,
     VolumeDataType,
@@ -50,11 +54,7 @@ export class VolumeDataController {
                 filename: "tf-default.json",
             });
 
-            const configData = { files: [] };
-
-            for (let i = 0; i < 5; i++) {
-                configData["files"].push(settingsReference.filename);
-            }
+            const configData = { files: [settingsReference.filename] };
 
             const volumesJSON = JSON.stringify(visualizationFiles).replaceAll(
                 "\\",
@@ -67,6 +67,8 @@ export class VolumeDataController {
 
             res.render("visualize-volume", {
                 volumeName: "test",
+                projectId: Number(req.params.idProject),
+                volumeId: Number(req.params.idVolume),
                 settingsReference: settingsReferenceJSON,
                 volumes: volumesJSON,
                 config: configJSON,

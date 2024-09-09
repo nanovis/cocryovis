@@ -7,9 +7,14 @@ import { SparseLabeledVolumeData } from "./sparse-labeled-volume-data.mjs";
 import { PseudoLabeledVolumeData } from "./pseudo-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
 import { Result } from "./result.mjs";
+import appConfig from "../tools/config.mjs";
+import { createTemporaryFolder } from "../tools/utils.mjs";
+import path from "path";
+import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 
 /**
  * @typedef { import("@prisma/client").Volume } VolumeDB
+ * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
 
 export class Volume extends BaseModel {
@@ -231,25 +236,76 @@ export class Volume extends BaseModel {
     }
 
     /**
-     * @param {Number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<void>}
+     * @param {Number} id
+     * @param {Number} ownerId
+     * @typedef {Object} xyz
+     * @property {Number} x
+     * @property {Number} y
+     * @property {Number} z
+     * @param {{volumeName: String, dimensions: xyz, kernelSize: xyz, positions: xyz[]}} annotations
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return;
-        }
-        await tx.volume.deleteMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    projects: {
-                        none: {},
-                    },
+    static async addAnnotations(id, ownerId, annotations) {
+        const tempFolderPath = createTemporaryFolder(
+            appConfig.annotationsCachePath
+        );
+        try {
+            const outputFile =
+                path.parse(annotations.volumeName).name + "_annotated.raw";
+            const outputPath = path.join(tempFolderPath, outputFile);
+            const settings = await annotationsToVolume(
+                annotations.dimensions,
+                annotations.kernelSize,
+                annotations.positions,
+                outputPath
+            );
+
+            const sparseVolume = await prismaManager.db.$transaction(
+                async (tx) => {
+                    const volume = await tx.volume.findUnique({
+                        where: { id: id },
+                        include: {
+                            sparseVolumes: true,
+                        },
+                    });
+
+                    if (
+                        volume.sparseVolumes.length >=
+                        appConfig.projects.maxVolumeChannels
+                    ) {
+                        throw new Error(
+                            "Volume already has maximum number of Sparse Labels"
+                        );
+                    }
+
+                    const sparseVolume =
+                        await SparseLabeledVolumeData.fromRawFile(
+                            outputPath,
+                            ownerId,
+                            volume.id,
+                            JSON.stringify(settings),
+                            tx
+                        );
+
+                    return sparseVolume;
                 },
-            },
-        });
+                {
+                    timeout: 60000,
+                }
+            );
+
+            return sparseVolume;
+        } finally {
+            try {
+                await fsPromises.rm(tempFolderPath, {
+                    force: true,
+                    recursive: true,
+                });
+            } catch {
+                console.error(
+                    `Failed to remove temporary folder: ${tempFolderPath}`
+                );
+            }
+        }
     }
 }

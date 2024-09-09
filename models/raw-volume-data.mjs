@@ -37,9 +37,7 @@ export class RawVolumeData extends VolumeData {
      * @return {Promise<RawVolumeDataDB>}
      */
     static async getById(id) {
-        return /** @type {RawVolumeDataDB} */ (
-            /** @type {unknown} */ (await super.getById(id))
-        );
+        return await super.getById(id);
     }
 
     /**
@@ -48,26 +46,16 @@ export class RawVolumeData extends VolumeData {
      * @return {Promise<RawVolumeDataDB>}
      */
     static async create(ownerId, volumeId) {
-        return /** @type {RawVolumeDataDB} */ (
-            /** @type {unknown} */ (await super.create(ownerId, volumeId))
-        );
+        return await super.create(ownerId, volumeId);
     }
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {Number} [ownerId]
-     * @property {String?} [path]
-     * @property {String?} [rawFilePath]
-     * @property {String?} [settingsFilePath]
-     * @property {String?} [mrcFilePath]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.RawVolumeDataUpdateInput} changes
      * @return {Promise<RawVolumeDataDB>}
      */
     static async update(id, changes) {
-        return /** @type {RawVolumeDataDB} */ (
-            /** @type {unknown} */ (await super.update(id, changes))
-        );
+        return await super.update(id, changes);
     }
 
     /**
@@ -170,9 +158,7 @@ export class RawVolumeData extends VolumeData {
      * @return {Promise<RawVolumeDataDB>}
      */
     static async uploadFiles(id, files) {
-        return /** @type {RawVolumeDataDB} */ (
-            /** @type {unknown} */ (await super.uploadFiles(id, files, true))
-        );
+        return await super.uploadFiles(id, files, true);
     }
 
     /**

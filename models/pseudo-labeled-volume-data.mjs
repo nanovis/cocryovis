@@ -2,6 +2,8 @@
 
 import { VolumeData } from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
+import fileUpload from "express-fileupload";
+
 /**
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  */
@@ -44,14 +46,7 @@ export class PseudoLabeledVolumeData extends VolumeData {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {Number} [userId]
-     * @property {String} [path]
-     * @property {String?} [rawFilePath]
-     * @property {String?} [rawFileName]
-     * @property {String?} [settingsFilePath]
-     * @property {String?} [settingsFileName]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.PseudoLabelVolumeDataUpdateInput} changes
      * @return {Promise<PseudoVolumeDataDB>}
      */
     static async update(id, changes) {
@@ -112,6 +107,15 @@ export class PseudoLabeledVolumeData extends VolumeData {
                 timeout: 60000,
             }
         );
+    }
+
+    /**
+     * @param {Number} id
+     * @param {fileUpload.UploadedFile[]} files
+     * @return {Promise<PseudoVolumeDataDB>}
+     */
+    static async uploadFiles(id, files) {
+        return await super.uploadFiles(id, files, true);
     }
 
     /**

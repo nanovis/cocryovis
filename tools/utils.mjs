@@ -182,3 +182,16 @@ export function parseStringArray(array) {
 
     return array.map((s) => Number(s));
 }
+
+/**
+ * @param {String} basePath
+ * @returns {String}
+ */
+export function createTemporaryFolder(basePath) {
+    let tempFolderPath = path.join(basePath, getInverseDateString());
+    while (fileSystem.existsSync(tempFolderPath)) {
+        tempFolderPath += "_";
+    }
+    fileSystem.mkdirSync(tempFolderPath, { recursive: true });
+    return tempFolderPath;
+}

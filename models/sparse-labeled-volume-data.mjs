@@ -2,6 +2,10 @@
 
 import { VolumeData } from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
+import fsPromises from "fs/promises";
+import path from "path";
+import fileUpload from "express-fileupload";
+
 /**
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
@@ -44,14 +48,7 @@ export class SparseLabeledVolumeData extends VolumeData {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {Number} [userId]
-     * @property {String} [path]
-     * @property {String?} [rawFilePath]
-     * @property {String?} [rawFileName]
-     * @property {String?} [settingsFilePath]
-     * @property {String?} [settingsFileName]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.SparseLabelVolumeDataUpdateInput} changes
      * @return {Promise<SparseLabelVolumeDataDB>}
      */
     static async update(id, changes) {
@@ -100,5 +97,75 @@ export class SparseLabeledVolumeData extends VolumeData {
         );
 
         return fileDeleteStack;
+    }
+
+    /**
+     * @param {Number} id
+     * @param {Number} volumeId
+     * @return {Promise<SparseLabelVolumeDataDB>}
+     */
+    static async removeFromVolume(id, volumeId) {
+        return super.removeFromVolume(id, volumeId);
+    }
+
+    /**
+     * @param {Number} id
+     * @param {fileUpload.UploadedFile[]} files
+     * @return {Promise<SparseLabelVolumeDataDB>}
+     */
+    static async uploadFiles(id, files, preventRawFileOverride = false) {
+        return super.uploadFiles(id, files, preventRawFileOverride);
+    }
+
+    /**
+     * @param {String} filePath
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {String} settings
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<SparseLabelVolumeDataDB>}
+     */
+    static async fromRawFile(
+        filePath,
+        ownerId,
+        volumeId,
+        settings,
+        tx = prismaManager.db
+    ) {
+        let sparseVolume = await tx.sparseLabelVolumeData.create({
+            data: {
+                ownerId: ownerId,
+                volumes: {
+                    connect: { id: volumeId },
+                },
+            },
+        });
+
+        const folderPath = await this.createVolumeDataFolder(sparseVolume.id);
+        const fileName = path.basename(filePath);
+        const newFilePath = path.join(folderPath, fileName);
+        await fsPromises.rename(filePath, newFilePath);
+
+        try {
+            sparseVolume = await tx.sparseLabelVolumeData.update({
+                where: { id: sparseVolume.id },
+                data: {
+                    path: folderPath,
+                    rawFilePath: newFilePath,
+                    settings: settings,
+                },
+            });
+        } catch (error) {
+            try {
+                await this.deleteVolumeDataFiles(sparseVolume);
+            } catch (err) {
+                console.error(
+                    `Failed to delete volume data folder on failed operation:\n${err}`
+                );
+            }
+            throw error;
+        }
+
+        return sparseVolume;
     }
 }

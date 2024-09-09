@@ -99,7 +99,7 @@ getNameFromPath = function(path) {
             <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-settings-file">Download Settings</a> <br />
         <% } %>
         <% if (volume.rawData.rawFilePath != null && volume.rawData.settings != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/visualize">Visualize Raw Volume</a><br />
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
@@ -146,7 +146,7 @@ getNameFromPath = function(path) {
             <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/download-settings-file">Download Settings</a> <br />
         <% } %>
         <% if (sparseLabeledVolume.rawFilePath != null && sparseLabeledVolume.settings != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
     <h4>Pseudo Labels:</h4>
@@ -174,7 +174,7 @@ getNameFromPath = function(path) {
             <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/download-settings-file">Download Settings</a> <br />
         <% } %>
         <% if (pseudoLabeledVolume.rawFilePath != null && pseudoLabeledVolume.settings != null) { %>
-            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
+            <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
     <% } %>
     <h4>Results:</h4>

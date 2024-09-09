@@ -15,6 +15,10 @@ export class BaseModel {
         throw new Error("Method not implemented");
     }
 
+    /**
+     * @param {Number} id
+     * @return {Promise<Object>}
+     */
     static async getById(id) {
         let entry = await this.db.findUnique({
             where: { id: id },
@@ -27,7 +31,7 @@ export class BaseModel {
 
     /**
      * @param {...*} var_args
-     * @return {Promise<any>}
+     * @return {Promise<Object>}
      */
     static async create(...var_args) {
         throw new Error("Method not implemented");

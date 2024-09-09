@@ -41,7 +41,7 @@ export class VolumeData extends BaseModel {
 
     /**
      * @param {Number} id
-     * @return {Promise<VolumeDataDB>}
+     * @return {Promise<Object>}
      */
     static async getById(id) {
         return await super.getById(id);
@@ -50,11 +50,12 @@ export class VolumeData extends BaseModel {
     /**
      * @param {Number} ownerId
      * @param {Number} volumeId
-     * @return {Promise<VolumeDataDB>}
+     * @return {Promise<Object>}
      */
     static async create(ownerId, volumeId) {
         return await prismaManager.db.$transaction(
             async (tx) => {
+                /** @type {VolumeDataDB} */
                 const volumeData = await tx[this.modelName].create({
                     data: {
                         ownerId: ownerId,
@@ -87,13 +88,8 @@ export class VolumeData extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {Number} [ownerId]
-     * @property {String?} [path]
-     * @property {String?} [rawFilePath]
-     * @property {String?} [settingsFilePath]
-     * @param {Changes} changes
-     * @return {Promise<VolumeDataDB>}
+     * @param {any} changes
+     * @return {Promise<Object>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
@@ -101,7 +97,7 @@ export class VolumeData extends BaseModel {
 
     /**
      * @param {Number} id
-     * @return {Promise<VolumeDataDB>}
+     * @return {Promise<Object>}
      */
     static async del(id) {
         const volumeData = await this.db.delete({
@@ -114,7 +110,7 @@ export class VolumeData extends BaseModel {
     /**
      * @param {Number} id
      * @param {Number} volumeId
-     * @return {Promise<VolumeDataDB>}
+     * @return {Promise<Object>}
      */
     static async removeFromVolume(id, volumeId) {
         return await prismaManager.db.$transaction(
@@ -238,7 +234,7 @@ export class VolumeData extends BaseModel {
     /**
      * @param {Number} id
      * @param {fileUpload.UploadedFile[]} files
-     * @return {Promise<VolumeDataDB>}
+     * @return {Promise<Object>}
      */
     static async uploadFiles(id, files, preventRawFileOverride = false) {
         const unpackedFiles = unpackFiles(files, this.acceptedFileExtensions);
@@ -415,9 +411,11 @@ export class VolumeData extends BaseModel {
             hasFiles = true;
         }
         if (downloadSettingsFile && volumeData.settings != null) {
+            const settings = JSON.parse(volumeData.settings);
+            const settingsJSON = JSON.stringify(settings, null, 4);
             zip.addFile(
                 `${path.parse(volumeData.rawFilePath).name}.json`,
-                Buffer.from(volumeData.settings)
+                Buffer.from(settingsJSON)
             );
             hasFiles = true;
         }

@@ -6,7 +6,6 @@
 */
 
 import express from 'express';
-import pkg from 'pbkdf2-password';
 import path from 'path';
 import session from 'express-session';
 import { actions } from './routes/api/actions.mjs';

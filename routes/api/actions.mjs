@@ -94,10 +94,14 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/test-tiff`, res
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
     async (req, res) => VolumeController.createPseudoLabels(ilastikHandler, req, res));
 
-/////// RAW VOLUME DATA
+// Process Sparse Labels
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/addAnnotations`, restrict, 
+    async (req, res) => VolumeController.addAnnotations(req, res));
 
-// Visualize Raw Volume Data
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/visualize`, restrict, 
+/////// VOLUME DATA
+
+// Visualize
+actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/volumeData/:type/:idVolumeData/visualize`, restrict, 
     async (req, res) => VolumeDataController.visualizeSingleVolume(VolumeDataType.mapName(req.params.type), req, res));
 
 // Add Files to Volume Data

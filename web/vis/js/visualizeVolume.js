@@ -59,7 +59,7 @@ var Module;
 
 		const js = document.createElement('script');
 		js.async = true;
-		js.src = "/vis/index.js";
+		js.src = "index.js";
 		document.body.appendChild(js);
 
 		canvasResize();
@@ -178,8 +178,8 @@ function useFileInput(fileInput) {
 
 	Module.start_app();
 
-	const loadingGif = document.getElementById('loadingcontainer');
-	loadingGif.style.display = 'block';
+	// const loadingGif = document.getElementById('loadingcontainer');
+	// loadingGif.style.display = 'block';
 	let loadCounter = 0;
 	let numFiles = fileInput.files.length;
 	for (let i = 0; i < numFiles; i++) {
@@ -222,8 +222,8 @@ function loadConfig(configData) {
 async function loadVolWebData(config, settingsReference, files) {
 	Module.start_app();
 
-	let loadingGif = document.getElementById('loadingcontainer');
-	loadingGif.style.display = 'block';
+	// let loadingGif = document.getElementById('loadingcontainer');
+	// loadingGif.style.display = 'block';
 
 	const promises = []
 
@@ -418,8 +418,8 @@ function aoEnabledHandler(elem) {
 }
 
 function updateMask(fileInput) {
-	var loadingGif = document.getElementById('loadingcontainer');
-	loadingGif.style.display = 'block';
+	// var loadingGif = document.getElementById('loadingcontainer');
+	// loadingGif.style.display = 'block';
 	var numFiles = fileInput.files.length;
 	let fr = new FileReader();
 	let file = fileInput.files[0];
@@ -446,6 +446,33 @@ function updateColor(picker) {
 	green = parseInt(hex_code[3]+hex_code[4],16);
 	blue = parseInt(hex_code[5]+hex_code[6],16);
 	Module.setColor(red / 255, green / 255, blue / 255);
+}
+
+var blockAnnotationRequests = false;
+
+function saveAnnotations(url) {
+	if (blockAnnotationRequests) {
+		return;
+	}
+	blockAnnotationRequests = true;
+
+	const annotations = Module.get_annotations();
+	const xhr = new XMLHttpRequest();
+
+	xhr.open('POST', url, true);
+
+	xhr.setRequestHeader('Content-Type', 'application/json');
+
+	xhr.onload = function() {
+		if (xhr.status >= 200 && xhr.status < 300) {
+			console.log('Response:', xhr.responseText);
+		} else {
+			console.error('Error:', xhr.statusText);
+		}
+		blockAnnotationRequests = false;
+	};
+
+	xhr.send(annotations);
 }
 
 var canvasResize = () => {

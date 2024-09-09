@@ -1,4 +1,11 @@
 {
+    "effects": [
+	{"name": "toneMapping", "vs" : "pass.vs", "fs" : "mono-tone.fs"},
+	{"name": "gaussX", "vs" : "pass.vs", "fs" : "gaussX.fs"},
+	{"name": "gaussY", "vs" : "pass.vs", "fs" : "gaussY.fs"},
+	{"name": "add", "vs" : "pass.vs", "fs" : "add.fs"}
+	]
+}{
 	"fullscreen": 87,
 	"annotation_mode": 342,
 	"rotation_mouse": 0,
@@ -10,6 +17,7 @@
 	"clipping-z-axis": 51,
 	"clipping-view-aligned": 52,
 	"clipping_raw_data": 32,
+	"switch-annotation-volume": 53,
 	"_comment keys": "keycodes can be found here - https://www.glfw.org/docs/3.3/group__keys.html",
 	"_comment mouse buttons": "mouse button codes can be found here - https://www.glfw.org/docs/3.3/group__buttons.html"
 }{
@@ -17,7 +25,7 @@
   "annotation_kernel_size": 25,
   "annotations": false,
   "ao_radius": 1.0,
-  "ao_samples": 20,
+  "ao_samples": 5,
   "ao_strength": 0.8999999761581421,
   "bloom": true,
   "clear_color": {
@@ -31,33 +39,153 @@
   "clip_volume_b": true,
   "clip_volume_c": true,
   "clipping": false,
-  "early_ray_termination": true,
+  "early_ray_termination": false,
   "enable_volume_a": true,
-  "enable_volume_b": true,
-  "enable_volume_c": true,
+  "enable_volume_b": false,
+  "enable_volume_c": false,
   "far_plane": 100.0,
   "near_plane": 0.009999999776482582,
   "ray_jittering": true,
-  "sample_rate": 10.0,
-  "shadow_quality": 5.0,
-  "shadow_radius": 0.2,
+  "sample_rate": 5.0,
+  "shadow_quality": 1.0,
+  "shadow_radius": 0.20000000298023224,
   "shadow_strength": 0.5,
   "shadows": true
 }
-{
-    "effects": [
-	{"name": "toneMapping", "vs" : "pass.vs", "fs" : "mono-tone.fs"},
-	{"name": "gaussX", "vs" : "pass.vs", "fs" : "gaussX.fs"},
-	{"name": "gaussY", "vs" : "pass.vs", "fs" : "gaussY.fs"},
-	{"name": "add", "vs" : "pass.vs", "fs" : "add.fs"}
-	]
-}{
-    "effects": [
-	{"name": "toneMapping", "vs" : "pass.vs", "fs" : "mono-tone.fs"},
-	{"name": "gaussX", "vs" : "pass.vs", "fs" : "gaussX.fs"},
-	{"name": "gaussY", "vs" : "pass.vs", "fs" : "gaussY.fs"}
-	]
-}// multiple of 16 bytes
+struct Dim {
+    pdim_x:i32,
+	pdim_y:i32,
+	pdim_z:i32,
+	
+	vdim_x:i32,
+	vdim_y:i32,
+	vdim_z:i32,
+
+	vdelta_x:f32,
+	vdelta_y:f32,
+	vdelta_z:f32,
+
+	pdelta_x:f32,
+	pdelta_y:f32
+}
+struct IntVar{
+    sample_num:i32,
+    current_projection:i32,
+    tile_num:i32,
+    tile_size:i32,
+    number_extra_rows:i32,
+    padding:i32,
+}
+
+@group(0) @binding(0) var<storage,read_write> OriVol : array<f32>;
+@group(0) @binding(1) var<storage,read_write> AllDim : Dim;  
+@group(0) @binding(2) var<storage,read_write> intconstVar : IntVar;
+@group(0) @binding(3) var<storage,read_write> CropResult : array<f32>;
+
+
+//what I need : original data,crop_buffer, dim，padding, tile_size 
+    @compute @workgroup_size(8,8,8)
+fn CRmain(@builtin(global_invocation_id) global_id : vec3<u32>) {
+    let gx=i32(global_id.x);let gy=i32(global_id.y); let gz=i32(global_id.z);
+    let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+	let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+    let col=gx; let row=gy;
+    let extra_row=intconstVar.number_extra_rows/2; let TL=intconstVar.tile_size; let padding=intconstVar.padding;
+    if(col<=pdim.x&&row<=TL){
+        //make sure all points in the projection coor
+        let VoxIndex=i32(padding)+col+(row+extra_row)*vdim.x+gz*vdim.y*vdim.x;
+        let PointInCR=col+row*pdim.x+gz*pdim.x*TL;
+        CropResult[PointInCR]=OriVol[VoxIndex];
+    }
+}struct Dim {
+    pdim_x:i32,
+	pdim_y:i32,
+	pdim_z:i32,
+	
+	vdim_x:i32,
+	vdim_y:i32,
+	vdim_z:i32,
+
+	vdelta_x:f32,
+	vdelta_y:f32,
+	vdelta_z:f32,
+
+	pdelta_x:f32,
+	pdelta_y:f32
+}
+struct Matrix {
+      data: array<f32>,
+    }
+    @group(0) @binding(0) var<storage,read_write> Originalprojection : Matrix;
+    @group(0) @binding(1) var<storage,read_write> AllDim : Dim; 
+    @group(0) @binding(2) var<storage,read_write> per_slice :Matrix;
+
+@compute @workgroup_size(1,1,8)
+fn Maxmain(@builtin(global_invocation_id) global_id : vec3<u32>) {
+
+    let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+    //let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+    let gx=i32(global_id.x);let gy=i32(global_id.y); let gz=i32(global_id.z);
+    
+    var max=-10000.0;
+    var VoxIndex:i32;
+    for(var i=0;i<pdim.x;i++){
+        for(var j=0;j<pdim.y;j++){
+            VoxIndex=i+j*pdim.x+gz*pdim.x*pdim.y;
+                if (Originalprojection.data[VoxIndex]>max){
+                        max=Originalprojection.data[VoxIndex];
+                    }
+        }
+    }
+    per_slice.data[gz]=max;
+}
+
+
+struct Dim {
+    pdim_x:i32,
+	pdim_y:i32,
+	pdim_z:i32,
+	
+	vdim_x:i32,
+	vdim_y:i32,
+	vdim_z:i32,
+
+	vdelta_x:f32,
+	vdelta_y:f32,
+	vdelta_z:f32,
+
+	pdelta_x:f32,
+	pdelta_y:f32
+}
+
+struct Matrix {
+      data: array<f32>,
+    }
+    @group(0) @binding(0) var<storage,read_write> Originalprojection : Matrix;
+    @group(0) @binding(1) var<storage,read_write> AllDim : Dim; 
+    @group(0) @binding(2) var<storage,read_write> Max_Per : Matrix; 
+    @group(0) @binding(3) var<storage,read_write> MaxValue : f32; 
+
+
+    @compute @workgroup_size(8,8,8)
+fn LPmain(@builtin(global_invocation_id) global_id : vec3<u32>) {
+    // Guard against out-of-bounds work group sizes
+    let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+    //let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+  
+    if (global_id.x >u32(pdim.x)  || global_id.y >u32(pdim.y)||(global_id.z>u32(pdim.z))) {
+    return;
+    }
+    let gx=i32(global_id.x);let gy=i32(global_id.y); let gz=i32(global_id.z);
+    let VoxIndex=gx+gy*pdim.x+gz*pdim.x*pdim.y;
+    if(Originalprojection.data[VoxIndex]>0){
+        Originalprojection.data[VoxIndex]=-1.0*log(max(Originalprojection.data[VoxIndex],MaxValue/1000000000.0)/MaxValue);//here log of natural exponentiation
+
+    }else{
+        Originalprojection.data[VoxIndex]=0;//mainly noise
+    }
+}
+// multiple of 16 bytes
 struct Param 
 {	
 	param0 : vec4<f32>,
@@ -126,6 +254,43 @@ fn main(
 	return color0;
 	
 //	return vec4<f32>(color.x + color0.x, color.y + color0.y, color.z + color0.z, color.w);
+}struct ComputeDataFloat {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+@group(0) @binding(0) var<storage, read_write> input1: ComputeDataFloat;
+@group(0) @binding(1) var<storage, read_write> input2: ComputeDataFloat;
+@group(0) @binding(2) var<uniform> depth: parameter;
+@group(0) @binding(3) var<uniform> height: parameter;
+@group(0) @binding(4) var<uniform> width: parameter;
+@group(0) @binding(5) var<storage, read_write> output: ComputeDataFloat;
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+) 
+{
+    let sz = u32(depth.value * height.value * width.value);
+    if (global_id.x >= sz) {
+        return;
+    }
+
+    var val : f32;
+    val = input1.data[global_id.x] + input2.data[global_id.x];
+    if (val > 1.0)
+    {
+        val = 1.0;
+    }
+
+    output.data[global_id.x] = val;
+
+    return;
 }struct Param 
 {
 	mousePosX : f32,
@@ -241,7 +406,171 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>)
 	var copy = bool(param.pingPong.x);
 	
 	apply_brush(vec3<f32>(param.vertex.x, param.vertex.y, param.vertex.z), delta, copy);	
-}[[block]] struct Param 
+}struct Dim {
+    pdim_x:i32,
+	pdim_y:i32,
+	pdim_z:i32,
+	
+	vdim_x:i32,
+	vdim_y:i32,
+	vdim_z:i32,
+
+	vdelta_x:f32,
+	vdelta_y:f32,
+	vdelta_z:f32,
+
+	pdelta_x:f32,
+	pdelta_y:f32
+}
+struct FloatVar{
+    dis_vs:f32,
+    sample_rate:f32,
+    chillfactor:f32,
+}
+struct IntVar{
+    sample_num:i32,
+    current_projection:i32,
+    tile_num:i32,
+    tile_size:i32,
+    number_extra_rows:i32,
+}
+@group(0) @binding(0) var<storage,read_write> Originalprojection : array<f32>;
+@group(0) @binding(1) var<storage,read_write> Reconstructvolume : array<f32>;
+@group(0) @binding(2) var<storage,read_write> AllDim : Dim;  
+@group(0) @binding(3) var<storage,read_write> dir : vec3<f32>;
+@group(0) @binding(4) var<storage,read_write> floatconstVar : FloatVar;
+@group(0) @binding(5) var<storage,read_write> intconstVar : IntVar;
+@group(0) @binding(6) var<storage,read_write> CorrectionImg : array<f32>;
+@group(0) @binding(7) var<storage,read_write> pip : vec3<f32>;
+
+//input point
+//output rotated point
+fn rotate_anticlockwise(pos:vec3<f32>)->vec3<f32>
+{
+	var temp_pos=vec3<f32>(dir.z*pos.x-dir.x*pos.z,pos.y,dir.z*pos.z+dir.x*pos.x);
+	return temp_pos;
+}
+
+//get_index
+//input: the projection/correction frame pos
+//output: the projection/correction index
+fn get_ProCOr_index(corpos:vec2<f32>)->i32{
+    let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+    var index:i32;
+    var pos:vec2<i32>;
+    pos=vec2(i32(corpos.x),i32(corpos.y));
+    index=pos.x+pos.y*pdim.x;
+    return index;
+}
+//input: the point in the correction_img
+//output: the value of the correction_img
+//this function use the average as the correction value
+fn interpol2D(pos:vec2<f32>)->f32
+{
+	let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+	var p11 = vec2<f32>(floor(pos.x), floor(pos.y));
+		//Are we at the rightmost or topmost column?
+	var xlimit:bool = false;
+	var ylimit:bool = false;
+
+	var p21:vec2<f32>;
+	if (p11.x <f32(pdim.x - i32(1)))
+	{
+		p21 = vec2<f32>(p11.x + f32(1), p11.y);
+	}else
+	{
+		xlimit = true;
+		p21 = p11;
+	}
+	var p12:vec2<f32>;
+	if (p11.y < f32(pdim.y - i32(1))){
+		p12 = vec2(p11.x, p11.y + f32(1));
+	}else
+	{
+		ylimit = true;
+		p12 = p11;
+	}
+
+	var p22:vec2<f32>;
+	if (!xlimit){
+		p22 = vec2(p12.x + f32(1), p12.y);
+	}else{
+		p22 = p12;
+	}
+	
+	//Get the volume data values of the cell points
+	var q11:f32 = CorrectionImg[i32(p11.x) + i32(p11.y) * pdim.x];
+	var q21:f32= CorrectionImg[i32(p21.x) + i32(p21.y) * pdim.x];
+	var q12:f32= CorrectionImg[i32(p12.x) + i32(p12.y) * pdim.x];
+	var q22:f32 = CorrectionImg[i32(p22.x) + i32(p22.y) * pdim.x];
+	//return q11;
+	//Interpolate
+	var ip1:f32;
+	var ip2:f32;
+	if (!xlimit)
+	{
+
+		ip1 = ((p21.x - pos.x) / (p21.x - p11.x)) * q11 + ((pos.x - p11.x) / (p21.x - p11.x)) * q21;
+		ip2 = ((p22.x - pos.x) / (p22.x - p12.x)) * q12 + ((pos.x - p12.x) / (p22.x - p12.x)) * q22;
+	}else
+	{
+		ip1 = q11;
+		ip2 = q22;
+	}
+
+	if (!ylimit)
+	{
+		return ((p12.y - pos.y) / (p12.y - p11.y)) * ip1 + ((pos.y - p11.y) / (p12.y - p11.y)) * ip2;
+	}else
+	{
+		return ip1;
+	}
+
+
+}
+
+@compute @workgroup_size(8,8,8)
+fn BPmain(@builtin(global_invocation_id) global_id : vec3<u32>){
+		let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+		let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+		let pdelta=vec2<f32>(AllDim.pdelta_x,AllDim.pdelta_y);
+		let vdelta=vec3<f32>(AllDim.vdelta_x,AllDim.vdelta_y,AllDim.vdelta_z);
+		let gx=i32(global_id.x);let gy=i32(global_id.y);let gz=i32(global_id.z);
+		let current_tile=intconstVar.tile_num;
+		let tile_size=intconstVar.tile_size;
+		let number_extra_rows=intconstVar.number_extra_rows;
+		let col:i32=gx; 
+		let row:i32=current_tile*tile_size -(number_extra_rows/2) +gy;  
+		let M:i32=intconstVar.sample_num;
+		let sample_rate:f32=floatconstVar.sample_rate;
+        let current_projection:i32=intconstVar.current_projection;
+		let chill_factor:f32=floatconstVar.chillfactor;
+		if ((col < vdim.x) && (row >= 0) && (row < pdim.y) && (gy < vdim.y))
+		{
+            var voxel_index:i32=col+gy*vdim.x+gz*vdim.x*vdim.y;
+			var voxel_pos=vec3<f32>(f32(col)-vdelta.x,f32(row)-vdelta.y,f32(gz)-vdelta.z);
+			var t=(pip.x-voxel_pos.x)*dir.x+(pip.z-voxel_pos.z)*dir.z;
+			var pvox=vec3<f32>(voxel_pos.x + t * dir.x, voxel_pos.y, voxel_pos.z + t * dir.z);
+			pvox=rotate_anticlockwise(pvox);
+			if ((pvox.x <= pdelta.x) && (pvox.x >= -pdelta.x) &&
+			(pvox.y <= pdelta.y) && (pvox.y >= -pdelta.y))
+			{
+				//Reconstructvolume[voxel_index] += chill_factor*interpol2D(vec2<f32>(pvox.x + pdelta.x, pvox.y + pdelta.y));
+				//Reconstructvolume[voxel_index]= vec2<f32>(pvox.x + pdelta.x, pvox.y + pdelta.y).x;
+				//Reconstructvolume[voxel_index]=interpol2D(vec2<f32>(pvox.x + pdelta.x, pvox.y + pdelta.y));//it can get correction_img data 
+				//Reconstructvolume[voxel_index]=chill_factor;//chill_factor is ok 
+				Reconstructvolume[voxel_index]+=chill_factor*interpol2D(vec2<f32>(pvox.x + pdelta.x, pvox.y + pdelta.y));
+				//Positivity constraint
+				if ((Reconstructvolume[voxel_index] < 0.0)){
+                    Reconstructvolume[voxel_index] = 0.0;
+                }
+					
+			}
+
+		}
+
+
+}struct Param 
 {
 	paramF1 : f32,
 	paramF2 : f32,
@@ -252,20 +581,20 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>)
 	paramV3 : vec3<f32>,
 };
 
-[[group(0), binding(0)]] var texSampler : sampler;
-[[group(0), binding(1)]] var tex : texture_2d<f32>;
-[[group(0), binding(2)]] var<uniform> param : Param;
+@group(0) @binding(0) var texSampler : sampler;
+@group(0) @binding(1) var tex : texture_2d<f32>;
+@group(0) @binding(2) var<uniform> param : Param;
 
-[[stage(fragment)]]
+@fragment
 fn main(
-[[location(0)]] eye : vec3<f32>,
-[[location(1)]] direction : vec3<f32>,
-[[location(2)]] light : vec3<f32>,
-[[location(3)]] lightPos : vec3<f32>,
-[[location(4)]] fragPos : vec3<f32>,
-[[location(5)]] tex_coords : vec2<f32> 
+@location(0) eye : vec3<f32>,
+@location(1) direction : vec3<f32>,
+@location(2) light : vec3<f32>,
+@location(3) lightPos : vec3<f32>,
+@location(4) fragPos : vec3<f32>,
+@location(5) tex_coords : vec2<f32> 
 ) 
--> [[location(0)]] vec4<f32> 
+-> @location(0) vec4<f32> 
 {
 	var fragColor = vec4<f32>(tex_coords.y, tex_coords.x, 0.0 , 1.0);
 	
@@ -295,6 +624,531 @@ fn main(
 	fragColor = vec4<f32>(color.x, color.y, color.z, 1.0);
 	
 	return fragColor;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> conv_mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> bias: ComputeData;
+@group(0) @binding(3) var<storage, read_write> padArray: ComputeData;
+@group(0) @binding(4) var<storage, read_write> output: ComputeData;
+@group(0) @binding(5) var<uniform> outChannels: parameter;
+@group(0) @binding(6) var<uniform> stride: parameter;
+@group(0) @binding(7) var<uniform> padding: parameter;
+
+const blockSize = 8;
+
+@compute @workgroup_size(blockSize, blockSize, blockSize)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    var index : u32;
+    let step = stride.value;
+    let pad = padding.value;
+
+    let vol_channel = u32(vol.data[1]);
+    let vol_depth = u32(vol.data[2] + f32(2 * pad));
+    let vol_height = u32(vol.data[3] + f32(2 * pad));
+    let vol_width = u32(vol.data[4] + f32(2 * pad));
+
+    let conv_mask_depth = u32(conv_mask.data[2]);
+    let conv_mask_height = u32(conv_mask.data[3]);
+    let conv_mask_width = u32(conv_mask.data[4]);
+
+    let w = i32(floor(f32(vol_width - conv_mask_width) / f32(step) + 1.0));
+    let h = i32(floor(f32(vol_height - conv_mask_height) / f32(step) + 1.0));
+    let d = i32(floor(f32(vol_depth - conv_mask_depth) / f32(step) + 1.0));
+
+    output.data[0] = f32(w * h * d * outChannels.value);
+    output.data[1] = f32(outChannels.value);
+    output.data[2] = f32(d);
+    output.data[3] = f32(h);
+    output.data[4] = f32(w);
+    
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(w)
+        || global_id.y >= u32(h)
+        || global_id.z >= u32(d))
+    {
+        return;
+    }
+
+    var result : f32;
+    var i : u32;
+    var indxRoI : u32;
+
+    let lengthOneKernel = u32(conv_mask_depth * conv_mask_height * conv_mask_width);
+
+    for (var c = 0u; c < u32(outChannels.value); c = c + 1u)
+    {
+        index = (c * u32(w * h * d)) + (global_id.z * u32(w * h)) + (global_id.y * u32(w)) + global_id.x;
+        i = 0u;
+        result = f32(0.0);
+
+        for (var k = 0u; k < u32(vol_channel); k = k + 1u)
+        {
+            i = (c * u32(vol_channel) * lengthOneKernel) + (k * lengthOneKernel);
+            for (var z = global_id.z * u32(step); z < global_id.z * u32(step) + u32(conv_mask_depth); z = z + 1u)
+            {
+                for (var y = global_id.y * u32(step); y < global_id.y * u32(step) + u32(conv_mask_height); y = y + 1u)
+                {
+                    for (var x = global_id.x * u32(step); x < global_id.x * u32(step) + u32(conv_mask_width); x = x + 1u)
+                    {
+                        indxRoI = (k * u32(vol_depth * vol_height * vol_width)) + (z * u32(vol_height * vol_width)) + (y * u32(vol_width)) + x;
+                        result = result + padArray.data[indxRoI + 5u] * conv_mask.data[i + 5u];
+                        i = i + 1u;
+                    }
+                }
+            }
+
+        }
+
+        output.data[index + 5u] = result + bias.data[c + 5u];
+    }
+
+    return;
+}struct Dim {
+    pdim_x:i32,
+	pdim_y:i32,
+	pdim_z:i32,
+	
+	vdim_x:i32,
+	vdim_y:i32,
+	vdim_z:i32,
+
+	vdelta_x:f32,
+	vdelta_y:f32,
+	vdelta_z:f32,
+
+	pdelta_x:f32,
+	pdelta_y:f32
+}
+
+struct Matrix {
+      data: array<f32>,
+    }
+    @group(0) @binding(0) var<storage,read_write> RecVolume : Matrix;
+    @group(0) @binding(1) var<storage,read_write> MaxValue :f32;
+    @group(0) @binding(2) var<storage,read_write> AllDim : Dim; 
+
+    @compute @workgroup_size(8,8,8)
+fn DLmain(@builtin(global_invocation_id) global_id : vec3<u32>) {
+    // Guard against out-of-bounds work group sizes
+    //let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+    let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+ if (global_id.x >u32(vdim.x)  || global_id.y >u32(vdim.y)||(global_id.z>u32(vdim.z))) {
+    return;
+    }
+    
+    let gx=i32(global_id.x);let gy=i32(global_id.y); let gz=i32(global_id.z);
+    let VoxIndex=gx+gy*vdim.x+gz*vdim.x*vdim.y;
+    RecVolume.data[VoxIndex]=MaxValue*exp(-1*RecVolume.data[VoxIndex]);
+
+}
+
+struct ComputeData {
+	data: array<f32>
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> output: ComputeData;
+
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+	@builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+	let c = vol.data[1];
+	let d = vol.data[2];
+	let h = vol.data[3];
+	let w = vol.data[4];
+
+    output.data[1] = c;
+    output.data[2] = d;
+    output.data[3] = h;
+    output.data[4] = w;
+    output.data[0] = c * d * h * w;
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(d * h * w))
+    {
+        return;
+    }
+
+    // Element wise for each channel
+    for (var k = 0u; k < u32(c); k = k + 1u)
+    {
+        var i = (k * u32(d * h * w)) + global_id.x;
+        output.data[i + 5u] = vol.data[i + 5u] * mask.data[global_id.x + 5u];
+    }
+	return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> conv_mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> bias: ComputeData;
+@group(0) @binding(3) var<storage, read_write> padArray: ComputeData;
+@group(0) @binding(4) var<storage, read_write> output: ComputeData;
+@group(0) @binding(5) var<uniform> outChannels: parameter;
+@group(0) @binding(6) var<uniform> stride: parameter;
+@group(0) @binding(7) var<uniform> padding: parameter;
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    let pad = padding.value;
+
+    let c = vol.data[1];
+    let d = vol.data[2] + f32(2 * pad);
+    let h = vol.data[3] + f32(2 * pad);
+    let w = vol.data[4] + f32(2 * pad);
+
+    padArray.data[1] = c;
+    padArray.data[2] = d;
+    padArray.data[3] = h;
+    padArray.data[3] = h;
+    padArray.data[4] = w;
+    padArray.data[0] = c* d* h* w;
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(padArray.data[0]))
+    {
+        return;
+    }
+
+    padArray.data[global_id.x + 5u] = 0.0;
+   
+    return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct TempData {
+    data: array<atomic<i32>>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> conv_mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> bias: ComputeData;
+@group(0) @binding(3) var<storage, read_write> padArray: TempData;
+@group(0) @binding(4) var<storage, read_write> output: ComputeData;
+@group(0) @binding(5) var<uniform> outChannels: parameter;
+@group(0) @binding(6) var<uniform> stride: parameter;
+@group(0) @binding(7) var<uniform> padding: parameter;
+@group(0) @binding(8) var<uniform> outputPadding: parameter;
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    let step = stride.value;
+    let conv_mask_sz = conv_mask.data[2];
+
+    let vol_depth = i32(vol.data[2]);
+    let vol_height = i32(vol.data[3]);
+    let vol_width = i32(vol.data[4]);
+
+    let w = (vol_depth - 1) * step + (i32(conv_mask_sz) - 1) + 1;
+    let h = (vol_height - 1) * step + (i32(conv_mask_sz) - 1) + 1;
+    let d = (vol_width - 1) * step + (i32(conv_mask_sz) - 1) + 1;
+    let c = outChannels.value;
+    let l = c * d * h * w;
+
+    
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(l))
+    {
+        return;
+    }
+
+    atomicStore(&padArray.data[global_id.x], 0);
+    return;
+}struct Dim {
+    pdim_x:i32,
+	pdim_y:i32,
+	pdim_z:i32,
+	
+	vdim_x:i32,
+	vdim_y:i32,
+	vdim_z:i32,
+
+	vdelta_x:f32,
+	vdelta_y:f32,
+	vdelta_z:f32,
+
+	pdelta_x:f32,
+	pdelta_y:f32
+}
+struct FloatVar{
+    dis_vs:f32,
+    sample_rate:f32,
+    chillfactor:f32,
+}
+struct IntVar{
+    sample_num:i32,
+    current_projection:i32,
+    tile_num:i32,
+    tile_size:i32,
+    number_extra_rows:i32,
+}
+@group(0) @binding(0) var<storage,read_write> Originalprojection : array<f32>;
+@group(0) @binding(1) var<storage,read_write> Reconstructvolume : array<f32>;
+@group(0) @binding(2) var<storage,read_write> AllDim : Dim;  
+@group(0) @binding(3) var<storage,read_write> dir : vec3<f32>;
+@group(0) @binding(4) var<storage,read_write> floatconstVar : FloatVar;
+@group(0) @binding(5) var<storage,read_write> intconstVar : IntVar;
+@group(0) @binding(6) var<storage,read_write> CorrectionImg : array<f32>;
+@group(0) @binding(7) var<storage,read_write> pip : vec3<f32>;
+
+fn rotate_clockwise(pos:vec3<f32>)->vec3<f32>{
+	//dir.z==cos   dir.x==sin
+	var rotated_pos=vec3<f32>(dir.z*pos.x+dir.x*pos.z,pos.y,dir.z*pos.z-dir.x*pos.x);
+	return rotated_pos;
+}
+fn get_ray_origin(pos:vec3<f32>)->vec3<f32>
+{
+	let vdelta=vec3<f32>(AllDim.vdelta_x,AllDim.vdelta_y,AllDim.vdelta_z);
+	//Rotate according to current projection angle
+	//Initial position of volume rendering, from source plane
+	var roPOS:vec3<f32>=rotate_clockwise(pos);
+
+	//'Decenter' to volume coordinates
+	roPOS = roPOS + vec3<f32>(vdelta.x, 0, vdelta.z);//这里理解应该是把全部的点都旋转了
+	return roPOS;
+}
+//get_index
+//input: the volume pos in volume frame
+//output: the volume index
+fn get_index(Worpos:vec3<f32>)->i32{
+    var index:i32;
+    var pos:vec3<i32>;
+    let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+    pos=vec3(i32(Worpos.x),i32(Worpos.y),i32(Worpos.z));
+    index=pos.x+pos.y*vdim.x+pos.z*vdim.x*vdim.y;
+    return index;
+}
+
+//interpolation
+//input: current ray sample position in the volume frame,the reconstruct volume data
+//output: the interpolation value 
+fn interpolation(pos:vec3<f32>)->f32
+{
+	let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+	var p11=vec3<f32>(floor(pos.x),floor(pos.y),floor(pos.z));
+		//Are we at the rightmost or topmost column?
+	var xlimit:bool= false;
+	var ylimit:bool= false;
+	var zlimit:bool = !(p11.z < f32(vdim.z - i32(1)));
+	var p21:vec2<f32>;
+	if(p11.x<f32(vdim.x-i32(1))){
+		p21=vec2(p11.x+f32(1),p11.y);
+	}else{
+		xlimit = true;
+		p21=vec2(p11.x,p11.y);
+	}
+
+	var p12:vec2<f32>;
+	if (p12.y < f32(vdim.y - i32(1)))
+	{
+		p12 = vec2(p11.x, p11.y +f32(1) );
+	}	
+	else
+	{
+		ylimit = true;
+		p12 = vec2(p11.x, p11.y);
+	}
+
+	var p22:vec2<f32>;
+	if (!xlimit){
+		p22 = vec2(p12.x + f32(1), p12.y);
+	}else{
+		p22 = p12;
+	}
+
+		//Get the volume data values of the cell points
+	var q11:f32 = Reconstructvolume[i32(p11.x) + i32(p11.y)*vdim.x + i32(p11.z)*vdim.y*vdim.x];
+	var q21:f32= Reconstructvolume[i32(p21.x) + i32(p21.y)*vdim.x + i32(p11.z)*vdim.y*vdim.x];
+	var q12:f32 = Reconstructvolume[i32(p12.x) + i32(p12.y)*vdim.x +i32( p11.z)*vdim.y*vdim.x];
+	var q22:f32 = Reconstructvolume[i32(p22.x) + i32(p22.y)*vdim.x + i32(p11.z)*vdim.y*vdim.x];	
+		
+	//Same, next z value
+	var s11:f32;
+	var s21:f32;
+	var s12:f32;
+	var s22:f32;
+	if (!zlimit)
+	{
+		s11 = Reconstructvolume[i32(p11.x) + i32(p11.y)*vdim.x + i32(p11.z + 1)*vdim.y*vdim.x];
+		s21 = Reconstructvolume[i32(p21.x) + i32(p21.y)*vdim.x + i32(p11.z + 1)*vdim.y*vdim.x];
+		s12 = Reconstructvolume[i32(p12.x) + i32(p12.y)*vdim.x + i32(p11.z + 1)*vdim.y*vdim.x];
+		s22 = Reconstructvolume[i32(p22.x) + i32(p22.y)*vdim.x + i32(p11.z + 1)*vdim.y*vdim.x];
+	}
+	else
+	{
+		s11 = q11;
+		s21 = q21;
+		s12 = q12;
+		s22 = q22;
+	}
+
+	//Interpolate
+	var ip1:f32;
+	var ip2:f32;
+	var is1:f32;
+	var is2:f32;
+	if (!xlimit)
+	{
+		ip1 = ((p21.x - pos.x) / (p21.x - p11.x)) * q11 + ((pos.x - p11.x) / (p21.x - p11.x)) * q21;
+		ip2 = ((p22.x - pos.x) / (p22.x - p12.x)) * q12 + ((pos.x - p12.x) / (p22.x - p12.x)) * q22;
+
+		is1 = ((p21.x - pos.x) / (p21.x - p11.x)) * s11 + ((pos.x - p11.x) / (p21.x - p11.x)) * s21;
+		is2 = ((p22.x - pos.x) / (p22.x - p12.x)) * s12 + ((pos.x - p12.x) / (p22.x - p12.x)) * s22;
+	}
+	else
+	{
+		ip1 = q11;
+		ip2 = q22;
+
+		is1 = s11;
+		is2 = s22;
+	}
+
+	var interpol1:f32;
+	var interpol2:f32;
+	if (!ylimit)
+	{
+		interpol1 = ((p12.y - pos.y) / (p12.y - p11.y)) * ip1 + ((pos.y - p11.y) / (p12.y - p11.y)) * ip2;
+		interpol2 = ((p12.y - pos.y) / (p12.y - p11.y)) * is1 + ((pos.y - p11.y) / (p12.y - p11.y)) * is2;
+	}
+	else
+	{
+		interpol1 = ip1;
+		interpol2 = is1;
+	}
+
+	if (!zlimit)
+	{
+		return (((p11.z + f32(1)) - pos.z) / ((p11.z + f32(1)) - p11.z)) * interpol1 + ((pos.z - p11.z) / ((p11.z + f32(1)) - p11.z)) * interpol2;
+	}
+	else
+	{
+		return interpol1;
+	}
+}
+//get_length
+//input: a vector
+//output: the length of the vector
+fn get_length(pos:vec3<f32>)->f32
+{
+    var length:f32;
+    length=sqrt(pos.x*pos.x+pos.y*pos.y+pos.z*pos.z);
+    return length;
+
+}
+
+@compute @workgroup_size(8,8)
+fn FPmain(@builtin(global_invocation_id) global_id : vec3<u32>) {
+	    let pdim=vec3<i32>(AllDim.pdim_x,AllDim.pdim_y,AllDim.pdim_z);
+		let vdim=vec3<i32>(AllDim.vdim_x,AllDim.vdim_y,AllDim.vdim_z);
+		let pdelta=vec2<f32>(AllDim.pdelta_x,AllDim.pdelta_y);
+		let vdelta=vec3<f32>(AllDim.vdelta_x,AllDim.vdelta_y,AllDim.vdelta_z);
+		let gx=i32(global_id.x);let gy=i32(global_id.y);
+		let current_tile=intconstVar.tile_num;
+		let tile_size=intconstVar.tile_size;
+		let number_extra_rows=intconstVar.number_extra_rows;
+		let col:i32=gx; 
+		let row:i32=current_tile*tile_size - (number_extra_rows/2) +gy;  
+		let M:i32=intconstVar.sample_num;
+		let sample_rate:f32=floatconstVar.sample_rate;
+        let current_projection=intconstVar.current_projection;
+
+
+		if ((row >= 0) && (row < pdim.y) && (gy < vdim.y) && (col < pdim.x))
+		{
+			//current_tile is 0 for non pw
+			var pixel_index:i32 = col + row*pdim.x;
+			//Ray origin in world coordinates (from i, j pixel in source plane)
+			var Oringin_pos =vec3<f32>(f32(col) - pdelta.x,f32(gy), -floatconstVar.dis_vs - vdelta.z);
+			var pos:vec3<f32> = get_ray_origin(Oringin_pos);
+			var  entry_pos = vec3<f32>(0, 0, 0);
+			var  exit_pos = vec3<f32>(0, 0, 0);
+			var  ray_sum:f32;
+			var inteVAR:f32;
+
+			for (var m:i32 = 0; m <= M; m++)
+			{
+				//If the current position is 'inside the volume'
+				if ((pos.x <= f32(vdim.x - 1)) && (pos.x >= 0.0) &&
+					//Y never changes and is always inside
+					(pos.z <= f32(vdim.z - 1)) && (pos.z >= 0.0))
+				{
+					//Store first sampled point as entry point
+					//TODO: Compute entry and exit points outside, once and exactly!
+					if ((entry_pos.x == 0) && (entry_pos.y == 0) && (entry_pos.z == 0))
+					{
+						entry_pos = pos;
+						entry_pos.x = entry_pos.x + 0.000000001; //To prevent funny things if the entry point was 0, 0, 0
+					}
+
+					//Update ray sum
+					inteVAR=interpolation(pos);
+					ray_sum += sample_rate*inteVAR;
+
+					//Update last sampled position
+					exit_pos = pos;
+				}
+				pos = pos + sample_rate*dir;
+			}
+
+            var ray_length:f32=get_length(exit_pos-entry_pos);
+
+            //the index in the correction projection is equal to the projection
+            let indexInPro=pixel_index+current_projection*pdim.x*pdim.y;// the correspond point in projection data
+            if(ray_length>f32(0)&&Originalprojection[indexInPro]>f32(0)){     
+                CorrectionImg[pixel_index]=(Originalprojection[indexInPro]-ray_sum)/ray_length;
+				//CorrectionImg[pixel_index]= inteVAR   ;
+				//CorrectionImg[pixel_index]=Originalprojection[indexInPro];
+				//CorrectionImg[pixel_index]=ray_length;
+            }  
+            else{//the projection is 0 means nothing to correction
+                CorrectionImg[pixel_index]=f32(0);
+            }
+		}
+
 }//data texture
 uniform sampler3D Data;
 uniform sampler1D Transfer1D;
@@ -1514,7 +2368,94 @@ fn main(
 }
 
 
-struct Param 
+struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> volTemp: ComputeData;
+@group(0) @binding(2) var<storage, read_write> output: ComputeData;
+@group(0) @binding(3) var<uniform> nDivChannels: parameter;
+@group(0) @binding(4) var<uniform> offset: parameter;
+@group(0) @binding(5) var<storage, read_write> weight: ComputeData;
+@group(0) @binding(6) var<storage, read_write> bias: ComputeData;
+
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(local_invocation_id) local_id : vec3<u32>,
+    @builtin(workgroup_id) workgroup_id : vec3<u32>
+)
+{ 
+    let c = f32(nDivChannels.value);
+    let d = vol.data[2];
+    let h = vol.data[3];
+    let w = vol.data[4];
+    let length = c * d * h * w;
+
+    let off_val = u32(offset.value);
+    let lengthOneChannel = u32(w * h * d);
+    let indGroup = u32(f32(off_val) / length);
+    let off_channel = indGroup * u32(c);
+    let eps = 0.00001;
+
+    let tid = workgroup_id.x * u32(blockSize) + local_id.x;
+    if (tid < lengthOneChannel)
+    {
+        for (var i = 0u; i < u32(c); i = i + 1u)
+        {
+            let index = tid + i * lengthOneChannel;
+            output.data[index + 5u] = vol.data[index + off_val + 5u] / sqrt(f32(volTemp.data[5u]) / f32(length) + eps) * weight.data[off_channel + i + 5u] + bias.data[off_channel + i + 5u];
+        }
+    }
+
+    return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+
+
+@group(0) @binding(0) var<storage, read_write> input1: ComputeData;
+@group(0) @binding(1) var<storage, read_write> input2: ComputeData;
+@group(0) @binding(2) var<storage, read_write> output: ComputeData;
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+) 
+{
+    var index : u32;
+
+    index = global_id.x;
+
+    if (index >= u32(input1.data[0])) {
+        return;
+    }
+
+    var value : f32;
+    value = input1.data[index + 5u] + input2.data[index + 5u];
+    
+    output.data[0] = input1.data[0];
+    output.data[1] = input1.data[1];
+    output.data[2] = input1.data[2];
+    output.data[3] = input1.data[3];
+    output.data[4] = input1.data[4];
+
+    output.data[index + 5u] = value;
+
+    return;
+}struct Param 
 {
 	param0 : vec4<f32>,
 }
@@ -1558,6 +2499,111 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>)
 	}
 	
 	textureStore(output, tex_coord, result);	
+}struct Matrix {
+      size : vec2<f32>,
+      numbers: array<f32>,
+    }
+
+    @group(0) @binding(0) var<storage, read> firstMatrix : Matrix;
+    @group(0) @binding(1) var<storage, read> secondMatrix : Matrix;
+    @group(0) @binding(2) var<storage, read_write> resultMatrix : Matrix;
+
+    @compute @workgroup_size(8, 8)
+    fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
+      // Guard against out-of-bounds work group sizes
+      if (global_id.x >= u32(firstMatrix.size.x) || global_id.y >= u32(secondMatrix.size.y)) {
+        return;
+      }
+
+      resultMatrix.size = vec2(firstMatrix.size.x, secondMatrix.size.y);
+
+      let resultCell = vec2(global_id.x, global_id.y);
+      var result = 0.0;
+      for (var i = 0u; i < u32(firstMatrix.size.y); i = i + 1u) {
+        let a = i + resultCell.x * u32(firstMatrix.size.y);
+        let b = resultCell.y + i * u32(secondMatrix.size.y);
+        result = result + firstMatrix.numbers[a] * secondMatrix.numbers[b];
+      }
+
+      let index = resultCell.y + resultCell.x * u32(secondMatrix.size.y);
+      resultMatrix.numbers[index] = result;
+    }struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> output: ComputeData;
+@group(0) @binding(2) var<uniform> kernel_size: parameter;
+@group(0) @binding(3) var<uniform> stride: parameter;
+
+const blockSize = 8;
+
+@compute @workgroup_size(blockSize, blockSize, blockSize)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    let k_size = kernel_size.value;
+    let step = stride.value;
+
+    let vol_c = i32(vol.data[1]);
+    let vol_d = i32(vol.data[2]);
+    let vol_h = i32(vol.data[3]);
+    let vol_w = i32(vol.data[4]);
+
+    let w = i32(floor(f32(vol_w - k_size) / f32(step) + 1.0));
+    let h = i32(floor(f32(vol_h - k_size) / f32(step) + 1.0));
+    let d = i32(floor(f32(vol_d - k_size) / f32(step) + 1.0));
+    
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(w)
+        || global_id.y >= u32(h)
+        || global_id.z >= u32(d))
+    {
+        return;
+    }
+
+    output.data[0] = f32(w * h * d * vol_c);
+    output.data[1] = f32(vol_c);
+    output.data[2] = f32(d);
+    output.data[3] = f32(h);
+    output.data[4] = f32(w);
+
+    var index : u32;
+    var max_pool : f32;
+    var indxRoI : u32;
+
+    let start_x = global_id.x * u32(step);
+    let start_y = global_id.y * u32(step);
+    let start_z = global_id.z * u32(step);
+    
+    for (var c = 0u; c < u32(vol_c); c = c + 1u)
+    {
+        index = (c * u32(w * h * d)) + (global_id.z * u32(w * h)) + (global_id.y * u32(w)) + global_id.x;
+        indxRoI = (c * u32(vol_w * vol_h * vol_d)) + (start_z * u32(vol_w * vol_h)) + (start_y * u32(vol_w)) + start_x;
+        max_pool = vol.data[indxRoI + 5u];
+
+        for (var z = start_z; z < start_z + u32(k_size); z = z + 1u)
+        {
+            for (var y = start_y; y < start_y + u32(k_size); y = y + 1u)
+            {
+                for (var x = start_x; x < start_x + u32(k_size); x = x + 1u)
+                {
+                    indxRoI = (c * u32(vol_w * vol_h * vol_d)) + (z * u32(vol_w * vol_h)) + (y * u32(vol_w)) + x;
+                    max_pool = max(max_pool, vol.data[indxRoI + 5u]);
+                }
+            }
+        }
+
+        output.data[index + 5u] = max_pool;
+    }
+    
+    return;
 }// multiple of 16 bytes
 struct Param 
 {	
@@ -1629,6 +2675,143 @@ fn main(
 	color = toneMap(color);
 				
 	return color;
+}struct ComputeData {
+data: array<f32>
+}
+
+struct TempData {
+data: array<atomic<i32>>
+}
+
+struct parameter {
+value: i32
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> conv_mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> bias: ComputeData;
+@group(0) @binding(3) var<storage, read_write> padArray: TempData;
+@group(0) @binding(4) var<storage, read_write> output: ComputeData;
+@group(0) @binding(5) var<uniform> outChannels: parameter;
+@group(0) @binding(6) var<uniform> stride: parameter;
+@group(0) @binding(7) var<uniform> padding: parameter;
+@group(0) @binding(8) var<uniform> outputPadding: parameter;
+
+
+const blockSize = 8;
+
+@compute @workgroup_size(blockSize, blockSize, blockSize)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    let step = u32(stride.value);
+    let pad = u32(padding.value);
+    let outPad = u32(outputPadding.value);
+    let conv_mask_sz = u32(conv_mask.data[2]);
+
+    let vol_channel = u32(vol.data[1]);
+    let vol_depth = u32(vol.data[2]);
+    let vol_height = u32(vol.data[3]);
+    let vol_width = u32(vol.data[4]);
+
+    let pad_depth = (vol_depth - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u;
+    let pad_height = (vol_height - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u;
+    let pad_width = (vol_width - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u;
+    let padLengthOneChannel = pad_depth * pad_height * pad_width;
+
+    let out_channel = u32(outChannels.value);
+    let out_depth = (vol_depth - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u - 2u * pad + outPad;
+    let out_height = (vol_height - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u - 2u * pad + outPad;
+    let out_width = (vol_width - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u - 2u * pad + outPad;
+    let outLengthOneChannel = out_depth * out_height * out_width;
+    let out_length = out_channel * out_depth * out_height * out_width;
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= out_width
+        || global_id.y >= out_height
+        || global_id.z >= out_depth)
+    {
+        return;
+    }
+
+    output.data[0] = f32(out_length);
+    output.data[1] = f32(out_channel);
+    output.data[2] = f32(out_depth);
+    output.data[3] = f32(out_height);
+    output.data[4] = f32(out_width);
+
+    for (var c = 0u; c < out_channel; c = c + 1u)
+    {
+        let indexPad = c * padLengthOneChannel + (global_id.z + pad) * pad_height * pad_width + (global_id.y + pad) * pad_width + (global_id.x + pad);
+        let index = c * outLengthOneChannel + global_id.z  * out_height * out_width + global_id.y * out_width + global_id.x;
+        output.data[index + 5u] = f32(atomicLoad(&padArray.data[indexPad])) / 100000.0 + bias.data[c + 5u];
+    }
+    
+
+    return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> conv_mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> bias: ComputeData;
+@group(0) @binding(3) var<storage, read_write> padArray: ComputeData;
+@group(0) @binding(4) var<storage, read_write> output: ComputeData;
+@group(0) @binding(5) var<uniform> outChannels: parameter;
+@group(0) @binding(6) var<uniform> stride: parameter;
+@group(0) @binding(7) var<uniform> padding: parameter;
+
+const blockSize = 8;
+
+@compute @workgroup_size(blockSize, blockSize, blockSize)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    var index : u32;
+    var vol_index : u32;
+    let pad = padding.value;
+
+    let c = padArray.data[1];
+    let d = padArray.data[2];
+    let h = padArray.data[3];
+    let w = padArray.data[4];
+
+    let vol_depth = u32(vol.data[2]);
+    let vol_height = u32(vol.data[3]);
+    let vol_width = u32(vol.data[4]);
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= vol_width
+        || global_id.y >= vol_height
+        || global_id.z >= vol_depth)
+    {
+        return;
+    }
+
+    let offset = u32(pad);
+    for (var i = 0u; i < u32(c); i = i + 1u)
+    {
+        let x = global_id.x;
+        let y = global_id.y;
+        let z = global_id.z;
+
+        vol_index = (i * u32(vol_depth * vol_height * vol_width)) + (z * u32(vol_height * vol_width)) + (y * u32(vol_width)) + x;
+        index = (i * u32(d * h * w)) + ((z + offset) * u32(w * h)) + ((y + offset) * u32(w)) + (x + offset);
+      
+        padArray.data[index + 5u] = vol.data[vol_index + 5u];
+    }
+
+    return;
 }struct VertexOutput {
 	@location(0) eye : vec3<f32>,
 	@location(1) direction : vec3<f32>,
@@ -1922,13 +3105,38 @@ struct VertexOutput {
 	output.color = vec3<f32>(1.0, 0.0, 0.0);
 				
 	return output;
-}[[fragment]] 
+}struct ComputeData {
+    data: array<f32>
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
 fn main(
-	[[location(0)]] vCol: vec3<f32>,
-	[[location(1)]] direction: vec3<f32>,
-	[[location(2)]] eye: vec3<f32>
+    @builtin(global_invocation_id) global_id: vec3<u32>
 ) 
--> [[location(0)]] vec4<f32> 
+{
+    var index : u32;
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(vol.data[0]))
+    {
+        return;
+    }
+
+    vol.data[global_id.x + 5u] = max(vol.data[global_id.x + 5u], 0.0);
+   
+    return;
+}@fragment
+fn main(
+	@location(0) vCol: vec3<f32>,
+	@location(1) direction: vec3<f32>,
+	@location(2) eye: vec3<f32>
+) 
+-> @location(0) vec4<f32> 
 {
 	var fragColor = vec4<f32>(vCol, 1.0);
 	fragColor = vec4<f32>(eye, 1.0);
@@ -1939,29 +3147,29 @@ fn radians(degs : f32) -> f32 {
 	return (degs * PI) / 180.0;
 }
 
-[[block]] struct Camera {
+struct Camera {
 	view : mat4x4<f32>;
 	viewInv : mat4x4<f32>;
 	proj : mat4x4<f32>;
 };
-[[group(0), binding(0)]] var<uniform> camera : Camera;
+@group(0) @binding(0) var<uniform> camera : Camera;
 
-[[block]] struct Model {
+struct Model {
 	
 	matrix : mat4x4<f32>;
 };
-[[group(0), binding(1)]] var<uniform> model : Model;
+@group(0) @binding(1) var<uniform> model : Model;
 
 struct VertexOutput {
-  [[location(0)]] vCol: vec3<f32>,
-  [[location(1)]] direction: vec3<f32>,
-  [[location(2)]] eye: vec3<f32>,
-  [[builtin(position)]] Position : vec4<f32>,
+  @location(0) vCol: vec3<f32>,
+  @location(1) direction: vec3<f32>,
+  @location(2) eye: vec3<f32>,
+  @builtin(position) Position : vec4<f32>,
 };
 
-[[stage(vertex)]] fn main(
-[[location(0)]] aPos : vec2<f32>,
-[[location(1)]] aCol : vec3<f32>)
+@vertex fn main(
+@location(0) aPos : vec2<f32>,
+@location(1) aCol : vec3<f32>)
 -> VertexOutput
 {
 	var output : VertexOutput;			
@@ -1981,29 +3189,301 @@ struct VertexOutput {
 	output.Position = vec4<f32>(vec3<f32>(aPos, 0.0), 1.0);
 		
 	return output;
-}[[block]] struct CubeOutput 
+}struct ComputeData {
+data: array<f32>
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> output: ComputeData;
+
+
+const blockSize = 8;
+
+@compute @workgroup_size(blockSize, blockSize, blockSize)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    
+    let c = vol.data[1];
+    let d = vol.data[2];
+    let h = vol.data[3];
+    let w = vol.data[4];
+
+    output.data[1] = c;
+    output.data[2] = d;
+    output.data[3] = h;
+    output.data[4] = w;
+    output.data[0] = c * d * h * w;
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= u32(w)
+        || global_id.y >= u32(h)
+        || global_id.z >= u32(d))
+    {
+        return;
+    }
+
+    var i : u32;
+    var k : u32; // channel iter
+    var sumExp : f32;
+    sumExp = 0.0;
+
+    for (k = 0u; k < u32(c); k = k + 1u)
+    {
+        i = (k * u32(d * h * w)) + (global_id.z * u32(h * w)) + (global_id.y * u32(w)) + global_id.x;
+        sumExp = sumExp + exp(vol.data[i + 5u]);
+    }
+   
+    for (k = 0u; k < u32(c); k = k + 1u)
+    {
+        i = (k * u32(d * h * w)) + (global_id.z * u32(h * w)) + (global_id.y * u32(w)) + global_id.x;
+        output.data[i + 5u] = exp(vol.data[i + 5u]) / sumExp;
+    }
+
+    return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> volTemp: ComputeData;
+@group(0) @binding(2) var<storage, read_write> output: ComputeData;
+@group(0) @binding(3) var<uniform> nDivChannels: parameter;
+@group(0) @binding(4) var<uniform> offset: parameter;
+@group(0) @binding(5) var<storage, read_write> weight: ComputeData;
+@group(0) @binding(6) var<storage, read_write> bias: ComputeData;
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(local_invocation_id) local_id : vec3<u32>,
+    @builtin(workgroup_id) workgroup_id : vec3<u32>
+)
+{
+    var index : u32;
+
+    let c = output.data[1];
+    let d = output.data[2];
+    let h = output.data[3];
+    let w = output.data[4];
+
+    let off_val = u32(offset.value);
+    let lengthOneChannel = u32(w * h * d);
+
+    for (var i = 0u; i < u32(c); i = i + 1u)
+    {
+        let tid = workgroup_id.x * u32(blockSize) + local_id.x;
+        if (tid < lengthOneChannel)
+        {
+            index = tid + i * lengthOneChannel;
+            output.data[index + 5u] = vol.data[index + off_val + 5u] * vol.data[index + off_val + 5u];
+        }
+    }
+
+    return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct parameter {
+    value: i32
+}
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> volTemp: ComputeData;
+@group(0) @binding(2) var<storage, read_write> output: ComputeData;
+@group(0) @binding(3) var<uniform> nDivChannels: parameter;
+@group(0) @binding(4) var<uniform> offset: parameter;
+@group(0) @binding(5) var<storage, read_write> weight: ComputeData;
+@group(0) @binding(6) var<storage, read_write> bias: ComputeData;
+
+
+const blockSize = 1024;
+var<workgroup> partial_sum : array<f32, blockSize>;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(local_invocation_id) local_id : vec3<u32>,
+    @builtin(workgroup_id) workgroup_id : vec3<u32>
+)
+{
+    let c = nDivChannels.value;
+    let d = volTemp.data[2];
+    let h = volTemp.data[3];
+    let w = volTemp.data[4];
+    
+    let lengthOneChannel = u32(w * h * d);
+
+    // Calculate thread ID
+    partial_sum[local_id.x] = f32(0.0);
+    workgroupBarrier();
+
+    var value : f32;
+    let tid = workgroup_id.x * u32(blockSize) + local_id.x;
+    if (tid < lengthOneChannel)
+    {
+        value = f32(0.0);
+        for (var i = 0u; i < u32(c); i = i + 1u)
+        {
+            value = value + volTemp.data[tid + i * lengthOneChannel + 5u];
+        }
+        partial_sum[local_id.x] = partial_sum[local_id.x] + value;
+    }
+    workgroupBarrier();
+        
+
+    // Start at 1/2 block stride and divide by two each iteration
+    for (var s = u32(blockSize) / 2u; s > 0u; s = s >> 1u) {
+
+        // Each thread does work unless it is further than the stride
+        if (local_id.x < s) {
+            partial_sum[local_id.x] = partial_sum[local_id.x] + partial_sum[local_id.x + s];
+        }
+        workgroupBarrier();
+    }
+
+    // Let the thread 0 for this block write it's result to main memory
+    // Result is inexed by this block
+    if (local_id.x == 0u) {
+        output.data[workgroup_id.x + 5u] = partial_sum[0];
+    }
+
+    // Without this line, bug write to memory will happend
+    if (tid > lengthOneChannel)
+    {
+        return;
+    }
+    
+    output.data[1] = 1.0;
+    output.data[2] = 1.0;
+    output.data[3] = 1.0;
+    output.data[4] = f32(ceil((w * h * d) / f32(blockSize)));
+    output.data[0] = f32(ceil((w * h * d) / f32(blockSize)));
+    
+    return;
+}struct ComputeData {
+    data: array<f32>
+}
+
+struct TempData {
+    data: array<atomic<i32>>
+}
+
+struct parameter {
+    value: i32
+}
+
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> conv_mask: ComputeData;
+@group(0) @binding(2) var<storage, read_write> bias: ComputeData;
+@group(0) @binding(3) var<storage, read_write> padArray: TempData;
+@group(0) @binding(4) var<storage, read_write> output: ComputeData;
+@group(0) @binding(5) var<uniform> outChannels: parameter;
+@group(0) @binding(6) var<uniform> stride: parameter;
+@group(0) @binding(7) var<uniform> padding: parameter;
+@group(0) @binding(8) var<uniform> outputPadding: parameter;
+
+
+const blockSize = 8;
+
+@compute @workgroup_size(blockSize, blockSize, blockSize)
+fn main(
+    @builtin(global_invocation_id) global_id: vec3<u32>
+)
+{
+    let step = u32(stride.value);
+
+    let conv_mask_sz = u32(conv_mask.data[2]);
+
+    let vol_channel = u32(vol.data[1]);
+    let vol_depth = u32(vol.data[2]);
+    let vol_height = u32(vol.data[3]);
+    let vol_width = u32(vol.data[4]);
+
+    // Guard against out-of-bounds work group sizes
+    if (global_id.x >= vol_width
+        || global_id.y >= vol_height
+        || global_id.z >= vol_depth)
+    {
+        return;
+    }
+
+    let out_channel = u32(outChannels.value);
+    let out_depth = (vol_depth - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u;
+    let out_height = (vol_height - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u;
+    let out_width = (vol_width - 1u) * step + (u32(conv_mask_sz) - 1u) + 1u;
+
+    var result : f32;
+    var indxRoI : u32;
+    var indxKernel : u32;
+    var index : u32;
+
+    let lengthOneKernel = conv_mask_sz * conv_mask_sz * conv_mask_sz;
+    let lengthOneChannel = vol_depth * vol_height * vol_width;
+    let lengthOneOutChannel = out_depth * out_height * out_width;
+
+    for (var c = 0u; c < out_channel; c = c + 1u)
+    {
+        for (var k = 0u; k < vol_channel; k = k + 1u)
+        {
+            for (var z = 0u; z < conv_mask_sz; z = z + 1u)
+            {
+                for (var y = 0u; y < conv_mask_sz; y = y + 1u)
+                {
+                    for (var x = 0u; x < conv_mask_sz; x = x + 1u)
+                    {
+                        let xx = global_id.x * step + x;
+                        let yy = global_id.y * step + y;
+                        let zz = global_id.z * step + z;
+
+                        indxRoI = k * lengthOneChannel + global_id.z * vol_height * vol_width + global_id.y * vol_width + global_id.x;
+                        index = c * lengthOneOutChannel + zz * out_height * out_width + yy * out_width + xx;
+
+                        // Inverse compare with convolution: loop out_channels for weights or kernels
+                        indxKernel = (k * out_channel * lengthOneKernel) + (c * lengthOneKernel) + z * conv_mask_sz * conv_mask_sz + y * conv_mask_sz + x;
+
+                        result = vol.data[indxRoI + 5u] * conv_mask.data[indxKernel + 5u];
+                        let res = i32(result * 100000.0);
+                        let val = atomicAdd(&padArray.data[index], res);
+                    }
+                }   
+            }  
+        }
+    }
+
+    return;
+}struct CubeOutput 
 {
 	t : f32,
 	fr : f32,
 };
 
-[[block]] struct VolumeRatios
+struct VolumeRatios
 {
 	ratio : array<vec3<f32>>,
 };
 
-[[block]] struct TransferFunctionColor
+struct TransferFunctionColor
 {
 	color : array<vec4<f32>>,
 };
 
-[[block]] struct TransferFunctionRamp
+struct TransferFunctionRamp
 {
 	ramp : array<f32>,
 };
 
 
-[[block]] struct Param 
+struct Param 
 {
 	enableEarlyRayTermination : i32,
 	enableJittering : i32,
@@ -2017,17 +3497,17 @@ struct VertexOutput {
 	shadowQuality : f32,
 	shadowStrength : f32,
 };
-[[group(0), binding(2)]] var s : sampler;
-[[group(0), binding(3)]] var volume0 : texture_3d<f32>;
-[[group(0), binding(4)]] var volume1 : texture_3d<f32>;
-[[group(0), binding(5)]] var volume2 : texture_3d<f32>;
-[[group(0), binding(6)]] var volume3 : texture_3d<f32>;
-[[group(0), binding(7)]] var volume4 : texture_3d<f32>;
-[[group(0), binding(8)]] var<uniform> param : Param;
-[[group(0), binding(9)]] var<storage, read> transferFunctionColor: TransferFunctionColor;
-[[group(0), binding(10)]] var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
-[[group(0), binding(11)]] var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
-[[group(0), binding(12)]] var<storage, read> volumeRatios: VolumeRatios;
+@group(0) @binding(2) var s : sampler;
+@group(0) @binding(3) var volume0 : texture_3d<f32>;
+@group(0) @binding(4) var volume1 : texture_3d<f32>;
+@group(0) @binding(5) var volume2 : texture_3d<f32>;
+@group(0) @binding(6) var volume3 : texture_3d<f32>;
+@group(0) @binding(7) var volume4 : texture_3d<f32>;
+@group(0) @binding(8) var<uniform> param : Param;
+@group(0) @binding(9) var<storage, read> transferFunctionColor: TransferFunctionColor;
+@group(0) @binding(10) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
+@group(0) @binding(11) var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
+@group(0) @binding(12) var<storage, read> volumeRatios: VolumeRatios;
 
 var<private> seedGlobal : u32;
 var<private> lightRadius : f32;
@@ -2182,16 +3662,16 @@ fn color_transfer(intensity : f32, which : i32) -> vec3<f32>
     //return vec4<f32>(intensity * high + (1.0 - intensity) * low, alpha);
 }
 
-[[stage(fragment)]]
+@fragment
 fn main(
-[[location(0)]] eye : vec3<f32>,
-[[location(1)]] direction : vec3<f32>,
-[[location(2)]] light : vec3<f32>,
-[[location(3)]] lightPos : vec3<f32>,
-[[location(4)]] fragPos : vec3<f32>,
-[[location(5)]] tex_coords : vec2<f32> 
+@location(0) eye : vec3<f32>,
+@location(1) direction : vec3<f32>,
+@location(2) light : vec3<f32>,
+@location(3) lightPos : vec3<f32>,
+@location(4) fragPos : vec3<f32>,
+@location(5) tex_coords : vec2<f32> 
 ) 
--> [[location(0)]] vec4<f32> 
+-> @location(0) vec4<f32> 
 {
 	//var size = vec3<f32>(1.0, 1.0, 1.0);
 	var size = volumeRatios.ratio[0];
@@ -2443,7 +3923,7 @@ struct Intersection
 
 struct VolumeRatios
 {
-	ratio : array<vec3<f32>>,
+	ratio : array<vec4<f32>>,
 }
 
 struct TransferFunctionColor
@@ -2488,15 +3968,20 @@ struct Param
 	annotationVolume : i32,
 	annotationPingPong : i32,
 	shadowRadius : f32,
+	
+	rawVolumeChannel : i32,
+	numChannels : i32,
+	empty2 : i32,
+	empty3 : i32,
 }
 
 @group(0) @binding(0) var<uniform> camera : Camera;
 @group(0) @binding(2) var s : sampler;
 @group(0) @binding(3) var volume0 : texture_3d<f32>;
-@group(0) @binding(4) var volume1 : texture_3d<f32>;
+//@group(0) @binding(4) var volume1 : texture_3d<f32>;
 @group(0) @binding(5) var volume2 : texture_3d<f32>;
 @group(0) @binding(6) var volume3 : texture_3d<f32>;
-@group(0) @binding(7) var volume4 : texture_3d<f32>;
+//@group(0) @binding(7) var volume4 : texture_3d<f32>;
 @group(0) @binding(8) var<uniform> param : Param;
 @group(0) @binding(9) var<storage, read> transferFunctionColor: TransferFunctionColor;
 @group(0) @binding(10) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
@@ -2615,7 +4100,7 @@ fn clip(sample : vec4<f32>, pos : vec3<f32> ) -> vec4<f32>
 fn dataReadAnnotation(pos : vec3<f32>) -> vec4<f32>
 {
 	var result : vec4<f32>;
-	var volumeRatio = volumeRatios.ratio[0];
+	var volumeRatio = volumeRatios.ratio[0].xyz;
 	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
 	
 	if(bool(param.annotationPingPong)) 
@@ -2634,7 +4119,7 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 {
 	var mapped : vec4<f32>;
 	
-	var volumeRatio = volumeRatios.ratio[0];
+	var volumeRatio = volumeRatios.ratio[0].xyz;
 	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
 
 	var sample4 = textureSampleLevel(volume0, s, pos, 0.0);
@@ -2766,8 +4251,14 @@ fn main(
 
 	clipped = false;
 	
+	var rawVolumeChannel = param.rawVolumeChannel;
+	var useRawVolume = rawVolumeChannel >= 0;
+	var numChannels = param.numChannels;
+	
+	
+	
 	// volumeRatio = voxelSize * (dataSize / maxDataSize)
-	var volumeRatio = volumeRatios.ratio[0];
+	var volumeRatio = volumeRatios.ratio[0].xyz;
 	//size = vec3<f32>(1.5, 1.0, 1.0);
 			
 	// intialize random seed
@@ -2827,7 +4318,7 @@ fn main(
 	var enableEarlyRayTermination = bool(param.enableEarlyRayTermination);
 	var enableAnnotations = bool(param.enableAnnotations);
 	
-	for (var i: i32 = 0; i < iterations; i = i + 1) 
+	for (var i: i32 = 0; i < iterations; i += 1) 
 	{
 		//calculate intersection along the ray
 		var tmp = f32(i) * stepSize + outputCube.t;
@@ -2880,8 +4371,17 @@ fn main(
 		}
 				
 		// voxels with low influence are skipped 
-		var influence = masks[0] + masks[1] + masks[2];
-		if (( influence <= 0.2) || masks[3] <= 0.1) {
+		var influence = 0.0;
+		
+		for (var i: i32 = 0; i < numChannels; i = i + 1)
+		{
+			if(i != rawVolumeChannel) {
+				influence += masks[i];
+			}
+			
+		}
+		
+		if (( influence <= 0.2) || (useRawVolume && masks[rawVolumeChannel] <= 0.1)) {
 			continue;
 		}
 		
@@ -2962,7 +4462,6 @@ fn main(
 					{
 						sample = dataRead(sample_pos).xyz;
 					}
-					//voxel = dataRead(sp, 0).xyz;
 					
 					var value = 1.0 - (sample.x + sample.y + sample.z);
 					var low = transferFunctionRamp1.ramp[4];
@@ -2985,8 +4484,11 @@ fn main(
 		}		
 		
 		// ============= COLOR AND ALPHA ACCUMULATION =============
-		for (var which: i32 = 0; which < 3; which = which + 1) 
+		for (var which: i32 = 0; which < numChannels; which += 1) 
 		{
+			if(which == rawVolumeChannel) {
+				continue;
+			}
 			var alpha = masks[which];		
 			var color = color_transfer(which) * 1.0;
 			
@@ -2997,9 +4499,11 @@ fn main(
 			//var ds = stepSize * 20.0;
 			//alpha = 1.0 - pow(1.0 - alpha, ds);
 			
-			// apply original data
-			alpha = alpha * masks[3]; //ToDo: temorary not used since raw data is missing for small volume
-					
+			// apply original data, only use when raw data is available
+			if(useRawVolume) {
+				alpha = alpha * masks[rawVolumeChannel];
+			}
+			
 			//shading
 			var originalColor = color;
 			
@@ -3067,414 +4571,6 @@ fn main(
 	output.color = fragColor;
 
 	return output;
-}[[block]] struct CubeOutput 
-{
-	t : f32;
-	fr : f32;
-};
-
-[[block]] struct VolumeRatios
-{
-	ratio : array<vec3<f32>>;
-};
-
-[[block]] struct TransferFunctionColor
-{
-	color : array<vec4<f32>>;
-};
-
-[[block]] struct TransferFunctionRamp
-{
-	ramp : array<f32>;
-};
-
-
-[[block]] struct Param 
-{
-	enableEarlyRayTermination : i32;
-	enableJittering : i32;
-	enableAmbientOcclusion : i32;
-	enableSoftShadows : i32;
-	slice : f32;
-	sampleRate : f32;
-	aoRadius : f32;
-	aoStrength : f32;
-	aoNumSamples : i32;
-	shadowQuality : f32;
-	shadowStrength : f32;
-	voxelSize : f32;
-	
-	//padding : vec2<f32>;
-	//clearColor : vec4<f32>;
-};
-[[group(0), binding(2)]] var s : sampler;
-[[group(0), binding(3)]] var volume0 : texture_3d<f32>;
-[[group(0), binding(4)]] var volume1 : texture_3d<f32>;
-[[group(0), binding(5)]] var volume2 : texture_3d<f32>;
-[[group(0), binding(6)]] var volume3 : texture_3d<f32>;
-[[group(0), binding(7)]] var volume4 : texture_3d<f32>;
-[[group(0), binding(8)]] var<uniform> param : Param;
-[[group(0), binding(9)]] var<storage, read> transferFunctionColor: TransferFunctionColor;
-[[group(0), binding(10)]] var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
-[[group(0), binding(11)]] var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
-[[group(0), binding(12)]] var<storage, read> volumeRatios: VolumeRatios;
-
-var<private> seedGlobal : u32;
-var<private> lightRadius : f32;
-
-fn wang_hash(seedIn : u32) -> u32
-{
-	var seed = seedIn;
-    seed = (seed ^ 61u) ^ (seed >> 16u);
-    seed = seed * 9u;
-    seed = seed ^ (seed >> 4u);
-    seed = seed * u32(0x27d4eb2d);
-    seed = seed ^ (seed >> 15u);
-    return seed;
-}
-
-fn rand() -> f32
-{
-	seedGlobal = wang_hash(seedGlobal);
-	var f = f32(seedGlobal) * (1.0 / 4294967296.0);
-	return f
-	/cos(f)
-	;
-}
-
-
-fn cube(eye : vec3<f32>, dir : vec3<f32>, size : vec3<f32>) -> CubeOutput
-{
-	var output : CubeOutput;
-	var far : f32;
-	var near : f32;
-	var t1 : f32;
-	var t2 : f32;
-	var t3 : f32;
-	output.fr = 0.0;
-	far = 9999.0;
-	near = -9999.0;
-	var i : i32 = 0;
-	loop
-	{
-		if (i >= 3) { break; }
-
-		if (dir[i] == 0.0)
-		{
-			if (eye[i]<-0.0001 || eye[i]>0.0001)
-			{
-				output.t = -1.0;
-				return output;
-			}
-		}
-		else
-		{
-			t1 = (-size[i] - eye[i]) / dir[i];
-			t2 = (size[i] - eye[i]) / dir[i];
-			if (t2 > t1)
-			{
-				t3 = t1;
-				t1 = t2;
-				t2 = t3;
-			}
-
-			if (t2 > near) {
-				near=t2;
-			}
-			if (t1 < far) {
-				far=t1;
-			}
-			if (far < 0.0) { //eye lies behind the cube and looks away
-				output.t = 0.0;
-				return output;
-			}
-			if (near > far) { //eye is drunk
-				output.t = -1.0;
-				return output;
-			}
-		}
-		i = i + 1;
-	}
-	if (near < 0.0) //eye lies within the cube
-	{
-		output.fr = far;
-		output.t = 0.0;
-	}
-	else
-	{
-		output.fr = far;
-		output.t = near;
-	}
-	return output;
-}
-
-fn dataRead(pos : vec3<f32>, which : i32) -> vec4<f32>
-{
-	var uvy = pos.xyz;
-	
-	//var realSize = vec3<f32>(1024.0, 1440.0, 448.0);
-	var realSize = vec3<f32>(1.0,1.0,1.0);
-	var realZRatio = realSize.y / realSize.z;
-	var realXRatio = realSize.y / realSize.x;
-	
-	uvy.z = uvy.z - 0.5;
-	uvy.z = uvy.z * realZRatio;
-	uvy.z = uvy.z + 0.5;
-	
-	uvy.x = uvy.x - 0.5;
-	uvy.x = uvy.x * realXRatio;
-	uvy.x = uvy.x + 0.5;
-	
-	
-	var sample1 : f32;
-	var sample4 : vec4<f32>;
-
-	var mapped : vec4<f32>;
-
-	if (which == 0)
-	{
-		sample4 = textureSample(volume0, s, pos) * 1.0;		
-		
-		var low0 = transferFunctionRamp1.ramp[0];
-		var high0 = transferFunctionRamp2.ramp[0];
-
-		var low1 = transferFunctionRamp1.ramp[1];
-		var high1 = transferFunctionRamp2.ramp[1];
-
-		var low2 = transferFunctionRamp1.ramp[2];
-		var high2 = transferFunctionRamp2.ramp[2];
-
-		var low3 = transferFunctionRamp1.ramp[3];
-		var high3 = transferFunctionRamp2.ramp[3];
-
-		mapped.x = clamp((sample4.x - low0) / (high0 - low0), 0.0, 1.0);	
-		mapped.y = clamp((sample4.y - low1) / (high1 - low1), 0.0, 1.0);	
-		mapped.z = clamp((sample4.z - low2) / (high2 - low2), 0.0, 1.0);	
-		mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);	
-	}
-	elseif (which == 1)
-	{
-		sample1 = textureSample(volume1, s, pos).x;
-
-		var low = transferFunctionRamp1.ramp[4];
-		var high = transferFunctionRamp2.ramp[4];
-		
-		mapped.x = 1.0 - (1.0 - clamp((sample1 - low) / (high - low), 0.0, 1.0))
-		/** (textureSample(volume0, s, pos).a)*/;
-	}
-	
-	return mapped;
-}
-
-// color transfer function
-fn color_transfer(which : i32) -> vec3<f32> 
-{
-	return transferFunctionColor.color[which].xyz;
-}
-
-[[stage(fragment)]]
-fn main(
-[[location(0)]] eye : vec3<f32>,
-[[location(1)]] direction : vec3<f32>,
-[[location(2)]] light : vec3<f32>,
-[[location(3)]] lightPos : vec3<f32>,
-[[location(4)]] fragPos : vec3<f32>,
-[[location(5)]] tex_coords : vec2<f32> 
-) 
--> [[location(0)]] vec4<f32> 
-{	
-	var size = volumeRatios.ratio[0];
-			
-	// intialize random seed
-	//seedGlobal = u32(tex_coords.x * 21032.0 * tex_coords.y * 43242.0);
-	seedGlobal = u32(tex_coords.x * tex_coords.y * 1000000.0);
-			
-	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
-	var outputCube = cube(eye, direction, size);
-	
-	var stepSize = 0.01;
-	stepSize = stepSize / param.sampleRate;
-
-	// ray offset jittering
-	if (bool(param.enableJittering))
-	{
-		outputCube.t = outputCube.t + rand() * stepSize * 1.0;
-	}
-	
-	var iterations = i32((outputCube.fr - outputCube.t) / stepSize);
-		
-	var src = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-	var dst = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-
-	// D3D backend will unroll loops and cause following error
-	// error X3511: unable to unroll loop, loop does not appear to terminate in a timely manne
-	// It's a known problem with the FXC compiler used by Chrome
-	// https://bugs.chromium.org/p/tint/issues/detail?id=1112	
-	
-	// raymarching
-	var max = 0.0;
-
-	var accumA = 0.0;
-	var accumC = vec3<f32>(0.0);
-	
-	var quit = false;
-	
-	for (var i: i32 = 0; i < iterations; i = i + 1) 
-	{
-		//calculate intersection along the ray
-		var tmp = f32(i) * stepSize + outputCube.t;
-		var isec0 = tmp * direction + eye;
-		
-		//transform it to match the bounding box centered on [0, 0, 0]
-		var isec1 = (isec0 / size) * 0.5 + 0.5;
-	
-		if (isec1.x < 0.0 || isec1.x > 1.0 ||
-			isec1.y < 0.0 || isec1.y > 1.0 ||
-			isec1.z < 0.0 || isec1.z > 1.0)
-		{
-			continue;
-		} 
-				
-		var masks = vec4<f32>(0.0);
-		
-		masks = dataRead(isec1, 0);
-		
-		if ((masks[0] + masks[1] + masks[2] < 0.2) || masks[3] < 0.0)
-		{
-			continue;
-		}
-		
-				
-		//object space ambient occlusion
-		var ao = 0.0;
-		if (bool(param.enableAmbientOcclusion)) 
-		{
-			var radius = param.aoRadius * 0.01;
-			
-			for (var j: i32 = 0; j < param.aoNumSamples; j = j + 1)
-			{
-				var randomOffset = vec3<f32>(-1.0 + 2.0 * rand(), 2.0 + rand(), -1.0 + 2.0 * rand());
-				randomOffset = randomOffset * radius;
-				
-				var occlusion = 1.0 - dataRead(isec1 + randomOffset, 1).x;
-				ao = ao + occlusion;
-			}			
-			ao = ao / f32(param.aoNumSamples);
-			ao = ao * param.aoStrength;
-		}
-		
-	
-		//soft shadows
-		var shadow = 0.0;
-		if (bool(param.enableSoftShadows)) 
-		{
-			var sTotal : f32;
-			
-			sTotal = 0.0;
-							
-			var quality : i32;
-			quality = 1;
-			
-			var samplingRadiusShadow = 0.1;
-			var stepShadow = 0.05 / param.shadowQuality;
-			var shadowStrength = param.shadowStrength;
-			var shadowSampleCount = 0;
-			
-			for (var q: i32 = 0; q < quality; q = q + 1)
-			{	
-				for (var t: f32 = 0.05; t < 1.0; t = t + stepShadow)
-				{			
-					var halfV = normalize(lightPos - isec1);
-
-					var sp = isec1 + halfV * t * samplingRadiusShadow;
-
-					var occlusion = 1.0 - dataRead(sp, 1).x;
-
-					shadow = shadow + (occlusion) /** pow((0.25 - t) * 2.0, 1.0)*/;
-
-					//sample count for the shadow normalization
-					shadowSampleCount = shadowSampleCount + 1;
-				}
-				
-				sTotal = sTotal + shadow;
-			}
-			shadow = sTotal / f32(shadowSampleCount);
-			shadow = shadow * shadowStrength;
-			shadow = clamp(shadow, 0.0, 1.0);				
-		}		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		//color and alpha accumulation
-		for (var which: i32 = 0; which < 3; which = which + 1) 
-		{
-			var mask = 0.0;
-			
-			var alpha = masks[which];
-			
-			var color = color_transfer(which) * 1.0;
-			
-			//alpha normalization based on the stepSize
-			alpha = alpha * stepSize / 0.0025;
-					
-			//alpha normalization - correct, but slower formula
-			//var ds = stepSize * 20.0;
-			//alpha = 1.0 - pow(1.0 - alpha, ds);
-			
-			//apply original data
-			//alpha = alpha * masks[3];
-					
-			//shading
-			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
-			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
-
-			//front to back alpha compositing
-			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;
-			accumA = accumA + (1.0 - accumA) * alpha;  
-
-			// break from loop on high enough alpha value
-			if (bool(param.enableEarlyRayTermination) && accumA >= 0.8)
-			{
-				quit = true;
-				break;
-			}
-		}
-		
-		if (quit)
-		{
-			break;
-		}
-		
-	}
-	
-	//make the picture brighter
-	accumC = accumC * 1.5;
-	
-	var coords = vec3<f32>(tex_coords.x, tex_coords.y, 0.5);		
-	/*var sample = textureSample(volume1, s, coords);
-	var fragColor = vec4<f32>(sample.r, 0.0, 0.0, 1.0);*/
-	
-	
-	var masks = vec4<f32>(0.0);	
-	masks = dataRead(coords, 0);
-	//var fragColor = vec4<f32>(1.0 - masks[3], 0.0, 0.0, 1.0);
-		
-		
-	
-	var fragColor = vec4<f32>(accumC.x, accumC.y, accumC.z, accumA);
-	
-	//var fragColor = vec4<f32>(param.voxelSize, 0.0, 0.0, accumA);
-	//var fragColor = vec4<f32>(0.33, 1.0, 0.33, accumA);
-	
-	
-	
-	return fragColor;
 }struct Camera {
 	view : mat4x4<f32>,
 	viewInv : mat4x4<f32>,
@@ -3526,58 +4622,6 @@ struct VertexOutput {
 
 	
 	return output;
-}[[block]] struct Camera {
-	view : mat4x4<f32>;
-	viewInv : mat4x4<f32>;
-	proj : mat4x4<f32>;
-};
-[[group(0), binding(0)]] var<uniform> camera : Camera;
-
-[[block]] struct Model {
-	matrix : mat4x4<f32>;
-};
-[[group(0), binding(1)]] var<uniform> model : Model;
-
-struct VertexOutput {
-  [[location(0)]] eye : vec3<f32>;
-  [[location(1)]] direction : vec3<f32>;
-  [[location(2)]] light : vec3<f32>;
-  [[location(3)]] lightPos : vec3<f32>;
-  [[location(4)]] fragPos : vec3<f32>;
-  [[location(5)]] tex_coords : vec2<f32>; 
-  [[builtin(position)]] Position : vec4<f32>;
-};
-
-[[stage(vertex)]] fn main(
-[[location(0)]] vertex : vec3<f32>,
-[[location(1)]] txCoord : vec2<f32>)
--> VertexOutput
-{
-	var output : VertexOutput;	
-	
-	var fov : f32 = (45.0 / 360.0) * (2.0 * 3.141592654);
-	var fl : f32 = 1.0 / tan(fov / 2.0);
-	
-	var tmp = vec4<f32>(vertex.x / (1080.0 / 1920.0), vertex.y, vertex.z - fl, 1.0);
-
-	// vertex position
-	var ve : vec3<f32> = (camera.viewInv * tmp).xyz;
-	
-	output.eye = (camera.viewInv * vec4<f32>(0.0, 0.0, 0.0, 1.0)).xyz;
-	output.direction = ve - output.eye;	
-	output.lightPos = (camera.viewInv * vec4<f32>(1.0, 1.0, 3.0, 1.0)).xyz;
-	output.light = normalize(output.lightPos);
-	output.fragPos = vertex;
-	output.tex_coords = txCoord;
-	
-	
-	output.Position = vec4<f32>(vertex, 1.0);
-
-	//output.Position = camera.view * output.Position;
-	//output.Position = camera.proj * camera.view * output.Position;
-
-	
-	return output;
 }varying vec3 eye,dir,light,lightPos, fragPos;
 
 uniform mat4 modelview;
@@ -3608,7 +4652,63 @@ void main()
 }
 
 
+// Notice about the struct in the compute shader
+
+struct ComputeData {
+    data: array<f32>
+}
+
+
+struct parameter {
+    value: i32
+}
+
+@group(0) @binding(0) var<storage, read_write> vol: ComputeData;
+@group(0) @binding(1) var<storage, read_write> volTemp: ComputeData;
+@group(0) @binding(2) var<storage, read_write> output: ComputeData;
+@group(0) @binding(3) var<uniform> nDivChannels: parameter;
+@group(0) @binding(4) var<uniform> offset: parameter;
+@group(0) @binding(5) var<storage, read_write> weight: ComputeData;
+@group(0) @binding(6) var<storage, read_write> bias: ComputeData;
+
+
+const blockSize = 1024;
+
+@compute @workgroup_size(blockSize, 1, 1)
+fn main(
+    @builtin(local_invocation_id) local_id : vec3<u32>,
+    @builtin(workgroup_id) workgroup_id : vec3<u32>
+)
 {
+    var index : u32;
+
+    let c = f32(nDivChannels.value);
+    let d = vol.data[2];
+    let h = vol.data[3];
+    let w = vol.data[4];
+    let length = w * h * d * c;
+
+    output.data[0] = length;
+    output.data[1] = c;
+    output.data[2] = d;
+    output.data[3] = h;
+    output.data[4] = w;
+
+    let off_val = u32(offset.value);
+    let lengthOneChannel = u32(w * h * d);
+
+    let tid = workgroup_id.x * u32(blockSize) + local_id.x;
+    if (tid < lengthOneChannel)
+    {
+        for (var i = 0u; i < u32(c); i = i + 1u)
+        {
+            index = tid + i * lengthOneChannel;
+            output.data[index + 5u] = vol.data[index + off_val + 5u] - volTemp.data[5u] / f32(length);
+        }
+    }
+
+    return;
+}{
     "rampLow": 0.2,
 	"rampHigh": 0.6,
     "color": {
@@ -3617,14 +4717,6 @@ void main()
         "z": 120
     },
 	"comment" : "inner"
-}{
-    "rampLow": 0.2,
-	"rampHigh": 0.6,
-    "color": {
-        "x": 34,
-        "y": 51,
-        "z": 120
-    }
 }{
     "rampLow": 0.1,
 	"rampHigh": 0.9,
@@ -3638,28 +4730,11 @@ void main()
     "rampLow": 0.1,
 	"rampHigh": 0.9,
     "color": {
-        "x": 190,
-        "y": 30,
-        "z": 90
-    },
-	"comment" : "spikes"
-}{
-    "rampLow": 0.1,
-	"rampHigh": 0.9,
-    "color": {
         "x": 199,
         "y": 154,
         "z": 171
     },
 	"comment" : "membrane"
-}{
-    "rampLow": 0.1,
-	"rampHigh": 0.9,
-    "color": {
-        "x": 199,
-        "y": 154,
-        "z": 171
-    }
 }{
     "rampLow": 0.1,
 	"rampHigh": 0.9,

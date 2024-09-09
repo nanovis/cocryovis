@@ -1,4 +1,5 @@
 {
+    "annotationsCachePath": "./cache/annotations/",
     "ilastik": {
         "path": "../ilastik/",
         "scripts_path": "../ilastik/bin/",
