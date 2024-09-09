@@ -7,7 +7,7 @@ import appConfig from "../tools/config.mjs";
 import path from "path";
 import fileSystem from "fs";
 import { readdir, rename } from "node:fs/promises";
-import { isFileExtensionAccepted } from "../tools/utils.mjs";
+import Utils from "../tools/utils.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
@@ -113,7 +113,7 @@ export default class Result extends DatabaseModel {
                     for (const fileName of files) {
                         const filePath = path.join(resultPath, fileName);
                         if (
-                            isFileExtensionAccepted(
+                            Utils.isFileExtensionAccepted(
                                 fileName,
                                 this.acceptedFileExtensions
                             )
@@ -123,7 +123,7 @@ export default class Result extends DatabaseModel {
                             if (filePath.endsWith("_inverted.json")) {
                                 rawVolumeChannel = filePaths.length - 1;
                             } else if (
-                                isFileExtensionAccepted(fileName, [
+                                Utils.isFileExtensionAccepted(fileName, [
                                     ".raw",
                                     ".json",
                                 ])

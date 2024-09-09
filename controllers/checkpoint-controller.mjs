@@ -5,7 +5,7 @@ import Volume from "../models/volume.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
 import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
-import { parseStringArray } from "../tools/utils.mjs";
+import Utils from "../tools/utils.mjs";
 
 export default class CheckpointController {
     static async uploadCheckpoints(req, res) {
@@ -82,13 +82,15 @@ export default class CheckpointController {
     static async runTraining(nanoOetzi, req, res) {
         try {
             const modelId = Number(req.body.modelId);
-            const trainingVolumesIds = parseStringArray(
+            const trainingVolumesIds = Utils.parseStringArray(
                 req.body.trainingVolumes
             );
-            const validationVolumesIds = parseStringArray(
+            const validationVolumesIds = Utils.parseStringArray(
                 req.body.validationVolumes
             );
-            const testingVolumesIds = parseStringArray(req.body.testingVolumes);
+            const testingVolumesIds = Utils.parseStringArray(
+                req.body.testingVolumes
+            );
 
             const trainingVolumes = await Volume.getMultipleByIdDeep(
                 trainingVolumesIds,

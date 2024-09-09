@@ -2,7 +2,7 @@
 
 import AdmZip from "adm-zip";
 import path from "path";
-import { mrcToRaw } from "../tools/utils.mjs";
+import Utils from "../tools/utils.mjs";
 import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "node:fs/promises";
@@ -189,7 +189,7 @@ export default class RawVolumeData extends VolumeData {
         const mrcFilePath = await unpackedFiles[0].saveAs(volumeData.path);
 
         try {
-            const { rawFileName, settings } = await mrcToRaw(
+            const { rawFileName, settings } = await Utils.mrcToRaw(
                 mrcFilePath,
                 volumeData.path
             );

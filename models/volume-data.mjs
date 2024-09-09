@@ -6,10 +6,7 @@ import fileSystem from "fs";
 import DatabaseModel from "./base-model.mjs";
 import appConfig from "../tools/config.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import {
-    generateUniqueFileName,
-    isFileExtensionAccepted,
-} from "../tools/utils.mjs";
+import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import AdmZip from "adm-zip";
@@ -245,7 +242,7 @@ export default class VolumeData extends DatabaseModel {
         for (const unpackedFile of unpackedFiles) {
             if (
                 !newRawFile &&
-                isFileExtensionAccepted(
+                Utils.isFileExtensionAccepted(
                     unpackedFile.fileName,
                     this.rawFileExtensions
                 )
@@ -253,7 +250,7 @@ export default class VolumeData extends DatabaseModel {
                 newRawFile = unpackedFile;
             } else if (
                 !newSettingFile &&
-                isFileExtensionAccepted(
+                Utils.isFileExtensionAccepted(
                     unpackedFile.fileName,
                     this.settingFileExtensions
                 )
@@ -388,7 +385,7 @@ export default class VolumeData extends DatabaseModel {
         let fileNameOverride = null;
         const potentialSettingFilePath = path.join(folderPath, fileName);
         if (fileSystem.existsSync(potentialSettingFilePath)) {
-            fileNameOverride = generateUniqueFileName(potentialSettingFilePath);
+            fileNameOverride = Utils.generateUniqueFileName(potentialSettingFilePath);
         }
         return fileNameOverride;
     }

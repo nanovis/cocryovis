@@ -8,7 +8,7 @@ import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
 import Result from "./result.mjs";
 import appConfig from "../tools/config.mjs";
-import { createTemporaryFolder } from "../tools/utils.mjs";
+import Utils from "../tools/utils.mjs";
 import path from "path";
 import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 

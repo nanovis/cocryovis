@@ -1,7 +1,7 @@
 // @ts-check
 
 import RawVolumeData from "../models/raw-volume-data.mjs";
-import { publicDataPath, publicPath } from "../tools/utils.mjs";
+import Utils from "../tools/utils.mjs";
 import {
     VolumeDataFactory,
     VolumeDataType,
@@ -32,7 +32,10 @@ export default class VolumeDataController {
             const visualizationFiles = [];
 
             const rawFileReference = {
-                path: publicDataPath(req.originalUrl, volumeData.rawFilePath),
+                path: Utils.publicDataPath(
+                    req.originalUrl,
+                    volumeData.rawFilePath
+                ),
                 filename: path.basename(volumeData.rawFilePath),
             };
             const settingsReference = {
@@ -42,11 +45,11 @@ export default class VolumeDataController {
 
             visualizationFiles.push(rawFileReference);
             visualizationFiles.push({
-                path: publicPath(req.originalUrl, "data/session.json"),
+                path: Utils.publicPath(req.originalUrl, "data/session.json"),
                 filename: "session.json",
             });
             visualizationFiles.push({
-                path: publicPath(req.originalUrl, "data/tf-default.json"),
+                path: Utils.publicPath(req.originalUrl, "data/tf-default.json"),
                 filename: "tf-default.json",
             });
 

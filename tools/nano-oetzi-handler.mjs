@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { exec } from "child_process";
 const execPromise = promisify(exec);
 import TaskQueue from "./task-queue.mjs";
-import { getInverseDateString } from "./utils.mjs";
+import Utils from "./utils.mjs";
 import fsPromises from "node:fs/promises";
 
 /**
@@ -34,7 +34,7 @@ export default class NanoOetziHandler {
     createTemporaryOutputPath() {
         let tempFolderPath = path.join(
             this.config.workCache,
-            getInverseDateString()
+            Utils.getInverseDateString()
         );
         while (fileSystem.existsSync(tempFolderPath)) {
             tempFolderPath += "_";

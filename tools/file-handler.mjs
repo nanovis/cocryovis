@@ -1,6 +1,6 @@
 // @ts-check
 
-import { fileNameFilter, isFileExtensionAccepted } from "./utils.mjs";
+import Utils from "./utils.mjs";
 import path from "path";
 import AdmZip from "adm-zip";
 import fileUpload from "express-fileupload";
@@ -72,7 +72,7 @@ export class PendingFile extends PendingUpload {
      * @return {String}
      */
     get filteredFileName() {
-        return fileNameFilter(this.file.name);
+        return Utils.fileNameFilter(this.file.name);
     }
 
     /**
@@ -96,7 +96,7 @@ export class PendingFile extends PendingUpload {
         const filteredFileName =
             fileNameOverride != null
                 ? fileNameOverride
-                : fileNameFilter(this.file.name);
+                : Utils.fileNameFilter(this.file.name);
         const fullPath = path.join(folderPath, filteredFileName);
         if (fileSystem.existsSync(fullPath)) {
             if (appConfig.safeMode) {
@@ -140,7 +140,7 @@ export class PendingZipFile extends PendingUpload {
      * @return {String}
      */
     get filteredFileName() {
-        return fileNameFilter(this.entry.name);
+        return Utils.fileNameFilter(this.entry.name);
     }
 
     /**
@@ -164,7 +164,7 @@ export class PendingZipFile extends PendingUpload {
         const filteredFileName =
             fileNameOverride != null
                 ? fileNameOverride
-                : fileNameFilter(this.entry.name);
+                : Utils.fileNameFilter(this.entry.name);
         const fullPath = path.join(folderPath, filteredFileName);
 
         if (!fileSystem.existsSync(folderPath)) {
@@ -206,11 +206,11 @@ export function unpackFiles(files, acceptedExtensions = []) {
             let zip = new AdmZip(files[0].data);
             const zipEntries = zip.getEntries();
             for (const entry of zipEntries) {
-                if (isFileExtensionAccepted(entry.name, acceptedExtensions)) {
+                if (Utils.isFileExtensionAccepted(entry.name, acceptedExtensions)) {
                     result.push(new PendingZipFile(zip, entry));
                 }
             }
-        } else if (isFileExtensionAccepted(file.name, acceptedExtensions)) {
+        } else if (Utils.isFileExtensionAccepted(file.name, acceptedExtensions)) {
             result.push(new PendingFile(file));
         }
     }
