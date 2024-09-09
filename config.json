@@ -1,5 +1,10 @@
 {
     "annotationsCachePath": "./cache/annotations/",
+    "volumeDataPath": "./data/volume-data/",
+    "checkpointsPath": "./data/checkpoints/",
+    "resultsPath": "./data/results/",
+    "maxVolumeChannels": 4,
+    "safeMode": false,
     "ilastik": {
         "path": "../ilastik/",
         "scripts_path": "../ilastik/bin/",
@@ -9,7 +14,7 @@
         "model_file_name": "model_project.ilp",
         "tiffCacheFolder": "cache/tiff_cache"
     },
-    "nanoOetzi" : {
+    "nanoOetzi": {
         "path": "../nano-oetzi/",
         "data": "../nano-oetzi/data/",
         "models": "../nano-oetzi/models/",
@@ -26,15 +31,5 @@
             "min_epochs": 1,
             "max_epochs": 1
         }
-    },
-    "models": {
-        "path": "../models/"
-    },
-    "projects": {
-        "volumeDataPath": "./data/volume-data/",
-        "checkpointsPath": "./data/checkpoints/",
-        "resultsPath": "./data/results/",
-        "maxVolumeChannels": 4,
-        "safeMode": false
     }
 }

@@ -177,7 +177,7 @@ export default class VolumeData extends DatabaseModel {
      */
     static async createVolumeDataFolder(id) {
         const folderPath = path.join(
-            appConfig.projects.volumeDataPath,
+            appConfig.volumeDataPath,
             this.folderPath,
             id.toString()
         );
@@ -385,7 +385,9 @@ export default class VolumeData extends DatabaseModel {
         let fileNameOverride = null;
         const potentialSettingFilePath = path.join(folderPath, fileName);
         if (fileSystem.existsSync(potentialSettingFilePath)) {
-            fileNameOverride = Utils.generateUniqueFileName(potentialSettingFilePath);
+            fileNameOverride = Utils.generateUniqueFileName(
+                potentialSettingFilePath
+            );
         }
         return fileNameOverride;
     }

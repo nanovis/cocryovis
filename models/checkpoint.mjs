@@ -348,7 +348,7 @@ export default class Checkpoint extends DatabaseModel {
      */
     static async #createFolder(checkpoint) {
         const folderPath = path.join(
-            appConfig.projects.checkpointsPath,
+            appConfig.checkpointsPath,
             checkpoint.id.toString()
         );
         if (fileSystem.existsSync(folderPath)) {
@@ -378,10 +378,7 @@ export default class Checkpoint extends DatabaseModel {
      * @return {Promise<String>}
      */
     static async reserveFolderName(id) {
-        const folderPath = path.join(
-            appConfig.projects.checkpointsPath,
-            id.toString()
-        );
+        const folderPath = path.join(appConfig.checkpointsPath, id.toString());
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
                 throw new Error(`Checkpoint directory already exists`);

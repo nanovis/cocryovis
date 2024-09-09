@@ -141,12 +141,9 @@ export default class VolumeController {
                 Number(req.params.idVolume),
                 { sparseVolumes: true }
             );
-            if (
-                volume.sparseVolumes.length >=
-                appConfig.projects.maxVolumeChannels
-            ) {
+            if (volume.sparseVolumes.length >= appConfig.maxVolumeChannels) {
                 throw new Error(
-                    `Volume ${volume.id} (${volume.name}): Maximum amount of volumes in a sparse volume stack reached (${appConfig.projects.maxVolumeChannels})`
+                    `Volume ${volume.id} (${volume.name}): Maximum amount of volumes in a sparse volume stack reached (${appConfig.maxVolumeChannels})`
                 );
             }
             await SparseLabeledVolumeData.create(
@@ -172,12 +169,9 @@ export default class VolumeController {
                 Number(req.params.idVolume),
                 { pseudoVolumes: true }
             );
-            if (
-                volume.pseudoVolumes.length >=
-                appConfig.projects.maxVolumeChannels
-            ) {
+            if (volume.pseudoVolumes.length >= appConfig.maxVolumeChannels) {
                 throw new Error(
-                    `Volume ${volume.id} (${volume.name}): Maximum amount of volumes in a pseudo volume stack reached (${appConfig.projects.maxVolumeChannels})`
+                    `Volume ${volume.id} (${volume.name}): Maximum amount of volumes in a pseudo volume stack reached (${appConfig.maxVolumeChannels})`
                 );
             }
             await PseudoLabeledVolumeData.create(

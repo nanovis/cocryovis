@@ -76,8 +76,8 @@ export default class Result extends DatabaseModel {
         volumeId,
         folderPath
     ) {
-        if (!fileSystem.existsSync(appConfig.projects.resultsPath)) {
-            fileSystem.mkdirSync(appConfig.projects.resultsPath, {
+        if (!fileSystem.existsSync(appConfig.resultsPath)) {
+            fileSystem.mkdirSync(appConfig.resultsPath, {
                 recursive: true,
             });
         }
@@ -302,10 +302,7 @@ export default class Result extends DatabaseModel {
      * @return {Promise<String>}
      */
     static async reserveFolderName(id) {
-        const folderPath = path.join(
-            appConfig.projects.resultsPath,
-            id.toString()
-        );
+        const folderPath = path.join(appConfig.resultsPath, id.toString());
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
                 throw new Error(`Result directory already exists`);

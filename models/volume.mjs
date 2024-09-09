@@ -290,7 +290,7 @@ export default class Volume extends DatabaseModel {
 
                     if (
                         volume.sparseVolumes.length >=
-                        appConfig.projects.maxVolumeChannels
+                        appConfig.maxVolumeChannels
                     ) {
                         throw new Error(
                             "Volume already has maximum number of Sparse Labels"
