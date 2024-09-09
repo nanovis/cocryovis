@@ -94,17 +94,10 @@ export class User extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {String?} username
-     * @property {String?} name
-     * @property {String?} email
-     * @property {String?} password
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.UserUpdateInput & {password: String}} changes
      * @returns {Promise<UserDB>}
      */
     static async update(id, changes) {
-        const parsedChanges = Object.apply({}, changes);
-
         if (Object.hasOwn(changes, "password")) {
             const { salt, hash } = await new Promise((resolve, reject) => {
                 User.hasher(
@@ -116,14 +109,14 @@ export class User extends BaseModel {
                     }
                 );
             });
-            parsedChanges.passwordSalt = salt;
-            parsedChanges.passwordHash = hash;
+            changes.passwordSalt = salt;
+            changes.passwordHash = hash;
             delete changes.password;
         }
 
         return prismaManager.db.user.update({
             where: { id: id },
-            data: parsedChanges,
+            data: changes,
         });
     }
 

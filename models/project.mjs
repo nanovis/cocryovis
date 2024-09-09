@@ -88,11 +88,7 @@ export class Project extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {String?} name
-     * @property {String?} description
-     * @property {Number} userId
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.ProjectUpdateInput} changes
      * @return {Promise<ProjectDB>}
      */
     static async update(id, changes) {

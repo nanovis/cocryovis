@@ -167,14 +167,7 @@ export class Result extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {Number} [ownerId]
-     * @property {Number} [checkpointId]
-     * @property {Number} [volumeDataId]
-     * @property {String?} [folderPath]
-     * @property {String?} [files]
-     * @property {Number?} [rawVolumeChannel]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.ResultUpdateInput} changes
      * @return {Promise<ResultDB>}
      */
     static async update(id, changes) {

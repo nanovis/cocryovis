@@ -68,11 +68,7 @@ export class Model extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {String} [name]
-     * @property {String} [description]
-     * @property {Number} [ownerId]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.ModelUpdateInput} changes
      * @return {Promise<ModelDB>}
      */
     static async update(id, changes) {

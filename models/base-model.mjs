@@ -37,6 +37,11 @@ export class BaseModel {
         throw new Error("Method not implemented");
     }
 
+    /**
+     * @param {Number} id
+     * @param {Object} changes
+     * @return {Promise<Object>}
+     */
     static async update(id, changes) {
         return this.db.update({
             where: { id: id },
@@ -44,6 +49,10 @@ export class BaseModel {
         });
     }
 
+    /**
+     * @param {Number} id
+     * @return {Promise<Object>}
+     */
     static async del(id) {
         return await this.db.delete({
             where: { id: id },

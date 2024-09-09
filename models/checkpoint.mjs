@@ -195,11 +195,7 @@ export class Checkpoint extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {String?} [filePath]
-     * @property {String?} [folderPath]
-     * @property {Number} [ownerId]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.CheckpointUpdateInput} changes
      * @return {Promise<CheckpointDB>}
      */
     static async update(id, changes) {

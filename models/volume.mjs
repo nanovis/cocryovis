@@ -113,11 +113,7 @@ export class Volume extends BaseModel {
 
     /**
      * @param {Number} id
-     * @typedef {Object} Changes
-     * @property {String} [name]
-     * @property {String} [description]
-     * @property {Number} [ownerId]
-     * @param {Changes} changes
+     * @param {import("@prisma/client").Prisma.VolumeUpdateInput} changes
      * @return {Promise<VolumeDB>}
      */
     static async update(id, changes) {
@@ -233,6 +229,29 @@ export class Volume extends BaseModel {
         }
 
         return volume;
+    }
+
+    /**
+     * @param {Number[]} ids
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @return {Promise<void>}
+     */
+    static async deleteZombies(ids, tx) {
+        if (ids.length === 0) {
+            return;
+        }
+        await tx.volume.deleteMany({
+            where: {
+                AND: {
+                    id: {
+                        in: ids,
+                    },
+                    projects: {
+                        none: {},
+                    },
+                },
+            },
+        });
     }
 
     /**
