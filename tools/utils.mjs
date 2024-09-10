@@ -130,7 +130,7 @@ export default class Utils {
      * @param {String} outputPath
      */
     static async mrcToRaw(inputFile, outputPath) {
-        const command = `${appConfig.nanoOetzi.command} \"${path.join(
+        const command = `${appConfig.nanoOetzi.python} \"${path.join(
             "tools-python",
             "mrc-to-raw.py"
         )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;

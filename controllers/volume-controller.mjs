@@ -191,62 +191,6 @@ export default class VolumeController {
         }
     }
 
-    static async testTiffConversion(req, res) {
-        // try {
-        //     const volume = await Volume.getByIdDeep(
-        //         Number(req.params.idVolume),
-        //         { rawData: true, sparseVolumes: true }
-        //     );
-        //     const promises = [];
-        //     if (volume.rawData != null) {
-        //         const rawTiffFolderPath = path.join(
-        //             volume.rawData.path,
-        //             "tiff-test",
-        //             "raw"
-        //         );
-        //         if (fileSystem.existsSync(rawTiffFolderPath)) {
-        //             await rm(rawTiffFolderPath, {
-        //                 recursive: true,
-        //                 force: true,
-        //             });
-        //         }
-        //         promises.push(rawToTiff([volume.rawData], rawTiffFolderPath));
-        //     }
-        //     const validSparseVolumes = [];
-        //     for (const sparseVolume of volume.sparseVolumes) {
-        //         if (sparseVolume.rawFilePath && sparseVolume.settings) {
-        //             validSparseVolumes.push(sparseVolume);
-        //         }
-        //     }
-        //     if (validSparseVolumes.length > 0) {
-        //         const sparseLabelsTiffFolderPath = path.join(
-        //             validSparseVolumes[0].path,
-        //             "tiff-test",
-        //             "sparseLabels"
-        //         );
-        //         if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
-        //             await rm(sparseLabelsTiffFolderPath, {
-        //                 recursive: true,
-        //                 force: true,
-        //             });
-        //         }
-        //         promises.push(
-        //             rawToTiff(validSparseVolumes, sparseLabelsTiffFolderPath)
-        //         );
-        //     }
-        //     await Promise.all(promises);
-        //     console.log(
-        //         `Volume ${volume.id} (${volume.name}): Tiff conversion test done.`
-        //     );
-        //     res.redirect(
-        //         `/api/actions/projects/details/${req.params.idProject}`
-        //     );
-        // } catch (err) {
-        //     console.error("Error in creating volume:", err);
-        //     res.status(500).send(err);
-        // }
-    }
-
     static async createPseudoLabels(illastik, req, res) {
         try {
             const volumeId = Number(req.params.idVolume);
@@ -262,8 +206,13 @@ export default class VolumeController {
                 pseudoVolumes: true,
             });
 
-            if (volume.pseudoVolumes.length > 0) {
-                throw new Error("Volume already has pseudo labels.");
+            if (
+                volume.sparseVolumes.length + volume.pseudoVolumes.length >
+                appConfig.maxVolumeChannels
+            ) {
+                throw new Error(
+                    "Volume does not have enough space to generate pseudo labels from sparse label set."
+                );
             }
 
             await illastik.generateLabels(

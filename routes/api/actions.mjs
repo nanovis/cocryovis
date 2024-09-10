@@ -87,9 +87,6 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-sparse-labe
 // Add Pseudo Labeled Volume
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labeled-volume`, restrict, VolumeController.addPseudoLabeledVolume);
 
-// Test Tiff Conversion
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/test-tiff`, restrict, VolumeController.testTiffConversion);
-
 // Run Ilastik inference
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
     async (req, res) => VolumeController.createPseudoLabels(ilastikHandler, req, res));

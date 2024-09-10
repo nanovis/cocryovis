@@ -80,9 +80,6 @@ getNameFromPath = function(path) {
         <b>Volume:</b> <%= volume.name %> (<%= volume.id %>)
         <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/removeFromProject">[X]</a>
     </p>
-    <p>
-        <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/test-tiff">Tiff Test</a>
-    </p>
     <h4>Raw Data:</h4>
     <% if (volume.rawData != null) { %>
         <% if (volume.rawData.mrcFilePath != null) { %>

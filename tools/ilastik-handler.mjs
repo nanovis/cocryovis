@@ -5,7 +5,7 @@ import fileSystem from "fs";
 import path, { resolve } from "path";
 import { StoredFolder } from "./stored-folder.mjs";
 import fsPromises from "node:fs/promises";
-// import { rawToTiff } from "./raw-to-tiff.mjs";
+import { labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -13,8 +13,8 @@ import fsPromises from "node:fs/promises";
  */
 
 export default class IlastikHandler {
-    static rawTiffFolder = "raw";
-    static sparseLabelsTiffFolder = "sparse-labels";
+    static rawCacheFolder = "raw";
+    static labelsCacheFolder = "sparse-labels";
 
     constructor(config) {
         this.config = config;
@@ -185,25 +185,31 @@ export default class IlastikHandler {
             );
         }
 
-        const rawTiffFolderPath = path.join(
-            this.config.tiffCacheFolder,
-            IlastikHandler.rawTiffFolder
+        const rawH5FileName = path.parse(rawData.rawFilePath).name + ".h5";
+        const labelsH5FileName =
+            path.parse(rawData.rawFilePath).name + "_labels.h5";
+
+        const rawH5Path = path.join(
+            this.config.h5CacheFolder,
+            IlastikHandler.rawCacheFolder,
+            rawH5FileName
         );
-        const sparseLabelsTiffFolderPath = path.join(
-            this.config.tiffCacheFolder,
-            IlastikHandler.sparseLabelsTiffFolder
+        const labelsH5Path = path.join(
+            this.config.h5CacheFolder,
+            IlastikHandler.labelsCacheFolder,
+            labelsH5FileName
         );
 
-        await this.convertDataToTiff(
+        await this.convertDataToH5(
             rawData,
             sparseLabelsStack,
-            rawTiffFolderPath,
-            sparseLabelsTiffFolderPath
+            rawH5Path,
+            labelsH5Path
         );
 
         this.createIlastikProject(
-            path.join(rawTiffFolderPath, "*.tiff"),
-            path.join(sparseLabelsTiffFolderPath, "*.tiff"),
+            rawH5Path + "/raw_data",
+            labelsH5Path + "/labels",
             modelOutputPath,
             labelsOutputPath
         );
@@ -212,29 +218,27 @@ export default class IlastikHandler {
     /**
      * @param {RawVolumeDataDB} rawData
      * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
-     * @param {String} rawTiffFolderPath
-     * @param {String} sparseLabelsTiffFolderPath
+     * @param {String} rawOutputPath
+     * @param {String} labelsOutputPath
      */
-    async convertDataToTiff(
+    async convertDataToH5(
         rawData,
         sparseLabelsStack,
-        rawTiffFolderPath,
-        sparseLabelsTiffFolderPath
+        rawOutputPath,
+        labelsOutputPath
     ) {
-        if (fileSystem.existsSync(rawTiffFolderPath)) {
-            await fsPromises.rm(rawTiffFolderPath, {
-                recursive: true,
+        if (fileSystem.existsSync(rawOutputPath)) {
+            await fsPromises.rm(rawOutputPath, {
                 force: true,
             });
         }
-        if (fileSystem.existsSync(sparseLabelsTiffFolderPath)) {
-            await fsPromises.rm(sparseLabelsTiffFolderPath, {
-                recursive: true,
+        if (fileSystem.existsSync(labelsOutputPath)) {
+            await fsPromises.rm(labelsOutputPath, {
                 force: true,
             });
         }
 
-        // await rawToTiff([rawData], rawTiffFolderPath);
-        // await rawToTiff(sparseLabelsStack, sparseLabelsTiffFolderPath);
+        await rawToH5(rawData, rawOutputPath);
+        await labelsToH5(sparseLabelsStack, labelsOutputPath);
     }
 }

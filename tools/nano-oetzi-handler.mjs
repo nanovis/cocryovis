@@ -121,7 +121,7 @@ export default class NanoOetziHandler {
                 "-m " + checkpointAbsolutePath,
             ];
             let command =
-                this.config.command +
+                this.config.python +
                 " " +
                 params[0] +
                 " " +
@@ -243,7 +243,7 @@ export default class NanoOetziHandler {
             const configAbsolutePath = path.resolve(configPath);
             const outputAbsolutePath = path.resolve(workFolder);
 
-            let command = `${this.config.command} \"${path.join(
+            let command = `${this.config.python} \"${path.join(
                 "tools-python",
                 "raws-to-train-sets.py"
             )}\" -i \"${configAbsolutePath}\" -o \"${outputAbsolutePath}\"`;
@@ -260,7 +260,7 @@ export default class NanoOetziHandler {
                 `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nLauching training script...\n`
             );
 
-            command = `${this.config.command} \"${this.config.training.command}\" \"${outputAbsolutePath}\" --min_epochs ${this.config.training.min_epochs} --max_epochs ${this.config.training.max_epochs}`;
+            command = `${this.config.python} \"${this.config.training.command}\" \"${outputAbsolutePath}\" --min_epochs ${this.config.training.min_epochs} --max_epochs ${this.config.training.max_epochs}`;
 
             execResult = await execPromise(command, {
                 cwd: path.resolve(this.config.scripts),
