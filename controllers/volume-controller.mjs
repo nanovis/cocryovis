@@ -5,8 +5,10 @@ import RawVolumeData from "../models/raw-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
+import IlastikHandler from "../tools/ilastik-handler.mjs";
+import fsPromises from "fs/promises";
+import { H5ToLabels } from "../tools/raw-to-h5.mjs";
 import path from "path";
-import fileSystem from "fs";
 
 export default class VolumeController {
     static async createVolume(req, res) {
@@ -191,14 +193,12 @@ export default class VolumeController {
         }
     }
 
+    /**
+     * @param {IlastikHandler} illastik
+     */
     static async createPseudoLabels(illastik, req, res) {
         try {
             const volumeId = Number(req.params.idVolume);
-
-            const outputPath = path.join("data", "pseudoTest");
-            if (!fileSystem.existsSync(outputPath)) {
-                fileSystem.mkdirSync(outputPath, { recursive: true });
-            }
 
             const volume = await Volume.getByIdDeep(volumeId, {
                 rawData: true,
@@ -215,12 +215,34 @@ export default class VolumeController {
                 );
             }
 
-            await illastik.generateLabels(
-                volume.rawData,
-                volume.sparseVolumes,
-                outputPath,
-                outputPath
-            );
+            const { outputPath, resultPath } =
+                await illastik.queueLabelGeneration(
+                    volume.rawData,
+                    volume.sparseVolumes
+                );
+            try {
+                const labelDirectory = path.join(outputPath, "labels");
+                await fsPromises.mkdir(labelDirectory, {
+                    recursive: true,
+                });
+                await H5ToLabels(
+                    resultPath,
+                    IlastikHandler.pseudoLabelsDataset,
+                    labelDirectory
+                );
+                await Volume.addPseudoLabelsFromFolder(
+                    labelDirectory,
+                    req.session.user.id,
+                    volume.id,
+                    volume.sparseVolumes
+                );
+            } finally {
+                try {
+                    fsPromises.rm(outputPath, { recursive: true, force: true });
+                } catch (err) {
+                    console.error(`Failed to delete ilastik cache.`);
+                }
+            }
         } catch (err) {
             console.error("Error in pseudo labels:", err);
             res.status(500).send(err);

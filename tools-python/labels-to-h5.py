@@ -8,7 +8,7 @@ import numpy as np
 Dimensions = Tuple[int, int, int]
 
 
-def raw_to_h5(label_paths: List[str], output_path: str, dimensions: Dimensions, log=True):
+def labels_to_h5(label_paths: List[str], output_path: str, dataset_name: str, dimensions: Dimensions, log=True):
     label_datasets = []
     for label_path in label_paths:
         np_data = np.fromfile(label_path, dtype=np.uint8,
@@ -34,15 +34,16 @@ def raw_to_h5(label_paths: List[str], output_path: str, dimensions: Dimensions, 
     directory = os.path.dirname(output_path)
     os.makedirs(directory, exist_ok=True)
     with h5py.File(output_path, 'w') as file:
-        file.create_dataset("labels", data=labels)
+        file.create_dataset(dataset_name, data=labels)
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser('Convert raw volume to h5 dataset')
+    parser = ArgumentParser('Convert label volumes to h5 label dataset')
     parser.add_argument('-l', '--labels', type=str, nargs='+', required=True,
                         help='Paths to labels.')
     parser.add_argument('-d', '--dimensions', required=True, type=str, help='Dimensions presented as XxYxZ.')
-    parser.add_argument('-o', '--output', type=str, help='Path to output file')
+    parser.add_argument('-s', '--datasetName', type=str, required=True, help='Name of the dataset within the file.')
+    parser.add_argument('-o', '--output', type=str, required=True, help='Path to output file')
     parser.add_argument('-log', type=bool, default=True, help='Output the process status.')
     args = parser.parse_args()
 
@@ -52,4 +53,4 @@ if __name__ == '__main__':
 
     dims: Dimensions = (parsed_dims[0], parsed_dims[1], parsed_dims[2])
 
-    raw_to_h5(args.labels, args.output, dims, args.log)
+    labels_to_h5(args.labels, args.output, args.datasetName, dims, args.log)

@@ -81,6 +81,9 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     volumes: {
                         none: {},
                     },
+                    derivedLabels: {
+                        none: {},
+                    },
                 },
             },
         });
@@ -105,7 +108,46 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @return {Promise<SparseLabelVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
-        return super.removeFromVolume(id, volumeId);
+        return await prismaManager.db.$transaction(
+            async (tx) => {
+                let volumeData = await tx.sparseLabelVolumeData.findUnique({
+                    where: { id: id },
+                    include: {
+                        volumes: true,
+                        derivedLabels: true,
+                    },
+                });
+
+                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                    throw new Error("Volume Data is not part of the volume.");
+                }
+
+                if (
+                    volumeData.volumes.length > 1 ||
+                    volumeData.derivedLabels.length > 0
+                ) {
+                    await tx.sparseLabelVolumeData.update({
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            volumes: {
+                                disconnect: { id: volumeId },
+                            },
+                        },
+                    });
+                } else {
+                    await tx.sparseLabelVolumeData.delete({
+                        where: { id: id },
+                    });
+                    await this.deleteVolumeDataFiles(volumeData);
+                }
+                return volumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
     }
 
     /**

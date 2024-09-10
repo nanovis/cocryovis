@@ -327,4 +327,76 @@ export default class Volume extends DatabaseModel {
             }
         }
     }
+
+    /**
+     * @param {String} folderPath
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {SparseLabelVolumeDataDB[]} originalLabels
+     * @returns {Promise<void>}
+     */
+    static async addPseudoLabelsFromFolder(
+        folderPath,
+        ownerId,
+        volumeId,
+        originalLabels
+    ) {
+        await prismaManager.db.$transaction(
+            async (tx) => {
+                const volume = await tx.volume.findUnique({
+                    where: { id: volumeId },
+                    include: {
+                        sparseVolumes: true,
+                        pseudoVolumes: true,
+                    },
+                });
+
+                if (
+                    volume.sparseVolumes.length + volume.pseudoVolumes.length >
+                    appConfig.maxVolumeChannels
+                ) {
+                    throw new Error(
+                        "Volume does not have enough space to generate pseudo labels from sparse label set."
+                    );
+                }
+
+                const newFolders = [];
+                const files = await fsPromises.readdir(folderPath);
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const filePath = path.join(folderPath, files[i]);
+                        const settingsJSON = JSON.parse(
+                            originalLabels[i].settings
+                        );
+                        settingsJSON.file = files[i];
+                        const settings = JSON.stringify(settingsJSON);
+                        const pseudoLabelVolumeData =
+                            await PseudoLabeledVolumeData.fromRawFile(
+                                filePath,
+                                ownerId,
+                                volumeId,
+                                originalLabels[i].id,
+                                settings,
+                                tx
+                            );
+                        newFolders.push(pseudoLabelVolumeData.path);
+                    }
+                } catch (error) {
+                    newFolders.forEach((folder) => {
+                        try {
+                            fsPromises.rm(folder, {
+                                recursive: true,
+                                force: true,
+                            });
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    });
+                }
+            },
+            {
+                timeout: 60000,
+            }
+        );
+    }
 }

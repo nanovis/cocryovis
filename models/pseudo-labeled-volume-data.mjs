@@ -3,6 +3,9 @@
 import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fileUpload from "express-fileupload";
+import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
+import fsPromises from "fs/promises";
+import path from "path";
 
 /**
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
@@ -58,7 +61,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @return {Promise<PseudoVolumeDataDB>}
      */
     static async del(id) {
-        return await super.del(id);
+        return this.#del(id);
     }
 
     /**
@@ -67,27 +70,42 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @return {Promise<PseudoVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
-        return await prismaManager.db.$transaction(
+        return this.#del(id, volumeId);
+    }
+
+    /**
+     * @param {Number} volumeDataId
+     * @param {Number?} volumeId
+     * @return {Promise<PseudoVolumeDataDB>}
+     */
+    static async #del(volumeDataId, volumeId = null) {
+        const fileDeleteStack = [];
+
+        const volumeData = await prismaManager.db.$transaction(
             async (tx) => {
                 let volumeData = await tx.pseudoLabelVolumeData.findUnique({
-                    where: { id: id },
+                    where: { id: volumeDataId },
                     include: {
-                        volumes: true,
+                        volumes: volumeId !== null,
                         checkpoints: true,
                     },
                 });
 
-                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                if (
+                    volumeId &&
+                    !volumeData.volumes.some((v) => v.id === volumeId)
+                ) {
                     throw new Error("Volume Data is not part of the volume.");
                 }
 
                 if (
-                    volumeData.volumes.length > 1 ||
-                    volumeData.checkpoints.length > 0
+                    volumeId &&
+                    (volumeData.volumes.length > 1 ||
+                        volumeData.checkpoints.length > 0)
                 ) {
                     await tx.pseudoLabelVolumeData.update({
                         where: {
-                            id: id,
+                            id: volumeDataId,
                         },
                         data: {
                             volumes: {
@@ -97,8 +115,18 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                     });
                 } else {
                     await tx.pseudoLabelVolumeData.delete({
-                        where: { id: id },
+                        where: { id: volumeDataId },
                     });
+
+                    if (volumeData.originalLabelId) {
+                        fileDeleteStack.push(
+                            ...(await SparseLabeledVolumeData.deleteZombies(
+                                [volumeData.originalLabelId],
+                                tx
+                            ))
+                        );
+                    }
+
                     await this.deleteVolumeDataFiles(volumeData);
                 }
                 return volumeData;
@@ -107,6 +135,16 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                 timeout: 60000,
             }
         );
+
+        for (const file of fileDeleteStack) {
+            fsPromises
+                .rm(file, { recursive: true, force: true })
+                .catch((error) => {
+                    console.error(`Failed to delete ${file}: ${error}`);
+                });
+        }
+
+        return volumeData;
     }
 
     /**
@@ -156,5 +194,60 @@ export default class PseudoLabeledVolumeData extends VolumeData {
         );
 
         return fileDeleteStack;
+    }
+
+    /**
+     * @param {String} filePath
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {Number} originalLabelId
+     * @param {String} settings
+     * @param {import("@prisma/client").Prisma.TransactionClient} client
+     * @return {Promise<PseudoVolumeDataDB>}
+     */
+    static async fromRawFile(
+        filePath,
+        ownerId,
+        volumeId,
+        originalLabelId,
+        settings,
+        client = prismaManager.db
+    ) {
+        let pseudoVolume = await client.pseudoLabelVolumeData.create({
+            data: {
+                ownerId: ownerId,
+                originalLabelId: originalLabelId,
+                settings: settings,
+                volumes: {
+                    connect: { id: volumeId },
+                },
+            },
+        });
+
+        const folderPath = await this.createVolumeDataFolder(pseudoVolume.id);
+        const fileName = path.basename(filePath);
+        const newFilePath = path.join(folderPath, fileName);
+        await fsPromises.rename(filePath, newFilePath);
+
+        try {
+            pseudoVolume = await client.pseudoLabelVolumeData.update({
+                where: { id: pseudoVolume.id },
+                data: {
+                    path: folderPath,
+                    rawFilePath: newFilePath,
+                },
+            });
+        } catch (error) {
+            try {
+                await this.deleteVolumeDataFiles(pseudoVolume);
+            } catch (err) {
+                console.error(
+                    `Failed to delete volume data folder on failed operation:\n${err}`
+                );
+            }
+            throw error;
+        }
+
+        return pseudoVolume;
     }
 }

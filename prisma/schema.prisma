@@ -71,6 +71,7 @@ model SparseLabelVolumeData {
   rawFilePath       String?
   settings          String?
   volumes           Volume[]
+  derivedLabels     PseudoLabelVolumeData[]
 }
 
 model PseudoLabelVolumeData {
@@ -82,6 +83,8 @@ model PseudoLabelVolumeData {
   settings          String?
   volumes           Volume[]
   checkpoints       Checkpoint[]
+  originalLabel     SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id])
+  originalLabelId   Int?
 }
 
 model Model {
