@@ -2,10 +2,13 @@
 
 import { exec, spawnSync } from "child_process";
 import fileSystem from "fs";
-import path, { resolve } from "path";
+import path from "path";
 import { StoredFolder } from "./stored-folder.mjs";
 import fsPromises from "node:fs/promises";
 import { labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
+import Utils from "./utils.mjs";
+import { promisify } from "util";
+const execPromise = promisify(exec);
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -15,6 +18,8 @@ import { labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 export default class IlastikHandler {
     static rawCacheFolder = "raw";
     static labelsCacheFolder = "sparse-labels";
+    static rawDataset = "/raw_data";
+    static labelsDataset = "/labels";
 
     constructor(config) {
         this.config = config;
@@ -40,16 +45,10 @@ export default class IlastikHandler {
 */
     /**
      * @param {String} rawDataPath
-     * @param {String} sparseLabelPath
      * @param {String} modelPath
      * @param {String} labelsOutputPath
      */
-    runIlastikInference(
-        rawDataPath,
-        sparseLabelPath,
-        modelPath,
-        labelsOutputPath
-    ) {
+    async runIlastikInference(rawDataPath, modelPath, labelsOutputPath) {
         console.log("Running Ilastik inference");
         this.inferenceRunning = true;
 
@@ -60,22 +59,23 @@ export default class IlastikHandler {
             path.basename(labelsOutputPath),
             labelsOutputPath
         );
-        const rawDataFullPath = resolve(rawDataPath);
+        const rawDataFullPath =
+            path.resolve(rawDataPath) + IlastikHandler.rawDataset;
+        const modelFullPath = path.resolve(modelPath);
+        const resultsFilePath = path.join(
+            ilastikLabels.folderPath,
+            `${path.parse(rawDataPath).name}_results.h5`
+        );
 
-        const modelFullPath = resolve(modelPath);
         let params = [
             "--headless",
-            "--project=" + modelFullPath,
-            '--output_format="tif sequence"',
+            `--project=\"${modelFullPath}\"`,
+            '--output_format="hdf5"',
             '--export_source="Probabilities"',
             "--export_dtype=uint8",
             '--pipeline_result_drange="(0.0,1.0)"',
             '--export_drange="(0,255)"',
-            "--output_filename_format=" +
-                path.join(
-                    ilastikLabels.folderPath,
-                    "{nickname}_{slice_index}_results.tif"
-                ),
+            `--output_filename_format=\"${resultsFilePath}\"`,
             '"' + rawDataFullPath + '"',
         ];
         const command =
@@ -86,21 +86,23 @@ export default class IlastikHandler {
             fileSystem.mkdirSync(ilastikLabels.folderPath, { recursive: true });
         }
 
-        exec(command, (error, stdout, stderr) => {
-            this.inferenceRunning = false;
-            this.finished = true;
-            if (error) {
-                console.log(`exec error: ${error}`);
-                fileSystem.appendFileSync(logPath, `\n\nexec error: ${error}`);
-                throw error;
-            }
+        try {
+            const { stdout, stderr } = await execPromise(command);
             fileSystem.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
             fileSystem.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
             console.log("Ilastik inference finished");
 
             Promise.resolve(ilastikLabels);
             console.log("Ilastik labels successfully generated.");
-        });
+            return resultsFilePath;
+        } catch (error) {
+            console.log(`exec error: ${error}`);
+            fileSystem.appendFileSync(logPath, `\n\nexec error: ${error}`);
+            throw error;
+        } finally {
+            this.inferenceRunning = false;
+            this.finished = true;
+        }
     }
 
     /**
@@ -109,7 +111,7 @@ export default class IlastikHandler {
      * @param {String} modelOutputPath
      * @param {String} labelsOutputPath
      */
-    createIlastikProject(
+    async createIlastikProject(
         rawDataPath,
         sparseLabelPath,
         modelOutputPath,
@@ -121,11 +123,13 @@ export default class IlastikHandler {
 
         this.finished = false;
         const modelOutputFullPath = path.join(
-            resolve(modelOutputPath),
+            path.resolve(modelOutputPath),
             this.config.model_file_name
         );
-        const rawDataFullPath = resolve(rawDataPath);
-        const sparseLabelFullPath = resolve(sparseLabelPath);
+        const rawDataFullPath =
+            path.resolve(rawDataPath) + IlastikHandler.rawDataset;
+        const sparseLabelFullPath =
+            path.resolve(sparseLabelPath) + IlastikHandler.labelsDataset;
         let params = [
             this.config.scripts_path + this.config.create_project_command,
             modelOutputFullPath,
@@ -135,25 +139,19 @@ export default class IlastikHandler {
         const command = this.config.python + " " + params.join(" ");
         console.log(command);
 
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                this.finished = false;
-                console.log(`exec error: ${error}`);
-                fileSystem.appendFileSync(logPath, `\n\nexec error: ${error}`);
-                throw error;
-            }
+        try {
+            const { stdout, stderr } = await execPromise(command);
             fileSystem.appendFileSync(logPath, `\n\nstdout: \n${stdout}`);
             fileSystem.appendFileSync(logPath, `\n\nstderr: \n${stderr}`);
             console.log("Ilastik project created");
 
-            // Run Ilastik inference
-            this.runIlastikInference(
-                rawDataPath,
-                sparseLabelPath,
-                modelOutputFullPath,
-                labelsOutputPath
-            );
-        });
+            return modelOutputFullPath;
+        } catch (error) {
+            this.finished = false;
+            console.log(`exec error: ${error}`);
+            fileSystem.appendFileSync(logPath, `\n\nexec error: ${error}`);
+            throw error;
+        }
     }
 
     isInferenceRunning() {
@@ -177,12 +175,47 @@ export default class IlastikHandler {
         labelsOutputPath
     ) {
         if (!rawData || !rawData.rawFilePath) {
-            throw new Error("Pseudo Labels Generation: Raw Data is missing.");
+            throw new Error(
+                "Pseudo Labels Generation error: Raw Data is missing."
+            );
         }
         if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
             throw new Error(
-                "Pseudo Labels Generation: Sparse Label Data is missing."
+                "Pseudo Labels Generation error: Sparse Label Data is missing."
             );
+        }
+
+        const settings = JSON.parse(rawData.settings);
+        if (
+            !Object.hasOwn(settings, "bytesPerVoxel") ||
+            settings.bytesPerVoxel != 1
+        ) {
+            throw new Error(
+                "Pseudo Labels Generation error: The generation only supports uint8 data format."
+            );
+        }
+        if (!Object.hasOwn(settings, "size")) {
+            throw new Error(
+                "Pseudo Labels Generation error: Missing data dimensions data."
+            );
+        }
+        const dimensions = settings.size;
+        for (const sparseLabel of sparseLabelsStack) {
+            const settings = JSON.parse(sparseLabel.settings);
+            if (
+                !Object.hasOwn(settings, "bytesPerVoxel") ||
+                settings.bytesPerVoxel != 1
+            ) {
+                throw new Error(
+                    "Pseudo Labels Generation error: The generation only supports uint8 data format."
+                );
+            }
+            if (!Object.hasOwn(settings, "size")) {
+                throw new Error(
+                    "Pseudo Labels Generation error: Missing data dimensions data."
+                );
+            }
+            IlastikHandler.#checkDimensions(dimensions, settings.size);
         }
 
         const rawH5FileName = path.parse(rawData.rawFilePath).name + ".h5";
@@ -203,14 +236,21 @@ export default class IlastikHandler {
         await this.convertDataToH5(
             rawData,
             sparseLabelsStack,
+            dimensions,
             rawH5Path,
             labelsH5Path
         );
 
-        this.createIlastikProject(
-            rawH5Path + "/raw_data",
-            labelsH5Path + "/labels",
+        const modelFullPath = await this.createIlastikProject(
+            rawH5Path,
+            labelsH5Path,
             modelOutputPath,
+            labelsOutputPath
+        );
+
+        await this.runIlastikInference(
+            rawH5Path,
+            modelFullPath,
             labelsOutputPath
         );
     }
@@ -218,12 +258,14 @@ export default class IlastikHandler {
     /**
      * @param {RawVolumeDataDB} rawData
      * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
+     * @param {{x: Number, y: Number, z: Number}} dimensions
      * @param {String} rawOutputPath
      * @param {String} labelsOutputPath
      */
     async convertDataToH5(
         rawData,
         sparseLabelsStack,
+        dimensions,
         rawOutputPath,
         labelsOutputPath
     ) {
@@ -238,7 +280,24 @@ export default class IlastikHandler {
             });
         }
 
-        await rawToH5(rawData, rawOutputPath);
-        await labelsToH5(sparseLabelsStack, labelsOutputPath);
+        await rawToH5(rawData.rawFilePath, dimensions, rawOutputPath);
+        await labelsToH5(
+            sparseLabelsStack.map((l) => l.rawFilePath),
+            dimensions,
+            labelsOutputPath
+        );
+    }
+
+    /**
+     * @typedef {{x: number, y: number, z:number}} Dimensions
+     * @param {Dimensions} dim1
+     * @param {Dimensions} dim2
+     */
+    static #checkDimensions(dim1, dim2) {
+        if (!Utils.checkDimensions(dim1, dim2)) {
+            throw new Error(
+                "Pseudo Labels Generation error: One or more inputs have missmatching dimensions."
+            );
+        }
     }
 }

@@ -399,7 +399,7 @@ export default class NanoOetziHandler {
             if (properties.dimensions == null) {
                 properties.dimensions = volumeSettings["size"];
             } else {
-                this.#checkDimensions(
+                NanoOetziHandler.#checkDimensions(
                     volumeSettings["size"],
                     properties.dimensions
                 );
@@ -434,7 +434,7 @@ export default class NanoOetziHandler {
                         "NanoOetzi inference error: One or more pseudo labeled volumes have an unsopported data format."
                     );
                 }
-                this.#checkDimensions(
+                NanoOetziHandler.#checkDimensions(
                     pseudoVolumeSettings["size"],
                     properties.dimensions
                 );
@@ -445,12 +445,13 @@ export default class NanoOetziHandler {
         }
     }
 
-    #checkDimensions(dim1, dim2) {
-        if (
-            dim1["x"] != dim2["x"] ||
-            dim1["y"] != dim2["y"] ||
-            dim1["z"] != dim2["z"]
-        ) {
+    /**
+     * @typedef {{x: number, y: number, z:number}} Dimensions
+     * @param {Dimensions} dim1
+     * @param {Dimensions} dim2
+     */
+    static #checkDimensions(dim1, dim2) {
+        if (!Utils.checkDimensions(dim1, dim2)) {
             throw new Error(
                 "NanoOetzi inference error: One or more inputs have missmatching dimensions."
             );

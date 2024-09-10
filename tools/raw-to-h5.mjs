@@ -12,38 +12,40 @@ const execPromise = promisify(exec);
  */
 
 /**
- * @param {RawVolumeDataDB} rawVolumeData
+ * @param {String} rawVolumePath
+ * @param {{x: Number, y: Number, z: Number}} dimensions
  * @param {String} outputPath
  */
-export async function rawToH5(rawVolumeData, outputPath) {
-    const settings = JSON.parse(rawVolumeData.settings);
-    const dimensionString = `${settings.size.x}x${settings.size.y}x${settings.size.z}`;
-    const command = `${appConfig.nanoOetzi.python} \"${path.join(
+export async function rawToH5(rawVolumePath, dimensions, outputPath) {
+    let params = [
+        `-r \"${rawVolumePath}\"`,
+        `-d \"${dimensions.x}x${dimensions.y}x${dimensions.z}\"`,
+        `-o \"${outputPath}\"`,
+    ];
+    const command = `${appConfig.ilastik.python} \"${path.join(
         "tools-python",
         "raw-to-h5.py"
-    )}\" -r \"${
-        rawVolumeData.rawFilePath
-    }\" -d \"${dimensionString}\" -o \"${outputPath}\"`;
+    )}\" ${params.join(" ")}`;
 
     await execPromise(command);
     return outputPath;
 }
 
 /**
- * @param {SparseLabelVolumeDataDB[]} labels
+ * @param {String[]} labelPaths
+ * @param {{x: Number, y: Number, z: Number}} dimensions
  * @param {String} outputPath
  */
-export async function labelsToH5(labels, outputPath) {
-    let filePaths = "";
-    for (const label of labels) {
-        filePaths += ` \"${label.rawFilePath}\"`;
-    }
-    const settings = JSON.parse(labels[0].settings);
-    const dimensionString = `${settings.size.x}x${settings.size.y}x${settings.size.z}`;
-    const command = `${appConfig.nanoOetzi.python} \"${path.join(
+export async function labelsToH5(labelPaths, dimensions, outputPath) {
+    let params = [
+        `-l \"${labelPaths.join('" "')}\"`,
+        `-d \"${dimensions.x}x${dimensions.y}x${dimensions.z}\"`,
+        `-o \"${outputPath}\"`,
+    ];
+    const command = `${appConfig.ilastik.python} \"${path.join(
         "tools-python",
         "labels-to-h5.py"
-    )}\" -l${filePaths} -d \"${dimensionString}\" -o \"${outputPath}\"`;
+    )}\" ${params.join(" ")}`;
 
     await execPromise(command);
     return outputPath;

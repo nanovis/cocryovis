@@ -204,4 +204,14 @@ export default class Utils {
         fileSystem.mkdirSync(tempFolderPath, { recursive: true });
         return tempFolderPath;
     }
+
+    /**
+     * @typedef {{x: number, y: number, z:number}} Dimensions
+     * @param {Dimensions} dim1
+     * @param {Dimensions} dim2
+     * @returns {boolean}
+     */
+    static checkDimensions(dim1, dim2) {
+        return dim1.x == dim2.x && dim1.y == dim2.y && dim1.z == dim2.z;
+    }
 }
