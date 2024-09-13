@@ -1,20 +1,42 @@
+// @ts-check
+
 export default class TaskQueue {
+    /**
+     * @type {{action: function, identifiers:Object?, resolve: function, reject: function}[]}
+     */
     #queue = [];
     #pendingProcess = false;
 
     constructor() {}
 
+    /**
+     * @returns {Number}
+     */
     get size() {
         return this.#queue.length;
     }
 
+    /**
+     * @returns {boolean}
+     */
     get hasPendingTask() {
         return this.#pendingProcess;
     }
 
-    enqueue(action) {
+    /**
+     * @returns {Object[]}
+     */
+    get queuedIdentifiers() {
+        return this.#queue.map((q) => q.identifiers);
+    }
+
+    /**
+     * @param {function} action
+     * @param {Object?} identifiers
+     */
+    enqueue(action, identifiers = null) {
         return new Promise((resolve, reject) => {
-            this.#queue.push({ action, resolve, reject });
+            this.#queue.push({ action, identifiers, resolve, reject });
             this.dequeue();
         });
     }
@@ -22,7 +44,9 @@ export default class TaskQueue {
     async dequeue() {
         if (this._pendingProcess) return false;
 
-        const task = this.#queue.shift();
+        // Retain current task in queue so it is returned when inquiring about current tasks.
+        // const task = this.#queue.shift();
+        const task = this.#queue[0];
 
         if (!task) return false;
 
@@ -36,6 +60,7 @@ export default class TaskQueue {
             this._pendingProcess = false;
             task.reject(error);
         } finally {
+            this.#queue.shift();
             this.dequeue();
         }
 

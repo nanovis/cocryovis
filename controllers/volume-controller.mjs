@@ -6,9 +6,7 @@ import appConfig from "../tools/config.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import IlastikHandler from "../tools/ilastik-handler.mjs";
-import fsPromises from "fs/promises";
-import { H5ToLabels } from "../tools/raw-to-h5.mjs";
-import path from "path";
+import User from "../models/user.mjs";
 
 export default class VolumeController {
     static async createVolume(req, res) {
@@ -198,53 +196,39 @@ export default class VolumeController {
      */
     static async createPseudoLabels(illastik, req, res) {
         try {
-            const volumeId = Number(req.params.idVolume);
+            await illastik.queueLabelGeneration(
+                Number(req.params.idVolume),
+                Number(req.session.user.id)
+            );
+        } catch {}
+    }
 
-            const volume = await Volume.getByIdDeep(volumeId, {
-                rawData: true,
-                sparseVolumes: true,
-                pseudoVolumes: true,
+    /**
+     * @param {IlastikHandler} illastik
+     */
+    static async getIllastikTaskQueue(illastik, req, res) {
+        try {
+            const taskQueueIdentifiers = illastik.queuedIdentifiers;
+
+            const users = await User.getByIds(
+                taskQueueIdentifiers.map((i) => i.userId)
+            );
+            const volumes = await Volume.getByIds(
+                taskQueueIdentifiers.map((i) => i.volumeId)
+            );
+
+            const result = users.map(function (u, i) {
+                return {
+                    username: u.username,
+                    volumeName: volumes[i].name,
+                    volumeId: volumes[i].id,
+                };
             });
 
-            if (
-                volume.sparseVolumes.length + volume.pseudoVolumes.length >
-                appConfig.maxVolumeChannels
-            ) {
-                throw new Error(
-                    "Volume does not have enough space to generate pseudo labels from sparse label set."
-                );
-            }
-
-            const { outputPath, resultPath } =
-                await illastik.queueLabelGeneration(
-                    volume.rawData,
-                    volume.sparseVolumes
-                );
-            try {
-                const labelDirectory = path.join(outputPath, "labels");
-                await fsPromises.mkdir(labelDirectory, {
-                    recursive: true,
-                });
-                await H5ToLabels(
-                    resultPath,
-                    IlastikHandler.pseudoLabelsDataset,
-                    labelDirectory
-                );
-                await Volume.addPseudoLabelsFromFolder(
-                    labelDirectory,
-                    req.session.user.id,
-                    volume.id,
-                    volume.sparseVolumes
-                );
-            } finally {
-                try {
-                    fsPromises.rm(outputPath, { recursive: true, force: true });
-                } catch (err) {
-                    console.error(`Failed to delete ilastik cache.`);
-                }
-            }
+            res.setHeader("Content-Type", "application/json");
+            res.json(result);
         } catch (err) {
-            console.error("Error in pseudo labels:", err);
+            console.error(err);
             res.status(500).send(err);
         }
     }

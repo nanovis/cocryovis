@@ -38,6 +38,14 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
+     * @param {Number[]} ids
+     * @return {Promise<VolumeDB[]>}
+     */
+    static async getByIds(ids) {
+        return await super.getByIds(ids);
+    }
+
+    /**
      * @param {Number} id
      */
     static async getByIdDeep(

@@ -20,13 +20,28 @@ export default class DatabaseModel {
      * @return {Promise<Object>}
      */
     static async getById(id) {
-        let entry = await this.db.findUnique({
+        const entry = await this.db.findUnique({
             where: { id: id },
         });
         if (!entry) {
             throw new Error(`Cannot find ${this.modelName} with ID ${id}`);
         }
         return entry;
+    }
+
+    /**
+     * @param {Number[]} ids
+     * @return {Promise<Object[]>}
+     */
+    static async getByIds(ids) {
+        const entries = await this.db.findMany({
+            where: {
+                id: {
+                    in: ids,
+                },
+            },
+        });
+        return entries;
     }
 
     /**

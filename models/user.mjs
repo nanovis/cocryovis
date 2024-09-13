@@ -50,6 +50,14 @@ export default class User extends DatabaseModel {
     }
 
     /**
+     * @param {Number[]} ids
+     * @return {Promise<UserDB[]>}
+     */
+    static async getByIds(ids) {
+        return await super.getByIds(ids);
+    }
+
+    /**
      * @param {String} username
      * @return {Promise<UserDB>}
      */

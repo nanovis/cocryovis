@@ -88,8 +88,12 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-sparse-labe
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labeled-volume`, restrict, VolumeController.addPseudoLabeledVolume);
 
 // Run Ilastik inference
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
     async (req, res) => VolumeController.createPseudoLabels(ilastikHandler, req, res));
+
+// Get Ilastik task queue
+actions.get(`/${projectsActionsPath}/ilastik-task-queue`, restrict,
+    async (req, res) => VolumeController.getIllastikTaskQueue(ilastikHandler, req, res));
 
 // Process Sparse Labels
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/addAnnotations`, restrict, 

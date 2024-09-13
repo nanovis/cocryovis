@@ -4,10 +4,12 @@ import { exec } from "child_process";
 import fileSystem from "fs";
 import path from "path";
 import fsPromises from "node:fs/promises";
-import { labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
+import { H5ToLabels, labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 import Utils from "./utils.mjs";
 import { promisify } from "util";
 import TaskQueue from "./task-queue.mjs";
+import Volume from "../models/volume.mjs";
+import appConfig from "./config.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -20,15 +22,27 @@ export default class IlastikHandler {
     static labelsDataset = "/labels";
     static pseudoLabelsDataset = "/pseudo_labels";
 
+    /**
+     * @type {TaskQueue}
+     */
+    #taskQueue;
+
     constructor(config) {
         this.config = config;
-        this.taskQueue = new TaskQueue();
+        this.#taskQueue = new TaskQueue();
 
         Object.preventExtensions(this);
     }
 
     isInferenceRunning() {
-        return this.taskQueue.hasPendingTask;
+        return this.#taskQueue.hasPendingTask;
+    }
+
+    /**
+     * @returns {{userId: Number, volumeId: Number}[]}
+     */
+    get queuedIdentifiers() {
+        return this.#taskQueue.queuedIdentifiers;
     }
 
     async getVersion() {
@@ -38,23 +52,13 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {RawVolumeDataDB} rawData
-     * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
+     * @param {Number} volumeId
+     * @param {Number} userId
      * @param {String?} outputPath
-     * @returns {Promise<{outputPath: String, resultPath: String}>}
+     * @returns {Promise<void>}
      */
-    queueLabelGeneration(rawData, sparseLabelsStack, outputPath = null) {
-        if (!rawData || !rawData.rawFilePath) {
-            throw new Error(
-                "Failed Attempt to queue label generation: Raw Data is missing."
-            );
-        }
-        if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
-            throw new Error(
-                "Failed Attempt to queue label generation: Sparse Label Data is missing."
-            );
-        }
-        if (this.taskQueue.size >= this.config.maxQueueSize) {
+    queueLabelGeneration(volumeId, userId, outputPath = null) {
+        if (this.#taskQueue.size >= this.config.maxQueueSize) {
             throw new Error(
                 "Failed Attempt to queue label generation: Too many tasks in queue."
             );
@@ -63,8 +67,9 @@ export default class IlastikHandler {
         if (!outputPath) {
             outputPath = Utils.createTemporaryFolder(this.config.workCache);
         }
-        return this.taskQueue.enqueue(() =>
-            this.#generateLabels(rawData, sparseLabelsStack, outputPath)
+        return this.#taskQueue.enqueue(
+            () => this.#generateLabels(volumeId, userId, outputPath),
+            { userId: userId, volumeId: volumeId }
         );
     }
 
@@ -107,7 +112,6 @@ export default class IlastikHandler {
         ];
         const command =
             this.config.path + this.config.inference + " " + params.join(" ");
-        console.log(command);
 
         const { stdout, stderr } = await execPromise(command);
         await fsPromises.writeFile(
@@ -148,7 +152,7 @@ export default class IlastikHandler {
             '"' + sparseLabelFullPath + '"',
         ];
         const command = this.config.python + " " + params.join(" ");
-        console.log(command);
+
         const { stdout, stderr } = await execPromise(command);
         await fsPromises.writeFile(
             logPath,
@@ -159,31 +163,47 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {RawVolumeDataDB} rawData
-     * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
+     * @param {Number} volumeId
+     * @param {Number} userId
      * @param {String} outputPath
-     * @returns {Promise<{outputPath: String, resultPath: String}>}
+     * @returns {Promise<void>}
      */
-    async #generateLabels(rawData, sparseLabelsStack, outputPath) {
+    async #generateLabels(volumeId, userId, outputPath) {
         const logPath = path.join(outputPath, "!label-generation.log");
+
         try {
+            const volume = await Volume.getByIdDeep(volumeId, {
+                rawData: true,
+                sparseVolumes: true,
+                pseudoVolumes: true,
+            });
+
+            if (
+                volume.sparseVolumes.length + volume.pseudoVolumes.length >
+                appConfig.maxVolumeChannels
+            ) {
+                throw new Error(
+                    "Volume does not have enough space to generate pseudo labels from sparse label set."
+                );
+            }
+
             await fsPromises.writeFile(
                 logPath,
                 "Stating label generation process\n\n"
             );
 
-            if (!rawData || !rawData.rawFilePath) {
+            if (!volume.rawData || !volume.rawData.rawFilePath) {
                 throw new Error(
                     "Pseudo Labels Generation error: Raw Data is missing."
                 );
             }
-            if (!sparseLabelsStack || sparseLabelsStack.length === 0) {
+            if (!volume.sparseVolumes || volume.sparseVolumes.length === 0) {
                 throw new Error(
                     "Pseudo Labels Generation error: Sparse Label Data is missing."
                 );
             }
 
-            const settings = JSON.parse(rawData.settings);
+            const settings = JSON.parse(volume.rawData.settings);
             if (
                 !Object.hasOwn(settings, "bytesPerVoxel") ||
                 settings.bytesPerVoxel != 1
@@ -198,7 +218,7 @@ export default class IlastikHandler {
                 );
             }
             const dimensions = settings.size;
-            for (const sparseLabel of sparseLabelsStack) {
+            for (const sparseLabel of volume.sparseVolumes) {
                 const settings = JSON.parse(sparseLabel.settings);
                 if (
                     !Object.hasOwn(settings, "bytesPerVoxel") ||
@@ -216,26 +236,21 @@ export default class IlastikHandler {
                 IlastikHandler.#checkDimensions(dimensions, settings.size);
             }
 
-            const rawH5FileName = path.parse(rawData.rawFilePath).name + ".h5";
+            const rawH5FileName =
+                path.parse(volume.rawData.rawFilePath).name + ".h5";
             const labelsH5FileName =
-                path.parse(rawData.rawFilePath).name + "_labels.h5";
+                path.parse(volume.rawData.rawFilePath).name + "_labels.h5";
 
-            const rawH5Path = path.join(
-                outputPath,
-                rawH5FileName
-            );
-            const labelsH5Path = path.join(
-                outputPath,
-                labelsH5FileName
-            );
+            const rawH5Path = path.join(outputPath, rawH5FileName);
+            const labelsH5Path = path.join(outputPath, labelsH5FileName);
 
             await fsPromises.writeFile(
                 logPath,
                 "Converting raw data to HDF5 format...\n"
             );
             await this.#convertDataToH5(
-                rawData,
-                sparseLabelsStack,
+                volume.rawData,
+                volume.sparseVolumes,
                 dimensions,
                 rawH5Path,
                 labelsH5Path
@@ -259,10 +274,26 @@ export default class IlastikHandler {
                 logPath
             );
 
-            return { outputPath: outputPath, resultPath: resultPath };
+            const labelDirectory = path.join(outputPath, "labels");
+            await fsPromises.mkdir(labelDirectory, {
+                recursive: true,
+            });
+            await H5ToLabels(
+                resultPath,
+                IlastikHandler.pseudoLabelsDataset,
+                labelDirectory
+            );
+
+            await Volume.addPseudoLabelsFromFolder(
+                labelDirectory,
+                userId,
+                volume.id,
+                volume.sparseVolumes
+            );
         } catch (error) {
             console.log(`exec error: ${error}`);
             fileSystem.appendFileSync(logPath, `exec error: ${error}`);
+        } finally {
             try {
                 await fsPromises.rm(outputPath, {
                     recursive: true,
@@ -273,7 +304,6 @@ export default class IlastikHandler {
                     `Filed to remove ilastik inference cache: ${error}`
                 );
             }
-            throw error;
         }
     }
 

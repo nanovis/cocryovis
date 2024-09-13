@@ -147,7 +147,9 @@ getNameFromPath = function(path) {
         <% } %>
     <% } %>
     <h4>Pseudo Labels:</h4>
-    <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/create-pseudo-labels"><button>Create Pseudo Label Volumes</button></a><br />
+    <form method="POST" action="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/create-pseudo-labels" enctype="multipart/form-data">
+        <input type="submit" value="Create Pseudo Label Volumes" />
+    </form>
     <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/add-pseudo-labeled-volume"><button>Add Pseudo Labeled Volume</button></a>
     <br />
     <% for (const pseudoLabeledVolume of volume.pseudoVolumes) { %>
