@@ -26,6 +26,11 @@ class IlastikHandlerTaskHistory {
     /** @type {String} */ taskStatus;
     /** @type {LogFile} */ logFile;
 
+    static status = {
+        success: "success",
+        fail: "fail",
+    };
+
     /**
      * @param {Number} userId
      * @param {Number} volumeId
@@ -98,7 +103,7 @@ export default class IlastikHandler {
         if (!outputPath) {
             outputPath = Utils.createTemporaryFolder(this.config.workCache);
         }
-        return this.#taskQueue.enqueue(
+        this.#taskQueue.enqueue(
             () => this.#generateLabels(volumeId, userId, outputPath),
             { userId: userId, volumeId: volumeId }
         );
@@ -291,7 +296,7 @@ export default class IlastikHandler {
                 new IlastikHandlerTaskHistory(
                     userId,
                     volumeId,
-                    "success",
+                    IlastikHandlerTaskHistory.status.success,
                     logFile
                 )
             );
@@ -299,7 +304,12 @@ export default class IlastikHandler {
             console.log(`Ilastik label generation error: ${error}`);
             await logFile.writeLog(`exec error: ${error}`);
             this.taskHistory.push(
-                new IlastikHandlerTaskHistory(userId, volumeId, "fail", logFile)
+                new IlastikHandlerTaskHistory(
+                    userId,
+                    volumeId,
+                    IlastikHandlerTaskHistory.status.fail,
+                    logFile
+                )
             );
         } finally {
             try {

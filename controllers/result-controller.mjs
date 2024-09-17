@@ -1,12 +1,7 @@
 // @ts-check
 
-import Checkpoint from "../models/checkpoint.mjs";
-import RawVolumeData from "../models/raw-volume-data.mjs";
 import Result from "../models/result.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
-import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
-import { writeFile, rm } from "node:fs/promises";
-import path from "path";
 
 export default class ResultController {
     static async downloadResult(req, res) {
@@ -75,66 +70,6 @@ export default class ResultController {
                 `/api/actions/projects/details/` + req.params.idProject
             );
         } catch (err) {
-            res.status(500).send(err);
-        }
-    }
-
-    /**
-     * @param {NanoOetziHandler} nanoOetzi
-     */
-    static async runInference(nanoOetzi, req, res) {
-        try {
-            const volumeDataId = Number(req.params.idVolumeData);
-            const checkpointId = Number(req.params.idCheckpoint);
-            const volumeId = Number(req.params.idVolume);
-
-            const volumeData = await RawVolumeData.getById(volumeDataId);
-
-            if (!volumeData.settings) {
-                throw new Error(
-                    `Inference: Selected Volume Data must contain a settings file.`
-                );
-            }
-
-            const checkpoint = await Checkpoint.getById(checkpointId);
-
-            const tempSettingsFileName = "settings.json";
-            const tempSettingsPath = path.join(
-                volumeData.path,
-                tempSettingsFileName
-            );
-            await writeFile(tempSettingsPath, volumeData.settings, "utf8");
-
-            try {
-                const outputPath = await nanoOetzi.queueInference(
-                    tempSettingsPath,
-                    checkpoint.filePath
-                );
-
-                await Result.createFromFolder(
-                    Number(req.session.user.id),
-                    checkpointId,
-                    volumeDataId,
-                    volumeId,
-                    outputPath
-                );
-            } finally {
-                try {
-                    await rm(path.join(volumeData.path, tempSettingsFileName), {
-                        force: true,
-                    });
-                } catch {
-                    console.error(
-                        "Inference: Failed to remove the temporary setting file."
-                    );
-                }
-            }
-
-            res.redirect(
-                `/api/actions/projects/details/` + req.params.idProject
-            );
-        } catch (err) {
-            console.log(err);
             res.status(500).send(err);
         }
     }

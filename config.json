@@ -25,7 +25,8 @@
         "maxQueueSize": 20,
         "inference": {
             "command": "inference_script.py",
-            "defaultModel": "four_classes_model.ckpt"
+            "defaultModel": "four_classes_model.ckpt",
+            "cleanTemporaryFiles": true
         },
         "training": {
             "command": "train.py",

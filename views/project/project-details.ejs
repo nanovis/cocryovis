@@ -223,13 +223,29 @@ getNameFromPath = function(path) {
     <% for (const checkpoint of model.checkpoints) { %>
         <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/download"><%= getNameFromPath(checkpoint.filePath) %></a> ...
         <a href="/api/actions/projects/<%= project.id %>/model/<%= model.id %>/checkpoint/<%= checkpoint.id %>/removeFromModel">[X]</a>
-        <% if (project.volumes.length > 0 && project.volumes[0].rawData != null && project.volumes[0].rawData.rawFilePath != null && project.volumes[0].rawData.settings != null) { %>
-            <a href="/api/actions/inference-test/<%= project.volumes[0].rawData.id %>/<%= checkpoint.id %>">   Test Inference</a>
-        <% } %>
         <br />
     <% } %>
 <% } %>
 <hr />
+<hr />
+<h3 style="text-align: left">Inference:</h3>
+<form id="inference" action="/api/actions/projects/<%= project.id %>/run-inference" method="post" enctype="multipart/form-data">
+    <label for="inferenceCheckpoint">Checkpoint:</label>
+    <select id="inferenceCheckpoint" name="checkpointId" required>
+        <% for (const model of project.models) { %>
+            <% for (const checkpoint of model.checkpoints) { %>
+                <option type="number" value="<%= checkpoint.id %>"><%= getNameFromPath(checkpoint.filePath) %> (<%= checkpoint.id %>)</option>
+            <% } %>
+        <% } %>
+    </select><br />
+    <label for="inferenceVolume">Volume:</label>
+    <select id="inferenceVolume" name="volumeId" required>
+        <% for (const volume of project.volumes) { %>
+            <option value="<%= volume.id %>"> <%= volume.name %> (<%= volume.id %>)</option>
+        <% } %>
+    </select>
+    <input type="submit" value="Submit" />
+</form>
 <hr />
 <h3 style="text-align: left">Training:</h3>
 <form id="training" action="/api/actions/projects/<%= project.id %>/run-training" method="post" enctype="multipart/form-data">

@@ -8,27 +8,130 @@ const execPromise = promisify(exec);
 import TaskQueue from "./task-queue.mjs";
 import Utils from "./utils.mjs";
 import fsPromises from "node:fs/promises";
+import Checkpoint from "../models/checkpoint.mjs";
+import Result from "../models/result.mjs";
+import LogFile from "./log-manager.mjs";
+import Volume from "../models/volume.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB
- * @typedef { Object } DeepVolumeProperties
- * @property { RawVolumeDataDB } rawData
- * @property { PseudoVolumeDataDB[] } pseudoVolumes
- * @typedef { VolumeDB & DeepVolumeProperties } DeepVolume
+ * @typedef { import("@prisma/client").Result } ResultDB
+ * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
+ * @typedef { VolumeDB & {rawData: RawVolumeDataDB, pseudoVolumes: PseudoVolumeDataDB[]} } DeepVolume
  */
 
+class TaskProperties {
+    /** @type {Number} */ userId;
+    /** @type {String} */ type;
+
+    static type = {
+        inference: "inference",
+        training: "training",
+    };
+
+    /**
+     * @param {Number} userId
+     * @param {String} type
+     */
+    constructor(userId, type) {
+        this.userId = userId;
+        this.type = type;
+    }
+}
+
+export class InferenceTaskProperties extends TaskProperties {
+    /** @type {Number} */ checkpointId;
+    /** @type {Number} */ volumeId;
+
+    /**
+     * @param {Number} userId
+     * @param {String} type
+     * @param {Number} checkpointId
+     * @param {Number} volumeId
+     */
+    constructor(userId, type, checkpointId, volumeId) {
+        super(userId, type);
+        this.checkpointId = checkpointId;
+        this.volumeId = volumeId;
+
+        Object.preventExtensions(this);
+    }
+}
+
+export class TrainingTaskProperties extends TaskProperties {
+    /** @type {Number} */ modelId;
+    /** @type {Number[]} */ trainingVolumesIds;
+    /** @type {Number[]} */ validationVolumesIds;
+    /** @type {Number[]} */ testingVolumesIds;
+
+    /**
+     * @param {Number} userId
+     * @param {String} type
+     * @param {Number} modelId
+     * @param {Number[]} trainingVolumesIds
+     * @param {Number[]} validationVolumesIds
+     * @param {Number[]} testingVolumesIds
+     */
+    constructor(
+        userId,
+        type,
+        modelId,
+        trainingVolumesIds,
+        validationVolumesIds,
+        testingVolumesIds
+    ) {
+        super(userId, type);
+        this.modelId = modelId;
+        this.trainingVolumesIds = trainingVolumesIds;
+        this.validationVolumesIds = validationVolumesIds;
+        this.testingVolumesIds = testingVolumesIds;
+
+        Object.preventExtensions(this);
+    }
+}
+
+class TaskHistory {
+    static status = {
+        success: "success",
+        fail: "fail",
+    };
+
+    /**
+     * @param {String} taskStatus
+     * @param {LogFile} logFile
+     * @param {TaskProperties} taskProperties
+     */
+    constructor(taskStatus, logFile, taskProperties) {
+        this.taskProperties = taskProperties;
+        this.taskStatus = taskStatus;
+        this.logFile = logFile;
+
+        Object.preventExtensions(this);
+    }
+}
+
 export default class NanoOetziHandler {
+    /** @type {TaskQueue} */ #taskQueue;
+    /** @type {TaskHistory[]} */ taskHistory = [];
+
     constructor(config) {
         this.config = config;
-        this.taskQueue = new TaskQueue();
+        this.#taskQueue = new TaskQueue();
 
         Object.preventExtensions(this);
     }
 
     isInferenceRunning() {
-        return this.taskQueue.hasPendingTask;
+        return this.#taskQueue.hasPendingTask;
+    }
+
+    /**
+     * @returns {TaskProperties[]}
+     */
+    get queuedIdentifiers() {
+        return this.#taskQueue.queuedIdentifiers;
     }
 
     createTemporaryOutputPath() {
@@ -44,140 +147,197 @@ export default class NanoOetziHandler {
     }
 
     /**
-     * @param {String} inferenceDataPath
-     * @param {String} checkpointFilename
+     * @param {Number} checkpointId
+     * @param {Number} volumeId
+     * @param {Number} userId
      * @param {String?} outputPath
-     * @returns {Promise<String>}
+     * @returns {Promise<void>}
      */
-    queueInference(inferenceDataPath, checkpointFilename, outputPath = null) {
-        if (!inferenceDataPath) {
-            throw new Error(
-                "Failed Attempt to start inference: Missing inference data path."
-            );
-        }
-        if (!checkpointFilename) {
-            throw new Error(
-                "Failed Attempt to start inference: Missing checkpoint data path."
-            );
-        }
-        if (this.taskQueue.size >= this.config.maxQueueSize) {
+    async queueInference(checkpointId, volumeId, userId, outputPath = null) {
+        if (this.#taskQueue.size >= this.config.maxQueueSize) {
             throw new Error(
                 "Failed Attempt to start inference: Too many tasks in queue."
             );
         }
 
+        const volume = await Volume.getByIdDeep(volumeId, { rawData: true });
+        const checkpoint = await Checkpoint.getById(checkpointId);
+
+        NanoOetziHandler.#checkInferenceInput(volume, checkpoint);
+
         if (!outputPath) {
             outputPath = this.createTemporaryOutputPath();
         }
-        return this.taskQueue.enqueue(() =>
-            this.#runInference(
-                inferenceDataPath,
-                checkpointFilename,
-                outputPath
+        this.#taskQueue.enqueue(
+            () =>
+                this.#runInference(checkpointId, volumeId, userId, outputPath),
+            new InferenceTaskProperties(
+                userId,
+                TaskProperties.type.inference,
+                checkpointId,
+                volumeId
             )
         );
     }
 
     /**
-     * @param {String} inferenceDataPath
-     * @param {String} checkpointFilename
+     * @param {Number} checkpointId
+     * @param {Number} volumeId
+     * @param {Number} userId
      * @param {String} outputPath
-     * @returns {Promise<String>}
+     * @returns {Promise<ResultDB>}
      */
-    async #runInference(inferenceDataPath, checkpointFilename, outputPath) {
-        const logPath = path.join(outputPath, "!inference.log");
+    async #runInference(checkpointId, volumeId, userId, outputPath) {
+        const logFile = await LogFile.createLogFile("inference");
+        let tempSettingsPath = null;
+        const taskProperties = new InferenceTaskProperties(
+            userId,
+            TaskProperties.type.inference,
+            checkpointId,
+            volumeId
+        );
 
         try {
-            if (!fileSystem.existsSync(inferenceDataPath)) {
-                throw new Error(
-                    "Failed Attempt to start inference: Inference data does not exist"
-                );
-            }
-            if (!fileSystem.existsSync(checkpointFilename)) {
-                throw new Error(
-                    "Failed Attempt to start inference: Checkpoint file does not exist"
-                );
-            }
-            if (!fileSystem.existsSync(outputPath)) {
-                fileSystem.mkdirSync(outputPath, { recursive: true });
-            }
+            const volume = await Volume.getByIdDeep(volumeId, {
+                rawData: true,
+            });
+            const checkpoint = await Checkpoint.getById(checkpointId);
 
+            NanoOetziHandler.#checkInferenceInput(volume, checkpoint);
+
+            tempSettingsPath = path.join(volume.rawData.path, "settings.json");
             await fsPromises.writeFile(
-                logPath,
-                "Nano-Oetzi inference started\n--------------\n"
+                tempSettingsPath,
+                volume.rawData.settings,
+                "utf8"
             );
 
-            let inferenceDataAbsolutePath = path.resolve(inferenceDataPath);
-            let outputAbsolutePath = path.resolve(outputPath);
+            fsPromises.mkdir(outputPath, { recursive: true });
+
+            await logFile.writeLog("Nano-Oetzi inference started\n");
+
+            const inferenceDataAbsolutePath = path.resolve(tempSettingsPath);
+            const outputAbsolutePath = path.resolve(outputPath);
 
             if (!fileSystem.existsSync(outputAbsolutePath)) {
                 fileSystem.mkdirSync(outputAbsolutePath, { recursive: true });
             }
 
-            let checkpointAbsolutePath = path.resolve(checkpointFilename);
+            const checkpointAbsolutePath = path.resolve(checkpoint.filePath);
             let params = [
                 "./" + this.config.inference.command,
-                inferenceDataAbsolutePath + " " + outputAbsolutePath + " ",
+                inferenceDataAbsolutePath,
+                outputAbsolutePath,
                 "-m " + checkpointAbsolutePath,
             ];
-            let command =
-                this.config.python +
-                " " +
-                params[0] +
-                " " +
-                params[1] +
-                " " +
-                params[2];
-            console.log(command);
+            if (this.config.inference.cleanTemporaryFiles) {
+                params.push("-c True");
+            }
+            const command = this.config.python + " " + params.join(" ");
 
             const { stdout, stderr } = await execPromise(command, {
                 cwd: path.resolve(this.config.scripts),
             });
-            await fsPromises.appendFile(
-                logPath,
-                `\nstdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nNanoOetzi inference finished`
+            await logFile.writeLog(
+                `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
             );
-            console.log("NanoOetzi inference finished");
-            return outputPath;
+
+            const result = await Result.createFromFolder(
+                userId,
+                checkpointId,
+                volume.rawData.id,
+                volumeId,
+                outputPath
+            );
+
+            await logFile.writeLog(
+                `Result entry created.\n\nSaving task history...\n`
+            );
+
+            this.taskHistory.push(
+                new TaskHistory(
+                    TaskHistory.status.success,
+                    logFile,
+                    taskProperties
+                )
+            );
+
+            await logFile.writeLog(
+                `Task history saved.\n\nINFERENCE FINISHED!\n`
+            );
+
+            return result;
         } catch (error) {
-            await fsPromises.appendFile(logPath, `\nERROR: \n${error}`);
+            await logFile.writeLog(`ERROR: \n${error}`);
             console.error(`NanoOetzi inference error: ${error}`);
-            await fsPromises.rm(outputPath, { recursive: true, force: true });
+            try {
+                await fsPromises.rm(outputPath, {
+                    recursive: true,
+                    force: true,
+                });
+            } catch (error) {
+                console.error(
+                    `Filed to remove nano oetzi inference cache: ${error}`
+                );
+            }
+            this.taskHistory.push(
+                new TaskHistory(
+                    TaskHistory.status.fail,
+                    logFile,
+                    taskProperties
+                )
+            );
             throw error;
+        } finally {
+            if (tempSettingsPath != null) {
+                try {
+                    await fsPromises.rm(tempSettingsPath, {
+                        force: true,
+                    });
+                } catch {
+                    console.error(
+                        "Inference: Failed to remove the temporary setting file."
+                    );
+                }
+            }
         }
     }
 
     /**
-     * @param {DeepVolume[]} trainingReferences
-     * @param {DeepVolume[]} validationReferences
-     * @param {DeepVolume[]} testReferences
+     * @param {Number} modelId
+     * @param {Number} userId
+     * @param {Number[]} trainingVolumesIds
+     * @param {Number[]} validationVolumesIds
+     * @param {Number[]} testingVolumesIds
      * @param {String?} outputPath
      * @param {boolean} removeTempFiles
-     * @returns {Promise<{outputPath: string, checkpointPath:string}>}
+     * @returns {Promise<Void>}
      */
-    queueTraining(
-        trainingReferences,
-        validationReferences,
-        testReferences,
+    async queueTraining(
+        modelId,
+        userId,
+        trainingVolumesIds,
+        validationVolumesIds,
+        testingVolumesIds,
         outputPath = null,
         removeTempFiles = true
     ) {
-        if (!trainingReferences || trainingReferences.length == 0) {
+        if (!trainingVolumesIds || trainingVolumesIds.length == 0) {
             throw new Error(
                 "Failed Attempt to start training: Missing training data."
             );
         }
-        if (!validationReferences || validationReferences.length == 0) {
+        if (!validationVolumesIds || validationVolumesIds.length == 0) {
             throw new Error(
                 "Failed Attempt to start training: Missing validation data."
             );
         }
-        if (!testReferences || testReferences.length == 0) {
+        if (!testingVolumesIds || testingVolumesIds.length == 0) {
             throw new Error(
                 "Failed Attempt to start training: Missing test data."
             );
         }
-        if (this.taskQueue.size >= this.config.maxQueueSize) {
+        if (this.#taskQueue.size >= this.config.maxQueueSize) {
             throw new Error(
                 "Failed Attempt to start inference: Too many tasks in queue."
             );
@@ -186,57 +346,88 @@ export default class NanoOetziHandler {
         if (!outputPath) {
             outputPath = this.createTemporaryOutputPath();
         }
-        return this.taskQueue.enqueue(() =>
-            this.#runTraining(
-                trainingReferences,
-                validationReferences,
-                testReferences,
-                outputPath,
-                removeTempFiles
+        this.#taskQueue.enqueue(
+            () =>
+                this.#runTraining(
+                    modelId,
+                    userId,
+                    trainingVolumesIds,
+                    validationVolumesIds,
+                    testingVolumesIds,
+                    outputPath,
+                    removeTempFiles
+                ),
+            new TrainingTaskProperties(
+                userId,
+                TaskProperties.type.training,
+                modelId,
+                trainingVolumesIds,
+                validationVolumesIds,
+                testingVolumesIds
             )
         );
     }
 
     /**
-     * @param {DeepVolume[]} trainingReferences
-     * @param {DeepVolume[]} validationReferences
-     * @param {DeepVolume[]} testReferences
+     * @param {Number} modelId
+     * @param {Number} userId
+     * @param {Number[]} trainingVolumesIds
+     * @param {Number[]} validationVolumesIds
+     * @param {Number[]} testingVolumesIds
      * @param {String} outputPath
      * @param {boolean} removeTempFiles
-     * @returns {Promise<{outputPath: string, checkpointPath:string}>}
+     * @returns {Promise<CheckpointDB>}
      */
     async #runTraining(
-        trainingReferences,
-        validationReferences,
-        testReferences,
+        modelId,
+        userId,
+        trainingVolumesIds,
+        validationVolumesIds,
+        testingVolumesIds,
         outputPath,
         removeTempFiles = true
     ) {
-        const logPath = path.join(outputPath, "!training.log");
+        const logFile = await LogFile.createLogFile("training");
         const workFolder = path.join(outputPath, "training-data");
+        const taskProperties = new TrainingTaskProperties(
+            userId,
+            TaskProperties.type.training,
+            modelId,
+            trainingVolumesIds,
+            validationVolumesIds,
+            testingVolumesIds
+        );
 
         try {
-            await fsPromises.writeFile(
-                logPath,
+            await logFile.writeLog(
                 "Nano-Oetzi training started\n--------------\n"
             );
 
             await fsPromises.mkdir(workFolder, { recursive: true });
 
-            await fsPromises.appendFile(
-                logPath,
-                `Creating training configuration file...\n`
+            await logFile.writeLog(`Creating training configuration file...\n`);
+
+            const trainingVolumes = await Volume.getMultipleByIdDeep(
+                trainingVolumesIds,
+                { rawData: true, pseudoVolumes: true }
+            );
+            const validationVolumes = await Volume.getMultipleByIdDeep(
+                validationVolumesIds,
+                { rawData: true, pseudoVolumes: true }
+            );
+            const testingVolumes = await Volume.getMultipleByIdDeep(
+                testingVolumesIds,
+                { rawData: true, pseudoVolumes: true }
             );
 
             const configPath = await this.#writeTrainingConfigFile(
-                trainingReferences,
-                validationReferences,
-                testReferences,
+                trainingVolumes,
+                validationVolumes,
+                testingVolumes,
                 workFolder
             );
 
-            await fsPromises.appendFile(
-                logPath,
+            await logFile.writeLog(
                 `Training configuration file created successfully.\n`
             );
 
@@ -248,15 +439,13 @@ export default class NanoOetziHandler {
                 "raws-to-train-sets.py"
             )}\" -i \"${configAbsolutePath}\" -o \"${outputAbsolutePath}\"`;
 
-            await fsPromises.appendFile(
-                logPath,
+            await logFile.writeLog(
                 "Converting raw data into pytorch tensors...\n"
             );
 
             let execResult = await execPromise(command);
 
-            await fsPromises.appendFile(
-                logPath,
+            await logFile.writeLog(
                 `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nLauching training script...\n`
             );
 
@@ -266,9 +455,8 @@ export default class NanoOetziHandler {
                 cwd: path.resolve(this.config.scripts),
             });
 
-            await fsPromises.appendFile(
-                logPath,
-                `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nSearching for training results file...`
+            await logFile.writeLog(
+                `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nSearching for training results file...\n`
             );
 
             const trainingResultsPath = path.join(
@@ -289,10 +477,45 @@ export default class NanoOetziHandler {
 
             await fsPromises.rename(bestModelPath, newBestModelPath);
 
-            return { outputPath: outputPath, checkpointPath: newBestModelPath };
+            const labelIds = [];
+            for (const trainingVolume of trainingVolumes) {
+                for (const pseudoVolume of trainingVolume.pseudoVolumes) {
+                    labelIds.push(pseudoVolume.id);
+                }
+            }
+
+            await logFile.writeLog(
+                `Training results file found.\n\nCreating new checkpoint...\n`
+            );
+
+            const checkpoint = await Checkpoint.createFromFolder(
+                userId,
+                modelId,
+                labelIds,
+                outputPath,
+                newBestModelPath
+            );
+
+            await logFile.writeLog(
+                `New checkpoint created.\n\nSaving task history...\n`
+            );
+
+            this.taskHistory.push(
+                new TaskHistory(
+                    TaskHistory.status.success,
+                    logFile,
+                    taskProperties
+                )
+            );
+
+            await logFile.writeLog(
+                `Task history saved.\n\nTRAINING FINISHED!\n`
+            );
+
+            return checkpoint;
         } catch (error) {
-            await fsPromises.appendFile(logPath, `\nERROR: \n${error}`);
-            console.log(`NanoOetzi inference error: ${error}`);
+            await logFile.writeLog(`ERROR: \n${error}`);
+            console.error(`Nano Oetzi training error: ${error}`);
             try {
                 await fsPromises.rm(workFolder, {
                     recursive: true,
@@ -303,6 +526,13 @@ export default class NanoOetziHandler {
                     `Failed to remove temporary files after a failed Nano-Oetzi training:\n${error.message}`
                 );
             }
+            this.taskHistory.push(
+                new TaskHistory(
+                    TaskHistory.status.fail,
+                    logFile,
+                    taskProperties
+                )
+            );
             throw error;
         } finally {
             if (removeTempFiles) {
@@ -454,6 +684,33 @@ export default class NanoOetziHandler {
         if (!Utils.checkDimensions(dim1, dim2)) {
             throw new Error(
                 "NanoOetzi inference error: One or more inputs have missmatching dimensions."
+            );
+        }
+    }
+
+    /**
+     * @param {VolumeDB & {rawData: RawVolumeDataDB}} volume
+     * @param {CheckpointDB} checkpoint
+     */
+    static #checkInferenceInput(volume, checkpoint) {
+        if (!volume.rawData) {
+            throw new Error(
+                `Inference: Selected Volume must contain Raw Volume Data.`
+            );
+        }
+        if (!volume.rawData.rawFilePath) {
+            throw new Error(
+                `Inference: Raw Volume Data Volume must contain a raw file.`
+            );
+        }
+        if (!volume.rawData.settings) {
+            throw new Error(
+                `Inference: Raw Volume Data Volume must contain a settings file.`
+            );
+        }
+        if (!fileSystem.existsSync(checkpoint.filePath)) {
+            throw new Error(
+                "Failed Attempt to start inference: Checkpoint file does not exist"
             );
         }
     }

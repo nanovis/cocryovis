@@ -37,6 +37,14 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
+     * @param {Number[]} ids
+     * @return {Promise<CheckpointDB[]>}
+     */
+    static async getByIds(ids) {
+        return await super.getByIds(ids);
+    }
+
+    /**
      * @param {Number} ownerId
      * @param {Number} modelId
      * @return {Promise<CheckpointDB>}
@@ -190,6 +198,7 @@ export default class Checkpoint extends DatabaseModel {
                 recursive: true,
                 force: true,
             });
+            throw error;
         }
     }
 
@@ -379,6 +388,7 @@ export default class Checkpoint extends DatabaseModel {
      */
     static async reserveFolderName(id) {
         const folderPath = path.join(appConfig.checkpointsPath, id.toString());
+        await fsPromises.mkdir(appConfig.checkpointsPath, { recursive: true });
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
                 throw new Error(`Checkpoint directory already exists`);

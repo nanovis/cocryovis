@@ -31,6 +31,14 @@ export default class Model extends DatabaseModel {
     }
 
     /**
+     * @param {Number[]} ids
+     * @return {Promise<ModelDB[]>}
+     */
+    static async getByIds(ids) {
+        return await super.getByIds(ids);
+    }
+
+    /**
      * @param {Number} id
      */
     static async getByIdDeep(id) {

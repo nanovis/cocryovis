@@ -13,6 +13,8 @@ import { VolumeDataType } from '../../models/volume-data-factory.mjs';
 import ModelController from '../../controllers/model-controller.mjs';
 import CheckpointController from '../../controllers/checkpoint-controller.mjs';
 import ResultController from '../../controllers/result-controller.mjs';
+import IlastikController from '../../controllers/ilastik-controller.mjs';
+import NanoOetziController from '../../controllers/nano-oetzi-controller.mjs';
 
 // Config
 const config = appConfig;
@@ -65,6 +67,34 @@ actions.post(`/${projectsActionsPath}/create-project`, restrict, ProjectControll
 // Delete Project
 actions.get(`/${projectsActionsPath}/:idProject/delete`, restrict, ProjectController.deleteProject);
 
+/////// ILASTIK
+
+// Get Ilastik task queue
+actions.get(`/${projectsActionsPath}/ilastik-task-queue`, restrict,
+    async (req, res) => IlastikController.getIlastikTaskQueue(ilastikHandler, req, res));
+
+// Get Ilastik task history
+actions.get(`/${projectsActionsPath}/ilastik-task-history`, restrict,
+    async (req, res) => IlastikController.getIlastikUserTaskHistory(ilastikHandler, req, res));
+
+
+/////// NANO OETZI
+
+// Get Nano Oetzi task queue
+actions.get(`/${projectsActionsPath}/nanooetzi-task-queue`, restrict,
+    async (req, res) => NanoOetziController.getNanoOetziTaskQueue(nanoOetzi, req, res));
+
+// Get Nano Oetzi task history
+actions.get(`/${projectsActionsPath}/nanooetzi-task-history`, restrict,
+    async (req, res) => NanoOetziController.getNanoOetziUserTaskHistory(nanoOetzi, req, res));
+
+// Inference
+actions.post(`/${projectsActionsPath}/:idProject/run-inference`, restrict,
+    async (req, res) => NanoOetziController.runInference(nanoOetzi, req, res));
+
+// Run training
+actions.post(`/${projectsActionsPath}/:idProject/run-training`, restrict, 
+    async (req, res) => NanoOetziController.runTraining(nanoOetzi, req, res));
 
 /////// VOLUMES
 
@@ -90,14 +120,6 @@ actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labe
 // Run Ilastik inference
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
     async (req, res) => VolumeController.createPseudoLabels(ilastikHandler, req, res));
-
-// Get Ilastik task queue
-actions.get(`/${projectsActionsPath}/ilastik-task-queue`, restrict,
-    async (req, res) => VolumeController.getIllastikTaskQueue(ilastikHandler, req, res));
-
-// Get Ilastik task history
-actions.get(`/${projectsActionsPath}/ilastik-task-history`, restrict,
-    async (req, res) => VolumeController.getIllastikUserTaskHistory(ilastikHandler, req, res));
 
 // Process Sparse Labels
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/addAnnotations`, restrict, 
@@ -165,10 +187,6 @@ actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idChe
 // actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrict, CheckpointController.deleteCheckpoint);
 actions.get(`/${projectsActionsPath}/:idProject/model/:idModel/checkpoint/:idCheckpoint/removeFromModel`, restrict, CheckpointController.removeFromModel);
 
-// Run training
-actions.post(`/${projectsActionsPath}/:idProject/run-training`, restrict, 
-    async (req, res) => CheckpointController.runTraining(nanoOetzi, req, res));
-
 /////// RESULTS
 // Remove Result
 // actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/delete`, restrict, ResultController.deleteResult);
@@ -179,7 +197,3 @@ actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download`, rest
 
 // Download Result File
 actions.get(`/${projectsActionsPath}/:idProject/result/:idResult/download/:fileIndex`, restrict, ResultController.downloadResultFile);
-
-// Inference test
-actions.get(`/inference-test/:idVolumeData/:idCheckpoint/:idVolume`, restrict,
-    async (req, res) => ResultController.runInference(nanoOetzi, req, res));

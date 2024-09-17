@@ -34,6 +34,9 @@ export default class DatabaseModel {
      * @return {Promise<Object[]>}
      */
     static async getByIds(ids) {
+        if (ids.length === 0) {
+            return [];
+        }
         const entries = await this.db.findMany({
             where: {
                 id: {

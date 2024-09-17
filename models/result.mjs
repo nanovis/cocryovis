@@ -303,6 +303,7 @@ export default class Result extends DatabaseModel {
      */
     static async reserveFolderName(id) {
         const folderPath = path.join(appConfig.resultsPath, id.toString());
+        await fsPromises.mkdir(appConfig.resultsPath, { recursive: true });
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
                 throw new Error(`Result directory already exists`);
