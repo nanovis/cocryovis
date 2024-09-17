@@ -233,6 +233,36 @@ export default class VolumeController {
         }
     }
 
+    /**
+     * @param {IlastikHandler} illastik
+     */
+    static async getIllastikUserTaskHistory(illastik, req, res) {
+        try {
+            const userTaskHistory = illastik.taskHistory.filter(
+                (t) => t.userId === req.session.user.id
+            );
+
+            const volumes = await Volume.getByIds(
+                userTaskHistory.map((i) => i.volumeId)
+            );
+
+            const result = userTaskHistory.map(function (t, i) {
+                return {
+                    volumeName: volumes[i].name,
+                    volumeId: volumes[i].id,
+                    taskStatus: t.taskStatus,
+                    logFileName: t.logFile.fileName,
+                };
+            });
+
+            res.setHeader("Content-Type", "application/json");
+            res.json(result);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    }
+
     static async addAnnotations(req, res) {
         try {
             console.log(`Starting annotation conversion...`);

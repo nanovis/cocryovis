@@ -95,6 +95,10 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-
 actions.get(`/${projectsActionsPath}/ilastik-task-queue`, restrict,
     async (req, res) => VolumeController.getIllastikTaskQueue(ilastikHandler, req, res));
 
+// Get Ilastik task history
+actions.get(`/${projectsActionsPath}/ilastik-task-history`, restrict,
+    async (req, res) => VolumeController.getIllastikUserTaskHistory(ilastikHandler, req, res));
+
 // Process Sparse Labels
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/addAnnotations`, restrict, 
     async (req, res) => VolumeController.addAnnotations(req, res));

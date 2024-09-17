@@ -6,6 +6,7 @@ uploads/*
 .vs
 db.json
 data/
+logs/
 .idea
 cache/
 *.sqlite3

@@ -5,6 +5,7 @@
     "resultsPath": "./data/results/",
     "maxVolumeChannels": 4,
     "safeMode": false,
+    "logPath": "./logs/",
     "ilastik": {
         "path": "../ilastik/",
         "scripts_path": "../ilastik/bin/",

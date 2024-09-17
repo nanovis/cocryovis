@@ -52,6 +52,7 @@ app.use(function (req, res, next) {
 
 app.use(express.static('web',  { index: false }));
 app.use(express.static('data',  { index: false }));
+app.use('/logs', express.static('logs',  { index: false }));
 
 // Handling root route
 app.get('/', restrict, function (req, res) {
