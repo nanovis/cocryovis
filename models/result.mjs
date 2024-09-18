@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./base-model.mjs";
+import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "node:fs/promises";
 import appConfig from "../tools/config.mjs";
@@ -16,9 +16,6 @@ import RawVolumeData from "./raw-volume-data.mjs";
  * @typedef { import("@prisma/client").Result } ResultDB
  */
 
-/**
- * @extends DatabaseModel
- */
 export default class Result extends DatabaseModel {
     static acceptedFileExtensions = [".log", ".raw", ".json"];
 

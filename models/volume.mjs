@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./base-model.mjs";
+import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";

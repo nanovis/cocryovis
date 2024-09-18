@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./base-model.mjs";
+import DatabaseModel from "./database-model.mjs";
 import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
 

@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./base-model.mjs";
+import DatabaseModel from "./database-model.mjs";
 import path from "path";
 import fsPromises from "node:fs/promises";
 import prismaManager from "../tools/prisma-manager.mjs";

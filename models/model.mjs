@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./base-model.mjs";
+import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import fsPromises from "fs/promises";
