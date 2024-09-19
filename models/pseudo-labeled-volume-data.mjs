@@ -6,6 +6,7 @@ import fileUpload from "express-fileupload";
 import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
 import path from "path";
+import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
@@ -15,6 +16,8 @@ import path from "path";
  * @extends {VolumeData}
  */
 export default class PseudoLabeledVolumeData extends VolumeData {
+    static lockManager = new WriteLockManager();
+    
     /**
      * @return {String}
      */
@@ -79,6 +82,8 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @return {Promise<PseudoVolumeDataDB>}
      */
     static async #del(volumeDataId, volumeId = null) {
+        super.lockCheck(volumeDataId);
+
         const fileDeleteStack = [];
 
         const volumeData = await prismaManager.db.$transaction(
@@ -165,6 +170,9 @@ export default class PseudoLabeledVolumeData extends VolumeData {
         if (ids.length === 0) {
             return [];
         }
+
+        super.lockCheckMany(ids);
+
         const fileDeleteStack = [];
 
         const pseudoVolumes = await tx.pseudoLabelVolumeData.findMany({

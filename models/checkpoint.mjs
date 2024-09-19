@@ -9,6 +9,7 @@ import fileSystem from "fs";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import fileUpload from "express-fileupload";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
+import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
@@ -16,6 +17,7 @@ import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 
 export default class Checkpoint extends DatabaseModel {
     static acceptedFileExtensions = [".ckpt"];
+    static lockManager = new WriteLockManager();
 
     /**
      * @return {String}
@@ -220,6 +222,7 @@ export default class Checkpoint extends DatabaseModel {
         if (ids.length === 0) {
             return [];
         }
+        super.lockCheckMany(ids);
         const fileDeleteStack = [];
 
         const checkpoints = await tx.checkpoint.findMany({
@@ -274,6 +277,8 @@ export default class Checkpoint extends DatabaseModel {
      * @return {Promise<CheckpointDB>}
      */
     static async #del(checkpointId, modelId = null) {
+        super.lockCheck(checkpointId);
+
         const fileDeleteStack = [];
 
         const checkpoint = await prismaManager.db.$transaction(

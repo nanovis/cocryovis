@@ -11,6 +11,7 @@ import Utils from "../tools/utils.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
+import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -18,6 +19,7 @@ import RawVolumeData from "./raw-volume-data.mjs";
 
 export default class Result extends DatabaseModel {
     static acceptedFileExtensions = [".log", ".raw", ".json"];
+    static lockManager = new WriteLockManager();
 
     /**
      * @return {String}
@@ -230,9 +232,15 @@ export default class Result extends DatabaseModel {
                         },
                     });
                 } else {
-                    await tx.result.delete({
-                        where: { id: resultId },
-                    });
+                    const blockId = this.lockCheckAndBlock(resultId);
+
+                    try {
+                        await tx.result.delete({
+                            where: { id: resultId },
+                        });
+                    } finally {
+                        this.unblockLock(blockId);
+                    }
 
                     if (result.checkpoint) {
                         const checkpointFiles = await Checkpoint.deleteZombies(
@@ -337,15 +345,24 @@ export default class Result extends DatabaseModel {
                 },
             },
         });
-        await tx.result.deleteMany({
-            where: {
-                id: {
-                    in: results.map((r) => r.id),
-                },
-            },
-        });
-        results.forEach((r) => fileDeleteStack.push(...Result.getFilePaths(r)));
 
-        return fileDeleteStack;
+        const blockIds = this.lockCheckManyAndBlock(results.map((r) => r.id));
+
+        try {
+            await tx.result.deleteMany({
+                where: {
+                    id: {
+                        in: results.map((r) => r.id),
+                    },
+                },
+            });
+            results.forEach((r) =>
+                fileDeleteStack.push(...Result.getFilePaths(r))
+            );
+
+            return fileDeleteStack;
+        } finally {
+            this.unblockLockMany(blockIds);
+        }
     }
 }

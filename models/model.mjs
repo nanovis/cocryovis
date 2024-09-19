@@ -5,12 +5,15 @@ import prismaManager from "../tools/prisma-manager.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import fsPromises from "fs/promises";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
+import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
  */
 
 export default class Model extends DatabaseModel {
+    static lockManager = new WriteLockManager();
+    
     /**
      * @return {String}
      */
@@ -106,6 +109,8 @@ export default class Model extends DatabaseModel {
      * @returns { Promise<ModelDB> }
      */
     static async #del(modelId, projectId = null) {
+        super.lockCheck(modelId);
+
         const fileDeleteStack = [];
 
         const model = await prismaManager.db.$transaction(
@@ -193,6 +198,9 @@ export default class Model extends DatabaseModel {
         if (ids.length === 0) {
             return;
         }
+
+        super.lockCheckMany(ids);
+
         await tx.model.deleteMany({
             where: {
                 AND: {

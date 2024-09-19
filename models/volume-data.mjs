@@ -10,6 +10,7 @@ import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import AdmZip from "adm-zip";
+import Volume from "./volume.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -50,37 +51,46 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async create(ownerId, volumeId) {
-        return await prismaManager.db.$transaction(
-            async (tx) => {
-                /** @type {VolumeDataDB} */
-                const volumeData = await tx[this.modelName].create({
-                    data: {
-                        ownerId: ownerId,
-                        volumes: {
-                            connect: { id: volumeId },
+        // const lockId = Volume.connectionLockCheckAndBlock(
+        //     volumeId,
+        //     this.modelName
+        // );
+
+        try {
+            return await prismaManager.db.$transaction(
+                async (tx) => {
+                    /** @type {VolumeDataDB} */
+                    const volumeData = await tx[this.modelName].create({
+                        data: {
+                            ownerId: ownerId,
+                            volumes: {
+                                connect: { id: volumeId },
+                            },
                         },
-                    },
-                });
-
-                const folderPath = await this.createVolumeDataFolder(
-                    volumeData.id
-                );
-
-                try {
-                    await tx[this.modelName].update({
-                        where: { id: volumeData.id },
-                        data: { path: folderPath },
                     });
-                } catch (error) {
-                    await this.deleteVolumeDataFiles(volumeData);
-                    throw error;
+
+                    const folderPath = await this.createVolumeDataFolder(
+                        volumeData.id
+                    );
+
+                    try {
+                        await tx[this.modelName].update({
+                            where: { id: volumeData.id },
+                            data: { path: folderPath },
+                        });
+                    } catch (error) {
+                        await this.deleteVolumeDataFiles(volumeData);
+                        throw error;
+                    }
+                    return volumeData;
+                },
+                {
+                    timeout: 60000,
                 }
-                return volumeData;
-            },
-            {
-                timeout: 60000,
-            }
-        );
+            );
+        } finally {
+            // Volume.unblockLock(lockId);
+        }
     }
 
     /**
@@ -97,11 +107,18 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async del(id) {
-        const volumeData = await this.db.delete({
-            where: { id: id },
-        });
-        await this.deleteVolumeDataFiles(volumeData);
-        return volumeData;
+        // const lockId = this.lockCheckAndBlock(id);
+
+        try {
+            const volumeData = await this.db.delete({
+                where: { id: id },
+            });
+            await this.deleteVolumeDataFiles(volumeData);
+
+            return volumeData;
+        } finally {
+            // this.unblockLock(lockId);
+        }
     }
 
     /**
@@ -110,43 +127,51 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async removeFromVolume(id, volumeId) {
-        return await prismaManager.db.$transaction(
-            async (tx) => {
-                /** @type {VolumeDataDB & {volumes: VolumeDB[]}} */
-                let volumeData = await tx[this.modelName].findUnique({
-                    where: { id: id },
-                    include: {
-                        volumes: true,
-                    },
-                });
+        // const blockId = Volume.connectionLockCheckAndBlock(volumeId, this.modelName);
 
-                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                    throw new Error("Volume Data is not part of the volume.");
-                }
-
-                if (volumeData.volumes.length > 1) {
-                    await tx[this.modelName].update({
-                        where: {
-                            id: id,
-                        },
-                        data: {
-                            volumes: {
-                                disconnect: { id: volumeId },
-                            },
-                        },
-                    });
-                } else {
-                    await tx[this.modelName].delete({
+        try {
+            return await prismaManager.db.$transaction(
+                async (tx) => {
+                    /** @type {VolumeDataDB & {volumes: VolumeDB[]}} */
+                    let volumeData = await tx[this.modelName].findUnique({
                         where: { id: id },
+                        include: {
+                            volumes: true,
+                        },
                     });
-                    await this.deleteVolumeDataFiles(volumeData);
+
+                    if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                        throw new Error(
+                            "Volume Data is not part of the volume."
+                        );
+                    }
+
+                    if (volumeData.volumes.length > 1) {
+                        await tx[this.modelName].update({
+                            where: {
+                                id: id,
+                            },
+                            data: {
+                                volumes: {
+                                    disconnect: { id: volumeId },
+                                },
+                            },
+                        });
+                    } else {
+                        await tx[this.modelName].delete({
+                            where: { id: id },
+                        });
+                        await this.deleteVolumeDataFiles(volumeData);
+                    }
+                    return volumeData;
+                },
+                {
+                    timeout: 60000,
                 }
-                return volumeData;
-            },
-            {
-                timeout: 60000,
-            }
-        );
+            );
+        } finally {
+            // Volume.unblockLock(blockId);
+        }
     }
 
     /**

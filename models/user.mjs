@@ -3,12 +3,15 @@
 import DatabaseModel from "./database-model.mjs";
 import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
+import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").User } UserDB
  */
 
 export default class User extends DatabaseModel {
+    static lockManager = new WriteLockManager();
+    
     static hasher = bkfd2Password();
     /**
      * @return {String}

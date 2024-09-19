@@ -8,6 +8,7 @@ import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "node:fs/promises";
 import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
+import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -17,6 +18,8 @@ import { unpackFiles } from "../tools/file-handler.mjs";
  * @extends {VolumeData}
  */
 export default class RawVolumeData extends VolumeData {
+    static lockManager = new WriteLockManager();
+
     /**
      * @return {String}
      */
@@ -64,6 +67,8 @@ export default class RawVolumeData extends VolumeData {
      * @return {Promise<RawVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
+        this.lockCheck(id);
+
         return await prismaManager.db.$transaction(
             async (tx) => {
                 let volumeData = await tx.rawVolumeData.findUnique({
@@ -285,6 +290,9 @@ export default class RawVolumeData extends VolumeData {
         if (ids.length === 0) {
             return [];
         }
+
+        super.lockCheckMany(ids);
+
         const fileDeleteStack = [];
 
         const rawVolumes = await tx.rawVolumeData.findMany({
