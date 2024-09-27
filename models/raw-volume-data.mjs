@@ -9,6 +9,7 @@ import fsPromises from "node:fs/promises";
 import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
+import Volume from "./volume.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -18,14 +19,8 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
  * @extends {VolumeData}
  */
 export default class RawVolumeData extends VolumeData {
-    static lockManager = new WriteLockManager();
-
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "rawVolumeData";
-    }
+    static modelName = "rawVolumeData";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.rawVolumeData;
@@ -67,48 +62,48 @@ export default class RawVolumeData extends VolumeData {
      * @return {Promise<RawVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
-        this.lockCheck(id);
-
-        return await prismaManager.db.$transaction(
-            async (tx) => {
-                let volumeData = await tx.rawVolumeData.findUnique({
-                    where: { id: id },
-                    include: {
-                        volumes: true,
-                        results: true,
-                    },
-                });
-
-                if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                    throw new Error("Volume Data is not part of the volume.");
-                }
-
-                if (
-                    volumeData.volumes.length > 1 ||
-                    volumeData.results.length > 0
-                ) {
-                    await tx.rawVolumeData.update({
-                        where: {
-                            id: id,
-                        },
-                        data: {
-                            volumes: {
-                                disconnect: { id: volumeId },
-                            },
-                        },
-                    });
-                } else {
-                    await tx.rawVolumeData.delete({
+        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+            return prismaManager.db.$transaction(
+                async (tx) => {
+                    let volumeData = await tx.rawVolumeData.findUnique({
                         where: { id: id },
+                        include: {
+                            volumes: true,
+                            results: true,
+                        },
                     });
-                    await this.deleteVolumeDataFiles(volumeData);
+
+                    if (!volumeData.volumes.some((m) => m.id === volumeId)) {
+                        throw new Error("Volume Data is not part of the volume.");
+                    }
+
+                    if (
+                        volumeData.volumes.length > 1 ||
+                        volumeData.results.length > 0
+                    ) {
+                        await tx.rawVolumeData.update({
+                            where: {
+                                id: id,
+                            },
+                            data: {
+                                volumes: {
+                                    disconnect: { id: volumeId },
+                                },
+                            },
+                        });
+                    } else {
+                        await tx.rawVolumeData.delete({
+                            where: { id: id },
+                        });
+                        await this.deleteVolumeDataFiles(volumeData);
+                    }
+                    return volumeData;
+                },
+                {
+                    timeout: 60000,
                 }
-                return volumeData;
-            },
-            {
-                timeout: 60000,
-            }
-        );
+            );
+        });
     }
 
     /**
@@ -291,10 +286,6 @@ export default class RawVolumeData extends VolumeData {
             return [];
         }
 
-        super.lockCheckMany(ids);
-
-        const fileDeleteStack = [];
-
         const rawVolumes = await tx.rawVolumeData.findMany({
             where: {
                 AND: {
@@ -310,17 +301,26 @@ export default class RawVolumeData extends VolumeData {
                 },
             },
         });
-        await tx.rawVolumeData.deleteMany({
-            where: {
-                id: {
-                    in: rawVolumes.map((v) => v.id),
-                },
-            },
-        });
-        rawVolumes.forEach((v) =>
-            fileDeleteStack.push(...RawVolumeData.getFilePaths(v))
-        );
 
-        return fileDeleteStack;
+        const idsToDelete = rawVolumes.map((v) => v.id);
+
+        return this.withWriteLocks(idsToDelete, null, async () => {
+            await tx.rawVolumeData.deleteMany({
+                where: {
+                    id: {
+                        in: rawVolumes.map((v) => v.id),
+                    },
+                },
+            });
+
+            /** @type {String[]} */
+            const fileDeleteStack = [];
+
+            rawVolumes.forEach((v) =>
+                fileDeleteStack.push(...RawVolumeData.getFilePaths(v))
+            );
+
+            return fileDeleteStack;
+        });
     }
 }

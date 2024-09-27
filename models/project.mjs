@@ -16,12 +16,7 @@ import fsPromises from "fs/promises";
  */
 
 export default class Project extends DatabaseModel {
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "project";
-    }
+    static modelName = "project";
 
     static get db() {
         return prismaManager.db.project;
@@ -104,46 +99,42 @@ export default class Project extends DatabaseModel {
 
         const project = await prismaManager.db.$transaction(
             async (tx) => {
-                const project = await tx.project.delete({
-                    where: {
-                        id: id,
-                    },
-                    include: {
-                        volumes: {
-                            where: {
-                                projects: {
-                                    every: {
-                                        id: id,
+                const project = await this.withWriteLock(id, null, () => {
+                    return tx.project.delete({
+                        where: {
+                            id: id,
+                        },
+                        include: {
+                            volumes: {
+                                where: {
+                                    projects: {
+                                        every: {
+                                            id: id,
+                                        },
                                     },
                                 },
-                            },
-                            include: {
-                                rawData: true,
-                                sparseVolumes: true,
-                                pseudoVolumes: true,
-                                results: true,
-                            },
-                        },
-                        models: {
-                            where: {
-                                projects: {
-                                    every: {
-                                        id: id,
-                                    },
+                                include: {
+                                    rawData: true,
+                                    sparseVolumes: true,
+                                    pseudoVolumes: true,
+                                    results: true,
                                 },
                             },
-                            include: {
-                                checkpoints: true,
+                            models: {
+                                where: {
+                                    projects: {
+                                        every: {
+                                            id: id,
+                                        },
+                                    },
+                                },
+                                include: {
+                                    checkpoints: true,
+                                },
                             },
                         },
-                    },
+                    });
                 });
-
-                // await tx.project.delete({
-                //     where: {
-                //         id: id,
-                //     },
-                // });
 
                 await Volume.deleteZombies(
                     project.volumes.map((v) => v.id),

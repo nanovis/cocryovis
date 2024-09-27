@@ -51,13 +51,8 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async create(ownerId, volumeId) {
-        // const lockId = Volume.connectionLockCheckAndBlock(
-        //     volumeId,
-        //     this.modelName
-        // );
-
-        try {
-            return await prismaManager.db.$transaction(
+        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+            return prismaManager.db.$transaction(
                 async (tx) => {
                     /** @type {VolumeDataDB} */
                     const volumeData = await tx[this.modelName].create({
@@ -88,9 +83,7 @@ export default class VolumeData extends DatabaseModel {
                     timeout: 60000,
                 }
             );
-        } finally {
-            // Volume.unblockLock(lockId);
-        }
+        });
     }
 
     /**
@@ -107,18 +100,14 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async del(id) {
-        // const lockId = this.lockCheckAndBlock(id);
-
-        try {
+        return this.withWriteLock(id, null, async () => {
             const volumeData = await this.db.delete({
                 where: { id: id },
             });
             await this.deleteVolumeDataFiles(volumeData);
 
             return volumeData;
-        } finally {
-            // this.unblockLock(lockId);
-        }
+        });
     }
 
     /**
@@ -127,10 +116,8 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async removeFromVolume(id, volumeId) {
-        // const blockId = Volume.connectionLockCheckAndBlock(volumeId, this.modelName);
-
-        try {
-            return await prismaManager.db.$transaction(
+        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+            return prismaManager.db.$transaction(
                 async (tx) => {
                     /** @type {VolumeDataDB & {volumes: VolumeDB[]}} */
                     let volumeData = await tx[this.modelName].findUnique({
@@ -158,8 +145,10 @@ export default class VolumeData extends DatabaseModel {
                             },
                         });
                     } else {
-                        await tx[this.modelName].delete({
-                            where: { id: id },
+                        this.withWriteLock(id, null, () => {
+                            return tx[this.modelName].delete({
+                                where: { id: id },
+                            });
                         });
                         await this.deleteVolumeDataFiles(volumeData);
                     }
@@ -169,9 +158,7 @@ export default class VolumeData extends DatabaseModel {
                     timeout: 60000,
                 }
             );
-        } finally {
-            // Volume.unblockLock(blockId);
-        }
+        });
     }
 
     /**

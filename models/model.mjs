@@ -6,20 +6,15 @@ import Checkpoint from "./checkpoint.mjs";
 import fsPromises from "fs/promises";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
+import Project from "./project.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
  */
 
 export default class Model extends DatabaseModel {
-    static lockManager = new WriteLockManager();
-    
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "model";
-    }
+    static modelName = "model";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.model;
@@ -65,15 +60,17 @@ export default class Model extends DatabaseModel {
      * @return {Promise<ModelDB>}
      */
     static async create(name, description, ownerId, projectId) {
-        return await this.db.create({
-            data: {
-                name: name,
-                description: description,
-                ownerId: ownerId,
-                projects: {
-                    connect: { id: projectId },
+        return Project.withWriteLock(projectId, [this.modelName], () => {
+            return this.db.create({
+                data: {
+                    name: name,
+                    description: description,
+                    ownerId: ownerId,
+                    projects: {
+                        connect: { id: projectId },
+                    },
                 },
-            },
+            });
         });
     }
 
@@ -100,7 +97,9 @@ export default class Model extends DatabaseModel {
      * @return {Promise<ModelDB>}
      */
     static async removeFromProject(id, projectId) {
-        return this.#del(id, projectId);
+        return Project.withWriteLock(projectId, [this.modelName], () => {
+            return this.#del(id, projectId);
+        });
     }
 
     /**
@@ -109,8 +108,6 @@ export default class Model extends DatabaseModel {
      * @returns { Promise<ModelDB> }
      */
     static async #del(modelId, projectId = null) {
-        super.lockCheck(modelId);
-
         const fileDeleteStack = [];
 
         const model = await prismaManager.db.$transaction(
@@ -146,8 +143,10 @@ export default class Model extends DatabaseModel {
                         },
                     });
                 } else {
-                    await tx.model.delete({
-                        where: { id: modelId },
+                    await this.withWriteLock(modelId, null, async () => {
+                        return tx.model.delete({
+                            where: { id: modelId },
+                        });
                     });
 
                     fileDeleteStack.push(
@@ -199,9 +198,7 @@ export default class Model extends DatabaseModel {
             return;
         }
 
-        super.lockCheckMany(ids);
-
-        await tx.model.deleteMany({
+        const models = await tx.model.findMany({
             where: {
                 AND: {
                     id: {
@@ -212,6 +209,18 @@ export default class Model extends DatabaseModel {
                     },
                 },
             },
+        });
+
+        const idsToDelete = models.map((m) => m.id);
+
+        await this.withWriteLocks(idsToDelete, null, async () => {
+            return tx.model.deleteMany({
+                where: {
+                    id: {
+                        in: idsToDelete,
+                    },
+                },
+            });
         });
     }
 }

@@ -15,6 +15,7 @@ import User from "../models/user.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
+import { WriteMultiLock } from "./write-lock-manager.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -104,41 +105,25 @@ export default class IlastikHandler {
 
         IlastikHandler.#checkVolumeProperties(volume);
 
-        Volume.connectionLockCheck(volumeId, PseudoLabeledVolumeData.modelName);
-
         if (!outputPath) {
             outputPath = Utils.createTemporaryFolder(this.config.workCache);
         }
 
-        if (
-            Volume.lockManager.isLockBlocked(volumeId, [
+        const multiLock = new WriteMultiLock([
+            Volume.lockManager.generateLockInstance(volumeId, [
                 RawVolumeData.modelName,
                 SparseLabeledVolumeData.modelName,
-            ]) ||
-            User.lockManager.isLockBlocked(userId)
-        ) {
-            throw new Error(
-                "Cannot start the label generation as the resources are currently used by another proccess."
-            );
-        }
-
-        const volumeLock = Volume.lockManager.requestLock(volumeId, [
-            RawVolumeData.modelName,
-            SparseLabeledVolumeData.modelName,
+                PseudoLabeledVolumeData.modelName,
+            ]),
+            User.lockManager.generateLockInstance(userId),
         ]);
-        const userLock = User.lockManager.requestLock(userId);
 
-        this.#taskQueue.enqueue(
-            () =>
-                this.#generateLabels(
-                    volumeId,
-                    volumeLock,
-                    userId,
-                    userLock,
-                    outputPath
-                ),
-            { userId: userId, volumeId: volumeId }
-        );
+        WriteMultiLock.withWriteMultiLock(multiLock, () => {
+            return this.#taskQueue.enqueue(
+                () => this.#generateLabels(volumeId, userId, outputPath),
+                { userId: userId, volumeId: volumeId }
+            );
+        });
     }
 
     /**
@@ -224,13 +209,11 @@ export default class IlastikHandler {
 
     /**
      * @param {Number} volumeId
-     * @param {Number} volumeLock
      * @param {Number} userId
-     * @param {Number} userLock
      * @param {String} outputPath
      * @returns {Promise<void>}
      */
-    async #generateLabels(volumeId, volumeLock, userId, userLock, outputPath) {
+    async #generateLabels(volumeId, userId, outputPath) {
         const logFile = await LogFile.createLogFile("label-generation");
 
         try {
@@ -356,9 +339,6 @@ export default class IlastikHandler {
                     `Filed to remove ilastik inference cache: ${error}`
                 );
             }
-
-            Volume.lockManager.removeLock(volumeLock);
-            User.lockManager.removeLock(userLock);
         }
     }
 

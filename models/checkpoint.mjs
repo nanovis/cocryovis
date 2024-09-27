@@ -10,6 +10,7 @@ import { unpackFiles } from "../tools/file-handler.mjs";
 import fileUpload from "express-fileupload";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
+import Model from "./model.mjs";
 
 /**
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
@@ -17,14 +18,8 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 export default class Checkpoint extends DatabaseModel {
     static acceptedFileExtensions = [".ckpt"];
-    static lockManager = new WriteLockManager();
-
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "checkpoint";
-    }
+    static modelName = "checkpoint";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.checkpoint;
@@ -222,8 +217,6 @@ export default class Checkpoint extends DatabaseModel {
         if (ids.length === 0) {
             return [];
         }
-        super.lockCheckMany(ids);
-        const fileDeleteStack = [];
 
         const checkpoints = await tx.checkpoint.findMany({
             where: {
@@ -240,18 +233,27 @@ export default class Checkpoint extends DatabaseModel {
                 },
             },
         });
-        await tx.checkpoint.deleteMany({
-            where: {
-                id: {
-                    in: checkpoints.map((c) => c.id),
-                },
-            },
-        });
-        checkpoints.forEach((c) =>
-            fileDeleteStack.push(...this.getFilePaths(c))
-        );
 
-        return fileDeleteStack;
+        const idsToDelete = checkpoints.map((c) => c.id);
+
+        await this.withWriteLocks(idsToDelete, null, async () => {
+            await tx.checkpoint.deleteMany({
+                where: {
+                    id: {
+                        in: idsToDelete,
+                    },
+                },
+            });
+
+            /** @type {String[]} */
+            const fileDeleteStack = [];
+
+            checkpoints.forEach((c) =>
+                fileDeleteStack.push(...this.getFilePaths(c))
+            );
+
+            return fileDeleteStack;
+        });
     }
 
     /**
@@ -268,7 +270,9 @@ export default class Checkpoint extends DatabaseModel {
      * @return {Promise<CheckpointDB>}
      */
     static async removeFromModel(checkpointId, modelId) {
-        return this.#del(checkpointId, modelId);
+        return Model.withWriteLock(checkpointId, [this.modelName], () => {
+            return this.#del(checkpointId, modelId);
+        });
     }
 
     /**
@@ -277,8 +281,6 @@ export default class Checkpoint extends DatabaseModel {
      * @return {Promise<CheckpointDB>}
      */
     static async #del(checkpointId, modelId = null) {
-        super.lockCheck(checkpointId);
-
         const fileDeleteStack = [];
 
         const checkpoint = await prismaManager.db.$transaction(
@@ -321,8 +323,10 @@ export default class Checkpoint extends DatabaseModel {
                         },
                     });
                 } else {
-                    await tx.checkpoint.delete({
-                        where: { id: checkpointId },
+                    await this.withWriteLock(checkpointId, null, () => {
+                        return tx.checkpoint.delete({
+                            where: { id: checkpointId },
+                        });
                     });
 
                     fileDeleteStack.push(

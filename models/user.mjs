@@ -10,15 +10,10 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
  */
 
 export default class User extends DatabaseModel {
-    static lockManager = new WriteLockManager();
-    
+    static modelName = "user";
+    static lockManager = new WriteLockManager(this.modelName);
+
     static hasher = bkfd2Password();
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "user";
-    }
 
     static get db() {
         return prismaManager.db.user;

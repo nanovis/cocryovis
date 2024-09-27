@@ -7,6 +7,7 @@ import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
 import path from "path";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
+import Volume from "./volume.mjs";
 
 /**
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
@@ -16,14 +17,8 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
  * @extends {VolumeData}
  */
 export default class PseudoLabeledVolumeData extends VolumeData {
-    static lockManager = new WriteLockManager();
-    
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "pseudoLabelVolumeData";
-    }
+    static modelName = "pseudoLabelVolumeData";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.pseudoLabelVolumeData;
@@ -73,7 +68,9 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @return {Promise<PseudoVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
-        return this.#del(id, volumeId);
+        return Volume.withWriteLock(volumeId, null, () => {
+            return this.#del(id, volumeId);
+        });
     }
 
     /**
@@ -82,8 +79,6 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @return {Promise<PseudoVolumeDataDB>}
      */
     static async #del(volumeDataId, volumeId = null) {
-        super.lockCheck(volumeDataId);
-
         const fileDeleteStack = [];
 
         const volumeData = await prismaManager.db.$transaction(
@@ -119,8 +114,10 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                         },
                     });
                 } else {
-                    await tx.pseudoLabelVolumeData.delete({
-                        where: { id: volumeDataId },
+                    await this.withWriteLock(volumeDataId, null, () => {
+                        return tx.pseudoLabelVolumeData.delete({
+                            where: { id: volumeDataId },
+                        });
                     });
 
                     if (volumeData.originalLabelId) {
@@ -171,10 +168,6 @@ export default class PseudoLabeledVolumeData extends VolumeData {
             return [];
         }
 
-        super.lockCheckMany(ids);
-
-        const fileDeleteStack = [];
-
         const pseudoVolumes = await tx.pseudoLabelVolumeData.findMany({
             where: {
                 AND: {
@@ -190,18 +183,27 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                 },
             },
         });
-        await tx.pseudoLabelVolumeData.deleteMany({
-            where: {
-                id: {
-                    in: pseudoVolumes.map((v) => v.id),
-                },
-            },
-        });
-        pseudoVolumes.forEach((v) =>
-            fileDeleteStack.push(...this.getFilePaths(v))
-        );
 
-        return fileDeleteStack;
+        const idsToDelete = pseudoVolumes.map((v) => v.id);
+
+        return this.withWriteLocks(idsToDelete, null, async () => {
+            await tx.pseudoLabelVolumeData.deleteMany({
+                where: {
+                    id: {
+                        in: pseudoVolumes.map((v) => v.id),
+                    },
+                },
+            });
+
+            /** @type {String[]} */
+            const fileDeleteStack = [];
+
+            pseudoVolumes.forEach((v) =>
+                fileDeleteStack.push(...this.getFilePaths(v))
+            );
+
+            return fileDeleteStack;
+        });
     }
 
     /**

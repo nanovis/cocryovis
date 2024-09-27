@@ -20,14 +20,8 @@ import Project from "./project.mjs";
  */
 
 export default class Volume extends DatabaseModel {
-    static lockManager = new WriteLockManager();
-
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "volume";
-    }
+    static modelName = "volume";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.volume;
@@ -96,42 +90,18 @@ export default class Volume extends DatabaseModel {
      * @return {Promise<VolumeDB>}
      */
     static async create(name, description, ownerId, projectId) {
-        // const blockId = Project.connectionLockCheckAndBlock(
-        //     projectId,
-        //     this.modelName
-        // );
-
-        // try {
-        //     return await this.db.create({
-        //         data: {
-        //             name: name,
-        //             description: description,
-        //             ownerId: ownerId,
-        //             projects: {
-        //                 connect: { id: projectId },
-        //             },
-        //         },
-        //     });
-        // } finally {
-        //     Project.unblockLock(blockId);
-        // }
-
-        return this.withBlockedConnectionWriteLock(
-            projectId,
-            this.modelName,
-            () => {
-                return this.db.create({
-                    data: {
-                        name: name,
-                        description: description,
-                        ownerId: ownerId,
-                        projects: {
-                            connect: { id: projectId },
-                        },
+        return Project.withWriteLock(projectId, [this.modelName], () => {
+            return this.db.create({
+                data: {
+                    name: name,
+                    description: description,
+                    ownerId: ownerId,
+                    projects: {
+                        connect: { id: projectId },
                     },
-                });
-            }
-        );
+                },
+            });
+        });
     }
 
     /**
@@ -157,23 +127,9 @@ export default class Volume extends DatabaseModel {
      * @return {Promise<VolumeDB>}
      */
     static async removeFromProject(id, projectId) {
-        // const blockId = Project.connectionLockCheckAndBlock(
-        //     projectId,
-        //     this.modelName
-        // );
-        // try {
-        //     return await this.#del(id, projectId);
-        // } finally {
-        //     Project.unblockLock(blockId);
-        // }
-
-        return Project.withBlockedConnectionWriteLock(
-            projectId,
-            this.modelName,
-            () => {
-                return this.#del(id, projectId);
-            }
-        );
+        return Project.withWriteLock(projectId, [this.modelName], () => {
+            return this.#del(id, projectId);
+        });
     }
 
     // @param { import("@prisma/client").Prisma.VolumeDelegate } db
@@ -217,8 +173,8 @@ export default class Volume extends DatabaseModel {
                         },
                     });
                 } else {
-                    this.withBlockedWriteLock(volumeId, async () => {
-                        await tx.volume.delete({
+                    await this.withWriteLock(volumeId, null, () => {
+                        return tx.volume.delete({
                             where: { id: volumeId },
                         });
                     });
@@ -297,8 +253,8 @@ export default class Volume extends DatabaseModel {
 
         const idsToDelete = volumes.map((v) => v.id);
 
-        this.withManyBlockedWriteLock(idsToDelete, async () => {
-            await tx.volume.deleteMany({
+        await this.withWriteLocks(idsToDelete, null, async () => {
+            return tx.volume.deleteMany({
                 where: {
                     id: {
                         in: idsToDelete,
@@ -321,9 +277,9 @@ export default class Volume extends DatabaseModel {
     static async addAnnotations(id, ownerId, annotations) {
         let tempFolderPath = null;
 
-        return this.withBlockedConnectionWriteLock(
+        return this.withWriteLock(
             id,
-            SparseLabeledVolumeData.modelName,
+            [SparseLabeledVolumeData.modelName],
             async () => {
                 try {
                     tempFolderPath = Utils.createTemporaryFolder(
@@ -407,9 +363,9 @@ export default class Volume extends DatabaseModel {
         volumeId,
         originalLabels
     ) {
-        this.withBlockedConnectionWriteLock(
+        return this.withWriteLock(
             volumeId,
-            PseudoLabeledVolumeData.modelName,
+            [PseudoLabeledVolumeData.modelName],
             () => {
                 prismaManager.db.$transaction(
                     async (tx) => {

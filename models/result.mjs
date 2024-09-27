@@ -12,6 +12,7 @@ import Checkpoint from "./checkpoint.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
+import Volume from "./volume.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -19,14 +20,8 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
 
 export default class Result extends DatabaseModel {
     static acceptedFileExtensions = [".log", ".raw", ".json"];
-    static lockManager = new WriteLockManager();
-
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "result";
-    }
+    static modelName = "result";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.result;
@@ -187,7 +182,9 @@ export default class Result extends DatabaseModel {
      * @return {Promise<ResultDB>}
      */
     static async removeFromVolume(resultId, volumeId) {
-        return this.#del(resultId, volumeId);
+        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+            return this.#del(resultId, volumeId);
+        });
     }
 
     /**
@@ -232,15 +229,11 @@ export default class Result extends DatabaseModel {
                         },
                     });
                 } else {
-                    const blockId = this.lockCheckAndBlock(resultId);
-
-                    try {
-                        await tx.result.delete({
+                    await this.withWriteLock(resultId, null, () => {
+                        return tx.result.delete({
                             where: { id: resultId },
                         });
-                    } finally {
-                        this.unblockLock(blockId);
-                    }
+                    });
 
                     if (result.checkpoint) {
                         const checkpointFiles = await Checkpoint.deleteZombies(
@@ -331,7 +324,6 @@ export default class Result extends DatabaseModel {
         if (ids.length === 0) {
             return [];
         }
-        const fileDeleteStack = [];
 
         const results = await tx.result.findMany({
             where: {
@@ -346,9 +338,9 @@ export default class Result extends DatabaseModel {
             },
         });
 
-        const blockIds = this.lockCheckManyAndBlock(results.map((r) => r.id));
+        const idsToDelete = results.map((r) => r.id);
 
-        try {
+        return this.withWriteLocks(idsToDelete, null, async () => {
             await tx.result.deleteMany({
                 where: {
                     id: {
@@ -356,13 +348,15 @@ export default class Result extends DatabaseModel {
                     },
                 },
             });
+
+            /** @type {String[]} */
+            const fileDeleteStack = [];
+
             results.forEach((r) =>
                 fileDeleteStack.push(...Result.getFilePaths(r))
             );
 
             return fileDeleteStack;
-        } finally {
-            this.unblockLockMany(blockIds);
-        }
+        });
     }
 }

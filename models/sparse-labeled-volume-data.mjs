@@ -16,14 +16,8 @@ import Volume from "./volume.mjs";
  * @extends {VolumeData}
  */
 export default class SparseLabeledVolumeData extends VolumeData {
-    static lockManager = new WriteLockManager();
-
-    /**
-     * @return {String}
-     */
-    static get modelName() {
-        return "sparseLabelVolumeData";
-    }
+    static modelName = "sparseLabelVolumeData";
+    static lockManager = new WriteLockManager(this.modelName);
 
     static get db() {
         return prismaManager.db.sparseLabelVolumeData;
@@ -94,9 +88,8 @@ export default class SparseLabeledVolumeData extends VolumeData {
         });
 
         const idsToDelete = sparseVolumes.map((v) => v.id);
-        const blockIds = this.lockCheckManyAndBlock(idsToDelete);
 
-        try {
+        return this.withWriteLocks(idsToDelete, null, async () => {
             await tx.sparseLabelVolumeData.deleteMany({
                 where: {
                     id: {
@@ -104,15 +97,16 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     },
                 },
             });
+
+            /** @type {String[]} */
             const fileDeleteStack = [];
+
             sparseVolumes.forEach((v) =>
                 fileDeleteStack.push(...this.getFilePaths(v))
             );
 
             return fileDeleteStack;
-        } finally {
-            this.unblockLockMany(blockIds);
-        }
+        });
     }
 
     /**
@@ -121,13 +115,8 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @return {Promise<SparseLabelVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
-        const lockId = Volume.connectionLockCheckAndBlock(
-            volumeId,
-            this.modelName
-        );
-
-        try {
-            return await prismaManager.db.$transaction(
+        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+            return prismaManager.db.$transaction(
                 async (tx) => {
                     let volumeData = await tx.sparseLabelVolumeData.findUnique({
                         where: { id: id },
@@ -158,15 +147,11 @@ export default class SparseLabeledVolumeData extends VolumeData {
                             },
                         });
                     } else {
-                        const lockId = this.lockCheckAndBlock(id);
-
-                        try {
-                            await tx.sparseLabelVolumeData.delete({
+                        await this.withWriteLock(id, null, () => {
+                            return tx.sparseLabelVolumeData.delete({
                                 where: { id: id },
                             });
-                        } finally {
-                            this.unblockLock(lockId);
-                        }
+                        });
 
                         await this.deleteVolumeDataFiles(volumeData);
                     }
@@ -176,9 +161,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     timeout: 60000,
                 }
             );
-        } finally {
-            Volume.unblockLock(lockId);
-        }
+        });
     }
 
     /**
@@ -205,51 +188,40 @@ export default class SparseLabeledVolumeData extends VolumeData {
         settings,
         tx = prismaManager.db
     ) {
-        const lockId = Volume.connectionLockCheckAndBlock(
-            volumeId,
-            this.modelName
-        );
+        let sparseVolume = await tx.sparseLabelVolumeData.create({
+            data: {
+                ownerId: ownerId,
+                volumes: {
+                    connect: { id: volumeId },
+                },
+            },
+        });
+
+        const folderPath = await this.createVolumeDataFolder(sparseVolume.id);
+        const fileName = path.basename(filePath);
+        const newFilePath = path.join(folderPath, fileName);
+        await fsPromises.rename(filePath, newFilePath);
 
         try {
-            let sparseVolume = await tx.sparseLabelVolumeData.create({
+            sparseVolume = await tx.sparseLabelVolumeData.update({
+                where: { id: sparseVolume.id },
                 data: {
-                    ownerId: ownerId,
-                    volumes: {
-                        connect: { id: volumeId },
-                    },
+                    path: folderPath,
+                    rawFilePath: newFilePath,
+                    settings: settings,
                 },
             });
-
-            const folderPath = await this.createVolumeDataFolder(
-                sparseVolume.id
-            );
-            const fileName = path.basename(filePath);
-            const newFilePath = path.join(folderPath, fileName);
-            await fsPromises.rename(filePath, newFilePath);
-
+        } catch (error) {
             try {
-                sparseVolume = await tx.sparseLabelVolumeData.update({
-                    where: { id: sparseVolume.id },
-                    data: {
-                        path: folderPath,
-                        rawFilePath: newFilePath,
-                        settings: settings,
-                    },
-                });
-            } catch (error) {
-                try {
-                    await this.deleteVolumeDataFiles(sparseVolume);
-                } catch (err) {
-                    console.error(
-                        `Failed to delete volume data folder on failed operation:\n${err}`
-                    );
-                }
-                throw error;
+                await this.deleteVolumeDataFiles(sparseVolume);
+            } catch (err) {
+                console.error(
+                    `Failed to delete volume data folder on failed operation:\n${err}`
+                );
             }
-
-            return sparseVolume;
-        } finally {
-            Volume.unblockLock(lockId);
+            throw error;
         }
+
+        return sparseVolume;
     }
 }

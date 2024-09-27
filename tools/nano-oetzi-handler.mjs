@@ -16,6 +16,7 @@ import User from "../models/user.mjs";
 import Model from "../models/model.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
+import { WriteMultiLock } from "./write-lock-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -173,63 +174,41 @@ export default class NanoOetziHandler {
             outputPath = this.createTemporaryOutputPath();
         }
 
-        if (
-            Checkpoint.lockManager.isLockBlocked(checkpointId) ||
-            Volume.lockManager.isLockBlocked(volumeId, [
+        const multiLock = new WriteMultiLock([
+            Checkpoint.lockManager.generateLockInstance(checkpointId),
+            Volume.lockManager.generateLockInstance(volumeId, [
                 RawVolumeData.modelName,
-            ]) ||
-            User.lockManager.isLockBlocked(userId)
-        ) {
-            throw new Error(
-                "Cannot start inference as the resources are currently used by another proccess."
-            );
-        }
-
-        const checkpointLock = Checkpoint.lockManager.requestLock(checkpointId);
-        const volumeLock = Volume.lockManager.requestLock(volumeId, [
-            RawVolumeData.modelName,
+            ]),
+            User.lockManager.generateLockInstance(userId),
         ]);
-        const userLock = User.lockManager.requestLock(userId);
 
-        this.#taskQueue.enqueue(
-            () =>
-                this.#runInference(
-                    checkpointId,
-                    checkpointLock,
-                    volumeId,
-                    volumeLock,
+        WriteMultiLock.withWriteMultiLock(multiLock, () => {
+            return this.#taskQueue.enqueue(
+                () =>
+                    this.#runInference(
+                        checkpointId,
+                        volumeId,
+                        userId,
+                        outputPath
+                    ),
+                new InferenceTaskProperties(
                     userId,
-                    userLock,
-                    outputPath
-                ),
-            new InferenceTaskProperties(
-                userId,
-                TaskProperties.type.inference,
-                checkpointId,
-                volumeId
-            )
-        );
+                    TaskProperties.type.inference,
+                    checkpointId,
+                    volumeId
+                )
+            );
+        });
     }
 
     /**
      * @param {Number} checkpointId
-     * @param {Number} checkpointLock
      * @param {Number} volumeId
-     * @param {Number} volumeLock
      * @param {Number} userId
-     * @param {Number} userLock
      * @param {String} outputPath
      * @returns {Promise<ResultDB>}
      */
-    async #runInference(
-        checkpointId,
-        checkpointLock,
-        volumeId,
-        volumeLock,
-        userId,
-        userLock,
-        outputPath
-    ) {
+    async #runInference(checkpointId, volumeId, userId, outputPath) {
         const logFile = await LogFile.createLogFile("inference");
         let tempSettingsPath = null;
         const taskProperties = new InferenceTaskProperties(
@@ -342,9 +321,6 @@ export default class NanoOetziHandler {
                     );
                 }
             }
-            Checkpoint.lockManager.removeLock(checkpointLock);
-            Volume.lockManager.removeLock(volumeLock);
-            User.lockManager.removeLock(userLock);
         }
     }
 
@@ -392,43 +368,15 @@ export default class NanoOetziHandler {
             outputPath = this.createTemporaryOutputPath();
         }
 
-        if (
-            Model.lockManager.isLockBlocked(modelId) ||
-            User.lockManager.isLockBlocked(userId) ||
-            trainingVolumesIds.some((v) => {
-                Volume.lockManager.isLockBlocked(v);
-                Volume.lockManager.isLockBlocked(v, [
-                    RawVolumeData.modelName,
-                    PseudoLabeledVolumeData.modelName,
-                ]);
-            }) ||
-            validationVolumesIds.some((v) => {
-                Volume.lockManager.isLockBlocked(v);
-                Volume.lockManager.isLockBlocked(v, [
-                    RawVolumeData.modelName,
-                    PseudoLabeledVolumeData.modelName,
-                ]);
-            }) ||
-            testingVolumesIds.some((v) => {
-                Volume.lockManager.isLockBlocked(v);
-                Volume.lockManager.isLockBlocked(v, [
-                    RawVolumeData.modelName,
-                    PseudoLabeledVolumeData.modelName,
-                ]);
-            })
-        ) {
-            throw new Error(
-                "Cannot start inference as the resources are currently used by another proccess."
-            );
-        }
-
-        const modelLock = Model.lockManager.requestLock(modelId);
-        const userLock = User.lockManager.requestLock(userId);
+        const modelLock = Model.lockManager.generateLockInstance(modelId, [
+            Checkpoint.modelName,
+        ]);
+        const userLock = User.lockManager.generateLockInstance(userId);
 
         const volumeLocks = [];
         trainingVolumesIds.forEach((v) => {
             volumeLocks.push(
-                Volume.lockManager.requestLock(v, [
+                Volume.lockManager.generateLockInstance(v, [
                     RawVolumeData.modelName,
                     PseudoLabeledVolumeData.modelName,
                 ])
@@ -437,7 +385,7 @@ export default class NanoOetziHandler {
 
         validationVolumesIds.forEach((v) => {
             volumeLocks.push(
-                Volume.lockManager.requestLock(v, [
+                Volume.lockManager.generateLockInstance(v, [
                     RawVolumeData.modelName,
                     PseudoLabeledVolumeData.modelName,
                 ])
@@ -446,60 +394,59 @@ export default class NanoOetziHandler {
 
         testingVolumesIds.forEach((v) => {
             volumeLocks.push(
-                Volume.lockManager.requestLock(v, [
+                Volume.lockManager.generateLockInstance(v, [
                     RawVolumeData.modelName,
                     PseudoLabeledVolumeData.modelName,
                 ])
             );
         });
 
-        this.#taskQueue.enqueue(
-            () =>
-                this.#runTraining(
-                    modelId,
-                    modelLock,
+        const multiLock = new WriteMultiLock([
+            modelLock,
+            userLock,
+            ...volumeLocks,
+        ]);
+
+        WriteMultiLock.withWriteMultiLock(multiLock, () => {
+            return this.#taskQueue.enqueue(
+                () =>
+                    this.#runTraining(
+                        modelId,
+                        userId,
+                        trainingVolumesIds,
+                        validationVolumesIds,
+                        testingVolumesIds,
+                        outputPath,
+                        removeTempFiles
+                    ),
+                new TrainingTaskProperties(
                     userId,
-                    userLock,
+                    TaskProperties.type.training,
+                    modelId,
                     trainingVolumesIds,
                     validationVolumesIds,
-                    testingVolumesIds,
-                    volumeLocks,
-                    outputPath,
-                    removeTempFiles
-                ),
-            new TrainingTaskProperties(
-                userId,
-                TaskProperties.type.training,
-                modelId,
-                trainingVolumesIds,
-                validationVolumesIds,
-                testingVolumesIds
-            )
-        );
+                    testingVolumesIds
+                )
+            );
+        });
     }
 
     /**
      * @param {Number} modelId
-     * @param {Number} modelLock
      * @param {Number} userId
-     * @param {Number} userLock
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
-     * @param {Number[]} volumeLocks
      * @param {String} outputPath
      * @param {boolean} removeTempFiles
      * @returns {Promise<CheckpointDB>}
      */
     async #runTraining(
         modelId,
-        modelLock,
         userId,
-        userLock,
         trainingVolumesIds,
         validationVolumesIds,
         testingVolumesIds,
-        volumeLocks,
         outputPath,
         removeTempFiles = true
     ) {
@@ -664,9 +611,6 @@ export default class NanoOetziHandler {
                     );
                 }
             }
-            Model.lockManager.removeLock(modelLock);
-            User.lockManager.removeLock(userLock);
-            volumeLocks.forEach((l) => Volume.lockManager.removeLock(l));
         }
     }
 
