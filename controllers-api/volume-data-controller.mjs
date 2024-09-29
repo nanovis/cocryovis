@@ -13,6 +13,17 @@ export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
      */
+    static async getById(type, req, res) {
+        const volumeData = await VolumeDataFactory.getClass(type).getById(
+            Number(req.params.idVolumeData)
+        );
+
+        return res.json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     */
     static async visualizeSingleVolume(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
             Number(req.params.idVolumeData)

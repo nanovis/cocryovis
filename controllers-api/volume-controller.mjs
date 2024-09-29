@@ -5,10 +5,31 @@ import RawVolumeData from "../models/raw-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
-import IlastikHandler from "../tools/ilastik-handler.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 
 export default class VolumeController {
+    static async getVolume(req, res) {
+        const volume = await Volume.getById(Number(req.params.idVolume));
+
+        return res.status(200).json(volume);
+    }
+
+    static async getVolumeDetails(req, res) {
+        const volume = await Volume.getByIdDeep(Number(req.params.idVolume), {
+            rawData: true,
+            sparseVolumes: true,
+            pseudoVolumes: true,
+        });
+
+        return res.status(200).json(volume);
+    }
+
+    static async getVolumesFromProject(req, res) {
+        const volumes = await Volume.getVolumesFromProject(Number(req.params.idProject));
+
+        return res.status(200).json(volumes);
+    }
+
     static async createVolume(req, res) {
         const volume = await Volume.create(
             req.body.name,

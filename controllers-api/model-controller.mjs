@@ -3,6 +3,24 @@
 import Model from "../models/model.mjs";
 
 export default class ModelController {
+    static async getModel(req, res) {
+        const model = await Model.getById(Number(req.params.idModel));
+
+        return res.status(200).json(model);
+    }
+
+    static async getModelDetails(req, res) {
+        const model = await Model.getByIdDeep(Number(req.params.idModel));
+
+        return res.status(200).json(model);
+    }
+
+    static async getModelsFromProject(req, res) {
+        const models = await Model.getModelsFromProject(Number(req.params.idProject));
+
+        return res.status(200).json(models);
+    }
+
     static async createModel(req, res) {
         const model = await Model.create(
             req.body.name,

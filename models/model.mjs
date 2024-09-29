@@ -54,6 +54,22 @@ export default class Model extends DatabaseModel {
     }
 
     /**
+     * @param {Number} projectId
+     * @return {Promise<ModelDB[]>}
+     */
+    static async getModelsFromProject(projectId) {
+        return await this.db.findMany({
+            where: {
+                projects: {
+                    some: {
+                        id: projectId,
+                    },
+                },
+            },
+        });
+    }
+
+    /**
      * @param {String} name
      * @param {String} description
      * @param {Number} ownerId

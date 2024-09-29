@@ -37,6 +37,22 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
+     * @param {Number} projectId
+     * @return {Promise<VolumeDB[]>}
+     */
+    static async getVolumesFromProject(projectId) {
+        return await this.db.findMany({
+            where: {
+                projects: {
+                    some: {
+                        id: projectId,
+                    },
+                },
+            },
+        });
+    }
+
+    /**
      * @param {Number[]} ids
      * @return {Promise<VolumeDB[]>}
      */
@@ -49,7 +65,12 @@ export default class Volume extends DatabaseModel {
      */
     static async getByIdDeep(
         id,
-        { rawData = false, sparseVolumes = false, pseudoVolumes = false }
+        {
+            rawData = false,
+            sparseVolumes = false,
+            pseudoVolumes = false,
+            results = false,
+        }
     ) {
         let entry = await this.db.findUnique({
             where: { id: id },
@@ -57,6 +78,7 @@ export default class Volume extends DatabaseModel {
                 rawData: rawData,
                 sparseVolumes: sparseVolumes,
                 pseudoVolumes: pseudoVolumes,
+                results: results,
             },
         });
         if (!entry) {

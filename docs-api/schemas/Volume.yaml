@@ -5,6 +5,7 @@ Volume:
     - name
     - description
     - ownerId
+    - rawDataId
   properties:
     id:
       type: integer
@@ -21,13 +22,17 @@ Volume:
       format: int64
       nullable: true
 
-DeepVolume:
+VolumeDetails:
   type: object
   required:
     - id
     - name
     - description
     - ownerId
+    - rawDataId
+    - rawData
+    - sparseVolumes
+    - pseudoVolumes
   properties:
     id:
       type: integer

@@ -48,8 +48,8 @@ projectsApi.get(`/projects`, restrictApi, ProjectController.getAllUserProjects);
 // Create New Project
 projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 
-// Get Project Details
-projectsApi.get(`/project/:idProject`, restrictApi, ProjectController.getProjectDetails);
+// Get Project
+projectsApi.get(`/project/:idProject`, restrictApi, ProjectController.getProject);
 
 // Delete Project
 projectsApi.delete(`/project/:idProject`, restrictApi, ProjectController.deleteProject);
@@ -88,8 +88,17 @@ projectsApi.post(`project/:idProject/queue-training`, restrictApi,
 
 /////// VOLUMES
 
+// Get Volumes from project
+projectsApi.get(`/project/:idProject/volumes`, restrictApi, VolumeController.getVolumesFromProject);
+
 // Create New Volume
 projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);
+
+// Get Volume
+projectsApi.get(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.getVolume);
+
+// Get Volume Details
+projectsApi.get(`/project/:idProject/volume/:idVolume/details`, restrictApi, VolumeController.getVolumeDetails);
 
 // Remove Volume
 // actions.get(`/:idProject/volume/:idVolume/delete`, restrictApi, VolumeController.removeVolume);
@@ -112,6 +121,10 @@ projectsApi.put(`/:idProject/volume/:idVolume/add-annotations`, restrictApi,
     async (req, res) => VolumeController.addAnnotations(req, res));
 
 /////// VOLUME DATA
+
+// Get Raw Data
+projectsApi.get(`/project/:idProject/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi, 
+    async (req, res) => VolumeDataController.getById(VolumeDataType.mapName(req.params.type), req, res));
 
 // Visualize
 projectsApi.get(`/:idProject/volume/:idVolume/volumeData/:type/:idVolumeData/visualize`, restrictApi, 
@@ -151,8 +164,18 @@ projectsApi.delete(`/project/:idProject/volume/:idVolume/volumeData/:type/:idVol
 //     async (req, res) => VolumeDataController.removeMrcFile(VolumeDataType.mapName(req.params.type), req, res));
   
 /////// MODELS
+
+// Get Models from Project
+projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.getModelsFromProject);
+
 // Create New Model
-projectsApi.post(`/project/:idProject/create-model`, restrictApi, ModelController.createModel);
+projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.createModel);
+
+// Get Model
+projectsApi.get(`/project/:idProject/model/:idModel`, restrictApi, ModelController.getModel);
+
+// Get Model Details
+projectsApi.get(`/project/:idProject/model/:idModel/details`, restrictApi, ModelController.getModelDetails);
 
 // Remove Model
 // actions.get(`/:idProject/model/:idModel/delete`, restrictApi, ModelController.removeModel);
@@ -160,15 +183,18 @@ projectsApi.get(`/project/:idProject/model/:idModel/removeFromProject`, restrict
 
 /////// CHECKPOINTS
 
+// Get checkpoint info
+projectsApi.get(`/project/:idProject/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.getCheckpoint);
+
+// Delete checkpoint
+// actions.get(`/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrictApi, CheckpointController.deleteCheckpoint);
+projectsApi.delete(`/project/:idProject/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
+
 // Upload new checkpoint
 projectsApi.post(`/project/:idProject/model/:idModel/add-checkpoint`, restrictApi, CheckpointController.uploadCheckpoints);
 
 // Download checkpoint
 projectsApi.get(`/project/:idProject/model/:idModel/checkpoint/:idCheckpoint/download`, CheckpointController.downloadCheckpoint);
-
-// Delete checkpoint
-// actions.get(`/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrictApi, CheckpointController.deleteCheckpoint);
-projectsApi.delete(`/project/:idProject/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
 
 /////// RESULTS
 // Remove Result

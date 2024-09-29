@@ -6,6 +6,13 @@ import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
 
 export default class CheckpointController {
+    static async getCheckpoint(req, res) {
+        const checkpoints = await Checkpoint.getById(
+            Number(req.params.idCheckpoint)
+        );
+        return res.json(checkpoints);
+    }
+
     static async uploadCheckpoints(req, res) {
         if (!req.files || !req.files.files) {
             throw new ApiError(400, "No files uploaded.");

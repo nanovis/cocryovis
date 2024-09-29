@@ -136,6 +136,22 @@ paths:
                 $ref: "#/components/schemas/Error"
 
   /project/{idProject}/volumes:
+    get:
+      summary: Get volumes assigned to project.
+      operationId: getVolumesFromProject
+      tags:
+        - Volume
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+      responses:
+        '200':
+          description: Volumes assigned to project.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Volume"
     post:
       summary: Create a new volume
       operationId: createVolume
@@ -166,6 +182,21 @@ paths:
                 $ref: '#/components/schemas/Volume'
 
   /project/{idProject}/volume/{idVolume}:
+    get:
+      summary: Fetch volume info.
+      operationId: getVolumeById
+      tags:
+        - Volume
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idVolume'
+      responses:
+        '200':
+          description: Requested volume info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volume"
     delete:
       summary: Removes volume from project. If volume is no longer part of any project, it is deleted.
       operationId: removeVolumeFromProject
@@ -177,6 +208,23 @@ paths:
       responses:
         '204':
           description: Volume successfuly removed from project.
+
+  /project/{idProject}/volume/{idVolume}/details:
+    get:
+      summary: Fetch volume info with the related raw volume, sparse label and pseudo label data.
+      operationId: getVolumeDetails
+      tags:
+        - Volume
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idVolume'
+      responses:
+        '200':
+          description: Requested volume info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VolumeDetails"
 
   /project/{idProject}/volume/{idVolume}/raw-data/upload:
     put:
@@ -297,6 +345,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/SparseLabelVolumeData"
 
+  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}:
+    get:
+      summary: Fetch volume data info.
+      operationId: getVolumeDataById
+      tags:
+        - Volume Data
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/idVolumeData'
+      responses:
+        '200':
+          description: Requested volume data info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VolumeData"
+    delete:
+      summary: Removes volume data from volume. If volume data is no longer referenced anywhere else, it is deleted.
+      operationId: removeVolumeDataFromProject
+      tags:
+        - Volume Data
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/idVolumeData'
+      responses:
+        '204':
+          description: Volume data successfuly removed from volume.
+
   /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/upload-files:
     put:
       summary: Upload volume data files
@@ -327,10 +405,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: "#/components/schemas/RawData"
-                  - $ref: "#/components/schemas/SparseLabelVolumeData"
-                  - $ref: "#/components/schemas/PseudoLabelVolumeData"
+                $ref: "#/components/schemas/VolumeData"
     
   /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/download-full:
     get:
@@ -424,21 +499,23 @@ paths:
               schema:
                 type: string
 
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}:
-    delete:
-      summary: Removes volume data from volume. If volume data is no longer referenced anywhere else, it is deleted.
-      operationId: removeVolumeDataFromProject
+  /project/{idProject}/models:
+    get:
+      summary: Get models assigned to project.
+      operationId: getModelsFromProject
       tags:
-        - Volume Data
+        - Model
       parameters:
         - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
-        - $ref: '#/components/parameters/idVolumeData'
       responses:
-        '204':
-          description: Volume data successfuly removed from volume.
-
-  /project/{idProject}/models:
+        '200':
+          description: Models assigned to project.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
     post:
       summary: Create a new model
       operationId: createModel
@@ -469,6 +546,21 @@ paths:
                 $ref: '#/components/schemas/Model'
 
   /project/{idProject}/model/{idModel}:
+    get:
+      summary: Fetch Model info.
+      operationId: getModelById
+      tags:
+        - Model
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idModel'
+      responses:
+        '200':
+          description: Requested model info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
     delete:
       summary: Removes model from project. If model is no longer part referenced anywhere, it is deleted.
       operationId: removeModelFromProject
@@ -480,6 +572,23 @@ paths:
       responses:
         '204':
           description: Model successfuly removed from project.
+
+  /project/{idProject}/model/{idModel}/details:
+    get:
+      summary: Fetch model info with the related checkpoints.
+      operationId: getModelDetails
+      tags:
+        - Model
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idModel'
+      responses:
+        '200':
+          description: Requested model info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelDetails"
 
   /project/{idProject}/model/{idModel}/checkpoints:
     post:
@@ -511,6 +620,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/Checkpoint'
 
+  /project/{idProject}/model/{idModel}/checkpoint/{idCheckpoint}:
+    get:
+      summary: Fetch Checkpoint info.
+      operationId: getCheckpointById
+      tags:
+        - Checkpoint
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idModel'
+        - $ref: '#/components/parameters/idCheckpoint'
+      responses:
+        '200':
+          description: Requested checkpoint info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checkpoint"
+    delete:
+      summary: Removes checkpoint from model. If model is no longer referenced anywhere, it is deleted.
+      operationId: removeCheckpointFromModel
+      tags:
+        - Checkpoint
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idModel'
+        - $ref: '#/components/parameters/idCheckpoint'
+      responses:
+        '204':
+           description: Checkpoint successfuly removed from model.
+
   /project/{idProject}/model/{idModel}/checkpoint/{idCheckpoint}/download:
     get:
       summary: Download mrc file in volume data 
@@ -533,20 +672,6 @@ paths:
               description: Indicates that the response should be downloaded as an attachment.
               schema:
                 type: string
-
-  /project/{idProject}/model/{idModel}/checkpoint/{idCheckpoint}:
-    delete:
-      summary: Removes checkpoint from model. If model is no longer referenced anywhere, it is deleted.
-      operationId: removeCheckpointFromModel
-      tags:
-        - Checkpoint
-      parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idModel'
-        - $ref: '#/components/parameters/idCheckpoint'
-      responses:
-        '204':
-           description: Checkpoint successfuly removed from model.
 
   /project/{idProject}/volume/{idVolume}/result/{idResult}/download:
     get:
@@ -793,14 +918,23 @@ components:
       $ref: "./schemas/Project.yaml"
     Volume:
       $ref: "./schemas/Volume.yaml#/Volume"
+    VolumeDetails:
+      $ref: "./schemas/Volume.yaml#/VolumeDetails"
     RawData:
       $ref: "./schemas/RawData.yaml"
     SparseLabelVolumeData:
       $ref: "./schemas/SparseLabelVolumeData.yaml"
     PseudoLabelVolumeData:
       $ref: "./schemas/PseudoLabelVolumeData.yaml"
+    VolumeData:
+      oneOf:
+      - $ref: "#/components/schemas/RawData"
+      - $ref: "#/components/schemas/SparseLabelVolumeData"
+      - $ref: "#/components/schemas/PseudoLabelVolumeData"
     Model:
-      $ref: "./schemas/Model.yaml"
+      $ref: "./schemas/Model.yaml#/Model"
+    ModelDetails:
+      $ref: "./schemas/Model.yaml#/ModelDetails"
     Checkpoint:
       $ref: "./schemas/Checkpoint.yaml"
     NanooetziInferenceTask:

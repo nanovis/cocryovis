@@ -8,7 +8,12 @@ export default class ProjectController {
         return res.json(projects);
     }
 
-    static async getProjectDetails(req, res, next) {
+    static async getProject(req, res) {
+        const project = await Project.getById(Number(req.params.idProject));
+        return res.json(project);
+    }
+
+    static async getProjectDetails(req, res) {
         const project = await Project.getByIdDeep(Number(req.params.idProject));
         return res.json(project);
     }
