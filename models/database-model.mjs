@@ -1,14 +1,17 @@
 // @ts-check
 
+import { Prisma } from "@prisma/client";
+
 import WriteLockManager, {
     WriteMultiLock,
 } from "../tools/write-lock-manager.mjs";
+import { MissingResourceError } from "../tools/error-handler.mjs";
 
 export default class DatabaseModel {
-    /** 
+    /**
      * @constant
      * @type {string}
-    */
+     */
     static modelName = "";
     /** @type {WriteLockManager?} */ static lockManager = null;
 
@@ -24,11 +27,11 @@ export default class DatabaseModel {
      * @return {Promise<Object>}
      */
     static async getById(id) {
-        const entry = await this.db.findUnique({
+        const entry = await this.db.findUniqueOrThrow({
             where: { id: id },
         });
-        if (!entry) {
-            throw new Error(`Cannot find ${this.modelName} with ID ${id}`);
+        if (entry === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
         }
         return entry;
     }
@@ -66,10 +69,17 @@ export default class DatabaseModel {
      */
     static async update(id, changes) {
         return this.withWriteLock(id, null, () => {
-            return this.db.update({
-                where: { id: id },
-                data: changes,
-            });
+            try {
+                return this.db.update({
+                    where: { id: id },
+                    data: changes,
+                });
+            } catch (error) {
+                if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                    throw MissingResourceError.fromId(id, this.modelName);
+                }
+                throw error;
+            }
         });
     }
 
@@ -79,9 +89,16 @@ export default class DatabaseModel {
      */
     static async del(id) {
         return this.withWriteLock(id, null, () => {
-            return this.db.delete({
-                where: { id: id },
-            });
+            try {
+                return this.db.delete({
+                    where: { id: id },
+                });
+            } catch (error) {
+                if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                    throw MissingResourceError.fromId(id, this.modelName);
+                }
+                throw error;
+            }
         });
     }
 

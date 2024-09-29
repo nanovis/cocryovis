@@ -16,6 +16,7 @@ import RawVolumeData from "../models/raw-volume-data.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
+import { ApiError } from "./error-handler.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -92,7 +93,8 @@ export default class IlastikHandler {
      */
     async queueLabelGeneration(volumeId, userId, outputPath = null) {
         if (this.#taskQueue.size >= this.config.maxQueueSize) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to queue label generation: Too many tasks in queue."
             );
         }
@@ -232,12 +234,14 @@ export default class IlastikHandler {
                 !Object.hasOwn(settings, "bytesPerVoxel") ||
                 settings.bytesPerVoxel != 1
             ) {
-                throw new Error(
+                throw new ApiError(
+                    400,
                     "Pseudo Labels Generation error: The generation only supports uint8 data format."
                 );
             }
             if (!Object.hasOwn(settings, "size")) {
-                throw new Error(
+                throw new ApiError(
+                    400,
                     "Pseudo Labels Generation error: Missing data dimensions data."
                 );
             }
@@ -248,12 +252,14 @@ export default class IlastikHandler {
                     !Object.hasOwn(settings, "bytesPerVoxel") ||
                     settings.bytesPerVoxel != 1
                 ) {
-                    throw new Error(
+                    throw new ApiError(
+                        400,
                         "Pseudo Labels Generation error: The generation only supports uint8 data format."
                     );
                 }
                 if (!Object.hasOwn(settings, "size")) {
-                    throw new Error(
+                    throw new ApiError(
+                        400,
                         "Pseudo Labels Generation error: Missing data dimensions data."
                     );
                 }
@@ -388,7 +394,8 @@ export default class IlastikHandler {
      */
     static #checkDimensions(dim1, dim2) {
         if (!Utils.checkDimensions(dim1, dim2)) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Pseudo Labels Generation error: One or more inputs have missmatching dimensions."
             );
         }
@@ -402,18 +409,21 @@ export default class IlastikHandler {
             volume.sparseVolumes.length + volume.pseudoVolumes.length >
             appConfig.maxVolumeChannels
         ) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Volume does not have enough space to generate pseudo labels from sparse label set."
             );
         }
 
         if (!volume.rawData || !volume.rawData.rawFilePath) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Pseudo Labels Generation error: Raw Data is missing."
             );
         }
         if (!volume.sparseVolumes || volume.sparseVolumes.length === 0) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Pseudo Labels Generation error: Sparse Label Data is missing."
             );
         }

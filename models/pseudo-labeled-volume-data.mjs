@@ -8,6 +8,7 @@ import fsPromises from "fs/promises";
 import path from "path";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
@@ -95,7 +96,10 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                     volumeId &&
                     !volumeData.volumes.some((v) => v.id === volumeId)
                 ) {
-                    throw new Error("Volume Data is not part of the volume.");
+                    throw new ApiError(
+                        400,
+                        "Volume Data is not part of the volume."
+                    );
                 }
 
                 if (

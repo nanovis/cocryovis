@@ -7,6 +7,7 @@ import fileUpload from "express-fileupload";
 import fileSystem from "fs";
 import appConfig from "../tools/config.mjs";
 import { rm } from "node:fs/promises";
+import { ApiError } from "./error-handler.mjs";
 
 export class PendingUpload {
     /**
@@ -231,7 +232,7 @@ export function unpackFiles(files, acceptedExtensions = []) {
  */
 export function prepareDataForDownload(files, outputName) {
     if (files.length === 0) {
-        throw new Error(`No files to download.`);
+        throw new ApiError(404, `No files to download.`);
     }
     const zip = new AdmZip();
     for (const filePath of files) {

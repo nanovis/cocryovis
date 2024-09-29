@@ -58,20 +58,3 @@ export default class LogFile {
         this.#filePath = newFilePath;
     }
 }
-
-// export default class LogFileManager {
-//     /**
-//      * @param {String} basename
-//      * @return {Promise<LogFile>}
-//      */
-//     static async createLogFile(basename) {
-//         let logPath = Utils.getInverseDateString() + "_" + basename;
-//         logPath = path.join(appConfig.logPath, basename);
-//         while (fileSystem.existsSync(logPath + ".log")) {
-//             logPath += "_";
-//         }
-//         logPath += ".log";
-//         await fileSystem.promises.writeFile(logPath, "");
-//         return new LogFile(logPath);
-//     }
-// }

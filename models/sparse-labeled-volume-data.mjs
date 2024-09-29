@@ -7,6 +7,7 @@ import path from "path";
 import fileUpload from "express-fileupload";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
@@ -127,7 +128,8 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     });
 
                     if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                        throw new Error(
+                        throw new ApiError(
+                            400,
                             "Volume Data is not part of the volume."
                         );
                     }

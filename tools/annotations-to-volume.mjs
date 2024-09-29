@@ -2,6 +2,7 @@
 
 import fsPromises from "fs/promises";
 import path from "path";
+import { ApiError } from "./error-handler.mjs";
 
 /**
  * @typedef {Object} xyz
@@ -20,7 +21,8 @@ export async function annotationsToVolume(
     outputFile
 ) {
     if (positions.length === 0) {
-        throw new Error(
+        throw new ApiError(
+            400,
             "Annotations Import: Annotations have no specified positions."
         );
     }

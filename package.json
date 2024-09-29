@@ -23,6 +23,7 @@
   "dependencies": {
     "@prisma/client": "^5.18.0",
     "adm-zip": "^0.5.9",
+    "async-express-decorator": "^1.1.0",
     "body-parser": "^1.19.1",
     "child-process": "^1.0.2",
     "cors": "^2.8.5",

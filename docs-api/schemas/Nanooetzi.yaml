@@ -1,0 +1,99 @@
+InferenceTask:
+  type: object
+  required:
+    - userId
+    - username
+    - type
+    - volumeId
+    - volumeName
+    - checkpointId
+    - checkpointName
+  properties:
+    userId:
+      type: integer
+      format: int64
+    username:
+      type: string
+    type:
+      type: string
+    volumeId:
+      type: integer
+      format: int64
+    volumeName:
+      type: string
+    checkpointId:
+      type: integer
+      format: int64
+    checkpointName:
+      type: string
+
+TrainingTask:
+  type: object
+  required:
+    - userId
+    - username
+    - type
+    - modelId
+    - modelName
+  properties:
+    userId:
+      type: integer
+      format: int64
+    username:
+      type: string
+    type:
+      type: string
+    modelId:
+      type: integer
+      format: int64
+    modelName:
+      type: string
+
+InferenceHistory:
+  type: object
+  required:
+    - type
+    - taskStatus
+    - logFile
+    - volumeId
+    - volumeName
+    - checkpointId
+    - checkpointName
+  properties:
+    type:
+      type: string
+    taskStatus:
+      type: string
+    logFile:
+      type: string
+    volumeId:
+      type: integer
+      format: int64
+    volumeName:
+      type: string
+    checkpointId:
+      type: integer
+      format: int64
+    checkpointName:
+      type: string
+
+TrainingHistory:
+  type: object
+  required:
+    - type
+    - taskStatus
+    - logFile
+    - modelId
+    - modelName
+  properties:
+    type:
+      type: string
+    taskStatus:
+      type: string
+    logFile:
+      type: string
+    modelId:
+      type: integer
+      format: int64
+    modelName:
+      type: string

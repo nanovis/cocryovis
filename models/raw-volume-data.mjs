@@ -10,6 +10,7 @@ import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -74,7 +75,10 @@ export default class RawVolumeData extends VolumeData {
                     });
 
                     if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                        throw new Error("Volume Data is not part of the volume.");
+                        throw new ApiError(
+                            400,
+                            "Volume Data is not part of the volume."
+                        );
                     }
 
                     if (
@@ -114,7 +118,7 @@ export default class RawVolumeData extends VolumeData {
         let volumeData = await this.getById(id);
         const mrcFilePath = volumeData.mrcFilePath;
         if (!mrcFilePath) {
-            throw new Error("Volume Data has no associated mrc file.");
+            throw new ApiError(400, "Volume Data has no associated mrc file.");
         }
         volumeData = await this.db.update({
             where: { id: id },
@@ -169,19 +173,21 @@ export default class RawVolumeData extends VolumeData {
     static async uploadMrcFile(id, file) {
         const unpackedFiles = unpackFiles([file], [".mrc"]);
         if (unpackedFiles.length == 0) {
-            throw new Error("No valid MRC file found.");
+            throw new ApiError(400, "No valid MRC file found.");
         }
 
         let volumeData = await this.getById(id);
 
         if (volumeData.mrcFilePath) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Once a MRC File is uploaded to a Raw Volume Data it cannot be changed."
             );
         }
 
         if (volumeData.rawFilePath) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Once a Raw File is uploaded to a Raw Volume Data a MRC file can no longer be added."
             );
         }
@@ -263,7 +269,7 @@ export default class RawVolumeData extends VolumeData {
         }
 
         if (!hasFiles) {
-            throw new Error("No files to download.");
+            throw new ApiError(404, "No files to download.");
         }
 
         let outputFileName = `${this.modelName}_${

@@ -9,6 +9,7 @@ import express from 'express';
 import path from 'path';
 import session from 'express-session';
 import { actions } from './routes/api/actions.mjs';
+import { projectsApi } from './routes/api/projects.mjs';
 import bodyParser from 'body-parser';
 import { argv } from 'process';
 import cors from 'cors';
@@ -35,6 +36,7 @@ app.use(session({
 }));
 
 // Server actions
+app.use('/api', projectsApi);
 app.use('/api/actions', actions);
 
 // Session handling

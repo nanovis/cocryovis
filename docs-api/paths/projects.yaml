@@ -1,0 +1,55 @@
+projects:
+  get:
+    summary: List of all user projects
+    operationId: getProjects
+    responses:
+      '200':
+        description: An array of user's projects.
+        content:
+          application/json:
+            schema:
+              type: array
+              $ref: "../schemas/Project.yaml"
+  post:
+    summary: Create a new project
+    operationId: createProject
+    responses:
+      '200':
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - name
+                - description
+                - ownerId
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+
+project:
+  get:
+    summary: Detailed info about a project.
+    operationId: getProjectById
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+    responses:
+      '200':
+        description: Requested project.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/Project.yaml"
+
+components:
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+          type: integer

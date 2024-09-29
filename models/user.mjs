@@ -4,6 +4,7 @@ import DatabaseModel from "./database-model.mjs";
 import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").User } UserDB
@@ -32,7 +33,9 @@ export default class User extends DatabaseModel {
                 function (err, pass, salt, hash) {
                     if (err) return reject(err);
                     if (hash !== user.passwordHash)
-                        return reject(new Error("Authentication Failed"));
+                        return reject(
+                            new ApiError(401, "Authentication Failed")
+                        );
                     return resolve(user);
                 }
             );
@@ -64,7 +67,10 @@ export default class User extends DatabaseModel {
             where: { username: username },
         });
         if (!user) {
-            throw new Error(`Cannot find User with username ${username}`);
+            throw new ApiError(
+                404,
+                `Cannot find User with username ${username}`
+            );
         }
         return user;
     }

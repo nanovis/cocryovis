@@ -13,6 +13,7 @@ import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -214,7 +215,10 @@ export default class Result extends DatabaseModel {
                     volumeId &&
                     !result.volumes.some((v) => v.id === volumeId)
                 ) {
-                    throw new Error("Result is not part of the volume.");
+                    throw new ApiError(
+                        400,
+                        "Result is not part of the volume."
+                    );
                 }
 
                 if (volumeId && result.volumes.length > 1) {
@@ -304,7 +308,7 @@ export default class Result extends DatabaseModel {
         await fsPromises.mkdir(appConfig.resultsPath, { recursive: true });
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
-                throw new Error(`Result directory already exists`);
+                throw new ApiError(500, `Result directory already exists`);
             } else {
                 await fsPromises.rm(folderPath, {
                     recursive: true,

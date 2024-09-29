@@ -17,6 +17,7 @@ import Model from "../models/model.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
+import { ApiError } from "./error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -160,7 +161,8 @@ export default class NanoOetziHandler {
      */
     async queueInference(checkpointId, volumeId, userId, outputPath = null) {
         if (this.#taskQueue.size >= this.config.maxQueueSize) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to start inference: Too many tasks in queue."
             );
         }
@@ -344,22 +346,26 @@ export default class NanoOetziHandler {
         removeTempFiles = true
     ) {
         if (!trainingVolumesIds || trainingVolumesIds.length == 0) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to start training: Missing training data."
             );
         }
         if (!validationVolumesIds || validationVolumesIds.length == 0) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to start training: Missing validation data."
             );
         }
         if (!testingVolumesIds || testingVolumesIds.length == 0) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to start training: Missing test data."
             );
         }
         if (this.#taskQueue.size >= this.config.maxQueueSize) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to start inference: Too many tasks in queue."
             );
         }
@@ -671,17 +677,20 @@ export default class NanoOetziHandler {
     async #prepareTrainingConfigSet(references, configDataArray, properties) {
         for (const reference of references) {
             if (!reference.rawData) {
-                throw new Error(
+                throw new ApiError(
+                    400,
                     "NanoOetzi inference error: One or more inputs are missing raw data."
                 );
             }
             if (!reference.rawData.rawFilePath || !reference.rawData.settings) {
-                throw new Error(
+                throw new ApiError(
+                    400,
                     "NanoOetzi inference error: One or more raw data volumes are missing either a raw file or settings."
                 );
             }
             if (reference.pseudoVolumes.length == 0) {
-                throw new Error(
+                throw new ApiError(
+                    400,
                     "NanoOetzi inference error: One or more inputs are missing raw data."
                 );
             }
@@ -691,7 +700,8 @@ export default class NanoOetziHandler {
                 Object.hasOwn(volumeSettings, "usedBits") &&
                 volumeSettings["usedBits"] != 8
             ) {
-                throw new Error(
+                throw new ApiError(
+                    400,
                     "NanoOetzi inference error: One or more raw volume data inputs have an unsopported data format."
                 );
             }
@@ -708,7 +718,8 @@ export default class NanoOetziHandler {
                 properties.channels = reference.pseudoVolumes.length;
             } else {
                 if (properties.channels != reference.pseudoVolumes.length) {
-                    throw new Error(
+                    throw new ApiError(
+                        400,
                         "NanoOetzi inference error: One or more inputs have missmatching number of pseudo labels."
                     );
                 }
@@ -721,7 +732,8 @@ export default class NanoOetziHandler {
 
             for (const pseudoVolume of reference.pseudoVolumes) {
                 if (!pseudoVolume.rawFilePath || !pseudoVolume.settings) {
-                    throw new Error(
+                    throw new ApiError(
+                        400,
                         "NanoOetzi inference error: One or more pseudo labeled volumes are missing either a raw file or settings."
                     );
                 }
@@ -730,7 +742,8 @@ export default class NanoOetziHandler {
                     Object.hasOwn(pseudoVolumeSettings, "usedBits") &&
                     pseudoVolumeSettings["usedBits"] != 8
                 ) {
-                    throw new Error(
+                    throw new ApiError(
+                        400,
                         "NanoOetzi inference error: One or more pseudo labeled volumes have an unsopported data format."
                     );
                 }
@@ -752,7 +765,8 @@ export default class NanoOetziHandler {
      */
     static #checkDimensions(dim1, dim2) {
         if (!Utils.checkDimensions(dim1, dim2)) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "NanoOetzi inference error: One or more inputs have missmatching dimensions."
             );
         }
@@ -764,22 +778,26 @@ export default class NanoOetziHandler {
      */
     static #checkInferenceInput(volume, checkpoint) {
         if (!volume.rawData) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 `Inference: Selected Volume must contain Raw Volume Data.`
             );
         }
         if (!volume.rawData.rawFilePath) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 `Inference: Raw Volume Data Volume must contain a raw file.`
             );
         }
         if (!volume.rawData.settings) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 `Inference: Raw Volume Data Volume must contain a settings file.`
             );
         }
         if (!fileSystem.existsSync(checkpoint.filePath)) {
-            throw new Error(
+            throw new ApiError(
+                400,
                 "Failed Attempt to start inference: Checkpoint file does not exist"
             );
         }

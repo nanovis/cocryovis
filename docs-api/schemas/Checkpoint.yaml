@@ -1,0 +1,19 @@
+type: object
+required:
+  - id
+  - filePath
+  - folderPath
+  - ownerId
+properties:
+  id:
+    type: integer
+    format: int64
+  filePath:
+    type: string
+    nullable: true
+  folderPath:
+    type: string
+    nullable: true
+  ownerId:
+    type: integer
+    format: int64

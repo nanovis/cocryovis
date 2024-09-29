@@ -161,9 +161,6 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/r
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-raw-file`, restrict, 
     async (req, res) => VolumeDataController.removeRawFile(VolumeDataType.mapName(req.params.type), req, res));
 
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-settings-file`, restrict, 
-    async (req, res) => VolumeDataController.removeSettingsFile(VolumeDataType.mapName(req.params.type), req, res));
-
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-mrc-file`, restrict, 
     async (req, res) => VolumeDataController.removeMrcFile(VolumeDataType.mapName(req.params.type), req, res));
   

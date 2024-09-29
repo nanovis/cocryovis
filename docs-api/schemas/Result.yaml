@@ -1,0 +1,32 @@
+type: object
+required:
+  - id
+  - folderPath
+  - files
+  - rawVolumeChannel
+  - ownerId
+  - checkpointId
+  - volumeDataId
+properties:
+  id:
+    type: integer
+    format: int64
+  folderPath:
+    type: string
+    nullable: true
+  files:
+    type: string
+    nullable: true
+    description: List of files attached to result in stringified JSON format.
+  rawVolumeChannel:
+    type: integer
+    nullable: true
+  ownerId:
+    type: integer
+    format: int64
+  checkpointId:
+    type: integer
+    format: int64
+  volumeDataId:
+    type: integer
+    format: int64

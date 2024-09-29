@@ -13,6 +13,7 @@ import path from "path";
 import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
+import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Volume } VolumeDB
@@ -59,7 +60,7 @@ export default class Volume extends DatabaseModel {
             },
         });
         if (!entry) {
-            throw new Error(`Cannot find ${this.modelName} with ID ${id}`);
+            throw MissingResourceError.fromId(id, this.modelName);
         }
         return entry;
     }
@@ -158,7 +159,10 @@ export default class Volume extends DatabaseModel {
                     projectId &&
                     !volume.projects.some((m) => m.id === projectId)
                 ) {
-                    throw new Error("Volume is not part of the project.");
+                    throw new ApiError(
+                        400,
+                        "Volume is not part of the project."
+                    );
                 }
 
                 if (projectId && volume.projects.length > 1) {
@@ -310,7 +314,8 @@ export default class Volume extends DatabaseModel {
                                 volume.sparseVolumes.length >=
                                 appConfig.maxVolumeChannels
                             ) {
-                                throw new Error(
+                                throw new ApiError(
+                                    400,
                                     "Volume already has maximum number of Sparse Labels"
                                 );
                             }
@@ -382,7 +387,8 @@ export default class Volume extends DatabaseModel {
                                 volume.pseudoVolumes.length >
                             appConfig.maxVolumeChannels
                         ) {
-                            throw new Error(
+                            throw new ApiError(
+                                400,
                                 "Volume does not have enough space to generate pseudo labels from sparse label set."
                             );
                         }

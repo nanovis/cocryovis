@@ -11,6 +11,7 @@ import fileUpload from "express-fileupload";
 import { unpackFiles } from "../tools/file-handler.mjs";
 import AdmZip from "adm-zip";
 import Volume from "./volume.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -128,7 +129,8 @@ export default class VolumeData extends DatabaseModel {
                     });
 
                     if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                        throw new Error(
+                        throw new ApiError(
+                            400,
                             "Volume Data is not part of the volume."
                         );
                     }
@@ -168,7 +170,7 @@ export default class VolumeData extends DatabaseModel {
         let volumeData = await this.getById(id);
         const rawFilePath = volumeData.rawFilePath;
         if (!rawFilePath) {
-            throw new Error("Volume Data has no associated raw file.");
+            throw new ApiError(400, "Volume Data has no associated raw file.");
         }
         volumeData = await this.db.update({
             where: { id: id },
@@ -284,13 +286,14 @@ export default class VolumeData extends DatabaseModel {
                         newRawFile &&
                         volumeData.rawFilePath
                     ) {
-                        throw new Error(
+                        throw new ApiError(
+                            400,
                             "Once Raw File is uploaded to a Raw Volume Data it cannot be changed."
                         );
                     }
 
                     if (!newRawFile && !newSettingFile) {
-                        throw new Error("No valid files provided");
+                        throw new ApiError(400, "No valid files provided");
                     }
 
                     if (!fileSystem.existsSync(volumeData.path)) {
@@ -432,7 +435,7 @@ export default class VolumeData extends DatabaseModel {
         }
 
         if (!hasFiles) {
-            throw new Error("No files to download.");
+            throw new ApiError(404, "No files to download.");
         }
 
         const outputFileName = `${this.modelName}_${

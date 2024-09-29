@@ -11,6 +11,7 @@ import fileUpload from "express-fileupload";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Model from "./model.mjs";
+import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
@@ -298,11 +299,15 @@ export default class Checkpoint extends DatabaseModel {
                     modelId &&
                     !checkpoint.models.some((m) => m.id === modelId)
                 ) {
-                    throw new Error("Checkpoint is not part of the model.");
+                    throw new ApiError(
+                        400,
+                        "Checkpoint is not part of the model."
+                    );
                 }
 
                 if (!modelId && checkpoint.results.length > 0) {
-                    throw new Error(
+                    throw new ApiError(
+                        400,
                         "Cannot remove checkpoint as long as its referenced in at least one result."
                     );
                 }
@@ -371,7 +376,7 @@ export default class Checkpoint extends DatabaseModel {
         );
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
-                throw new Error(`Checkpoint directory already exists`);
+                throw new ApiError(400, `Checkpoint directory already exists`);
             } else {
                 await fsPromises.rm(folderPath, {
                     recursive: true,
@@ -400,7 +405,7 @@ export default class Checkpoint extends DatabaseModel {
         await fsPromises.mkdir(appConfig.checkpointsPath, { recursive: true });
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
-                throw new Error(`Checkpoint directory already exists`);
+                throw new ApiError(400, `Checkpoint directory already exists`);
             } else {
                 await fsPromises.rm(folderPath, {
                     recursive: true,

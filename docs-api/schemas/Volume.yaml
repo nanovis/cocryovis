@@ -1,0 +1,58 @@
+Volume:
+  type: object
+  required:
+    - id
+    - name
+    - description
+    - ownerId
+  properties:
+    id:
+      type: integer
+      format: int64
+    name:
+      type: string
+    description:
+      type: string
+    ownerId:
+      type: integer
+      format: int64
+    rawDataId:
+      type: integer
+      format: int64
+      nullable: true
+
+DeepVolume:
+  type: object
+  required:
+    - id
+    - name
+    - description
+    - ownerId
+  properties:
+    id:
+      type: integer
+      format: int64
+    name:
+      type: string
+    description:
+      type: string
+    ownerId:
+      type: integer
+      format: int64
+    rawDataId:
+      type: integer
+      format: int64
+      nullable: true
+    rawData:
+      nullable: true
+      $ref: "./RawData.yaml"   
+    sparseVolumes:
+      type: array
+      nullable: true
+      items:
+        $ref: "./SparseLabelVolumeData.yaml"
+    pseudoVolumes:
+      type: array
+      nullable: true
+      items:
+        $ref: "./PseudoLabelVolumeData.yaml"

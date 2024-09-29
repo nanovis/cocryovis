@@ -10,6 +10,7 @@ import RawVolumeData from "./raw-volume-data.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
+import { MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
@@ -47,7 +48,7 @@ export default class Project extends DatabaseModel {
      * @return {Promise<ProjectDB>}
      */
     static async getByIdDeep(id) {
-        return await this.db.findUnique({
+        const project = await this.db.findUnique({
             where: {
                 id: id,
             },
@@ -67,6 +68,10 @@ export default class Project extends DatabaseModel {
                 },
             },
         });
+        if (project === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
+        }
+        return project;
     }
 
     /**

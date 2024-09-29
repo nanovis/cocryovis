@@ -7,6 +7,7 @@ import fsPromises from "fs/promises";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
+import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
@@ -40,14 +41,14 @@ export default class Model extends DatabaseModel {
      * @param {Number} id
      */
     static async getByIdDeep(id) {
-        let entry = await this.db.findUnique({
+        const entry = await this.db.findUnique({
             where: { id: id },
             include: {
                 checkpoints: true,
             },
         });
-        if (!entry) {
-            throw new Error(`Cannot find ${this.modelName} with ID ${id}`);
+        if (entry === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
         }
         return entry;
     }
@@ -128,7 +129,10 @@ export default class Model extends DatabaseModel {
                     projectId &&
                     !model.projects.some((m) => m.id === projectId)
                 ) {
-                    throw new Error("Model is not part of the project.");
+                    throw new ApiError(
+                        400,
+                        "Model is not part of the project."
+                    );
                 }
 
                 if (projectId && model.projects.length > 1) {
