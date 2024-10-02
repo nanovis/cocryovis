@@ -5,6 +5,20 @@ import { ApiError } from "../tools/error-handler.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
 
 export default class ResultController {
+    static async getById(req, res) {
+        const result = await Result.getById(Number(req.params.idResult));
+
+        return res.json(result);
+    }
+
+    static async getDetails(req, res) {
+        const result = await Result.getByIdDeep(Number(req.params.idResult), {
+            checkpoint: true,
+        });
+
+        return res.json(result);
+    }
+
     static async downloadResult(req, res) {
         const result = await Result.getById(Number(req.params.idResult));
 

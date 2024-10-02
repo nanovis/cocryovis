@@ -13,7 +13,7 @@ import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
-import { ApiError } from "../tools/error-handler.mjs";
+import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -34,6 +34,29 @@ export default class Result extends DatabaseModel {
      */
     static async getById(id) {
         return await super.getById(id);
+    }
+
+    /**
+     * @param {Number} id
+     */
+    static async getByIdDeep(
+        id,
+        { checkpoint = false, volumeData = false, volumes = false }
+    ) {
+        const result = await this.db.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                checkpoint: checkpoint,
+                volumeData: volumeData,
+                volumes: volumes,
+            },
+        });
+        if (result === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
+        }
+        return result;
     }
 
     /**

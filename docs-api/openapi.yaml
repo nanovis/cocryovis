@@ -662,6 +662,38 @@ paths:
               schema:
                 type: string
 
+  /result/{idResult}:
+    get:
+      summary: Fetch Result info.
+      operationId: getResultById
+      tags:
+        - Result
+      parameters:
+        - $ref: '#/components/parameters/idResult'
+      responses:
+        '200':
+          description: Requested Result info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+
+  /result/{idResult}/details:
+    get:
+      summary: Fetch Result info with the related checkpoint.
+      operationId: getResultDetails
+      tags:
+        - Result
+      parameters:
+        - $ref: '#/components/parameters/idResult'
+      responses:
+        '200':
+          description: Requested Result info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultDetails"
+
   /result/{idResult}/download:
     get:
       summary: Download result files

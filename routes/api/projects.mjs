@@ -197,6 +197,12 @@ projectsApi.post(`/model/:idModel/checkpoints`, restrictApi, CheckpointControlle
 projectsApi.get(`/checkpoint/:idCheckpoint/download`, CheckpointController.downloadCheckpoint);
 
 /////// RESULTS
+// Get Result
+projectsApi.get(`/result/:idResult`, restrictApi, ResultController.getById);
+
+// Get Result Details
+projectsApi.get(`/result/:idResult/details`, restrictApi, ResultController.getDetails);
+
 // Remove Result
 // actions.get(`/:idProject/result/:idResult/delete`, restrictApi, ResultController.deleteResult);
 projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultController.removeFromVolume);
