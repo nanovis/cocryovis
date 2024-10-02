@@ -50,7 +50,7 @@ VolumeDetails:
       nullable: true
     rawData:
       nullable: true
-      $ref: "./RawData.yaml"   
+      $ref: "./RawData.yaml"
     sparseVolumes:
       type: array
       nullable: true

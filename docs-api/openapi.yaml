@@ -182,23 +182,8 @@ paths:
                 $ref: '#/components/schemas/Volume'
 
   /project/{idProject}/volume/{idVolume}:
-    get:
-      summary: Fetch volume info.
-      operationId: getVolumeById
-      tags:
-        - Volume
-      parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
-      responses:
-        '200':
-          description: Requested volume info.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Volume"
     delete:
-      summary: Removes volume from project. If volume is no longer part of any project, it is deleted.
+      summary: Removes volume from project. If volume is no longer referenced anywhere, it is deleted.
       operationId: removeVolumeFromProject
       tags:
         - Volume
@@ -209,14 +194,29 @@ paths:
         '204':
           description: Volume successfuly removed from project.
 
-  /project/{idProject}/volume/{idVolume}/details:
+  /volume/{idVolume}:
+    get:
+      summary: Fetch volume info.
+      operationId: getVolumeById
+      tags:
+        - Volume
+      parameters:
+        - $ref: '#/components/parameters/idVolume'
+      responses:
+        '200':
+          description: Requested volume info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volume"
+
+  /volume/{idVolume}/details:
     get:
       summary: Fetch volume info with the related raw volume, sparse label and pseudo label data.
       operationId: getVolumeDetails
       tags:
         - Volume
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       responses:
         '200':
@@ -226,14 +226,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/VolumeDetails"
 
-  /project/{idProject}/volume/{idVolume}/raw-data/upload:
+  /volume/{idVolume}/raw-data/upload:
     put:
       summary: Upload raw volume data
       operationId: uploadRawData
       tags:
         - Volume
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       requestBody:
         required: true
@@ -256,14 +255,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/RawData"
 
-  /project/{idProject}/volume/{idVolume}/raw-data/upload-mrc:
+  /volume/{idVolume}/raw-data/upload-mrc:
     put:
       summary: Uploads mrc volume data
       operationId: uploadMrcRawData
       tags:
         - Volume
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       requestBody:
         required: true
@@ -283,14 +281,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/RawData"
 
-  /project/{idProject}/volume/{idVolume}/add-sparse-label-volume:
+  /volume/{idVolume}/add-sparse-label-volume:
     put:
       summary: Add sparse label volume
       operationId: addSparseLabelVolume
       tags:
         - Volume
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       responses:
         '201':
@@ -300,14 +297,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/SparseLabelVolumeData"
 
-  /project/{idProject}/volume/{idVolume}/add-pseudo-label-volume:
+  /volume/{idVolume}/add-pseudo-label-volume:
     put:
       summary: Add pseudo label volume
       operationId: addPseudoLabelVolume
       tags:
         - Volume
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       responses:
         '201':
@@ -317,14 +313,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PseudoLabelVolumeData"
 
-  /project/{idProject}/volume/{idVolume}/add-annotations:
+  /volume/{idVolume}/add-annotations:
     put:
       summary: Add annotations and convert them to sparse label volume
       operationId: addAnnotations
       tags:
         - Volume
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       requestBody:
         required: true
@@ -345,15 +340,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/SparseLabelVolumeData"
 
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}:
+  /volumeData/{type}/{idVolumeData}:
     get:
       summary: Fetch volume data info.
       operationId: getVolumeDataById
       tags:
         - Volume Data
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
         - $ref: '#/components/parameters/idVolumeData'
       responses:
         '200':
@@ -362,28 +356,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VolumeData"
-    delete:
-      summary: Removes volume data from volume. If volume data is no longer referenced anywhere else, it is deleted.
-      operationId: removeVolumeDataFromProject
-      tags:
-        - Volume Data
-      parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
-        - $ref: '#/components/parameters/idVolumeData'
-      responses:
-        '204':
-          description: Volume data successfuly removed from volume.
 
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/upload-files:
+  /volumeData/{type}/{idVolumeData}/upload-files:
     put:
       summary: Upload volume data files
       operationId: uploadFiles
       tags:
         - Volume Data
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
         - $ref: '#/components/parameters/idVolumeData'
       requestBody:
         required: true
@@ -407,15 +388,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/VolumeData"
     
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/download-full:
+  /volumeData/{type}/{idVolumeData}/download-full:
     get:
       summary: Download volume data
       operationId: downloadVolumeData
       tags:
         - Volume Data
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
         - $ref: '#/components/parameters/idVolumeData'
       responses:
         '200':
@@ -430,15 +410,14 @@ paths:
               schema:
                 type: string
 
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/download-raw-file:
+  /volumeData/{type}/{idVolumeData}/download-raw-file:
     get:
       summary: Download raw volume file in volume data 
       operationId: downloadVolumeDataRawFile
       tags:
         - Volume Data
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
         - $ref: '#/components/parameters/idVolumeData'
       responses:
         '200':
@@ -453,15 +432,14 @@ paths:
               schema:
                 type: string
   
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/download-settings-file:
+  /volumeData/{type}/{idVolumeData}/download-settings-file:
     get:
       summary: Download settings file in volume data 
       operationId: downloadVolumeDataSettingsFile
       tags:
         - Volume Data
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
         - $ref: '#/components/parameters/idVolumeData'
       responses:
         '200':
@@ -476,15 +454,14 @@ paths:
               schema:
                 type: string
 
-  /project/{idProject}/volume/{idVolume}/volumeData/:type/{idVolumeData}/download-mrc-file:
+  /volumeData/{type}/{idVolumeData}/download-mrc-file:
     get:
       summary: Download mrc file in volume data 
       operationId: downloadVolumeDataMrcFile
       tags:
         - Volume Data
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
         - $ref: '#/components/parameters/idVolumeData'
       responses:
         '200':
@@ -498,6 +475,20 @@ paths:
               description: Indicates that the response should be downloaded as an attachment.
               schema:
                 type: string
+  
+  /volume/{idVolume}/volumeData/{type}/{idVolumeData}:
+    delete:
+      summary: Removes volume data from volume. If volume data is no longer referenced anywhere else, it is deleted.
+      operationId: removeVolumeDataFromProject
+      tags:
+        - Volume Data
+      parameters:
+        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/idVolumeData'
+      responses:
+        '204':
+          description: Volume data successfuly removed from volume.
 
   /project/{idProject}/models:
     get:
@@ -545,24 +536,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Model'
 
+  
   /project/{idProject}/model/{idModel}:
-    get:
-      summary: Fetch Model info.
-      operationId: getModelById
-      tags:
-        - Model
-      parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idModel'
-      responses:
-        '200':
-          description: Requested model info.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Model"
     delete:
-      summary: Removes model from project. If model is no longer part referenced anywhere, it is deleted.
+      summary: Removes model from project. If model is no longer referenced anywhere, it is deleted.
       operationId: removeModelFromProject
       tags:
         - Model
@@ -573,14 +550,29 @@ paths:
         '204':
           description: Model successfuly removed from project.
 
-  /project/{idProject}/model/{idModel}/details:
+  /model/{idModel}:
+    get:
+      summary: Fetch Model info.
+      operationId: getModelById
+      tags:
+        - Model
+      parameters:
+        - $ref: '#/components/parameters/idModel'
+      responses:
+        '200':
+          description: Requested model info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
+
+  /model/{idModel}/details:
     get:
       summary: Fetch model info with the related checkpoints.
       operationId: getModelDetails
       tags:
         - Model
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idModel'
       responses:
         '200':
@@ -590,14 +582,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ModelDetails"
 
-  /project/{idProject}/model/{idModel}/checkpoints:
+  /model/{idModel}/checkpoints:
     post:
       summary: Create a new checkpoint
       operationId: createCheckpoint
       tags:
         - Checkpoint
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idModel'
       requestBody:
         required: true
@@ -620,15 +611,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/Checkpoint'
 
-  /project/{idProject}/model/{idModel}/checkpoint/{idCheckpoint}:
+  /model/{idModel}/checkpoint/{idCheckpoint}:
+    delete:
+      summary: Removes checkpoint from model. If model is no longer referenced anywhere, it is deleted.
+      operationId: removeCheckpointFromModel
+      tags:
+        - Checkpoint
+      parameters:
+        - $ref: '#/components/parameters/idModel'
+        - $ref: '#/components/parameters/idCheckpoint'
+      responses:
+        '204':
+           description: Checkpoint successfuly removed from model.
+             
+
+  /checkpoint/{idCheckpoint}:
     get:
       summary: Fetch Checkpoint info.
       operationId: getCheckpointById
       tags:
         - Checkpoint
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idModel'
         - $ref: '#/components/parameters/idCheckpoint'
       responses:
         '200':
@@ -637,28 +640,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Checkpoint"
-    delete:
-      summary: Removes checkpoint from model. If model is no longer referenced anywhere, it is deleted.
-      operationId: removeCheckpointFromModel
-      tags:
-        - Checkpoint
-      parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idModel'
-        - $ref: '#/components/parameters/idCheckpoint'
-      responses:
-        '204':
-           description: Checkpoint successfuly removed from model.
-
-  /project/{idProject}/model/{idModel}/checkpoint/{idCheckpoint}/download:
+                
+  /checkpoint/{idCheckpoint}/download:
     get:
-      summary: Download mrc file in volume data 
+      summary: Download checkpoint file 
       operationId: downloadCheckpoint
       tags:
         - Checkpoint
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idModel'
         - $ref: '#/components/parameters/idCheckpoint'
       responses:
         '200':
@@ -673,15 +662,13 @@ paths:
               schema:
                 type: string
 
-  /project/{idProject}/volume/{idVolume}/result/{idResult}/download:
+  /result/{idResult}/download:
     get:
       summary: Download result files
       operationId: downloadResult
       tags:
         - Result
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
         - $ref: '#/components/parameters/idResult'
       responses:
         '200':
@@ -696,15 +683,13 @@ paths:
               schema:
                 type: string
 
-  /project/{idProject}/volume/{idVolume}/result/{idResult}/download/{fileIndex}:
+  /result/{idResult}/download/{fileIndex}:
     get:
       summary: Download a specific result file
       operationId: downloadResultFile
       tags:
         - Result
       parameters:
-        - $ref: '#/components/parameters/idProject'
-        - $ref: '#/components/parameters/idVolume'
         - $ref: '#/components/parameters/idResult'
         - name: fileIndex
           in: path
@@ -724,14 +709,13 @@ paths:
               schema:
                 type: string
 
-  /project/{idProject}/volume/{idVolume}/result/{idResult}:
+  /volume/{idVolume}/result/{idResult}:
     delete:
       summary: Removes result from the volume. If the result is no longer referenced anywhere, it is deleted.
       operationId: removeResultFromVolume
       tags:
         - Result
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
         - $ref: '#/components/parameters/idResult'
       responses:
@@ -797,14 +781,13 @@ paths:
                     logFile:
                       type: string
   
-  /project/{idProject}/volume/{idVolume}/create-pseudo-labels:
+  /volume/{idVolume}/queue-pseudo-label-generation:
     post:
       summary: Queues Ilastik presudo label generation
       operationId: queuePseudoLabelsGeneration
       tags:
         - Ilastik
       parameters:
-        - $ref: '#/components/parameters/idProject'
         - $ref: '#/components/parameters/idVolume'
       responses:
         '204':
@@ -842,14 +825,12 @@ paths:
                   - $ref: '#/components/schemas/NanooetziInferenceHistory'
                   - $ref: '#/components/schemas/NanooetziTrainingHistory'
 
-  /project/{idProject}/queue-inference:
+  /queue-inference:
     post:
       summary: Queue Nanooetzi inference task.
       operationId: queueInferenceNanooetzi
       tags:
         - Nanooetzi
-      parameters:
-        - $ref: '#/components/parameters/idProject'
       requestBody:
         required: true
         content:
@@ -870,14 +851,12 @@ paths:
         '204':
             description: Inference task successfuly queued.
 
-  /project/{idProject}/queue-training:
+  /queue-training:
     post:
       summary: Queue Nanooetzi inference task.
       operationId: queueTrainingNanooetzi
       tags:
         - Nanooetzi
-      parameters:
-        - $ref: '#/components/parameters/idProject'
       requestBody:
         required: true
         content:
@@ -935,6 +914,10 @@ components:
       $ref: "./schemas/Model.yaml#/Model"
     ModelDetails:
       $ref: "./schemas/Model.yaml#/ModelDetails"
+    Result:
+      $ref: "./schemas/Result.yaml#/Result"
+    ResultDetails:
+      $ref: "./schemas/Result.yaml#/ResultDetails"
     Checkpoint:
       $ref: "./schemas/Checkpoint.yaml"
     NanooetziInferenceTask:
@@ -958,37 +941,44 @@ components:
       in: path
       required: true
       schema:
-          type: integer
+        type: integer
     idVolume:
       name: idVolume
       in: path
       required: true
       schema:
-          type: integer
+        type: integer
     idVolumeData:
       name: idVolumeData
       in: path
       required: true
       schema:
-          type: integer
+        type: integer
+    type:
+      name: type
+      in: path
+      required: true
+      description: "One of the following values 'RawVolumeData', 'SparseLabeledVolumeData', 'PseudoLabeledVolumeData'."
+      schema:
+        type: string
     idModel:
       name: idModel
       in: path
       required: true
       schema:
-          type: integer
+        type: integer
     idCheckpoint:
       name: idCheckpoint
       in: path
       required: true
       schema:
-          type: integer
+        type: integer
     idResult:
       name: idResult
       in: path
       required: true
       schema:
-          type: integer
+        type: integer
   securitySchemes:
     express-session:
       type: apiKey
