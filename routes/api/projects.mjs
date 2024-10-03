@@ -37,6 +37,7 @@ projectsApi.use(fileUpload({ createParentPath: true }));
 
 projectsApi.post('/login', UserController.login);
 projectsApi.post('/logout', UserController.logout);
+projectsApi.post('/register', UserController.register);
 
 ///////////////////////
 /////// PROJECTS

@@ -77,12 +77,18 @@ export default class User extends DatabaseModel {
 
     /**
      * @param {String} username
+     * @param {String} password
      * @param {String} name
      * @param {String} email
-     * @param {String} password
      * @return {Promise<UserDB>}
      */
-    static async create(username, name, email, password) {
+    static async create(username, password, name, email) {
+        if (!username || username.length === 0) {
+            throw new ApiError(400, "Missing username.");
+        }
+        if (!password || password.length === 0) {
+            throw new ApiError(400, "Missing password.");
+        }
         const { salt, hash } = await new Promise((resolve, reject) => {
             User.hasher(
                 { password: password },
@@ -137,5 +143,17 @@ export default class User extends DatabaseModel {
      */
     static async del(id) {
         return await super.del(id);
+    }
+
+    /**
+     * @param {UserDB} user
+     */
+    static async toPublic(user) {
+        return {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+        };
     }
 }

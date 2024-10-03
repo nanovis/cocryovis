@@ -7,8 +7,8 @@
     "seed": "node prisma/seed.mjs"
   },
   "scripts": {
-    "prisma:init": "node config.mjs && prisma migrate dev --name init",
-    "start": "node config.mjs && node index.mjs"
+    "prisma:init": "prisma migrate dev --name init",
+    "start": "node index.mjs"
   },
   "repository": {
     "type": "git",
@@ -24,9 +24,12 @@
     "@prisma/client": "^5.18.0",
     "adm-zip": "^0.5.9",
     "async-express-decorator": "^1.1.0",
+    "better-sqlite3": "^11.3.0",
+    "better-sqlite3-session-store": "^0.1.0",
     "body-parser": "^1.19.1",
     "child-process": "^1.0.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.6",
     "express": "^4.17.2",
     "express-fileupload": "^1.2.1",

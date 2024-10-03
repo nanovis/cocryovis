@@ -19,6 +19,15 @@ The system consists of several components and the overall folder structure we us
 ```
 
 ## Setup
+In the root folder create a ```.env``` file with the following entries:
+```
+# Path to main sqlite database
+DATABASE_URL=file:./db.sqlite
+
+# Secret used to sign the session cookie
+SESSION_SECRET=
+```
+
 To install the app, you need node.js. In the project folder run:
 
 ```npm install```
@@ -29,7 +38,7 @@ To setup the database run:
 
 To run the server run:
 
-```nodemon index.mjs```
+```npm start```
 
 ## Default User Credentials
 Username: ciril

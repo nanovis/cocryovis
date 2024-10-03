@@ -33,8 +33,14 @@ paths:
                 password:
                   type: string
       responses:
-        "204":
+        "200":
           description: Login successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
         "401":
           description: Login failed.
           content:
@@ -52,6 +58,43 @@ paths:
       responses:
         "204":
           description: Logout successful.
+
+  /register:
+    post:
+      summary: Register
+      operationId: register
+      tags:
+        - User
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - username
+              - password
+              - name
+              - email
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+      responses:
+        "200":
+          description: Registration successful.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
 
   /projects:
     get:
@@ -925,6 +968,8 @@ paths:
 
 components:
   schemas:
+    User:
+      $ref: "./schemas/User.yaml"
     Project:
       $ref: "./schemas/Project.yaml"
     Volume:

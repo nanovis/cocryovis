@@ -4,9 +4,28 @@ import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 
 export default class UserController {
+    static async register(req, res, next) {
+        const user = await User.create(
+            req.body.username,
+            req.body.password,
+            req.body.name,
+            req.body.email
+        );
+        req.session.regenerate(function (err) {
+            if (err) return next(err);
+
+            req.session.user = user;
+
+            req.session.save(function (err) {
+                if (err) return next(err);
+                res.json(User.toPublic(user));
+            });
+        });
+    }
+
     static async login(req, res, next) {
         try {
-            let user = await User.authenticate(
+            const user = await User.authenticate(
                 req.body.username,
                 req.body.password
             );
@@ -17,8 +36,7 @@ export default class UserController {
 
                 req.session.save(function (err) {
                     if (err) return next(err);
-                    console.log(req.sessionID)
-                    res.sendStatus(204);
+                    res.json(User.toPublic(user));
                 });
             });
         } catch {

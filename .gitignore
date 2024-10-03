@@ -16,3 +16,7 @@ cache/
 prisma/migrations/
 .vscode/
 .venv/
+
+sessions/*.db
+sessions/*.db-shm
+sessions/*.db-wal
