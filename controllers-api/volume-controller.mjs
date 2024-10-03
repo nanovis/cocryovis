@@ -19,6 +19,7 @@ export default class VolumeController {
             rawData: true,
             sparseVolumes: true,
             pseudoVolumes: true,
+            results: true
         });
 
         return res.status(200).json(volume);

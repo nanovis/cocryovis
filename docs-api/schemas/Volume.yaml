@@ -33,6 +33,7 @@ VolumeDetails:
     - rawData
     - sparseVolumes
     - pseudoVolumes
+    - results
   properties:
     id:
       type: integer
@@ -61,3 +62,8 @@ VolumeDetails:
       nullable: true
       items:
         $ref: "./PseudoLabelVolumeData.yaml"
+    results:
+      type: array
+      nullable: true
+      items:
+        $ref: "./Result.yaml#/Result"
