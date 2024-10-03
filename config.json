@@ -1,4 +1,5 @@
 {
+    "idleSessionExpirationMin": 30,
     "annotationsCachePath": "./cache/annotations/",
     "volumeDataPath": "./data/volume-data/",
     "checkpointsPath": "./data/checkpoints/",

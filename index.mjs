@@ -19,6 +19,8 @@ import { restrict } from "./middleware/restrict.mjs";
 import UserController from "./controllers/user-controller.mjs";
 import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
+import helmet from "helmet";
+import appConfig from "./tools/config.mjs";
 
 const port = argv[2] || 8080;
 const app = express(express.json());
@@ -40,23 +42,31 @@ sessionsDB.pragma("journal_mode = WAL");
 
 const SqliteStore = sqlite3SessionStore(session);
 
-app.use(
-    session({
-        store: new SqliteStore({
-            client: sessionsDB,
-            expired: {
-                clear: true,
-                intervalMs: 12 * 60 * 60 * 1000,
-            },
-        }),
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.SESSION_SECRET,
-        cookie: {
-            maxAge: 30 * 60 * 1000,
+const sess = {
+    store: new SqliteStore({
+        client: sessionsDB,
+        expired: {
+            clear: true,
+            intervalMs: 12 * 60 * 60 * 1000,
         },
-    })
-);
+    }),
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.SESSION_SECRET,
+    rolling: true,
+    cookie: {
+        maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
+    },
+};
+
+if (app.get("env") === "production") {
+    // app.set('trust proxy', 1)
+    sess.cookie.secure = true;
+    sess.cookie.HttpOnly = true;
+    app.use(helmet());
+}
+
+app.use(session(sess));
 
 // Server actions
 app.use("/api", projectsApi);
@@ -82,7 +92,7 @@ app.get("/logout", UserController.logout);
 
 // Handling login route
 app.get("/login", function (req, res) {
-    res.render("login");
+    res.render("login", { message: "" });
 });
 
 app.post("/login", UserController.login);
