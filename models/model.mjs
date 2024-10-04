@@ -92,6 +92,63 @@ export default class Model extends DatabaseModel {
     }
 
     /**
+     * @param {Number} sourceId
+     * @param {Number} ownerId
+     * @param {Number} projectId
+     * @return {Promise<ModelDB>}
+     */
+    static async clone(sourceId, ownerId, projectId) {
+        return await prismaManager.db.$transaction(async (tx) => {
+            return this.cloneTransaction(tx, sourceId, ownerId, projectId);
+        });
+    }
+
+    /**
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @param {Number} sourceId
+     * @param {Number} ownerId
+     * @param {Number?} projectId
+     * @return {Promise<ModelDB>}
+     */
+    static async cloneTransaction(tx, sourceId, ownerId, projectId = null) {
+        const sourceModel = await tx.model.findUnique({
+            where: { id: sourceId },
+            include: {
+                checkpoints: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
+        });
+
+        if (!sourceModel) {
+            throw MissingResourceError.fromId(sourceId, this.modelName);
+        }
+
+        const newModelData = {
+            name: sourceModel.name,
+            description: sourceModel.description,
+            ownerId: ownerId,
+            projects: {
+                connect: { id: projectId },
+            },
+        };
+
+        if (projectId != null) {
+            newModelData.projects = {
+                connect: { id: projectId },
+            };
+        }
+
+        const newModel = await tx.model.create({
+            data: newModelData,
+        });
+
+        return newModel;
+    }
+
+    /**
      * @param {Number} id
      * @param {import("@prisma/client").Prisma.ModelUpdateInput} changes
      * @return {Promise<ModelDB>}

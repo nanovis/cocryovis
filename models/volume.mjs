@@ -128,6 +128,80 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
+     * @param {Number} sourceId
+     * @param {Number} ownerId
+     * @param {Number} projectId
+     * @return {Promise<VolumeDB>}
+     */
+    static async clone(sourceId, ownerId, projectId) {
+        return await prismaManager.db.$transaction(async (tx) => {
+            return this.cloneTransaction(tx, sourceId, ownerId, projectId);
+        });
+    }
+
+    /**
+     * @param {import("@prisma/client").Prisma.TransactionClient} tx
+     * @param {Number} sourceId
+     * @param {Number} ownerId
+     * @param {Number?} projectId
+     * @return {Promise<VolumeDB>}
+     */
+    static async cloneTransaction(tx, sourceId, ownerId, projectId = null) {
+        const sourceVolume = await tx.volume.findUnique({
+            where: { id: sourceId },
+            include: {
+                sparseVolumes: {
+                    select: {
+                        id: true,
+                    },
+                },
+                pseudoVolumes: {
+                    select: {
+                        id: true,
+                    },
+                },
+                results: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
+        });
+
+        if (!sourceVolume) {
+            throw MissingResourceError.fromId(sourceId, this.modelName);
+        }
+
+        const newVolumeData = {
+            name: sourceVolume.name,
+            description: sourceVolume.description,
+            ownerId: ownerId,
+            rawDataId: sourceVolume.rawDataId,
+            sparseVolumes: {
+                connect: sourceVolume.sparseVolumes,
+            },
+            pseudoVolumes: {
+                connect: sourceVolume.pseudoVolumes,
+            },
+            results: {
+                connect: sourceVolume.results,
+            },
+        };
+
+        if (projectId != null) {
+            newVolumeData.projects = {
+                connect: { id: projectId },
+            };
+        }
+
+        const newVolume = await tx.volume.create({
+            data: newVolumeData,
+        });
+
+        return newVolume;
+    }
+
+    /**
      * @param {Number} id
      * @param {import("@prisma/client").Prisma.VolumeUpdateInput} changes
      * @return {Promise<VolumeDB>}

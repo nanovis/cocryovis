@@ -52,6 +52,9 @@ projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 // Get Project
 projectsApi.get(`/project/:idProject`, restrictApi, ProjectController.getProject);
 
+// Deep Clone Project
+projectsApi.post(`/project/:idProject/deep-clone`, restrictApi, ProjectController.deepCloneProject);
+
 // Delete Project
 projectsApi.delete(`/project/:idProject`, restrictApi, ProjectController.deleteProject);
 
@@ -94,6 +97,9 @@ projectsApi.get(`/project/:idProject/volumes`, restrictApi, VolumeController.get
 
 // Create New Volume
 projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);
+
+// Clone Volume
+projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, VolumeController.cloneVolume);
 
 // Get Volume
 projectsApi.get(`/volume/:idVolume`, restrictApi, VolumeController.getVolume);
@@ -171,6 +177,9 @@ projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.getM
 
 // Create New Model
 projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.createModel);
+
+// Clone Model
+projectsApi.post(`/project/:idProject/model/:idModel/clone`, restrictApi, ModelController.cloneModel);
 
 // Get Model
 projectsApi.get(`/model/:idModel`, restrictApi, ModelController.getModel);

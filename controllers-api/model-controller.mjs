@@ -16,7 +16,9 @@ export default class ModelController {
     }
 
     static async getModelsFromProject(req, res) {
-        const models = await Model.getModelsFromProject(Number(req.params.idProject));
+        const models = await Model.getModelsFromProject(
+            Number(req.params.idProject)
+        );
 
         return res.status(200).json(models);
     }
@@ -29,6 +31,15 @@ export default class ModelController {
             Number(req.params.idProject)
         );
 
+        return res.status(201).json(model);
+    }
+
+    static async cloneModel(req, res) {
+        const model = await Model.clone(
+            Number(req.params.idModel),
+            req.session.user.id,
+            Number(req.params.idProject)
+        );
         return res.status(201).json(model);
     }
 

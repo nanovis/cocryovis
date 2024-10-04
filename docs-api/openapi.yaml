@@ -178,6 +178,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /project/{idProject}/deep-clone:
+    post:
+      summary: Clones the project together with volumes and models assigned to it.
+      operationId: deepCloneProject
+      tags:
+        - Project
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+      responses:
+        '201':
+          description: Cloned project.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
   /project/{idProject}/volumes:
     get:
       summary: Get volumes assigned to project.
@@ -219,6 +235,23 @@ paths:
       responses:
         '201':
           description: Created Volume.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Volume'
+
+  /project/{idProject}/volume/{idVolume}/clone:
+    post:
+      summary: Clones the volume.
+      operationId: cloneVolume
+      tags:
+        - Volume
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idVolume'
+      responses:
+        '201':
+          description: Cloned Volume.
           content:
             application/json:
               schema:
@@ -579,6 +612,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/Model'
 
+  /project/{idProject}/model/{idModel}/clone:
+    post:
+      summary: Clones the model.
+      operationId: cloneModel
+      tags:
+        - Model
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+        - $ref: '#/components/parameters/idModel'
+      responses:
+        '201':
+          description: Cloned Model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
   
   /project/{idProject}/model/{idModel}:
     delete:

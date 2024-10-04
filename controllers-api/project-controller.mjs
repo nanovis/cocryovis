@@ -27,6 +27,14 @@ export default class ProjectController {
         return res.status(201).json(project);
     }
 
+    static async deepCloneProject(req, res) {
+        const project = await Project.deepClone(
+            Number(req.params.idProject),
+            req.session.user.id
+        );
+        return res.status(201).json(project);
+    }
+
     static async deleteProject(req, res) {
         const project = await Project.del(Number(req.params.idProject));
 

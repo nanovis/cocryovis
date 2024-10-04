@@ -19,14 +19,16 @@ export default class VolumeController {
             rawData: true,
             sparseVolumes: true,
             pseudoVolumes: true,
-            results: true
+            results: true,
         });
 
         return res.status(200).json(volume);
     }
 
     static async getVolumesFromProject(req, res) {
-        const volumes = await Volume.getVolumesFromProject(Number(req.params.idProject));
+        const volumes = await Volume.getVolumesFromProject(
+            Number(req.params.idProject)
+        );
 
         return res.status(200).json(volumes);
     }
@@ -39,6 +41,15 @@ export default class VolumeController {
             Number(req.params.idProject)
         );
 
+        return res.status(201).json(volume);
+    }
+
+    static async cloneVolume(req, res) {
+        const volume = await Volume.clone(
+            Number(req.params.idVolume),
+            req.session.user.id,
+            Number(req.params.idProject)
+        );
         return res.status(201).json(volume);
     }
 

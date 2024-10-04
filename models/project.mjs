@@ -87,6 +87,62 @@ export default class Project extends DatabaseModel {
     }
 
     /**
+     * @param {Number} sourceId
+     * @param {Number} ownerId
+     * @return {Promise<ProjectDB>}
+     */
+    static async deepClone(sourceId, ownerId) {
+        return await prismaManager.db.$transaction(async (tx) => {
+            const sourceProject = await tx.project.findUnique({
+                where: { id: sourceId },
+                include: {
+                    volumes: {
+                        select: {
+                            id: true,
+                        },
+                    },
+                    models: {
+                        select: {
+                            id: true,
+                        },
+                    },
+                },
+            });
+
+            if (!sourceProject) {
+                throw MissingResourceError.fromId(sourceId, this.modelName);
+            }
+
+            const volumes = await Promise.all(
+                sourceProject.volumes.map(async (v) =>
+                    Volume.cloneTransaction(tx, v.id, ownerId)
+                )
+            );
+            const models = await Promise.all(
+                sourceProject.models.map(async (v) =>
+                    Model.cloneTransaction(tx, v.id, ownerId)
+                )
+            );
+
+            const newProject = await tx.project.create({
+                data: {
+                    name: sourceProject.name,
+                    description: sourceProject.description,
+                    ownerId: ownerId,
+                    volumes: {
+                        connect: volumes,
+                    },
+                    models: {
+                        connect: models,
+                    },
+                },
+            });
+
+            return newProject;
+        });
+    }
+
+    /**
      * @param {Number} id
      * @param {import("@prisma/client").Prisma.ProjectUpdateInput} changes
      * @return {Promise<ProjectDB>}
