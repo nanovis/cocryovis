@@ -1,8 +1,6 @@
 // @ts-check
 
 import express from 'express';
-import cors from 'cors';
-import fileUpload from 'express-fileupload';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import NanoOetziHandler from '../../tools/nano-oetzi-handler.mjs';
 import { restrictApi } from '../../middleware/restrict.mjs';
@@ -27,9 +25,6 @@ const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 
 // toAsyncRouter removes the need to call next() on async errors.
 export const projectsApi = toAsyncRouter(express.Router());
-
-projectsApi.use(cors());
-projectsApi.use(fileUpload({ createParentPath: true }));
 
 ///////////////////////
 /////// AUTHENTICATION
@@ -111,17 +106,17 @@ projectsApi.get(`/volume/:idVolume/details`, restrictApi, VolumeController.getVo
 // actions.get(`/:idProject/volume/:idVolume/delete`, restrictApi, VolumeController.removeVolume);
 projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.removeFromProject);
 
-// Upload Raw Data
-projectsApi.put(`/volume/:idVolume/raw-data/upload`, VolumeController.uploadRawData);
+// // Upload Raw Data
+// projectsApi.put(`/volume/:idVolume/raw-data/upload`, VolumeController.uploadRawData);
 
-// Upload Mrc File to Raw Data
-projectsApi.put(`/volume/:idVolume/raw-data/upload-mrc`, restrictApi, VolumeController.uploadMrcFile);
+// // Upload Mrc File to Raw Data
+// projectsApi.put(`/volume/:idVolume/raw-data/upload-mrc`, restrictApi, VolumeController.uploadMrcFile);
 
-// Add Sparse Labeled Volume
-projectsApi.put(`/volume/:idVolume/add-sparse-label-volume`, restrictApi, VolumeController.addSparseLabelVolume);
+// // Add Sparse Labeled Volume
+// projectsApi.put(`/volume/:idVolume/add-sparse-label-volume`, restrictApi, VolumeController.addSparseLabelVolume);
 
-// Add Pseudo Labeled Volume
-projectsApi.put(`/volume/:idVolume/add-pseudo-label-volume`, restrictApi, VolumeController.addPseudoLabelVolume);
+// // Add Pseudo Labeled Volume
+// projectsApi.put(`/volume/:idVolume/add-pseudo-label-volume`, restrictApi, VolumeController.addPseudoLabelVolume);
 
 // Process Sparse Labels
 projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, 
@@ -137,9 +132,18 @@ projectsApi.get(`/volumeData/:type/:idVolumeData`, restrictApi,
 projectsApi.get(`/volumeData/:type/:idVolumeData/visualize`, restrictApi, 
     async (req, res) => VolumeDataController.visualizeSingleVolume(VolumeDataType.mapName(req.params.type), req, res));
 
-// Add Files to Volume Data
-projectsApi.put(`/volumeData/:type/:idVolumeData/upload-files`, restrictApi, 
-    async (req, res) => (VolumeDataController.addFiles(VolumeDataType.mapName(req.params.type), req, res)));
+// Create from Files
+projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi, 
+    async (req, res) => (VolumeDataController.createFromFiles(VolumeDataType.mapName(req.params.type), req, res)));
+
+// Create from Mrc File
+projectsApi.post(`/volume/:idVolume/volumeData/:type/from-mrc-file`, restrictApi,
+    async (req, res) => (VolumeDataController.createFromMrcFile(VolumeDataType.mapName(req.params.type), req, res)));
+
+
+// // Add Files to Volume Data
+// projectsApi.put(`/volumeData/:type/:idVolumeData/upload-files`, restrictApi, 
+//     async (req, res) => (VolumeDataController.addFiles(VolumeDataType.mapName(req.params.type), req, res)));
 
 // Add Mrc File to Volume Data
 // projectsApi.post(`/:idProject/volumeData/:type/:idVolumeData/upload-mrc-file`, 

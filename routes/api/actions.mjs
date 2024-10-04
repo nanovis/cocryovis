@@ -1,7 +1,5 @@
 import express from 'express';
 import { spawn } from 'child_process';
-import cors from 'cors';
-import fileUpload from 'express-fileupload';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import NanoOetziHandler from '../../tools/nano-oetzi-handler.mjs';
 import { restrict } from '../../middleware/restrict.mjs';
@@ -22,9 +20,6 @@ const ilastikHandler = new IlastikHandler(config.ilastik);
 const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 
 export const actions = express.Router();
-
-actions.use(cors());
-actions.use(fileUpload({ createParentPath: true }));
 
 actions.get('/', restrict, (req, res) => {
     res.send("List of possible actions");
@@ -105,17 +100,17 @@ actions.post(`/${projectsActionsPath}/:id/create-volume`, restrict, VolumeContro
 // actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/delete`, restrict, VolumeController.removeVolume);
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/removeFromProject`, restrict, VolumeController.removeFromProject);
 
-// Upload Raw Data
-actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload`, VolumeController.uploadRawData);
+// // Upload Raw Data
+// actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload`, VolumeController.uploadRawData);
 
-// Upload Mrc File to Raw Data
-actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload-mrc-file`, restrict, VolumeController.uploadMrcFile);
+// // Upload Mrc File to Raw Data
+// actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/raw-data/upload-mrc-file`, restrict, VolumeController.uploadMrcFile);
 
-// Add Sparse Labeled Volume
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-sparse-labeled-volume`, restrict, VolumeController.addSparseLabeledVolume);
+// // Add Sparse Labeled Volume
+// actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-sparse-labeled-volume`, restrict, VolumeController.addSparseLabeledVolume);
 
-// Add Pseudo Labeled Volume
-actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labeled-volume`, restrict, VolumeController.addPseudoLabeledVolume);
+// // Add Pseudo Labeled Volume
+// actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/add-pseudo-labeled-volume`, restrict, VolumeController.addPseudoLabeledVolume);
 
 // Run Ilastik inference
 actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/create-pseudo-labels`, restrict,
@@ -131,13 +126,21 @@ actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/addAnnotations
 actions.get(`/${projectsActionsPath}/:idProject/volume/:idVolume/volumeData/:type/:idVolumeData/visualize`, restrict, 
     async (req, res) => VolumeDataController.visualizeSingleVolume(VolumeDataType.mapName(req.params.type), req, res));
 
-// Add Files to Volume Data
-actions.post(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/upload-files`, restrict, 
-    async (req, res) => (VolumeDataController.addFiles(VolumeDataType.mapName(req.params.type), req, res)));
+// Create from Files
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/volumeData/:type/from-files`, restrict, 
+    async (req, res) => (VolumeDataController.createFromFiles(VolumeDataType.mapName(req.params.type), req, res)));
 
-// Add Mrc File to Volume Data
-actions.post(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/upload-mrc-file`, 
-    async (req, res) => VolumeDataController.addMrcFile(VolumeDataType.mapName(req.params.type), req, res));
+// Create from Mrc File
+actions.post(`/${projectsActionsPath}/:idProject/volume/:idVolume/volumeData/:type/from-mrc-file`, restrict,
+    async (req, res) => (VolumeDataController.createFromMrcFile(VolumeDataType.mapName(req.params.type), req, res)));
+
+// // Add Files to Volume Data
+// actions.post(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/upload-files`, restrict, 
+//     async (req, res) => (VolumeDataController.addFiles(VolumeDataType.mapName(req.params.type), req, res)));
+
+// // Add Mrc File to Volume Data
+// actions.post(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/upload-mrc-file`, 
+//     async (req, res) => VolumeDataController.addMrcFile(VolumeDataType.mapName(req.params.type), req, res));
 
 // Download Raw Volume Data
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/download-full`, restrict, 
@@ -158,11 +161,11 @@ actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/d
 actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/removeFromVolume/:idVolume`, restrict, 
     async (req, res) => VolumeDataController.removeFromVolume(VolumeDataType.mapName(req.params.type), req, res));
 
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-raw-file`, restrict, 
-    async (req, res) => VolumeDataController.removeRawFile(VolumeDataType.mapName(req.params.type), req, res));
+// actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-raw-file`, restrict, 
+//     async (req, res) => VolumeDataController.removeRawFile(VolumeDataType.mapName(req.params.type), req, res));
 
-actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-mrc-file`, restrict, 
-    async (req, res) => VolumeDataController.removeMrcFile(VolumeDataType.mapName(req.params.type), req, res));
+// actions.get(`/${projectsActionsPath}/:idProject/volumeData/:type/:idVolumeData/delete-mrc-file`, restrict, 
+//     async (req, res) => VolumeDataController.removeMrcFile(VolumeDataType.mapName(req.params.type), req, res));
   
 /////// MODELS
 // Create New Model

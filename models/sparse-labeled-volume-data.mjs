@@ -46,6 +46,16 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {fileUpload.UploadedFile[]} files
+     * @return {Promise<SparseLabelVolumeDataDB>}
+     */
+    static async createFromFiles(ownerId, volumeId, files) {
+        return await super.createFromFiles(ownerId, volumeId, files);
+    }
+
+    /**
      * @param {Number} id
      * @param {import("@prisma/client").Prisma.SparseLabelVolumeDataUpdateInput} changes
      * @return {Promise<SparseLabelVolumeDataDB>}

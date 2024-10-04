@@ -66,7 +66,7 @@ getNameFromPath = function(path) {
     document.getElementById('createVolume').style.display = disp === 'block' ? 'none' : 'block';
     document.getElementById('createVolumeToggle').textContent = disp === 'block' ? 'Add New Volume &darr;' : 'Add New Volume &uarr;';
     })()">Add New Volume &darr;</button>
-<form id="createVolume" style="display: none" action="/api/actions/projects/<%= project.id %>/create-volume" method="post" enctype="multipart/form-data">
+<form id="createVolume" style="display: none" action="/api/actions/projects/<%= project.id %>/create-volume" method="post">
     <label for="name">Volume name:</label>
     <input type="text" name="name" /> <br />
     <br />
@@ -83,13 +83,11 @@ getNameFromPath = function(path) {
     <h4>Raw Data:</h4>
     <% if (volume.rawData != null) { %>
         <% if (volume.rawData.mrcFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-mrc-file"><%= getNameFromPath(volume.rawData.mrcFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/delete-mrc-file">[X]</a>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-mrc-file"><%= getNameFromPath(volume.rawData.mrcFilePath) %></a>
             <br />
         <% } %>
         <% if (volume.rawData.rawFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-raw-file"><%= getNameFromPath(volume.rawData.rawFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/delete-raw-file">[X]</a>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/download-raw-file"><%= getNameFromPath(volume.rawData.rawFilePath) %></a>
             <br />
         <% } %>
         <% if (volume.rawData.settings != null) { %>
@@ -98,13 +96,13 @@ getNameFromPath = function(path) {
         <% if (volume.rawData.rawFilePath != null && volume.rawData.settings != null) { %>
             <a target="_blank" href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/RawVolumeData/<%= volume.rawData.id %>/visualize">Visualize Raw Volume</a><br />
         <% } %>
-    <% } %>
+    <% } else { %>
     <form method="POST" enctype="multipart/form-data" id="rawDataUpload">
         <label for="file">Select Raw Data Volume files:</label>
         <input type="file" id="rawDataFiles_<%= volume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
         <input
                 type="button"
-                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/upload', 'rawDataFiles_<%= volume.id %>', 'progressBarRawData_<%= volume.id %>', 'statusRawData_<%= volume.id %>')"
+                onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/RawVolumeData/from-files', 'rawDataFiles_<%= volume.id %>', 'progressBarRawData_<%= volume.id %>', 'statusRawData_<%= volume.id %>')"
                 value = "Upload">
         <progress id="progressBarRawData_<%= volume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
         <span id="statusRawData_<%= volume.id %>"></span>
@@ -114,29 +112,29 @@ getNameFromPath = function(path) {
         <input type="file" id="mrcFile_<%= volume.id %>" name="files" accept=".mrc">
         <input
             type="button"
-            onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/raw-data/upload-mrc-file', 'mrcFile_<%= volume.id %>', 'progressBarMrcFile_<%= volume.id %>', 'statusMrcFile_<%= volume.id %>')"
+            onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/RawVolumeData/from-mrc-file', 'mrcFile_<%= volume.id %>', 'progressBarMrcFile_<%= volume.id %>', 'statusMrcFile_<%= volume.id %>')"
             value = "Upload">
         <progress id="progressBarMrcFile_<%= volume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
         <span id="statusMrcFile_<%= volume.id %>"></span>
     </form>
+    <% } %>
     <h4>Sparse Labels:</h4>
-    <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/add-sparse-labeled-volume"><button>Add Sparse Labeled Volume</button></a>
-    <br />
+    <h5>Add Sparse Labeled Volume:</h5>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Files:</label>
+        <input type="file" id="sparseLabeledVolumeFiles_<%= volume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
+        <input
+            type="button"
+            onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/SparseLabeledVolumeData/from-files', 'sparseLabeledVolumeFiles_<%= volume.id %>', 'progressBarSparseLabeledVolume_<%= volume.id %>', 'statusSparseLabeledVolume_<%= volume.id %>')"
+            value = "Upload">
+        <progress id="progressBarSparseLabeledVolume_<%= volume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusSparseLabeledVolume_<%= volume.id %>"></span>
+    </form>
     <% for (const sparseLabeledVolume of volume.sparseVolumes) { %>
         <b>Sparse volume <%= sparseLabeledVolume.id %>:</b> <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/removeFromVolume/<%= volume.id %>">[X]</a>
-        <form method="POST" enctype="multipart/form-data">
-            <label for="file">Files:</label>
-            <input type="file" id="sparseLabeledVolumeFiles_<%= volume.id %>_<%= sparseLabeledVolume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
-            <input
-                    type="button"
-                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/upload-files', 'sparseLabeledVolumeFiles_<%= volume.id %>_<%= sparseLabeledVolume.id %>', 'progressBarSparseLabeledVolume_<%= volume.id %>_<%= sparseLabeledVolume.id %>', 'statusSparseLabeledVolume_<%= volume.id %>_<%= sparseLabeledVolume.id %>')"
-                    value = "Upload">
-            <progress id="progressBarSparseLabeledVolume_<%= volume.id %>_<%= sparseLabeledVolume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
-            <span id="statusSparseLabeledVolume_<%= volume.id %>_<%= sparseLabeledVolume.id %>"></span>
-        </form>
+        <br />
         <% if (sparseLabeledVolume.rawFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/download-raw-file"><%= getNameFromPath(sparseLabeledVolume.rawFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/delete-raw-file">[X]</a>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/SparseLabeledVolumeData/<%= sparseLabeledVolume.id %>/download-raw-file"><%= getNameFromPath(sparseLabeledVolume.rawFilePath) %></a>
             <br />
         <% } %>
         <% if (sparseLabeledVolume.settings != null) { %>
@@ -150,23 +148,22 @@ getNameFromPath = function(path) {
     <form method="POST" action="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/create-pseudo-labels" enctype="multipart/form-data">
         <input type="submit" value="Create Pseudo Label Volumes" />
     </form>
-    <a href="/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/add-pseudo-labeled-volume"><button>Add Pseudo Labeled Volume</button></a>
-    <br />
+    <h5>Add Pseudo Labeled Volume</h5>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Files:</label>
+        <input type="file" id="pseudoLabeledVolumeFiles_<%= volume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
+        <input
+            type="button"
+            onclick="uploadFile('/api/actions/projects/<%= project.id %>/volume/<%= volume.id %>/volumeData/PseudoLabeledVolumeData/from-files', 'pseudoLabeledVolumeFiles_<%= volume.id %>', 'progressBarPseudoLabeledVolume_<%= volume.id %>', 'statusPseudoLabeledVolume_<%= volume.id %>')"
+            value = "Upload">
+        <progress id="progressBarPseudoLabeledVolume_<%= volume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
+        <span id="statusPseudoLabeledVolume_<%= volume.id %>"></span>
+    </form>
     <% for (const pseudoLabeledVolume of volume.pseudoVolumes) { %>
         <b>Pseudo volume <%= pseudoLabeledVolume.id %>:</b> <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/removeFromVolume/<%= volume.id %>">[X]</a>
-        <form method="POST" enctype="multipart/form-data">
-            <label for="file">Files:</label>
-            <input type="file" id="pseudoLabeledVolumeFiles_<%= volume.id %>_<%= pseudoLabeledVolume.id %>" name="files" accept="application/zip,.raw,.json" multiple>
-            <input
-                    type="button"
-                    onclick="uploadFile('/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/upload-files', 'pseudoLabeledVolumeFiles_<%= volume.id %>_<%= pseudoLabeledVolume.id %>', 'progressBarPseudoLabeledVolume_<%= volume.id %>_<%= pseudoLabeledVolume.id %>', 'statusPseudoLabeledVolume_<%= volume.id %>_<%= pseudoLabeledVolume.id %>')"
-                    value = "Upload">
-            <progress id="progressBarPseudoLabeledVolume_<%= volume.id %>_<%= pseudoLabeledVolume.id %>" value="0" max="100" style="width:300px; display: none"></progress>
-            <span id="statusPseudoLabeledVolume_<%= volume.id %>_<%= pseudoLabeledVolume.id %>"></span>
-        </form>
+        <br />
         <% if (pseudoLabeledVolume.rawFilePath != null) { %>
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/download-raw-file"><%= getNameFromPath(pseudoLabeledVolume.rawFilePath) %></a> ...
-            <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/delete-raw-file">[X]</a>
+            <a href="/api/actions/projects/<%= project.id %>/volumeData/PseudoLabeledVolumeData/<%= pseudoLabeledVolume.id %>/download-raw-file"><%= getNameFromPath(pseudoLabeledVolume.rawFilePath) %></a>
             <br />
         <% } %>
         <% if (pseudoLabeledVolume.settings != null) { %>

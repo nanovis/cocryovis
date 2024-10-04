@@ -87,6 +87,54 @@ export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
      */
+    static async createFromFiles(type, req, res) {
+        if (!req.files || !req.files.files) {
+            throw new ApiError(404, "No file uploaded");
+        }
+
+        let files = req.files.files;
+        if (!Array.isArray(files)) {
+            files = [files];
+        }
+
+        const volumeData = await VolumeDataFactory.getClass(
+            type
+        ).createFromFiles(
+            req.session.user.id,
+            Number(req.params.idVolume),
+            files
+        );
+
+        return res.status(201).json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     */
+    static async createFromMrcFile(type, req, res) {
+        if (type != VolumeDataType.RawVolumeData) {
+            throw new ApiError(
+                400,
+                "This operation is only avaliable on Raw Volumes."
+            );
+        }
+
+        if (!req.files || !req.files.files) {
+            throw new ApiError(404, "No file uploaded");
+        }
+
+        const volumeData = RawVolumeData.createFromMrcFile(
+            req.session.user.id,
+            Number(req.params.idVolume),
+            req.files.files
+        );
+
+        return res.status(201).json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     */
     static async addFiles(type, req, res) {
         if (!req.files || !req.files.files) {
             throw new ApiError(404, "No file uploaded");

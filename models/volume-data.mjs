@@ -88,6 +88,97 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {fileUpload.UploadedFile[]} files
+     * @return {Promise<Object>}
+     */
+    static async createFromFiles(ownerId, volumeId, files) {
+        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+            const unpackedFiles = unpackFiles(
+                files,
+                this.acceptedFileExtensions
+            );
+
+            let rawFile = null;
+            let settingsFile = null;
+
+            for (const unpackedFile of unpackedFiles) {
+                if (
+                    !rawFile &&
+                    Utils.isFileExtensionAccepted(
+                        unpackedFile.fileName,
+                        this.rawFileExtensions
+                    )
+                ) {
+                    rawFile = unpackedFile;
+                } else if (
+                    !settingsFile &&
+                    Utils.isFileExtensionAccepted(
+                        unpackedFile.fileName,
+                        this.settingFileExtensions
+                    )
+                ) {
+                    settingsFile = unpackedFile;
+                }
+            }
+
+            if (!rawFile || !settingsFile) {
+                throw new ApiError(
+                    400,
+                    "Volume data requires both a .raw file and a settings file to create."
+                );
+            }
+
+            return prismaManager.db.$transaction(
+                async (tx) => {
+                    /** @type {VolumeDataDB} */
+                    const volumeData = await tx[this.modelName].create({
+                        data: {
+                            ownerId: ownerId,
+                            volumes: {
+                                connect: { id: volumeId },
+                            },
+                        },
+                    });
+                    let folderPath = null;
+                    try {
+                        folderPath = await this.createVolumeDataFolder(
+                            volumeData.id
+                        );
+                        const rawFilePath = await rawFile.saveAs(folderPath);
+                        const settings = await this.parseSettings(
+                            settingsFile.data.toString("utf-8"),
+                            rawFilePath
+                        );
+
+                        await tx[this.modelName].update({
+                            where: { id: volumeData.id },
+                            data: {
+                                path: folderPath,
+                                rawFilePath: rawFilePath,
+                                settings: settings,
+                            },
+                        });
+                    } catch (error) {
+                        if (folderPath != null) {
+                            await fsPromises.rm(folderPath, {
+                                recursive: true,
+                                force: true,
+                            });
+                        }
+                        throw error;
+                    }
+                    return volumeData;
+                },
+                {
+                    timeout: 60000,
+                }
+            );
+        });
+    }
+
+    /**
      * @param {Number} id
      * @param {any} changes
      * @return {Promise<Object>}

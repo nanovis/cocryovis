@@ -11,6 +11,7 @@ import { unpackFiles } from "../tools/file-handler.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
+import appConfig from "../tools/config.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -46,6 +47,117 @@ export default class RawVolumeData extends VolumeData {
      */
     static async create(ownerId, volumeId) {
         return await super.create(ownerId, volumeId);
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {fileUpload.UploadedFile[]} files
+     * @return {Promise<RawVolumeDataDB>}
+     */
+    static async createFromFiles(ownerId, volumeId, files) {
+        return await super.createFromFiles(ownerId, volumeId, files);
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} volumeId
+     * @param {fileUpload.UploadedFile} file
+     * @return {Promise<Object>}
+     */
+    static async createFromMrcFile(ownerId, volumeId, file) {
+        return await Volume.withWriteLock(
+            volumeId,
+            [this.modelName],
+            async () => {
+                const unpackedFiles = unpackFiles([file], [".mrc"]);
+                if (unpackedFiles.length == 0) {
+                    throw new ApiError(400, "No valid MRC file found.");
+                }
+                await fsPromises.mkdir(appConfig.mrcCachePath, {
+                    recursive: true,
+                });
+                const tempDirectory = await fsPromises.mkdtemp(
+                    appConfig.mrcCachePath
+                );
+
+                try {
+                    /* Save to temporary directory and perform operations there 
+                    so we don't clog up the database with long transaction. */
+                    const mrcFilePathTemp = await unpackedFiles[0].saveAs(
+                        tempDirectory
+                    );
+                    const { rawFileName, settings } = await Utils.mrcToRaw(
+                        mrcFilePathTemp,
+                        tempDirectory
+                    );
+
+                    return await prismaManager.db.$transaction(
+                        async (tx) => {
+                            /** @type {RawVolumeDataDB} */
+                            const volumeData = await tx.rawVolumeData.create({
+                                data: {
+                                    ownerId: ownerId,
+                                    volumes: {
+                                        connect: { id: volumeId },
+                                    },
+                                },
+                            });
+                            let folderPath = null;
+                            try {
+                                folderPath = await this.createVolumeDataFolder(
+                                    volumeData.id
+                                );
+                                const mrcFilePath = path.join(
+                                    folderPath,
+                                    path.basename(mrcFilePathTemp)
+                                );
+                                await fsPromises.rename(
+                                    mrcFilePathTemp,
+                                    mrcFilePath
+                                );
+                                const rawFilePath = path.join(
+                                    folderPath,
+                                    rawFileName
+                                );
+                                await fsPromises.rename(
+                                    path.join(tempDirectory, rawFileName),
+                                    rawFilePath
+                                );
+
+                                return await tx.rawVolumeData.update({
+                                    where: { id: volumeData.id },
+                                    data: {
+                                        path: folderPath,
+                                        rawFilePath: rawFilePath,
+                                        settings: JSON.stringify(settings),
+                                        mrcFilePath: mrcFilePath,
+                                    },
+                                });
+                            } catch (error) {
+                                if (folderPath != null) {
+                                    await fsPromises.rm(folderPath, {
+                                        recursive: true,
+                                        force: true,
+                                    });
+                                }
+                                throw error;
+                            }
+                        },
+                        {
+                            timeout: 60000,
+                        }
+                    );
+                } catch (error) {
+                    throw error;
+                } finally {
+                    await fsPromises.rm(tempDirectory, {
+                        recursive: true,
+                        force: true,
+                    });
+                }
+            }
+        );
     }
 
     /**

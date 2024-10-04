@@ -80,6 +80,65 @@ export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
      */
+    static async createFromFiles(type, req, res) {
+        try {
+            if (!req.files || !req.files.files) {
+                throw new Error("No file uploaded");
+            }
+
+            let files = req.files.files;
+            if (!Array.isArray(files)) {
+                files = [files];
+            }
+
+            const volumeData = await VolumeDataFactory.getClass(
+                type
+            ).createFromFiles(
+                req.session.user.id,
+                Number(req.params.idVolume),
+                files
+            );
+            res.redirect(
+                `/api/actions/projects/details/` + req.params.idProject
+            );
+        } catch (err) {
+            res.status(500).send(err);
+            console.log(err);
+        }
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     */
+    static async createFromMrcFile(type, req, res) {
+        try {
+            if (type != VolumeDataType.RawVolumeData) {
+                throw new Error(
+                    "This operation is only avaliable on Raw Volumes."
+                );
+            }
+
+            if (!req.files || !req.files.files) {
+                throw new Error("No file uploaded");
+            }
+
+            const volumeData = await RawVolumeData.createFromMrcFile(
+                req.session.user.id,
+                Number(req.params.idVolume),
+                req.files.files
+            );
+            res.redirect(
+                `/api/actions/projects/details/` + req.params.idProject
+            );
+        } catch (err) {
+            res.status(500).send(err);
+            console.log(err);
+        }
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     */
     static async addFiles(type, req, res) {
         try {
             if (!req.files || !req.files.files) {

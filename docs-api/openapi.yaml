@@ -302,93 +302,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/VolumeDetails"
 
-  /volume/{idVolume}/raw-data/upload:
-    put:
-      summary: Upload raw volume data
-      operationId: uploadRawData
-      tags:
-        - Volume
-      parameters:
-        - $ref: '#/components/parameters/idVolume'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-              schema:
-                type: object
-                properties:
-                  files:
-                    type: array
-                    items:
-                      type: string
-                      format: binary
-                    description: Multiple files of type .zip, .raw, or .json
-      responses:
-        '200':
-          description: Updated raw data volume.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RawData"
-
-  /volume/{idVolume}/raw-data/upload-mrc:
-    put:
-      summary: Uploads mrc volume data
-      operationId: uploadMrcRawData
-      tags:
-        - Volume
-      parameters:
-        - $ref: '#/components/parameters/idVolume'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  description: A single .mrc file.
-
-      responses:
-        '200':
-          description: Updated raw data volume.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RawData"
-
-  /volume/{idVolume}/add-sparse-label-volume:
-    put:
-      summary: Add sparse label volume
-      operationId: addSparseLabelVolume
-      tags:
-        - Volume
-      parameters:
-        - $ref: '#/components/parameters/idVolume'
-      responses:
-        '201':
-          description: Created sparse label volume.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SparseLabelVolumeData"
-
-  /volume/{idVolume}/add-pseudo-label-volume:
-    put:
-      summary: Add pseudo label volume
-      operationId: addPseudoLabelVolume
-      tags:
-        - Volume
-      parameters:
-        - $ref: '#/components/parameters/idVolume'
-      responses:
-        '201':
-          description: Created pseudo label volume.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PseudoLabelVolumeData"
-
   /volume/{idVolume}/add-annotations:
     put:
       summary: Add annotations and convert them to sparse label volume
@@ -416,6 +329,64 @@ paths:
               schema:
                 $ref: "#/components/schemas/SparseLabelVolumeData"
 
+  /volume/{idVolume}/volumeData/{type}/from-files:
+    post:
+      summary: Create new Volume Data.
+      operationId: createVolumeDataFromFiles
+      tags:
+        - Volume Data
+      parameters:
+        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/idVolumeData'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      type: string
+                      format: binary
+                    description: Multiple files of type .zip, .raw, or .json
+      responses:
+        '201':
+          description: Created Volume Data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VolumeData"
+
+  /volume/{idVolume}/volumeData/{type}/from-mrc-file:
+    post:
+      summary: Create new Volume Data from a MRC file.
+      operationId: createVolumeDataFromFiles
+      tags:
+        - Volume Data
+      parameters:
+        - $ref: '#/components/parameters/idVolume'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/idVolumeData'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: A single .mrc file.
+      responses:
+        '201':
+          description: Created Volume Data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawData"
+  
   /volumeData/{type}/{idVolumeData}:
     get:
       summary: Fetch volume data info.
@@ -428,37 +399,6 @@ paths:
       responses:
         '200':
           description: Requested volume data info.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VolumeData"
-
-  /volumeData/{type}/{idVolumeData}/upload-files:
-    put:
-      summary: Upload volume data files
-      operationId: uploadFiles
-      tags:
-        - Volume Data
-      parameters:
-        - $ref: '#/components/parameters/type'
-        - $ref: '#/components/parameters/idVolumeData'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-                  description: Multiple files of type .zip, .raw, or .json
-
-      responses:
-        '200':
-          description: Updated raw data.
           content:
             application/json:
               schema:

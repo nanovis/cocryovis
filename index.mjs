@@ -15,6 +15,7 @@ import { projectsApi } from "./routes/api/projects.mjs";
 import bodyParser from "body-parser";
 import { argv } from "process";
 import cors from "cors";
+import fileUpload from 'express-fileupload';
 import { restrict } from "./middleware/restrict.mjs";
 import UserController from "./controllers/user-controller.mjs";
 import Database from "better-sqlite3";
@@ -33,6 +34,7 @@ app.set("views", [path.join(".", "views"), path.join(".", "views", "project")]);
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+projectsApi.use(fileUpload({ createParentPath: true }));
 app.use(cors());
 
 fileSystem.mkdirSync("sessions", { recursive: true });
