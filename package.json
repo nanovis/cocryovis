@@ -39,6 +39,7 @@
     "util": "^0.12.4"
   },
   "devDependencies": {
+    "@types/node": "^22.7.5",
     "prisma": "^5.18.0"
   }
 }
