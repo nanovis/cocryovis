@@ -22,9 +22,23 @@ import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
 import appConfig from "./tools/config.mjs";
+import { log } from "console";
 
 const port = argv[2] || 8080;
 const app = express(express.json());
+
+app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", 'http://localhost:3000');
+    res.header("Access-Control-Allow-Credentials", true);
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
+    next();
+});
+
+app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
 
 // config
 app.set("view engine", "ejs");
@@ -35,7 +49,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 projectsApi.use(fileUpload({ createParentPath: true }));
-app.use(cors());
 
 fileSystem.mkdirSync("sessions", { recursive: true });
 

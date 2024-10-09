@@ -33,6 +33,7 @@ export const projectsApi = toAsyncRouter(express.Router());
 projectsApi.post('/login', UserController.login);
 projectsApi.post('/logout', UserController.logout);
 projectsApi.post('/register', UserController.register);
+projectsApi.get('/getLoggedUserData', UserController.getLoggedUserData);
 
 ///////////////////////
 /////// PROJECTS
