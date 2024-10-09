@@ -47,6 +47,7 @@ projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 
 // Get Project
 projectsApi.get(`/project/:idProject`, restrictApi, ProjectController.getProject);
+projectsApi.get(`/project/:idProject/details`, restrictApi, ProjectController.getProjectDetails);
 
 // Deep Clone Project
 projectsApi.post(`/project/:idProject/deep-clone`, restrictApi, ProjectController.deepCloneProject);

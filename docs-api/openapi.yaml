@@ -178,6 +178,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /project/{idProject}/details:
+    get:
+      summary: Get project, and its volumes and models.
+      operationId: projectDetails
+      tags:
+        - Project
+      parameters:
+        - $ref: '#/components/parameters/idProject'
+      responses:
+        '201':
+          description: Project details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetails"
+
   /project/{idProject}/deep-clone:
     post:
       summary: Clones the project together with volumes and models assigned to it.
@@ -960,7 +976,9 @@ components:
     User:
       $ref: "./schemas/User.yaml"
     Project:
-      $ref: "./schemas/Project.yaml"
+      $ref: "./schemas/Project.yaml#/Project"
+    ProjectDetails:
+      $ref: "./schemas/Project.yaml#/ProjectDetails"
     Volume:
       $ref: "./schemas/Volume.yaml#/Volume"
     VolumeDetails:
