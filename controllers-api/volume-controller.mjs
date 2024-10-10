@@ -70,7 +70,7 @@ export default class VolumeController {
 
     static async uploadRawData(req, res) {
         if (!req.files || !req.files.files) {
-            throw new ApiError(404, "No file uploaded");
+            throw new ApiError(400, "No file uploaded");
         }
 
         let files = req.files.files;
@@ -96,7 +96,7 @@ export default class VolumeController {
 
     static async uploadMrcFile(req, res) {
         if (!req.file || !req.file.files) {
-            throw new ApiError(404, "No file uploaded");
+            throw new ApiError(400, "No file uploaded");
         }
 
         const volume = await Volume.getByIdDeep(Number(req.params.idVolume), {

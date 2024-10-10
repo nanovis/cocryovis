@@ -15,7 +15,7 @@ import { projectsApi } from "./routes/api/projects.mjs";
 import bodyParser from "body-parser";
 import { argv } from "process";
 import cors from "cors";
-import fileUpload from 'express-fileupload';
+import fileUpload from "express-fileupload";
 import { restrict } from "./middleware/restrict.mjs";
 import UserController from "./controllers/user-controller.mjs";
 import Database from "better-sqlite3";
@@ -27,18 +27,23 @@ import { log } from "console";
 const port = argv[2] || 8080;
 const app = express(express.json());
 
-app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
+app.use(
+    cors({
+        credentials: true,
+        origin: "http://localhost:3000",
+        exposedHeaders: ["Content-Disposition"],
+    })
+);
 app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", 'http://localhost:3000');
+    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
     res.header("Access-Control-Allow-Credentials", true);
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin,X-Requested-With,Content-Type,Accept,content-type,application/json"
+    );
     next();
 });
-
-app.use(cors());
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-
 
 // config
 app.set("view engine", "ejs");
@@ -48,7 +53,7 @@ app.set("views", [path.join(".", "views"), path.join(".", "views", "project")]);
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-projectsApi.use(fileUpload({ createParentPath: true }));
+app.use(fileUpload({ createParentPath: true }));
 
 fileSystem.mkdirSync("sessions", { recursive: true });
 

@@ -89,7 +89,7 @@ export default class VolumeDataController {
      */
     static async createFromFiles(type, req, res) {
         if (!req.files || !req.files.files) {
-            throw new ApiError(404, "No file uploaded");
+            throw new ApiError(400, "No file uploaded");
         }
 
         let files = req.files.files;
@@ -120,7 +120,7 @@ export default class VolumeDataController {
         }
 
         if (!req.files || !req.files.files) {
-            throw new ApiError(404, "No file uploaded");
+            throw new ApiError(400, "No file uploaded");
         }
 
         const volumeData = RawVolumeData.createFromMrcFile(
@@ -137,7 +137,7 @@ export default class VolumeDataController {
      */
     static async addFiles(type, req, res) {
         if (!req.files || !req.files.files) {
-            throw new ApiError(404, "No file uploaded");
+            throw new ApiError(400, "No file uploaded");
         }
 
         let files = req.files.files;
@@ -182,8 +182,8 @@ export default class VolumeDataController {
         const data = await VolumeDataFactory.getClass(
             type
         ).prepareDataForDownload(Number(req.params.idVolumeData));
-        res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
+        res.type("application/zip");
+        res.setHeader("Content-Disposition", "attachment; filename=" + data.name);
         return res.send(data.zipBuffer);
     }
 
