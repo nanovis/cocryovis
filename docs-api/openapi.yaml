@@ -632,8 +632,8 @@ paths:
 
   /model/{idModel}/checkpoints:
     post:
-      summary: Create a new checkpoint
-      operationId: createCheckpoint
+      summary: Create new checkpoints
+      operationId: createCheckpoints
       tags:
         - Checkpoint
       parameters:
@@ -653,11 +653,13 @@ paths:
                   description: One or more files of type .ckpt
       responses:
         '201':
-          description: Created Checkpoint.
+          description: Created Checkpoints.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Checkpoint'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Checkpoint'
 
   /model/{idModel}/checkpoint/{idCheckpoint}:
     delete:

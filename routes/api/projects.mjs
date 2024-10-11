@@ -179,7 +179,7 @@ projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictA
 /////// MODELS
 
 // Get Models from Project
-projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.getModelsFromProject);
+projectsApi.get(`/project/:idProject/models`, restrictApi, ModelController.getModelsFromProject);
 
 // Create New Model
 projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.createModel);
