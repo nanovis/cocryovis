@@ -1,7 +1,6 @@
 // @ts-check
 
 import RawVolumeData from "../models/raw-volume-data.mjs";
-import Utils from "../tools/utils.mjs";
 import {
     VolumeDataFactory,
     VolumeDataType,
@@ -9,6 +8,25 @@ import {
 import path from "path";
 
 export default class VolumeDataController {
+    /**
+     * @param {String} currentPath
+     * @param {String} filePath
+     */
+    static publicDataPath(currentPath, filePath) {
+        return path.join(
+            path.relative(currentPath, "/"),
+            path.relative("./data", filePath)
+        );
+    }
+
+    /**
+     * @param {String} currentPath
+     * @param {String} filePath
+     */
+    static publicPath(currentPath, filePath) {
+        return path.join(path.relative(currentPath, "/"), filePath);
+    }
+
     /**
      * @param {VolumeDataType} type
      */
@@ -32,7 +50,7 @@ export default class VolumeDataController {
             const visualizationFiles = [];
 
             const rawFileReference = {
-                path: Utils.publicDataPath(
+                path: this.publicDataPath(
                     req.originalUrl,
                     volumeData.rawFilePath
                 ),
@@ -45,11 +63,11 @@ export default class VolumeDataController {
 
             visualizationFiles.push(rawFileReference);
             visualizationFiles.push({
-                path: Utils.publicPath(req.originalUrl, "data/session.json"),
+                path: this.publicPath(req.originalUrl, "data/session.json"),
                 filename: "session.json",
             });
             visualizationFiles.push({
-                path: Utils.publicPath(req.originalUrl, "data/tf-default.json"),
+                path: this.publicPath(req.originalUrl, "data/tf-default.json"),
                 filename: "tf-default.json",
             });
 

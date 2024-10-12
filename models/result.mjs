@@ -20,6 +20,7 @@ import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
  */
 
 export default class Result extends DatabaseModel {
+    static resultsFolder = "results";
     static acceptedFileExtensions = [".log", ".raw", ".json"];
     static modelName = "result";
     static lockManager = new WriteLockManager(this.modelName);
@@ -94,8 +95,12 @@ export default class Result extends DatabaseModel {
         volumeId,
         folderPath
     ) {
-        if (!fileSystem.existsSync(appConfig.resultsPath)) {
-            fileSystem.mkdirSync(appConfig.resultsPath, {
+        const resultsFolderPath = path.join(
+            appConfig.dataPath,
+            this.resultsFolder
+        );
+        if (!fileSystem.existsSync(resultsFolderPath)) {
+            fileSystem.mkdirSync(resultsFolderPath, {
                 recursive: true,
             });
         }
@@ -327,8 +332,12 @@ export default class Result extends DatabaseModel {
      * @return {Promise<String>}
      */
     static async reserveFolderName(id) {
-        const folderPath = path.join(appConfig.resultsPath, id.toString());
-        await fsPromises.mkdir(appConfig.resultsPath, { recursive: true });
+        const resultsFolderPath = path.join(
+            appConfig.dataPath,
+            this.resultsFolder
+        );
+        const folderPath = path.join(resultsFolderPath, id.toString());
+        await fsPromises.mkdir(resultsFolderPath, { recursive: true });
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
                 throw new ApiError(500, `Result directory already exists`);

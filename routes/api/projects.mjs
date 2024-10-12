@@ -131,7 +131,7 @@ projectsApi.get(`/volumeData/:type/:idVolumeData`, restrictApi,
     async (req, res) => VolumeDataController.getById(VolumeDataType.mapName(req.params.type), req, res));
 
 // Visualize
-projectsApi.get(`/volumeData/:type/:idVolumeData/visualize`, restrictApi, 
+projectsApi.get(`/volumeData/:type/:idVolumeData/visualization-data`, restrictApi, 
     async (req, res) => VolumeDataController.visualizeSingleVolume(VolumeDataType.mapName(req.params.type), req, res));
 
 // Create from Files

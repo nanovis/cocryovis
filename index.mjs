@@ -22,7 +22,6 @@ import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
 import appConfig from "./tools/config.mjs";
-import { log } from "console";
 
 const port = argv[2] || 8080;
 const app = express(express.json());
@@ -93,7 +92,7 @@ app.use("/api", projectsApi);
 app.use("/api/actions", actions);
 
 app.use(express.static("web", { index: false }));
-app.use(express.static("data", { index: false }));
+app.use(express.static(appConfig.dataPath, { index: false }));
 app.use("/logs", express.static("logs", { index: false }));
 
 // Handling root route

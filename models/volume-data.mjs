@@ -25,6 +25,7 @@ import { ApiError } from "../tools/error-handler.mjs";
  * @extends {DatabaseModel}
  */
 export default class VolumeData extends DatabaseModel {
+    static volumeDataFolder = "volume-data"
     static rawFileExtensions = [".raw"];
     static settingFileExtensions = [".json"];
     static acceptedFileExtensions = this.rawFileExtensions.concat(
@@ -282,7 +283,8 @@ export default class VolumeData extends DatabaseModel {
      */
     static async createVolumeDataFolder(id) {
         const folderPath = path.join(
-            appConfig.volumeDataPath,
+            appConfig.dataPath,
+            this.volumeDataFolder,
             this.folderPath,
             id.toString()
         );

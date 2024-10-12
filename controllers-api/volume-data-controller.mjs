@@ -1,13 +1,13 @@
 // @ts-check
 
 import RawVolumeData from "../models/raw-volume-data.mjs";
-import Utils from "../tools/utils.mjs";
 import {
     VolumeDataFactory,
     VolumeDataType,
 } from "../models/volume-data-factory.mjs";
 import path from "path";
 import { ApiError } from "../tools/error-handler.mjs";
+import appConfig from "../tools/config.mjs";
 
 export default class VolumeDataController {
     /**
@@ -42,45 +42,38 @@ export default class VolumeDataController {
             );
         }
 
+        const serverURL = `${req.protocol}://${req.get("host")}`;
+
         const visualizationFiles = [];
 
         const rawFileReference = {
-            path: Utils.publicDataPath(req.originalUrl, volumeData.rawFilePath),
+            url: new URL(
+                path.relative(appConfig.dataPath, volumeData.rawFilePath),
+                serverURL
+            ).toString(),
             filename: path.basename(volumeData.rawFilePath),
         };
         const settingsReference = {
-            data: volumeData.settings,
+            data: JSON.parse(volumeData.settings),
             filename: `${path.parse(volumeData.rawFilePath).name}.json`,
         };
 
         visualizationFiles.push(rawFileReference);
         visualizationFiles.push({
-            path: Utils.publicPath(req.originalUrl, "data/session.json"),
+            url: new URL("/data/session.json", serverURL).toString(),
             filename: "session.json",
         });
         visualizationFiles.push({
-            path: Utils.publicPath(req.originalUrl, "data/tf-default.json"),
+            url: new URL("/data/tf-default.json", serverURL).toString(),
             filename: "tf-default.json",
         });
 
         const configData = { files: [settingsReference.filename] };
 
-        const volumesJSON = JSON.stringify(visualizationFiles).replaceAll(
-            "\\",
-            "\\\\"
-        );
-        const configJSON = JSON.stringify(configData);
-        const settingsReferenceJSON = JSON.stringify(
-            settingsReference
-        ).replaceAll("\\", "\\\\");
-
-        res.render("visualize-volume", {
-            volumeName: "test",
-            projectId: Number(req.params.idProject),
-            volumeId: Number(req.params.idVolume),
-            settingsReference: settingsReferenceJSON,
-            volumes: volumesJSON,
-            config: configJSON,
+        return res.json({
+            settingsReference: settingsReference,
+            files: visualizationFiles,
+            config: configData,
         });
     }
 
@@ -183,7 +176,10 @@ export default class VolumeDataController {
             type
         ).prepareDataForDownload(Number(req.params.idVolumeData));
         res.type("application/zip");
-        res.setHeader("Content-Disposition", "attachment; filename=" + data.name);
+        res.setHeader(
+            "Content-Disposition",
+            "attachment; filename=" + data.name
+        );
         return res.send(data.zipBuffer);
     }
 

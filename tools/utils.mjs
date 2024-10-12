@@ -30,25 +30,6 @@ export default class Utils {
         );
     }
 
-    /**
-     * @param {String} currentPath
-     * @param {String} filePath
-     */
-    static publicDataPath(currentPath, filePath) {
-        return path.join(
-            path.relative(currentPath, "/"),
-            path.relative("./data", filePath)
-        );
-    }
-
-    /**
-     * @param {String} currentPath
-     * @param {String} filePath
-     */
-    static publicPath(currentPath, filePath) {
-        return path.join(path.relative(currentPath, "/"), filePath);
-    }
-
     static async saveData(
         files,
         uploadPath,

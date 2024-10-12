@@ -419,6 +419,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VolumeData"
+
+  /volumeData/{type}/{idVolumeData}/visualization-data:
+    get:
+      summary: Get Visualization Data
+      operationId: getVisualizationData
+      tags:
+        - Volume Data
+      parameters:
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/idVolumeData'
+      responses:
+        '200':
+          description: Visualization Data
+          content:
+            application/zip:
+              schema:
+                $ref: '#/components/schemas/VisualizationData'
     
   /volumeData/{type}/{idVolumeData}/download-full:
     get:
@@ -1014,6 +1031,8 @@ components:
       $ref: "./schemas/Nanooetzi.yaml#/InferenceHistory"
     NanooetziTrainingHistory:
       $ref: "./schemas/Nanooetzi.yaml#/TrainingHistory"
+    VisualizationData:
+      $ref: "./schemas/VisualizationData.yaml"
     Error:
       $ref: "./schemas/Error.yaml"
     ZipFile:

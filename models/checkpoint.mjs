@@ -18,6 +18,7 @@ import { ApiError } from "../tools/error-handler.mjs";
  */
 
 export default class Checkpoint extends DatabaseModel {
+    static checkpointFolder = "checkpoints";
     static acceptedFileExtensions = [".ckpt"];
     static modelName = "checkpoint";
     static lockManager = new WriteLockManager(this.modelName);
@@ -371,7 +372,8 @@ export default class Checkpoint extends DatabaseModel {
      */
     static async #createFolder(checkpoint) {
         const folderPath = path.join(
-            appConfig.checkpointsPath,
+            appConfig.dataPath,
+            this.checkpointFolder,
             checkpoint.id.toString()
         );
         if (fileSystem.existsSync(folderPath)) {
@@ -401,8 +403,12 @@ export default class Checkpoint extends DatabaseModel {
      * @return {Promise<String>}
      */
     static async reserveFolderName(id) {
-        const folderPath = path.join(appConfig.checkpointsPath, id.toString());
-        await fsPromises.mkdir(appConfig.checkpointsPath, { recursive: true });
+        const checkpointFolderPath = path.join(
+            appConfig.dataPath,
+            this.checkpointFolder
+        );
+        const folderPath = path.join(checkpointFolderPath, id.toString());
+        await fsPromises.mkdir(checkpointFolderPath, { recursive: true });
         if (fileSystem.existsSync(folderPath)) {
             if (appConfig.safeMode) {
                 throw new ApiError(400, `Checkpoint directory already exists`);
