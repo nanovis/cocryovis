@@ -19,7 +19,7 @@ export default class UserController {
 
             req.session.save(function (err) {
                 if (err) return next(err);
-                res.json(User.toPublic(user));
+                res.status(201).json(User.toPublic(user));
             });
         });
     }
@@ -32,7 +32,7 @@ export default class UserController {
                 req.body.password
             );          
 
-            const UserData = await User.toPublic(user);
+            const UserData = User.toPublic(user);
 
             req.session.regenerate(function (err) {
                 if (err) return next(err);

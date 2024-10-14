@@ -93,8 +93,8 @@ export default class User extends DatabaseModel {
             User.hasher(
                 { password: password },
                 function (err, pass, salt, hash) {
-                    if (err) throw new Error("Error hashing user password.");
-                    return { salt: salt, hash: hash };
+                    if (err) reject(new Error("Error hashing user password."));
+                    resolve({ salt: salt, hash: hash });
                 }
             );
         });
@@ -148,7 +148,7 @@ export default class User extends DatabaseModel {
     /**
      * @param {UserDB} user
      */
-    static async toPublic(user) {
+    static toPublic(user) {
         return {
             id: user.id,
             username: user.username,
