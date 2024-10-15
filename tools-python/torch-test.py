@@ -1,4 +1,5 @@
 import torch
+import matplotlib
 
 if __name__ == '__main__':
     print("Is Cuda available?", torch.cuda.is_available())

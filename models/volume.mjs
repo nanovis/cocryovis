@@ -468,7 +468,7 @@ export default class Volume extends DatabaseModel {
         volumeId,
         originalLabels
     ) {
-        prismaManager.db.$transaction(
+        return await prismaManager.db.$transaction(
             async (tx) => {
                 const volume = await tx.volume.findUnique({
                     where: { id: volumeId },

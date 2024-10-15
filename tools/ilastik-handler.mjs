@@ -340,6 +340,7 @@ export default class IlastikHandler {
                     logFile
                 )
             );
+            throw error;
         } finally {
             try {
                 await fsPromises.rm(outputPath, {
