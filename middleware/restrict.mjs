@@ -15,7 +15,7 @@ export const restrict = (req, res, next) => {
 
 export const restrictApi = (req, res, next) => {
     if (!req.session || !req.session.user) {
-        throw new ApiError(403, "Access denied!");
+        throw new ApiError(403, `Access to ${req.originalUrl} denied!`);
     }
     next();
 };
