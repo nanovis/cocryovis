@@ -21,34 +21,41 @@ export default class NanoOetziController {
         const users = await User.getByIds(
             taskQueueIdentifiers.map((i) => i.userId)
         );
+        const usersMap = Utils.arrayToMap(users, "id");
+
         const volumes = await Volume.getByIds(
             taskQueueIdentifiers
                 .filter((i) => i instanceof InferenceTaskProperties)
                 .map((i) => i.volumeId)
         );
+        const volumeMap = Utils.arrayToMap(volumes, "id");
+
         const checkpoints = await Checkpoint.getByIds(
             taskQueueIdentifiers
                 .filter((i) => i instanceof InferenceTaskProperties)
                 .map((i) => i.checkpointId)
         );
+        const checkpointMap = Utils.arrayToMap(checkpoints, "id");
+
         const models = await Model.getByIds(
             taskQueueIdentifiers
                 .filter((i) => i instanceof TrainingTaskProperties)
                 .map((i) => i.modelId)
         );
+        const modelMap = Utils.arrayToMap(models, "id");
 
         let inferenceIndex = 0;
         let trainingIndex = 0;
-        const result = taskQueueIdentifiers.map(function (t, i) {
-            const user = users[i];
+        const result = taskQueueIdentifiers.map(function (t) {
+            const user = usersMap.get(t.userId);
             let entry = {
                 userId: user.id,
                 username: user.username,
                 type: t.type,
             };
             if (t instanceof InferenceTaskProperties) {
-                const checkpoint = checkpoints[inferenceIndex];
-                const volume = volumes[inferenceIndex];
+                const checkpoint = checkpointMap.get(t.checkpointId);
+                const volume = volumeMap.get(t.volumeId);
 
                 entry.volumeId = volume.id;
                 entry.volumeName = volume.name;
@@ -57,8 +64,10 @@ export default class NanoOetziController {
                 inferenceIndex++;
             }
             if (t instanceof TrainingTaskProperties) {
-                entry.modelId = models[trainingIndex].id;
-                entry.modelName = models[trainingIndex].name;
+                const model = modelMap.get(t.modelId);
+
+                entry.modelId = model.id;
+                entry.modelName = model.name;
                 trainingIndex++;
             }
             return entry;
@@ -83,28 +92,35 @@ export default class NanoOetziController {
                 .filter((t) => t instanceof InferenceTaskProperties)
                 .map((t) => t.volumeId)
         );
+        const volumeMap = Utils.arrayToMap(volumes, "id");
+
         const checkpoints = await Checkpoint.getByIds(
             taskProperties
                 .filter((t) => t instanceof InferenceTaskProperties)
                 .map((t) => t.checkpointId)
         );
+        const checkpointMap = Utils.arrayToMap(checkpoints, "id");
+
         const models = await Model.getByIds(
             taskProperties
                 .filter((t) => t instanceof TrainingTaskProperties)
                 .map((t) => t.modelId)
         );
+        const modelMap = Utils.arrayToMap(models, "id");
 
         let inferenceIndex = 0;
         let trainingIndex = 0;
-        const result = userTaskHistory.map(function (t, i) {
+        const result = userTaskHistory.map(function (t) {
             let entry = {
                 type: t.taskProperties.type,
                 taskStatus: t.taskStatus,
                 logFile: t.logFile.fileName,
             };
             if (t.taskProperties instanceof InferenceTaskProperties) {
-                const checkpoint = checkpoints[inferenceIndex];
-                const volume = volumes[inferenceIndex];
+                const checkpoint = checkpointMap.get(
+                    t.taskProperties.checkpointId
+                );
+                const volume = volumeMap.get(t.taskProperties.volumeId);
 
                 entry.volumeId = volume.id;
                 entry.volumeName = volume.name;
@@ -113,14 +129,16 @@ export default class NanoOetziController {
                 inferenceIndex++;
             }
             if (t.taskProperties instanceof TrainingTaskProperties) {
-                entry.modelId = models[trainingIndex].id;
-                entry.modelName = models[trainingIndex].name;
+                const model = modelMap.get(t.taskProperties.modelId);
+
+                entry.modelId = model.id;
+                entry.modelName = model.name;
                 trainingIndex++;
             }
             return entry;
         });
 
-        return res.json(result);
+        return res.json(result.reverse());
     }
 
     /**

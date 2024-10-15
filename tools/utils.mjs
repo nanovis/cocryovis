@@ -195,4 +195,18 @@ export default class Utils {
     static checkDimensions(dim1, dim2) {
         return dim1.x == dim2.x && dim1.y == dim2.y && dim1.z == dim2.z;
     }
+
+    /**
+     * @template T, K
+     * @param {Array<T>} array
+     * @param {K & keyof T} key
+     * @returns {Map<T[K], T>}
+     */
+    static arrayToMap(array, key) {
+        const arrMap = new Map();
+        array.forEach((element) => {
+            arrMap.set(element[key], element);
+        });
+        return arrMap;
+    }
 }

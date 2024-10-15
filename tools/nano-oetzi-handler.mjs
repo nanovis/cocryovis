@@ -184,22 +184,28 @@ export default class NanoOetziHandler {
             User.lockManager.generateLockInstance(userId),
         ]);
 
-        WriteMultiLock.withWriteMultiLock(multiLock, () => {
-            return this.#taskQueue.enqueue(
-                () =>
-                    this.#runInference(
-                        checkpointId,
-                        volumeId,
+        WriteMultiLock.withWriteMultiLock(multiLock, async () => {
+            try {
+                return await this.#taskQueue.enqueue(
+                    () =>
+                        this.#runInference(
+                            checkpointId,
+                            volumeId,
+                            userId,
+                            outputPath
+                        ),
+                    new InferenceTaskProperties(
                         userId,
-                        outputPath
-                    ),
-                new InferenceTaskProperties(
-                    userId,
-                    TaskProperties.type.inference,
-                    checkpointId,
-                    volumeId
-                )
-            );
+                        TaskProperties.type.inference,
+                        checkpointId,
+                        volumeId
+                    )
+                );
+            } catch (error) {
+                console.error(
+                    `Inference task by User with id ${userId} failed.`
+                );
+            }
         });
     }
 
@@ -414,26 +420,30 @@ export default class NanoOetziHandler {
         ]);
 
         WriteMultiLock.withWriteMultiLock(multiLock, () => {
-            return this.#taskQueue.enqueue(
-                () =>
-                    this.#runTraining(
-                        modelId,
+            try {
+                return this.#taskQueue.enqueue(
+                    () =>
+                        this.#runTraining(
+                            modelId,
+                            userId,
+                            trainingVolumesIds,
+                            validationVolumesIds,
+                            testingVolumesIds,
+                            outputPath,
+                            removeTempFiles
+                        ),
+                    new TrainingTaskProperties(
                         userId,
+                        TaskProperties.type.training,
+                        modelId,
                         trainingVolumesIds,
                         validationVolumesIds,
-                        testingVolumesIds,
-                        outputPath,
-                        removeTempFiles
-                    ),
-                new TrainingTaskProperties(
-                    userId,
-                    TaskProperties.type.training,
-                    modelId,
-                    trainingVolumesIds,
-                    validationVolumesIds,
-                    testingVolumesIds
-                )
-            );
+                        testingVolumesIds
+                    )
+                );
+            } catch (error) {
+                console.error(`Training task by User with id ${userId} failed.`);
+            }
         });
     }
 

@@ -120,11 +120,17 @@ export default class IlastikHandler {
             User.lockManager.generateLockInstance(userId),
         ]);
 
-        WriteMultiLock.withWriteMultiLock(multiLock, () => {
-            return this.#taskQueue.enqueue(
-                () => this.#generateLabels(volumeId, userId, outputPath),
-                { userId: userId, volumeId: volumeId }
-            );
+        WriteMultiLock.withWriteMultiLock(multiLock, async () => {
+            try {
+                return await this.#taskQueue.enqueue(
+                    () => this.#generateLabels(volumeId, userId, outputPath),
+                    { userId: userId, volumeId: volumeId }
+                );
+            } catch {
+                console.error(
+                    `Label generation task by User with id ${userId} failed.`
+                );
+            }
         });
     }
 
