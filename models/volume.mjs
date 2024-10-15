@@ -351,6 +351,10 @@ export default class Volume extends DatabaseModel {
             },
         });
 
+        if (volumes.length === 0) {
+            return;
+        }
+
         const idsToDelete = volumes.map((v) => v.id);
 
         await this.withWriteLocks(idsToDelete, null, async () => {

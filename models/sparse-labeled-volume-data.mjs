@@ -98,6 +98,10 @@ export default class SparseLabeledVolumeData extends VolumeData {
             },
         });
 
+        if (sparseVolumes.length === 0) {
+            return [];
+        }
+
         const idsToDelete = sparseVolumes.map((v) => v.id);
 
         return this.withWriteLocks(idsToDelete, null, async () => {

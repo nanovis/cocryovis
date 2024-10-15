@@ -236,9 +236,13 @@ export default class Checkpoint extends DatabaseModel {
             },
         });
 
+        if (checkpoints.length === 0) {
+            return [];
+        }
+
         const idsToDelete = checkpoints.map((c) => c.id);
 
-        await this.withWriteLocks(idsToDelete, null, async () => {
+        return this.withWriteLocks(idsToDelete, null, async () => {
             await tx.checkpoint.deleteMany({
                 where: {
                     id: {

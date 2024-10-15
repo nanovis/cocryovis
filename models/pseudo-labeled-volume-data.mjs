@@ -198,6 +198,10 @@ export default class PseudoLabeledVolumeData extends VolumeData {
             },
         });
 
+        if (pseudoVolumes.length === 0) {
+            return [];
+        }
+
         const idsToDelete = pseudoVolumes.map((v) => v.id);
 
         return this.withWriteLocks(idsToDelete, null, async () => {

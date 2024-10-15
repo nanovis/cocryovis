@@ -374,6 +374,10 @@ export default class Result extends DatabaseModel {
             },
         });
 
+        if (results.length === 0) {
+            return [];
+        }
+
         const idsToDelete = results.map((r) => r.id);
 
         return this.withWriteLocks(idsToDelete, null, async () => {

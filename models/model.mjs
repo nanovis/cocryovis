@@ -288,6 +288,10 @@ export default class Model extends DatabaseModel {
             },
         });
 
+        if (models.length === 0) {
+            return;
+        }
+
         const idsToDelete = models.map((m) => m.id);
 
         await this.withWriteLocks(idsToDelete, null, async () => {

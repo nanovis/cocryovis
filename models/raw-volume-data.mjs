@@ -420,6 +420,10 @@ export default class RawVolumeData extends VolumeData {
             },
         });
 
+        if (rawVolumes.length === 0) {
+            return [];
+        }
+
         const idsToDelete = rawVolumes.map((v) => v.id);
 
         return this.withWriteLocks(idsToDelete, null, async () => {
