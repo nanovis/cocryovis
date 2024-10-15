@@ -468,72 +468,62 @@ export default class Volume extends DatabaseModel {
         volumeId,
         originalLabels
     ) {
-        return this.withWriteLock(
-            volumeId,
-            [PseudoLabeledVolumeData.modelName],
-            () => {
-                prismaManager.db.$transaction(
-                    async (tx) => {
-                        const volume = await tx.volume.findUnique({
-                            where: { id: volumeId },
-                            include: {
-                                sparseVolumes: true,
-                                pseudoVolumes: true,
-                            },
-                        });
-
-                        if (
-                            volume.sparseVolumes.length +
-                                volume.pseudoVolumes.length >
-                            appConfig.maxVolumeChannels
-                        ) {
-                            throw new ApiError(
-                                400,
-                                "Volume does not have enough space to generate pseudo labels from sparse label set."
-                            );
-                        }
-
-                        const newFolders = [];
-                        const files = await fsPromises.readdir(folderPath);
-                        try {
-                            for (let i = 0; i < files.length; i++) {
-                                const filePath = path.join(
-                                    folderPath,
-                                    files[i]
-                                );
-                                const settingsJSON = JSON.parse(
-                                    originalLabels[i].settings
-                                );
-                                settingsJSON.file = files[i];
-                                const settings = JSON.stringify(settingsJSON);
-                                const pseudoLabelVolumeData =
-                                    await PseudoLabeledVolumeData.fromRawFile(
-                                        filePath,
-                                        ownerId,
-                                        volumeId,
-                                        originalLabels[i].id,
-                                        settings,
-                                        tx
-                                    );
-                                newFolders.push(pseudoLabelVolumeData.path);
-                            }
-                        } catch (error) {
-                            newFolders.forEach((folder) => {
-                                try {
-                                    fsPromises.rm(folder, {
-                                        recursive: true,
-                                        force: true,
-                                    });
-                                } catch (error) {
-                                    console.log(error);
-                                }
-                            });
-                        }
+        prismaManager.db.$transaction(
+            async (tx) => {
+                const volume = await tx.volume.findUnique({
+                    where: { id: volumeId },
+                    include: {
+                        sparseVolumes: true,
+                        pseudoVolumes: true,
                     },
-                    {
-                        timeout: 60000,
+                });
+
+                if (
+                    volume.sparseVolumes.length + volume.pseudoVolumes.length >
+                    appConfig.maxVolumeChannels
+                ) {
+                    throw new ApiError(
+                        400,
+                        "Volume does not have enough space to generate pseudo labels from sparse label set."
+                    );
+                }
+
+                const newFolders = [];
+                const files = await fsPromises.readdir(folderPath);
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const filePath = path.join(folderPath, files[i]);
+                        const settingsJSON = JSON.parse(
+                            originalLabels[i].settings
+                        );
+                        settingsJSON.file = files[i];
+                        const settings = JSON.stringify(settingsJSON);
+                        const pseudoLabelVolumeData =
+                            await PseudoLabeledVolumeData.fromRawFile(
+                                filePath,
+                                ownerId,
+                                volumeId,
+                                originalLabels[i].id,
+                                settings,
+                                tx
+                            );
+                        newFolders.push(pseudoLabelVolumeData.path);
                     }
-                );
+                } catch (error) {
+                    newFolders.forEach((folder) => {
+                        try {
+                            fsPromises.rm(folder, {
+                                recursive: true,
+                                force: true,
+                            });
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    });
+                }
+            },
+            {
+                timeout: 60000,
             }
         );
     }
