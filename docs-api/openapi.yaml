@@ -433,7 +433,7 @@ paths:
         '200':
           description: Visualization Data
           content:
-            application/zip:
+            application/json:
               schema:
                 $ref: '#/components/schemas/VisualizationData'
     
@@ -808,6 +808,22 @@ paths:
               schema:
                 type: string
 
+  /result/{idResult}/visualization-data:
+    get:
+      summary: Get Visualization Data for Result
+      operationId: getResultVisualizationData
+      tags:
+        - Result
+      parameters:
+        - $ref: '#/components/parameters/idResult'
+      responses:
+        '200':
+          description: Visualization Data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisualizationDataMultiVolume'
+
   /volume/{idVolume}/result/{idResult}:
     delete:
       summary: Removes result from the volume. If the result is no longer referenced anywhere, it is deleted.
@@ -1032,7 +1048,9 @@ components:
     NanooetziTrainingHistory:
       $ref: "./schemas/Nanooetzi.yaml#/TrainingHistory"
     VisualizationData:
-      $ref: "./schemas/VisualizationData.yaml"
+      $ref: "./schemas/VisualizationData.yaml#/VisualizationData"
+    VisualizationDataMultiVolume:
+      $ref: "./schemas/VisualizationData.yaml#/VisualizationDataMultiVolume"
     Error:
       $ref: "./schemas/Error.yaml"
     ZipFile:

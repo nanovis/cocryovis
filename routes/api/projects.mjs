@@ -229,5 +229,8 @@ projectsApi.get(`/result/:idResult/download`, restrictApi, ResultController.down
 // Download Result File
 projectsApi.get(`/result/:idResult/download/:fileIndex`, restrictApi, ResultController.downloadResultFile);
 
+// Result vizualization data
+projectsApi.get(`/result/:idResult/visualization-data`, restrictApi, ResultController.getVisualizationData);
+
 projectsApi.use(logErrors)
 projectsApi.use(clientErrorHandler)

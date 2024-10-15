@@ -1,0 +1,10 @@
+{
+    "rampLow": 0.01,
+	"rampHigh": 0.99,
+    "color": {
+        "x": 255,
+        "y": 255,
+        "z": 255
+    },
+	"comment" : "default"
+}

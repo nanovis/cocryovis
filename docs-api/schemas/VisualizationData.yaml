@@ -1,32 +1,99 @@
-type: object
-required:
-  - config
-  - settingsReference
-  - files
-properties:
-  config:
-    type: object
-    required:
-      - files
-    properties:
-      files:
-        type: array
-        items:
+VisualizationData:
+  type: object
+  required:
+    - config
+    - settingsReference
+    - files
+  properties:
+    config:
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            type: string
+    settingsReference:
+      type: object
+      required:
+        - filename
+        - data
+      properties:
+        filename:
           type: string
-  settingsReference:
-    type: object
-    required:
-      - filename
-      - data
-    properties:
-      filename:
-        type: string
-      data:
-        type: json
-        
-  files:
-    type: array
-    items:
+        data:
+          type: json
+    files:
+      type: array
+      items:
+        type: object
+        required:
+          - filename
+          - url
+        properties:
+          filename:
+            type: string
+          url:
+            type: string
+
+VisualizationDataMultiVolume:
+  type: object
+  required:
+    - config
+    - settingsReference
+    - files
+  properties:
+    config:
+      type: object
+      required:
+        - rawVolumeChannel
+        - files
+      properties:
+        rawVolumeChannel:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+    settingsReference:
+      type: array
+      items:
+        type: object
+        required:
+          - filename
+          - data
+        properties:
+          filename:
+            type: string
+          data:
+            type: json
+    files:
+      type: array
+      items:
+        type: object
+        required:
+          - filename
+          - url
+        properties:
+          filename:
+            type: string
+          url:
+            type: string
+
+components:
+  schemas:
+    SettingsReference:
+      type: object
+      required:
+        - filename
+        - data
+      properties:
+        filename:
+          type: string
+        data:
+          type: json
+    VisualizationFile:
       type: object
       required:
         - filename
@@ -36,3 +103,4 @@ properties:
           type: string
         url:
           type: string
+    

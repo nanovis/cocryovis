@@ -1,19 +1,15 @@
-.token
 node_modules
-wandb
-uploads/*
-!uploads/.gitkeep
 .vs
 db.json
-data/
-logs/
+/data/
+/logs/
 .idea
-cache/
+/cache/
 *.sqlite3
 *.sqlite
 *.sqlite-journal
 .env
-prisma/migrations/
+/prisma/migrations/
 .vscode/
 .venv/
 
