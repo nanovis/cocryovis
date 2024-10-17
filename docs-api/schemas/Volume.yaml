@@ -62,8 +62,3 @@ VolumeDetails:
       nullable: true
       items:
         $ref: "./PseudoLabelVolumeData.yaml"
-    results:
-      type: array
-      nullable: true
-      items:
-        $ref: "./Result.yaml#/Result"

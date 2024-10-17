@@ -648,6 +648,20 @@ paths:
                 $ref: "#/components/schemas/ModelDetails"
 
   /model/{idModel}/checkpoints:
+    get:
+      summary: Get checkpoints assigned to Model
+      operationId: getCheckpointsFromModel
+      tags:
+        - Checkpoint
+      parameters:
+        - $ref: '#/components/parameters/idModel'
+      responses:
+        '201':
+          description: Created Checkpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkpoint'
     post:
       summary: Create new checkpoints
       operationId: createCheckpoints
@@ -823,6 +837,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VisualizationDataMultiVolume'
+
+  /volume/{idVolume}/results:
+    get:
+      summary: Fetches Results related to Volume together with their related checkpoint.
+      operationId: getResultFromVolume
+      tags:
+        - Result
+      parameters:
+        - $ref: '#/components/parameters/idVolume'
+      responses:
+        '200':
+            description: A list of Results.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ResultDetails'
 
   /volume/{idVolume}/result/{idResult}:
     delete:

@@ -38,6 +38,31 @@ export default class Result extends DatabaseModel {
     }
 
     /**
+     * @param {Number} volumeId
+     */
+    static async getFromVolume(
+        volumeId,
+        { checkpoint = false, volumeData = false, volumes = false }
+    ) {
+        const results = await this.db.findMany({
+            where: {
+                volumes: {
+                    some: {
+                        id: volumeId,
+                    },
+                },
+            },
+            include: {
+                checkpoint: checkpoint,
+                volumeData: volumeData,
+                volumes: volumes,
+            },
+        });
+
+        return results;
+    }
+
+    /**
      * @param {Number} id
      */
     static async getByIdDeep(

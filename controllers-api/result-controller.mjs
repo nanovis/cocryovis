@@ -22,6 +22,14 @@ export default class ResultController {
         return res.json(result);
     }
 
+    static async getFromVolume(req, res) {
+        const result = await Result.getFromVolume(Number(req.params.idVolume), {
+            checkpoint: true,
+        });
+
+        return res.json(result);
+    }
+
     static async downloadResult(req, res) {
         const result = await Result.getById(Number(req.params.idResult));
 

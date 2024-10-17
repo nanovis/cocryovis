@@ -7,8 +7,15 @@ import path from "path";
 
 export default class CheckpointController {
     static async getCheckpoint(req, res) {
-        const checkpoints = await Checkpoint.getById(
+        const checkpoint = await Checkpoint.getById(
             Number(req.params.idCheckpoint)
+        );
+        return res.json(checkpoint);
+    }
+
+    static async getCheckpointsFromModel(req, res) {
+        const checkpoints = await Checkpoint.getFromModel(
+            Number(req.params.idModel)
         );
         return res.json(checkpoints);
     }

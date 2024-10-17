@@ -53,19 +53,8 @@ export default class Project extends DatabaseModel {
                 id: id,
             },
             include: {
-                volumes: {
-                    include: {
-                        rawData: true,
-                        sparseVolumes: true,
-                        pseudoVolumes: true,
-                        results: true,
-                    },
-                },
-                models: {
-                    include: {
-                        checkpoints: true,
-                    },
-                },
+                volumes: true,
+                models: true,
             },
         });
         if (project === null) {

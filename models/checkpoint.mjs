@@ -36,6 +36,24 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
+     * @param {Number} modelId
+     * @return {Promise<CheckpointDB[]>}
+     */
+    static async getFromModel(modelId) {
+        const checkpoints = await this.db.findMany({
+            where: {
+                models: {
+                    some: {
+                        id: modelId,
+                    },
+                },
+            },
+        });
+
+        return checkpoints;
+    }
+
+    /**
      * @param {Number[]} ids
      * @return {Promise<CheckpointDB[]>}
      */
