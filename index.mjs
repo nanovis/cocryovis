@@ -10,14 +10,11 @@ import express from "express";
 import path from "path";
 import fileSystem from "fs";
 import session from "express-session";
-import { actions } from "./routes/api/actions.mjs";
 import { projectsApi } from "./routes/api/projects.mjs";
 import bodyParser from "body-parser";
 import { argv } from "process";
 import cors from "cors";
 import fileUpload from "express-fileupload";
-import { restrict } from "./middleware/restrict.mjs";
-import UserController from "./controllers/user-controller.mjs";
 import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
@@ -87,43 +84,19 @@ if (app.get("env") === "production") {
 
 app.use(session(sess));
 
-// Server actions
+// API
 app.use("/api", projectsApi);
-app.use("/api/actions", actions);
 
 app.use(express.static("web", { index: false }));
 app.use(express.static(appConfig.dataPath, { index: false }));
 app.use("/logs", express.static("logs", { index: false }));
 
-// Handling root route
-app.get("/", restrict, function (req, res) {
-    res.redirect("/auth");
-});
-
-// Handling auth route
-app.get("/auth", restrict, function (req, res) {
-    // res.send('Wahoo! restricted area, click to <a href="/logout">logout</a>');
-    res.render("actions");
-});
-
-// Handling logout route
-app.get("/logout", UserController.logout);
-
-// Handling login route
-app.get("/login", function (req, res) {
-    res.render("login", { message: "" });
-});
-
-app.post("/login", UserController.login);
-
-app.get("/test", function (req, res) {
-    console.log("Test request initiated...");
-    res.send({ message: "This is a bit longer test message ..." });
-});
-
 // 404 Error
 app.use(function (req, res) {
-    res.status(404).send({ error: "Sorry, this page does not exist." });
+    res.status(404).json({
+        name: "Bad Url",
+        message: "Sorry, this page does not exist.",
+    });
 });
 
 // Running server
