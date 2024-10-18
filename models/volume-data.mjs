@@ -95,7 +95,7 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async createFromFiles(ownerId, volumeId, files) {
-        return Volume.withWriteLock(volumeId, [this.modelName], () => {
+        return await Volume.withWriteLock(volumeId, [this.modelName], async () => {
             const unpackedFiles = unpackFiles(
                 files,
                 this.acceptedFileExtensions
@@ -131,10 +131,10 @@ export default class VolumeData extends DatabaseModel {
                 );
             }
 
-            return prismaManager.db.$transaction(
+            return await prismaManager.db.$transaction(
                 async (tx) => {
                     /** @type {VolumeDataDB} */
-                    const volumeData = await tx[this.modelName].create({
+                    let volumeData = await tx[this.modelName].create({
                         data: {
                             ownerId: ownerId,
                             volumes: {
@@ -153,7 +153,7 @@ export default class VolumeData extends DatabaseModel {
                             rawFilePath
                         );
 
-                        await tx[this.modelName].update({
+                        volumeData = await tx[this.modelName].update({
                             where: { id: volumeData.id },
                             data: {
                                 path: folderPath,

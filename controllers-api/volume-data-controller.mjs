@@ -56,6 +56,7 @@ export default class VolumeDataController {
         const settingsReference = {
             data: JSON.parse(volumeData.settings),
             filename: `${path.parse(volumeData.rawFilePath).name}.json`,
+            name: "Volume"
         };
 
         visualizationFiles.push(rawFileReference);
