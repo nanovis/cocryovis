@@ -234,7 +234,10 @@ export default class NanoOetziHandler {
 
             NanoOetziHandler.#checkInferenceInput(volume, checkpoint);
 
-            tempSettingsPath = path.join(volume.rawData.path, "settings.json");
+            tempSettingsPath = path.join(
+                volume.rawData.path,
+                `${path.parse(volume.rawData.rawFilePath).name}.json`
+            );
             await fsPromises.writeFile(
                 tempSettingsPath,
                 volume.rawData.settings,
@@ -442,7 +445,9 @@ export default class NanoOetziHandler {
                     )
                 );
             } catch (error) {
-                console.error(`Training task by User with id ${userId} failed.`);
+                console.error(
+                    `Training task by User with id ${userId} failed.`
+                );
             }
         });
     }
