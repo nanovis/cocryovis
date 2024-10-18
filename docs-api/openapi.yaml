@@ -796,31 +796,31 @@ paths:
               schema:
                 type: string
 
-  /result/{idResult}/download/{fileIndex}:
-    get:
-      summary: Download a specific result file
-      operationId: downloadResultFile
-      tags:
-        - Result
-      parameters:
-        - $ref: '#/components/parameters/idResult'
-        - name: fileIndex
-          in: path
-          required: true
-          schema:
-              type: integer
-      responses:
-        '200':
-          description: ZIP file containing a result file.
-          content:
-            application/zip:
-              schema:
-                $ref: '#/components/schemas/ZipFile'
-          headers:
-            Content-Disposition:
-              description: Indicates that the response should be downloaded as an attachment.
-              schema:
-                type: string
+  # /result/{idResult}/download/{fileIndex}:
+  #   get:
+  #     summary: Download a specific result file
+  #     operationId: downloadResultFile
+  #     tags:
+  #       - Result
+  #     parameters:
+  #       - $ref: '#/components/parameters/idResult'
+  #       - name: fileIndex
+  #         in: path
+  #         required: true
+  #         schema:
+  #             type: integer
+  #     responses:
+  #       '200':
+  #         description: ZIP file containing a result file.
+  #         content:
+  #           application/zip:
+  #             schema:
+  #               $ref: '#/components/schemas/ZipFile'
+  #         headers:
+  #           Content-Disposition:
+  #             description: Indicates that the response should be downloaded as an attachment.
+  #             schema:
+  #               type: string
 
   /result/{idResult}/visualization-data:
     get:

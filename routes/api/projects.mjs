@@ -233,7 +233,7 @@ projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultCont
 projectsApi.get(`/result/:idResult/download`, restrictApi, ResultController.downloadResult);
 
 // Download Result File
-projectsApi.get(`/result/:idResult/download/:fileIndex`, restrictApi, ResultController.downloadResultFile);
+// projectsApi.get(`/result/:idResult/download/:fileIndex`, restrictApi, ResultController.downloadResultFile);
 
 // Result vizualization data
 projectsApi.get(`/result/:idResult/visualization-data`, restrictApi, ResultController.getVisualizationData);

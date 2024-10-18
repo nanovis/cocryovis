@@ -14,6 +14,7 @@ import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
+import ResultFile from "./resultFile.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -42,7 +43,12 @@ export default class Result extends DatabaseModel {
      */
     static async getFromVolume(
         volumeId,
-        { checkpoint = false, volumeData = false, volumes = false }
+        {
+            checkpoint = false,
+            volumeData = false,
+            volumes = false,
+            files = false,
+        }
     ) {
         const results = await this.db.findMany({
             where: {
@@ -56,6 +62,7 @@ export default class Result extends DatabaseModel {
                 checkpoint: checkpoint,
                 volumeData: volumeData,
                 volumes: volumes,
+                files: files,
             },
         });
 
@@ -67,7 +74,12 @@ export default class Result extends DatabaseModel {
      */
     static async getByIdDeep(
         id,
-        { checkpoint = false, volumeData = false, volumes = false }
+        {
+            checkpoint = false,
+            volumeData = false,
+            volumes = false,
+            files = false,
+        }
     ) {
         const result = await this.db.findUnique({
             where: {
@@ -77,6 +89,7 @@ export default class Result extends DatabaseModel {
                 checkpoint: checkpoint,
                 volumeData: volumeData,
                 volumes: volumes,
+                files: files,
             },
         });
         if (result === null) {
@@ -111,14 +124,24 @@ export default class Result extends DatabaseModel {
      * @param {Number} checkpointId
      * @param {Number} volumeDataId
      * @param {Number} volumeId
+     * @typedef {Object} Config
+     * @property {String} name
+     * @property {String} rawFileName
+     * @property {String} settingsFileName
+     * @property {Number} index
+     * @property {Boolean?} rawVolumeChannel
+     * @param {Config[]} config
      * @param {String} folderPath
+     * @param {String?} logFile
      */
     static async createFromFolder(
         ownerId,
         checkpointId,
         volumeDataId,
         volumeId,
-        folderPath
+        config,
+        folderPath,
+        logFile = null
     ) {
         const resultsFolderPath = path.join(
             appConfig.dataPath,
@@ -129,6 +152,8 @@ export default class Result extends DatabaseModel {
                 recursive: true,
             });
         }
+
+        let resultPath = null;
 
         try {
             return await prismaManager.db.$transaction(
@@ -147,58 +172,60 @@ export default class Result extends DatabaseModel {
                         },
                     });
 
-                    const resultPath = await Result.reserveFolderName(
-                        result.id
-                    );
+                    resultPath = await Result.reserveFolderName(result.id);
                     await rename(folderPath, resultPath);
 
-                    let visualizationFileIndex = 0;
-                    let rawVolumeChannel = -1;
+                    let rawVolumeChannel = null;
 
-                    const filePaths = [];
-
-                    const files = await readdir(resultPath);
-                    for (const fileName of files) {
-                        const filePath = path.join(resultPath, fileName);
+                    for (const fileDescriptor of config) {
                         if (
-                            Utils.isFileExtensionAccepted(
-                                fileName,
-                                this.acceptedFileExtensions
+                            !fileSystem.existsSync(
+                                path.join(
+                                    resultPath,
+                                    fileDescriptor.rawFileName
+                                )
+                            ) ||
+                            !fileSystem.existsSync(
+                                path.join(
+                                    resultPath,
+                                    fileDescriptor.settingsFileName
+                                )
                             )
                         ) {
-                            filePaths.push(filePath);
+                            throw new ApiError(
+                                500,
+                                "Failed result creation: One of the volume files is missing."
+                            );
+                        }
+                        await ResultFile.create(
+                            fileDescriptor.name,
+                            fileDescriptor.rawFileName,
+                            fileDescriptor.settingsFileName,
+                            fileDescriptor.index,
+                            result.id,
+                            tx
+                        );
 
-                            if (filePath.endsWith("_inverted.json")) {
-                                rawVolumeChannel = filePaths.length - 1;
-                            } else if (
-                                Utils.isFileExtensionAccepted(fileName, [
-                                    ".raw",
-                                    ".json",
-                                ])
-                            ) {
-                                visualizationFileIndex++;
+                        if (fileDescriptor.rawVolumeChannel) {
+                            if (rawVolumeChannel !== null) {
+                                throw new ApiError(
+                                    500,
+                                    "Failed result creation: Two volumes marked as raw volume channel."
+                                );
                             }
+                            rawVolumeChannel = fileDescriptor.index;
                         }
                     }
 
-                    const filePathsJSON = JSON.stringify(filePaths);
+                    result = await tx.result.update({
+                        where: { id: result.id },
+                        data: {
+                            folderPath: resultPath,
+                            rawVolumeChannel: rawVolumeChannel,
+                            logFile: logFile,
+                        },
+                    });
 
-                    try {
-                        result = await tx.result.update({
-                            where: { id: result.id },
-                            data: {
-                                folderPath: resultPath,
-                                rawVolumeChannel: rawVolumeChannel,
-                                files: filePathsJSON,
-                            },
-                        });
-                    } catch (error) {
-                        await fsPromises.rm(resultPath, {
-                            recursive: true,
-                            force: true,
-                        });
-                        throw error;
-                    }
                     return result;
                 },
                 {
@@ -206,10 +233,17 @@ export default class Result extends DatabaseModel {
                 }
             );
         } catch (error) {
+            if (resultPath !== null) {
+                await fsPromises.rm(resultPath, {
+                    recursive: true,
+                    force: true,
+                });
+            }
             await fsPromises.rm(folderPath, {
                 recursive: true,
                 force: true,
             });
+            throw error;
         }
     }
 

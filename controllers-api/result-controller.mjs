@@ -17,6 +17,7 @@ export default class ResultController {
     static async getDetails(req, res) {
         const result = await Result.getByIdDeep(Number(req.params.idResult), {
             checkpoint: true,
+            files: true,
         });
 
         return res.json(result);
@@ -31,41 +32,47 @@ export default class ResultController {
     }
 
     static async downloadResult(req, res) {
-        const result = await Result.getById(Number(req.params.idResult));
+        const result = await Result.getByIdDeep(Number(req.params.idResult), {
+            files: true,
+        });
 
         if (!result.files) {
             throw new ApiError(400, "Result has no files.");
         }
 
-        const filePaths = JSON.parse(result.files);
+        const filePaths = [];
+        for (const file of result.files) {
+            filePaths.push(path.join(result.folderPath, file.rawFileName));
+            filePaths.push(path.join(result.folderPath, file.settingsFileName));
+        }
         const data = prepareDataForDownload(filePaths, `Result_${result.id}`);
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", "attachment; filename=" + data.name);
         return res.send(data.zipBuffer);
     }
 
-    static async downloadResultFile(req, res) {
-        const result = await Result.getById(Number(req.params.idResult));
+    // static async downloadResultFile(req, res) {
+    //     const result = await Result.getById(Number(req.params.idResult));
 
-        if (!result.files) {
-            throw new ApiError(404, "Result has no files.");
-        }
+    //     if (!result.files) {
+    //         throw new ApiError(404, "Result has no files.");
+    //     }
 
-        const filePaths = JSON.parse(result.files);
-        const fileIndex = Number(req.params.fileIndex);
+    //     const filePaths = JSON.parse(result.files);
+    //     const fileIndex = Number(req.params.fileIndex);
 
-        if (fileIndex >= filePaths.length) {
-            throw new ApiError(404, "Requested file does not exist.");
-        }
+    //     if (fileIndex >= filePaths.length) {
+    //         throw new ApiError(404, "Requested file does not exist.");
+    //     }
 
-        let data = prepareDataForDownload(
-            [filePaths[fileIndex]],
-            `Result_${result.id}`
-        );
-        res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
-        return res.send(data.zipBuffer);
-    }
+    //     let data = prepareDataForDownload(
+    //         [filePaths[fileIndex]],
+    //         `Result_${result.id}`
+    //     );
+    //     res.set("Content-Type", "application/zip");
+    //     res.set("Content-Disposition", "attachment; filename=" + data.name);
+    //     return res.send(data.zipBuffer);
+    // }
 
     static async deleteResult(req, res) {
         await Result.del(Number(req.params.idResult));
@@ -81,7 +88,9 @@ export default class ResultController {
     }
 
     static async getVisualizationData(req, res) {
-        const result = await Result.getById(Number(req.params.idResult));
+        const result = await Result.getByIdDeep(Number(req.params.idResult), {
+            files: true,
+        });
         if (result.files.length === 0) {
             throw new ApiError(
                 400,
@@ -95,38 +104,36 @@ export default class ResultController {
         const visualizationFiles = [];
         const transferFunctions = new Set();
 
-        /** @type {String[]} */
-        const filePathsArray = JSON.parse(result.files);
+        const fileReferences = result.files;
+        fileReferences.sort((a, b) => a.index - b.index);
 
-        /** @type {Set<String>} */
-        const filePaths = new Set(filePathsArray);
-        /** @type {Set<String>} */
-        const fileNames = new Set(
-            filePathsArray.map((fileName) => path.basename(fileName))
-        );
-
-        for (const filePath of filePaths) {
-            if (!filePath.endsWith(".json")) continue;
-
-            const settingsReference = JSON.parse(
-                (
-                    await fileSystem.promises.readFile(filePath, "utf8")
-                ).toString()
+        for (const fileReference of fileReferences) {
+            const settingsFilePath = path.join(
+                result.folderPath,
+                fileReference.settingsFileName
             );
-            if (!fileNames.has(settingsReference.file)) {
-                throw new ApiError(
-                    500,
-                    "Result is missing files and thus cannot be visualized."
-                );
-            }
+            const settingsReferenceFile = await fileSystem.promises.readFile(
+                settingsFilePath,
+                "utf8"
+            );
+            const settingsReference = JSON.parse(
+                settingsReferenceFile.toString()
+            );
             settingsReferences.push({
                 data: settingsReference,
-                filename: path.basename(filePath),
+                filename: fileReference.settingsFileName,
+                name: fileReference.name,
             });
             const rawFilePath = path.join(
                 result.folderPath,
                 settingsReference.file
             );
+            if (!fileSystem.existsSync(rawFilePath)) {
+                throw new ApiError(
+                    500,
+                    "Result is missing files and thus cannot be visualized."
+                );
+            }
             visualizationFiles.push({
                 url: new URL(
                     path.relative(appConfig.dataPath, rawFilePath),

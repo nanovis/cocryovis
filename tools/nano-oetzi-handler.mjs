@@ -274,12 +274,19 @@ export default class NanoOetziHandler {
                 `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
             );
 
+            const outputFile = await fsPromises.readFile(
+                path.join(outputPath, "output.json"),
+                "utf8"
+            );
+
             const result = await Result.createFromFolder(
                 userId,
                 checkpointId,
                 volume.rawData.id,
                 volumeId,
-                outputPath
+                JSON.parse(outputFile.toString()),
+                outputPath,
+                logFile.fileName
             );
 
             await logFile.writeLog(

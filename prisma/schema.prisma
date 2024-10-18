@@ -111,9 +111,9 @@ model Checkpoint {
 model Result {
   id                Int             @id @default(autoincrement())
   folderPath        String?
-  /// List of files attached to result in stringified JSON format.
-  files             String?
+  files             ResultFile[]
   rawVolumeChannel  Int?
+  logFile           String?
   owner             User            @relation(fields: [ownerId], references: [id])
   ownerId           Int
   checkpoint        Checkpoint      @relation(fields: [checkpointId], references: [id])
@@ -121,4 +121,14 @@ model Result {
   volumeData        RawVolumeData   @relation(fields: [volumeDataId], references: [id])
   volumeDataId      Int
   volumes           Volume[]
+}
+
+model ResultFile {
+  id                Int     @id @default(autoincrement())
+  name              String
+  rawFileName       String
+  settingsFileName  String
+  index             Int
+  result            Result  @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId          Int
 }
