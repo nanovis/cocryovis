@@ -15,7 +15,6 @@ import ResultController from '../../controllers-api/result-controller.mjs';
 import IlastikController from '../../controllers-api/ilastik-controller.mjs';
 import NanoOetziController from '../../controllers-api/nano-oetzi-controller.mjs';
 import UserController from '../../controllers-api/user-controller.mjs';
-import { logErrors, clientErrorHandler } from '../../tools/error-handler.mjs'
 import toAsyncRouter from 'async-express-decorator'
 
 // Config
@@ -237,6 +236,3 @@ projectsApi.get(`/result/:idResult/download`, restrictApi, ResultController.down
 
 // Result vizualization data
 projectsApi.get(`/result/:idResult/visualization-data`, restrictApi, ResultController.getVisualizationData);
-
-projectsApi.use(logErrors)
-projectsApi.use(clientErrorHandler)

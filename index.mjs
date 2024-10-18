@@ -1,3 +1,4 @@
+// @ts-check
 /*
     VolWeb
 
@@ -19,9 +20,10 @@ import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
 import appConfig from "./tools/config.mjs";
+import { logErrors, clientErrorHandler } from './tools/error-handler.mjs'
 
 const port = argv[2] || 8080;
-const app = express(express.json());
+const app = express();
 
 app.use(
     cors({
@@ -32,7 +34,7 @@ app.use(
 );
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.header("Access-Control-Allow-Credentials", true);
+    res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
     res.header(
         "Access-Control-Allow-Headers",
@@ -82,6 +84,7 @@ if (app.get("env") === "production") {
     app.use(helmet());
 }
 
+// @ts-ignore
 app.use(session(sess));
 
 // API
@@ -98,6 +101,9 @@ app.use(function (req, res) {
         message: "Sorry, this page does not exist.",
     });
 });
+
+app.use(logErrors);
+app.use(clientErrorHandler);
 
 // Running server
 app.listen(port, () => {
