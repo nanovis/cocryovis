@@ -26,13 +26,16 @@ const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 export const projectsApi = toAsyncRouter(express.Router());
 
 ///////////////////////
-/////// AUTHENTICATION
+/////// USER
 ///////////////////////
 
 projectsApi.post('/login', UserController.login);
 projectsApi.post('/logout', UserController.logout);
 projectsApi.post('/register', UserController.register);
 projectsApi.get('/getLoggedUserData', UserController.getLoggedUserData);
+
+projectsApi.get(`/status`, restrictApi, 
+    async (req, res) => UserController.getStatus(ilastikHandler, nanoOetzi, req, res));
 
 ///////////////////////
 /////// PROJECTS

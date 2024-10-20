@@ -3,6 +3,8 @@
 import { log } from "util";
 import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
+import IlastikHandler from "../tools/ilastik-handler.mjs";
+import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
 
 export default class UserController {
     static async register(req, res, next) {
@@ -26,11 +28,10 @@ export default class UserController {
 
     static async login(req, res, next) {
         try {
-
             const user = await User.authenticate(
                 req.body.username,
                 req.body.password
-            );          
+            );
 
             const UserData = User.toPublic(user);
 
@@ -38,7 +39,7 @@ export default class UserController {
                 if (err) return next(err);
 
                 req.session.user = user;
-                
+
                 req.session.save(function (err) {
                     if (err) return next(err);
 
@@ -46,7 +47,7 @@ export default class UserController {
                     res.json(UserData);
                 });
 
-                log("User " + req.body.username + " just logged in.")
+                log("User " + req.body.username + " just logged in.");
             });
         } catch {
             throw new ApiError(401, "Authentication Failed");
@@ -64,13 +65,33 @@ export default class UserController {
             if (req.session != null) {
                 const UserData = await User.toPublic(req.session.user);
                 return res.json(UserData);
-            }
-            else {
+            } else {
                 res.sendStatus(401);
             }
-        }
-        catch {
+        } catch {
             res.sendStatus(401);
         }
+    }
+
+    /**
+     * @param {IlastikHandler} ilastik
+     * @param {NanoOetziHandler} nanoOetzi
+     */
+    static async getStatus(ilastik, nanoOetzi, req, res) {
+        const ilastikTaskQueue = await ilastik.getTaskQueue();
+        const ilastikTaskHistory = await ilastik.getUserTaskHistory(
+            req.session.user.id
+        );
+        const nanoOetziTaskQueue = await nanoOetzi.getTaskQueue();
+        const nanoOetziTaskHistory = await nanoOetzi.getUserTaskHistory(
+            req.session.user.id
+        );
+
+        return res.json({
+            ilastikTaskQueue: ilastikTaskQueue,
+            ilastikTaskHistory: ilastikTaskHistory,
+            nanoOetziTaskQueue: nanoOetziTaskQueue,
+            nanoOetziTaskHistory: nanoOetziTaskHistory,
+        });
     }
 }

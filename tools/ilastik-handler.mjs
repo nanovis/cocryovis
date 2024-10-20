@@ -85,6 +85,55 @@ export default class IlastikHandler {
         return stdout;
     }
 
+    async getTaskQueue() {
+        const users = await User.getByIds(
+            this.queuedIdentifiers.map((i) => i.userId)
+        );
+        const usersMap = Utils.arrayToMap(users, "id");
+
+        const volumes = await Volume.getByIds(
+            this.queuedIdentifiers.map((i) => i.volumeId)
+        );
+        const volumeMap = Utils.arrayToMap(volumes, "id");
+
+        return this.queuedIdentifiers.map(function (t) {
+            const user = usersMap.get(t.userId);
+            const volume = volumeMap.get(t.volumeId);
+            return {
+                userId: user.id,
+                username: user.username,
+                volumeName: volume.name,
+                volumeId: volume.id,
+            };
+        });
+    }
+
+    /**
+     * @param {Number} userId
+     */
+    async getUserTaskHistory(userId) {
+        const userTaskHistory = this.taskHistory.filter(
+            (t) => t.userId === userId
+        );
+
+        const volumes = await Volume.getByIds(
+            userTaskHistory.map((i) => i.volumeId)
+        );
+        const volumeMap = Utils.arrayToMap(volumes, "id");
+
+        const result = userTaskHistory.map(function (t) {
+            const volume = volumeMap.get(t.volumeId);
+            return {
+                volumeName: volume.name,
+                volumeId: volume.id,
+                taskStatus: t.taskStatus,
+                logFile: t.logFile.fileName,
+            };
+        });
+
+        return result.reverse();
+    }
+
     /**
      * @param {Number} volumeId
      * @param {Number} userId
