@@ -8,6 +8,7 @@ import {
 import path from "path";
 import { ApiError } from "../tools/error-handler.mjs";
 import appConfig from "../tools/config.mjs";
+import fileSystem from "fs";
 
 export default class VolumeDataController {
     /**
@@ -19,6 +20,40 @@ export default class VolumeDataController {
         );
 
         return res.json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     */
+    static async getData(type, req, res) {
+        const volumeData = await VolumeDataFactory.getClass(type).getById(
+            Number(req.params.idVolumeData)
+        );
+        if (!volumeData.rawFilePath) {
+            throw new ApiError(400, "Volume Data is missing a raw file.");
+        }
+
+        if (!volumeData.settings) {
+            throw new ApiError(400, "Volume Data is missing a setting file.");
+        }
+
+        const rawFileData = {
+            filename: path.basename(volumeData.rawFilePath),
+            data: await fileSystem.promises.readFile(
+                volumeData.rawFilePath,
+                "base64"
+            ),
+        };
+
+        const settingsFileData = {
+            filename: `${path.parse(volumeData.rawFilePath).name}.json`,
+            data: JSON.parse(volumeData.settings),
+        };
+
+        return res.json({
+            rawData: rawFileData,
+            settings: settingsFileData,
+        });
     }
 
     /**
@@ -56,7 +91,7 @@ export default class VolumeDataController {
         const settingsReference = {
             data: JSON.parse(volumeData.settings),
             filename: `${path.parse(volumeData.rawFilePath).name}.json`,
-            name: "Volume"
+            name: "Volume",
         };
 
         visualizationFiles.push(rawFileReference);

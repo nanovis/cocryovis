@@ -132,6 +132,10 @@ projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi,
 projectsApi.get(`/volumeData/:type/:idVolumeData`, restrictApi, 
     async (req, res) => VolumeDataController.getById(VolumeDataType.mapName(req.params.type), req, res));
 
+// Get Raw Data Files
+projectsApi.get(`/volumeData/:type/:idVolumeData/data`, restrictApi,
+    async (req, res) => VolumeDataController.getData(VolumeDataType.mapName(req.params.type), req, res));
+    
 // Visualize
 projectsApi.get(`/volumeData/:type/:idVolumeData/visualization-data`, restrictApi, 
     async (req, res) => VolumeDataController.visualizeSingleVolume(VolumeDataType.mapName(req.params.type), req, res));
