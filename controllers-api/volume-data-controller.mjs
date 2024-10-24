@@ -32,27 +32,18 @@ export default class VolumeDataController {
         if (!volumeData.rawFilePath) {
             throw new ApiError(400, "Volume Data is missing a raw file.");
         }
+        
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${path.basename(volumeData.rawFilePath)}"`
+        );
+        const fileStream = fileSystem.createReadStream(volumeData.rawFilePath);
+        fileStream.pipe(res);
 
-        if (!volumeData.settings) {
-            throw new ApiError(400, "Volume Data is missing a setting file.");
-        }
-
-        const rawFileData = {
-            filename: path.basename(volumeData.rawFilePath),
-            data: await fileSystem.promises.readFile(
-                volumeData.rawFilePath,
-                "base64"
-            ),
-        };
-
-        const settingsFileData = {
-            filename: `${path.parse(volumeData.rawFilePath).name}.json`,
-            data: JSON.parse(volumeData.settings),
-        };
-
-        return res.json({
-            rawData: rawFileData,
-            settings: settingsFileData,
+        fileStream.on("error", (err) => {
+            console.error("File streaming error:", err);
+            throw new ApiError(500, "Error reading file.");
         });
     }
 

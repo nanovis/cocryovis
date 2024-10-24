@@ -422,8 +422,8 @@ paths:
   
   /volumeData/{type}/{idVolumeData}/data:
     get:
-      summary: Fetch raw data and settings file from volume data.
-      operationId: getVolumeDataFiles
+      summary: Fetch raw file data.
+      operationId: getVolumeDataRaw
       tags:
         - Volume Data
       parameters:
@@ -431,11 +431,12 @@ paths:
         - $ref: '#/components/parameters/idVolumeData'
       responses:
         '200':
-          description: Requested volume data files.
+          description: A RAW file
           content:
-            application/json:
+            application/octet-stream:
               schema:
-                $ref: "#/components/schemas/VolumeDataFiles"
+                type: string
+                format: binary
 
   /volumeData/{type}/{idVolumeData}/visualization-data:
     get:
@@ -1076,8 +1077,6 @@ components:
       - $ref: "#/components/schemas/RawData"
       - $ref: "#/components/schemas/SparseLabelVolumeData"
       - $ref: "#/components/schemas/PseudoLabelVolumeData"
-    VolumeDataFiles:
-      $ref: "./schemas/VolumeData.yaml"
     Model:
       $ref: "./schemas/Model.yaml#/Model"
     ModelDetails:
