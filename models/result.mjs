@@ -6,8 +6,6 @@ import fsPromises from "node:fs/promises";
 import appConfig from "../tools/config.mjs";
 import path from "path";
 import fileSystem from "fs";
-import { readdir, rename } from "node:fs/promises";
-import Utils from "../tools/utils.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
@@ -15,6 +13,9 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 import ResultFile from "./resultFile.mjs";
+import fileUpload from "express-fileupload";
+import { PendingFile } from "../tools/file-handler.mjs";
+import Utils from "../tools/utils.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -173,7 +174,7 @@ export default class Result extends DatabaseModel {
                     });
 
                     resultPath = await Result.reserveFolderName(result.id);
-                    await rename(folderPath, resultPath);
+                    await fsPromises.rename(folderPath, resultPath);
 
                     let rawVolumeChannel = null;
 
@@ -244,6 +245,251 @@ export default class Result extends DatabaseModel {
                 force: true,
             });
             throw error;
+        }
+    }
+
+    /**
+     * @param {Number} ownerId
+     * @param {Number} checkpointId
+     * @param {Number} volumeDataId
+     * @param {Number} volumeId
+     * @param {{name: String, index: Number, rawVolumeChannel: Boolean?}[]} volumeDescriptors,
+     * @param {fileUpload.UploadedFile[]} files
+     */
+    static async createFromFiles(
+        ownerId,
+        checkpointId,
+        volumeDataId,
+        volumeId,
+        volumeDescriptors,
+        files
+    ) {
+        const volumeData = await RawVolumeData.getById(volumeDataId);
+
+        if (!volumeData.rawFilePath) {
+            throw new ApiError(
+                400,
+                "Source Volume Data is missing a raw file."
+            );
+        }
+
+        if (!volumeData.settings) {
+            throw new ApiError(
+                400,
+                "Source Volume Data is missing a settings file."
+            );
+        }
+
+        const pendingFiles = files.map((file) => new PendingFile(file));
+
+        const settings = JSON.parse(volumeData.settings);
+
+        const resultsFolderPath = path.join(
+            appConfig.dataPath,
+            this.resultsFolder
+        );
+        fsPromises.mkdir(resultsFolderPath, {
+            recursive: true,
+        });
+
+        let resultPath = null;
+        let meanFilteredTmpFolder = null;
+        let meanFilteredFilePath = null;
+
+        if (
+            !volumeDescriptors.some(
+                (volume) => volume?.rawVolumeChannel === true
+            )
+        ) {
+            await fsPromises.mkdir(
+                path.join(appConfig.tempPath, "mean-filter"),
+                {
+                    recursive: true,
+                }
+            );
+            meanFilteredTmpFolder = await fsPromises.mkdtemp(
+                path.join(appConfig.tempPath, "mean-filter") + "/"
+            );
+            meanFilteredFilePath = path.join(
+                meanFilteredTmpFolder,
+                "tmp_mean_filtered.raw"
+            );
+            await Utils.meanFilter(
+                volumeData.rawFilePath,
+                settings.size.x,
+                settings.size.y,
+                settings.size.z,
+                meanFilteredFilePath
+            );
+        }
+
+        try {
+            return await prismaManager.db.$transaction(
+                async (tx) => {
+                    /** @type {ResultDB} */
+                    let result = await tx.result.create({
+                        data: {
+                            ownerId: ownerId,
+                            checkpointId: checkpointId,
+                            volumeDataId: volumeDataId,
+                            volumes: {
+                                connect: {
+                                    id: volumeId,
+                                },
+                            },
+                        },
+                    });
+
+                    resultPath = await Result.reserveFolderName(
+                        result.id,
+                        true
+                    );
+
+                    let rawVolumeChannel = null;
+
+                    for (const [i, pendingFile] of pendingFiles.entries()) {
+                        const settingFile = { ...settings };
+                        settingFile.file = pendingFile.filteredFileName;
+                        settingFile.transferFunction = Result.#getTFName(
+                            volumeDescriptors[i].name
+                        );
+                        const settingFileName = `${
+                            path.parse(pendingFile.filteredFileName).name
+                        }.json`;
+
+                        await pendingFile.saveAs(resultPath);
+                        await fsPromises.writeFile(
+                            path.join(resultPath, settingFileName),
+                            JSON.stringify(settingFile, null, 2),
+                            "utf8"
+                        );
+
+                        await ResultFile.create(
+                            volumeDescriptors[i].name,
+                            pendingFile.filteredFileName,
+                            settingFileName,
+                            volumeDescriptors[i].index,
+                            result.id,
+                            tx
+                        );
+
+                        if (volumeDescriptors[i].rawVolumeChannel) {
+                            if (rawVolumeChannel !== null) {
+                                throw new ApiError(
+                                    500,
+                                    "Failed result creation: Two volumes marked as raw volume channel."
+                                );
+                            }
+                            rawVolumeChannel = volumeDescriptors[i].index;
+                        }
+                    }
+
+                    if (meanFilteredFilePath !== null) {
+                        const volumeName = "Mean3-Inverted";
+                        const meanFilteredFileName = `${
+                            path.parse(volumeData.rawFilePath).name
+                        }_mean3_inverted.raw`;
+
+                        const settingFile = { ...settings };
+                        settingFile.file = meanFilteredFileName;
+                        settingFile.transferFunction =
+                            Result.#getTFName(volumeName);
+
+                        fsPromises.rename(
+                            meanFilteredFilePath,
+                            path.join(resultPath, meanFilteredFileName)
+                        );
+
+                        const settingFileName = `${
+                            path.parse(meanFilteredFileName).name
+                        }.json`;
+
+                        await fsPromises.writeFile(
+                            path.join(resultPath, settingFileName),
+                            JSON.stringify(settingFile, null, 2),
+                            "utf8"
+                        );
+
+                        const usedIndices = volumeDescriptors
+                            .map((descriptor) => descriptor.index)
+                            .sort((a, b) => a - b);
+
+                        let index = 0;
+                        for (let i = 0; i < usedIndices.length; i++) {
+                            if (usedIndices[i] !== index) {
+                                break;
+                            }
+                            index++;
+                        }
+
+                        rawVolumeChannel = index;
+
+                        await ResultFile.create(
+                            volumeName,
+                            meanFilteredFileName,
+                            settingFileName,
+                            index,
+                            result.id,
+                            tx
+                        );
+                    }
+
+                    result = await tx.result.update({
+                        where: { id: result.id },
+                        data: {
+                            folderPath: resultPath,
+                            rawVolumeChannel: rawVolumeChannel,
+                        },
+                    });
+
+                    return result;
+                },
+                {
+                    timeout: 60000,
+                }
+            );
+        } catch (error) {
+            if (resultPath !== null) {
+                await fsPromises.rm(resultPath, {
+                    recursive: true,
+                    force: true,
+                });
+            }
+            if (meanFilteredFilePath !== null) {
+                await fsPromises.rm(meanFilteredFilePath, {
+                    recursive: true,
+                    force: true,
+                });
+            }
+            throw error;
+        } finally {
+            if (meanFilteredTmpFolder !== null) {
+                await fsPromises.rm(meanFilteredTmpFolder, {
+                    recursive: true,
+                    force: true,
+                });
+            }
+        }
+    }
+
+    /**
+     * @param {String} volumeName
+     * @returns {String}
+     */
+    static #getTFName(volumeName) {
+        switch (volumeName) {
+            case "Spikes":
+                return "tf-Spikes.json";
+            case "Membrane":
+                return "tf-Membrane.json";
+            case "Inner":
+                return "tf-Inner.json";
+            case "Background":
+                return "tf-Background.json";
+            case "Mean3-Inverted":
+                return "tf-raw.json";
+            default:
+                return "tf-default.json";
         }
     }
 
@@ -388,9 +634,10 @@ export default class Result extends DatabaseModel {
 
     /**
      * @param {Number} id
+     * @param {Boolean} create
      * @return {Promise<String>}
      */
-    static async reserveFolderName(id) {
+    static async reserveFolderName(id, create = false) {
         const resultsFolderPath = path.join(
             appConfig.dataPath,
             this.resultsFolder
@@ -407,6 +654,11 @@ export default class Result extends DatabaseModel {
                 });
             }
         }
+
+        if (create) {
+            await fsPromises.mkdir(folderPath, { recursive: true });
+        }
+
         return folderPath;
     }
 

@@ -209,4 +209,46 @@ export default class Utils {
         });
         return arrMap;
     }
+
+    /**
+     * @param {String} rawFilePath
+     * @param {Number} width
+     * @param {Number} height
+     * @param {Number} depth
+     * @param {String} outputPath
+     * @param {Number} filterSize
+     * @returns {Promise<String>}
+     */
+    static async meanFilter(
+        rawFilePath,
+        width,
+        height,
+        depth,
+        outputPath,
+        filterSize = null
+    ) {
+        const rawFileAbsolutePath = path.resolve(rawFilePath);
+        const outputAbsolutePath = path.resolve(outputPath);
+
+        /** @type {Array<Number | String>} */
+        const params = [
+            `\"${rawFileAbsolutePath}\"`,
+            width,
+            height,
+            depth,
+            `\"${outputAbsolutePath}\"`,
+        ];
+
+        if (filterSize != null) {
+            params.push(filterSize);
+        }
+
+        const command = `${appConfig.nanoOetzi.python} \"${path.join(
+            "tools-python",
+            "mean-filter.py"
+        )}\" ${params.join(" ")}`;
+
+        await execPromise(command);
+        return outputPath;
+    }
 }

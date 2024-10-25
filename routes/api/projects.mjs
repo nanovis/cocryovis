@@ -231,6 +231,9 @@ projectsApi.get(`/result/:idResult/details`, restrictApi, ResultController.getDe
 // Get Results From Volume
 projectsApi.get(`/volume/:idVolume/results`, restrictApi, ResultController.getFromVolume);
 
+// Create Result from Fules
+projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
+
 // Remove Result
 // actions.get(`/:idProject/result/:idResult/delete`, restrictApi, ResultController.deleteResult);
 projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultController.removeFromVolume);

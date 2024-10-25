@@ -857,6 +857,55 @@ paths:
                 $ref: '#/components/schemas/VisualizationDataMultiVolume'
 
   /volume/{idVolume}/results:
+    post:
+      summary: Creates a result from files
+      operationId: createResult
+      tags:
+        - Result
+      parameters:
+        - $ref: '#/components/parameters/idVolume'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    description: Multiple .raw files
+          application/json:
+            schema:
+              type: object
+              properties:
+                idCheckpoint:
+                  type: integer
+                idVolumeData:
+                  type: integer
+                volumeDescriptors:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    - index
+                    properties:
+                      name:
+                        type: string
+                      index:
+                        type: integer
+                      rawVolumeChannel:
+                        type: boolean
+      responses:
+        '200':
+            description: Created Result.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Result'
     get:
       summary: Fetches Results related to Volume together with their related checkpoint.
       operationId: getResultFromVolume
@@ -870,7 +919,9 @@ paths:
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/ResultDetails'
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ResultDetails'
 
   /volume/{idVolume}/result/{idResult}:
     delete:

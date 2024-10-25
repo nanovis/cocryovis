@@ -209,4 +209,28 @@ export default class ResultController {
             `The transfer function ${transferFunction} is missing from the server.`
         );
     }
+
+    static async createFromFiles(req, res) {
+        if (!req.files || !req.files.files) {
+            throw new ApiError(400, "No file uploaded");
+        }
+
+        let files = req.files.files;
+        if (!Array.isArray(files)) {
+            files = [files];
+        }
+
+        const data = JSON.parse(req.body.data);
+
+        const result = await Result.createFromFiles(
+            req.session.user.id,
+            data.idCheckpoint,
+            data.idVolumeData,
+            Number(req.params.idVolume),
+            data.volumeDescriptors,
+            files
+        );
+
+        return res.json(result);
+    }
 }

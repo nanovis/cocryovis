@@ -12,6 +12,7 @@ db.json
 /prisma/migrations/
 .vscode/
 .venv/
+/temp/
 
 sessions/*.db
 sessions/*.db-shm

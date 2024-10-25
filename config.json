@@ -1,5 +1,6 @@
 {
     "idleSessionExpirationMin": 30,
+    "tempPath": "./temp",
     "annotationsCachePath": "./cache/annotations/",
     "mrcCachePath": "./cache/mrc/",
     "dataPath": "./data",
@@ -23,6 +24,9 @@
         "python": "python",
         "workCache": "cache/nano-oetzi",
         "maxQueueSize": 20,
+        "meanFiltering": {
+            "command": "mean_filtering.py"
+        },
         "inference": {
             "command": "inference_script.py",
             "defaultModel": "four_classes_model.ckpt",
