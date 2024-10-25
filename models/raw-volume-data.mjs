@@ -70,7 +70,7 @@ export default class RawVolumeData extends VolumeData {
             volumeId,
             [this.modelName],
             async () => {
-                const unpackedFiles = unpackFiles([file], [".mrc"]);
+                const unpackedFiles = await unpackFiles([file], [".mrc"]);
                 if (unpackedFiles.length == 0) {
                     throw new ApiError(400, "No valid MRC file found.");
                 }
@@ -283,7 +283,7 @@ export default class RawVolumeData extends VolumeData {
      * @return {Promise<RawVolumeDataDB>}
      */
     static async uploadMrcFile(id, file) {
-        const unpackedFiles = unpackFiles([file], [".mrc"]);
+        const unpackedFiles = await unpackFiles([file], [".mrc"]);
         if (unpackedFiles.length == 0) {
             throw new ApiError(400, "No valid MRC file found.");
         }

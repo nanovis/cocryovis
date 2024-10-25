@@ -6,7 +6,7 @@ import appConfig from "../tools/config.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
-import fileUpload from "express-fileupload";
+import fsPromises from "fs/promises";
 
 export default class VolumeController {
     static async getVolume(req, res) {
@@ -163,10 +163,11 @@ export default class VolumeController {
         if (Array.isArray(req.files.file)) {
             throw new ApiError(400, "To many files uploaded.");
         }
-        /** @type {fileUpload.UploadedFile} */
-        const annotationsFile = req.files.file;
+        const annotationsFile = await fsPromises.readFile(
+            req.files.file.tempFilePath
+        );
 
-        const annotations = JSON.parse(annotationsFile.data.toString("utf8"));
+        const annotations = JSON.parse(annotationsFile.toString("utf8"));
 
         if (!Array.isArray(annotations) || annotations.length < 1) {
             throw new ApiError(400, "No annotations found.");

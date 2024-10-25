@@ -20,7 +20,7 @@ import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
 import appConfig from "./tools/config.mjs";
-import { logErrors, clientErrorHandler } from './tools/error-handler.mjs'
+import { logErrors, clientErrorHandler } from "./tools/error-handler.mjs";
 
 const port = argv[2] || 8080;
 const app = express();
@@ -51,7 +51,13 @@ app.set("views", [path.join(".", "views"), path.join(".", "views", "project")]);
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(fileUpload({ createParentPath: true }));
+app.use(
+    fileUpload({
+        createParentPath: true,
+        useTempFiles: true,
+        tempFileDir: path.join(appConfig.tempPath, "upload"),
+    })
+);
 
 fileSystem.mkdirSync("sessions", { recursive: true });
 

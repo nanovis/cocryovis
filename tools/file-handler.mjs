@@ -8,6 +8,7 @@ import fileSystem from "fs";
 import appConfig from "../tools/config.mjs";
 import { rm } from "node:fs/promises";
 import { ApiError } from "./error-handler.mjs";
+import fsPromises from "fs/promises";
 
 export class PendingUpload {
     /**
@@ -32,9 +33,9 @@ export class PendingUpload {
     }
 
     /**
-     * @return {Buffer}
+     * @return {Promise<Buffer>}
      */
-    get data() {
+    async getData() {
         throw new Error("Method not implemented");
     }
 
@@ -84,10 +85,11 @@ export class PendingFile extends PendingUpload {
     }
 
     /**
-     * @return {Buffer}
+     * @return {Promise<Buffer>}
      */
-    get data() {
-        return this.file.data;
+    async getData() {
+        const contents = await fsPromises.readFile(this.file.tempFilePath);
+        return contents;
     }
 
     /**
@@ -152,9 +154,9 @@ export class PendingZipFile extends PendingUpload {
     }
 
     /**
-     * @return {Buffer}
+     * @return {Promise<Buffer>}
      */
-    get data() {
+    async getData() {
         return this.entry.getData();
     }
 
@@ -197,14 +199,17 @@ export class PendingZipFile extends PendingUpload {
 /**
  * @param {fileUpload.UploadedFile[]} files
  * @param {String[]?} acceptedExtensions
- * @returns {PendingUpload[]}
+ * @returns {Promise<PendingUpload[]>}
  */
-export function unpackFiles(files, acceptedExtensions = []) {
+export async function unpackFiles(files, acceptedExtensions = []) {
     const result = [];
 
     for (const file of files) {
         if (path.extname(file.name) === ".zip") {
-            let zip = new AdmZip(files[0].data);
+            const zipFileContents = await fsPromises.readFile(
+                file.tempFilePath
+            );
+            let zip = new AdmZip(zipFileContents);
             const zipEntries = zip.getEntries();
             for (const entry of zipEntries) {
                 if (

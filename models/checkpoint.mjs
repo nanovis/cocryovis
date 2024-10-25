@@ -102,7 +102,7 @@ export default class Checkpoint extends DatabaseModel {
      * @return {Promise<CheckpointDB[]>}
      */
     static async createFromFiles(ownerId, modelId, files) {
-        const unpackedFiles = unpackFiles(files, this.acceptedFileExtensions);
+        const unpackedFiles = await unpackFiles(files, this.acceptedFileExtensions);
         /** @type {CheckpointDB[]} */
         const result = [];
 

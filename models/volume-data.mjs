@@ -25,7 +25,7 @@ import { ApiError } from "../tools/error-handler.mjs";
  * @extends {DatabaseModel}
  */
 export default class VolumeData extends DatabaseModel {
-    static volumeDataFolder = "volume-data"
+    static volumeDataFolder = "volume-data";
     static rawFileExtensions = [".raw"];
     static settingFileExtensions = [".json"];
     static acceptedFileExtensions = this.rawFileExtensions.concat(
@@ -95,88 +95,96 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async createFromFiles(ownerId, volumeId, files) {
-        return await Volume.withWriteLock(volumeId, [this.modelName], async () => {
-            const unpackedFiles = unpackFiles(
-                files,
-                this.acceptedFileExtensions
-            );
-
-            let rawFile = null;
-            let settingsFile = null;
-
-            for (const unpackedFile of unpackedFiles) {
-                if (
-                    !rawFile &&
-                    Utils.isFileExtensionAccepted(
-                        unpackedFile.fileName,
-                        this.rawFileExtensions
-                    )
-                ) {
-                    rawFile = unpackedFile;
-                } else if (
-                    !settingsFile &&
-                    Utils.isFileExtensionAccepted(
-                        unpackedFile.fileName,
-                        this.settingFileExtensions
-                    )
-                ) {
-                    settingsFile = unpackedFile;
-                }
-            }
-
-            if (!rawFile || !settingsFile) {
-                throw new ApiError(
-                    400,
-                    "Volume data requires both a .raw file and a settings file to create."
+        return await Volume.withWriteLock(
+            volumeId,
+            [this.modelName],
+            async () => {
+                const unpackedFiles = await unpackFiles(
+                    files,
+                    this.acceptedFileExtensions
                 );
-            }
 
-            return await prismaManager.db.$transaction(
-                async (tx) => {
-                    /** @type {VolumeDataDB} */
-                    let volumeData = await tx[this.modelName].create({
-                        data: {
-                            ownerId: ownerId,
-                            volumes: {
-                                connect: { id: volumeId },
-                            },
-                        },
-                    });
-                    let folderPath = null;
-                    try {
-                        folderPath = await this.createVolumeDataFolder(
-                            volumeData.id
-                        );
-                        const rawFilePath = await rawFile.saveAs(folderPath);
-                        const settings = await this.parseSettings(
-                            settingsFile.data.toString("utf-8"),
-                            rawFilePath
-                        );
+                let rawFile = null;
+                let settingsFile = null;
 
-                        volumeData = await tx[this.modelName].update({
-                            where: { id: volumeData.id },
+                for (const unpackedFile of unpackedFiles) {
+                    if (
+                        !rawFile &&
+                        Utils.isFileExtensionAccepted(
+                            unpackedFile.fileName,
+                            this.rawFileExtensions
+                        )
+                    ) {
+                        rawFile = unpackedFile;
+                    } else if (
+                        !settingsFile &&
+                        Utils.isFileExtensionAccepted(
+                            unpackedFile.fileName,
+                            this.settingFileExtensions
+                        )
+                    ) {
+                        settingsFile = unpackedFile;
+                    }
+                }
+
+                if (!rawFile || !settingsFile) {
+                    throw new ApiError(
+                        400,
+                        "Volume data requires both a .raw file and a settings file to create."
+                    );
+                }
+
+                return await prismaManager.db.$transaction(
+                    async (tx) => {
+                        /** @type {VolumeDataDB} */
+                        let volumeData = await tx[this.modelName].create({
                             data: {
-                                path: folderPath,
-                                rawFilePath: rawFilePath,
-                                settings: settings,
+                                ownerId: ownerId,
+                                volumes: {
+                                    connect: { id: volumeId },
+                                },
                             },
                         });
-                    } catch (error) {
-                        if (folderPath != null) {
-                            await fsPromises.rm(folderPath, {
-                                recursive: true,
-                                force: true,
+                        let folderPath = null;
+                        try {
+                            folderPath = await this.createVolumeDataFolder(
+                                volumeData.id
+                            );
+                            const rawFilePath = await rawFile.saveAs(
+                                folderPath
+                            );
+                            const settingFileContents =
+                                await settingsFile.getData();
+                            const settings = await this.parseSettings(
+                                settingFileContents.toString("utf-8"),
+                                rawFilePath
+                            );
+
+                            volumeData = await tx[this.modelName].update({
+                                where: { id: volumeData.id },
+                                data: {
+                                    path: folderPath,
+                                    rawFilePath: rawFilePath,
+                                    settings: settings,
+                                },
                             });
+                        } catch (error) {
+                            if (folderPath != null) {
+                                await fsPromises.rm(folderPath, {
+                                    recursive: true,
+                                    force: true,
+                                });
+                            }
+                            throw error;
                         }
-                        throw error;
+                        return volumeData;
+                    },
+                    {
+                        timeout: 60000,
                     }
-                    return volumeData;
-                },
-                {
-                    timeout: 60000,
-                }
-            );
-        });
+                );
+            }
+        );
     }
 
     /**
@@ -341,7 +349,7 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async uploadFiles(id, files, preventRawFileOverride = false) {
-        const unpackedFiles = unpackFiles(files, this.acceptedFileExtensions);
+        const unpackedFiles = await unpackFiles(files, this.acceptedFileExtensions);
 
         let newRawFile = null;
         let newSettingFile = null;
@@ -419,8 +427,10 @@ export default class VolumeData extends DatabaseModel {
                         }
 
                         if (newSettingFile) {
+                            const settingFileContents =
+                                await newSettingFile.getData();
                             changes.settings = await this.parseSettings(
-                                newSettingFile.data.toString("utf-8"),
+                                settingFileContents.toString("utf-8"),
                                 newRawFile != null
                                     ? changes.rawFilePath
                                     : volumeData.rawFilePath
