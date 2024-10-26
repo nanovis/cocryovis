@@ -761,6 +761,45 @@ paths:
               schema:
                 type: string
 
+  /checkpoint/{idCheckpoint}/as-text:
+    get:
+      summary: Get checkpoint formatted as a text file 
+      operationId: getCheckpointAsText
+      tags:
+        - Checkpoint
+      parameters:
+        - $ref: '#/components/parameters/idCheckpoint'
+      responses:
+        '200':
+          description: Checkpoint file in txt format.
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /checkpoint/to-text:
+    get:
+      summary: Format checkpoint as a text file 
+      operationId: checkpointToText
+      tags:
+        - Checkpoint
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: A single .ckpt file.
+      responses:
+        '200':
+          description: Checkpoint file in txt format.
+          content:
+            text/plain:
+              schema:
+                type: string
+
   /result/{idResult}:
     get:
       summary: Fetch Result info.

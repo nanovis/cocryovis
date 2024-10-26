@@ -3,7 +3,7 @@
 import fileSystem from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import appConfig from "./config.mjs";
 import { promisify } from "node:util";
 import fs from "fs";
@@ -174,5 +174,37 @@ export default class Utils {
 
         await execPromise(command);
         return outputPath;
+    }
+
+    /**
+     * @param {String} checkpointPath
+     * @returns {Promise<String>}
+     */
+    static async ckptToText(checkpointPath) {
+        return new Promise((resolve, reject) => {
+            const pythonProcess = spawn(appConfig.nanoOetzi.python, [
+                path.join("tools-python", "ckpt-to-text.py"),
+                "-c",
+                path.resolve(checkpointPath),
+            ]);
+
+            let outputData = "";
+
+            pythonProcess.stdout.on("data", (data) => {
+                outputData += data.toString(); // Accumulate data
+            });
+
+            pythonProcess.stderr.on("data", (error) => {
+                reject(`Error: ${error}`);
+            });
+
+            pythonProcess.on("close", (code) => {
+                if (code !== 0) {
+                    reject(`Python process exited with code ${code}`);
+                } else {
+                    resolve(outputData);
+                }
+            });
+        });
     }
 }

@@ -221,6 +221,12 @@ projectsApi.post(`/model/:idModel/checkpoints`, restrictApi, CheckpointControlle
 // Download checkpoint
 projectsApi.get(`/checkpoint/:idCheckpoint/download`, CheckpointController.downloadCheckpoint);
 
+// Download checkpoint
+projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, CheckpointController.checkpointToText);
+
+// Download checkpoint
+projectsApi.get(`/checkpoint/to-text`, CheckpointController.checkpointFileToText);
+
 /////// RESULTS
 // Get Result
 projectsApi.get(`/result/:idResult`, restrictApi, ResultController.getById);

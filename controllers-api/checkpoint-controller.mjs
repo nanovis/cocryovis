@@ -4,6 +4,8 @@ import Checkpoint from "../models/checkpoint.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
+import Utils from "../tools/utils.mjs";
+import fileUpload from "express-fileupload";
 
 export default class CheckpointController {
     static async getCheckpoint(req, res) {
@@ -61,5 +63,34 @@ export default class CheckpointController {
             Number(req.params.idModel)
         );
         return res.sendStatus(204);
+    }
+
+    static async checkpointToText(req, res) {
+        const checkpoint = await Checkpoint.getById(
+            Number(req.params.idCheckpoint)
+        );
+
+        if (!checkpoint.filePath) {
+            throw new ApiError(400, "Checkpoint is missing a file.");
+        }
+
+        const checkpointTxt = await Utils.ckptToText(checkpoint.filePath);
+
+        return res.send(checkpointTxt);
+    }
+
+    static async checkpointFileToText(req, res) {
+        if (!req.files || !req.files.checkpoint) {
+            throw new ApiError(400, "No files uploaded.");
+        }
+
+        /** @type {fileUpload.UploadedFile} */
+        const checkpointFile = req.files.checkpoint;
+
+        const checkpointTxt = await Utils.ckptToText(
+            checkpointFile.tempFilePath
+        );
+
+        return res.send(checkpointTxt);
     }
 }
