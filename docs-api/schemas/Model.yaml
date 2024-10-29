@@ -24,7 +24,6 @@ ModelDetails:
     - name
     - description
     - ownerId
-    - checkpoints
   properties:
     id:
       type: integer
@@ -40,3 +39,7 @@ ModelDetails:
       type: array
       items:
         $ref: "./Checkpoint.yaml"
+    projects:
+      type: array
+      items:
+        $ref: "./Project.yaml#/Project"

@@ -24,8 +24,6 @@ ProjectDetails:
     - name
     - description
     - ownerId
-    - volumes
-    - models
   properties:
     id:
       type: integer
@@ -45,3 +43,5 @@ ProjectDetails:
       type: array
       items:
         $ref: "./Model.yaml#/ModelDetails"
+    User:
+       $ref: "./User.yaml"

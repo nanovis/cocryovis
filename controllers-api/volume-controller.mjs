@@ -10,27 +10,38 @@ import fsPromises from "fs/promises";
 
 export default class VolumeController {
     static async getVolume(req, res) {
-        const volume = await Volume.getById(Number(req.params.idVolume));
-
-        return res.status(200).json(volume);
-    }
-
-    static async getVolumeDetails(req, res) {
-        const volume = await Volume.getByIdDeep(Number(req.params.idVolume), {
-            rawData: true,
-            sparseVolumes: true,
-            pseudoVolumes: true,
-        });
+        const options = VolumeController.#parseOptionQuery(req);
+        const volume = await Volume.getById(
+            Number(req.params.idVolume),
+            options
+        );
 
         return res.status(200).json(volume);
     }
 
     static async getVolumesFromProject(req, res) {
+        const options = VolumeController.#parseOptionQuery(req);
         const volumes = await Volume.getVolumesFromProject(
-            Number(req.params.idProject)
+            Number(req.params.idProject),
+            options
         );
 
         return res.status(200).json(volumes);
+    }
+
+    /**
+     * @returns {import("../models/volume.mjs").Options}
+     */
+    static #parseOptionQuery(req) {
+        const options = {
+            rawData: !!req?.query?.rawData,
+            sparseVolumes: !!req?.query?.sparseVolumes,
+            pseudoVolumes: !!req?.query?.pseudoVolumes,
+            results: !!req?.query?.results,
+            projects: !!req?.query?.projects,
+        };
+
+        return options;
     }
 
     static async createVolume(req, res) {
@@ -99,7 +110,7 @@ export default class VolumeController {
             throw new ApiError(400, "No file uploaded");
         }
 
-        const volume = await Volume.getByIdDeep(Number(req.params.idVolume), {
+        const volume = await Volume.getById(Number(req.params.idVolume), {
             rawData: true,
         });
         let rawDataId = volume.rawDataId;
@@ -121,7 +132,7 @@ export default class VolumeController {
     }
 
     static async addSparseLabelVolume(req, res) {
-        const volume = await Volume.getByIdDeep(Number(req.params.idVolume), {
+        const volume = await Volume.getById(Number(req.params.idVolume), {
             sparseVolumes: true,
         });
         if (volume.sparseVolumes.length >= appConfig.maxVolumeChannels) {
@@ -139,7 +150,7 @@ export default class VolumeController {
     }
 
     static async addPseudoLabelVolume(req, res) {
-        const volume = await Volume.getByIdDeep(Number(req.params.idVolume), {
+        const volume = await Volume.getById(Number(req.params.idVolume), {
             pseudoVolumes: true,
         });
         if (volume.pseudoVolumes.length >= appConfig.maxVolumeChannels) {

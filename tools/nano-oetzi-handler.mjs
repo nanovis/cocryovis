@@ -287,7 +287,7 @@ export default class NanoOetziHandler {
             );
         }
 
-        const volume = await Volume.getByIdDeep(volumeId, { rawData: true });
+        const volume = await Volume.getById(volumeId, { rawData: true });
         const checkpoint = await Checkpoint.getById(checkpointId);
 
         NanoOetziHandler.#checkInferenceInput(volume, checkpoint);
@@ -347,7 +347,7 @@ export default class NanoOetziHandler {
         );
 
         try {
-            const volume = await Volume.getByIdDeep(volumeId, {
+            const volume = await Volume.getById(volumeId, {
                 rawData: true,
             });
             const checkpoint = await Checkpoint.getById(checkpointId);

@@ -24,9 +24,10 @@ export default class DatabaseModel {
 
     /**
      * @param {Number} id
+     * @param {any} options
      * @return {Promise<Object>}
      */
-    static async getById(id) {
+    static async getById(id, options) {
         const entry = await this.db.findUniqueOrThrow({
             where: { id: id },
         });

@@ -148,7 +148,7 @@ export default class IlastikHandler {
             );
         }
 
-        const volume = await Volume.getByIdDeep(volumeId, {
+        const volume = await Volume.getById(volumeId, {
             rawData: true,
             sparseVolumes: true,
             pseudoVolumes: true,
@@ -274,7 +274,7 @@ export default class IlastikHandler {
         const logFile = await LogFile.createLogFile("label-generation");
 
         try {
-            const volume = await Volume.getByIdDeep(volumeId, {
+            const volume = await Volume.getById(volumeId, {
                 rawData: true,
                 sparseVolumes: true,
                 pseudoVolumes: true,

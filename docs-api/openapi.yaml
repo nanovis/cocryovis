@@ -148,13 +148,33 @@ paths:
         - Project
       parameters:
         - $ref: '#/components/parameters/idProject'
+        - in: query
+          name: volumes
+          schema:
+            type: boolean
+          description: Whether the request returns project volumes.
+        - in: query
+          name: models
+          schema:
+            type: boolean
+          description: Whether the request returns project models.
+        - in: query
+          name: checkpoint
+          schema:
+            type: boolean
+          description: Whether the request returns checkpoints with project models. Requires models query set to true in order to have an effect.
+        - in: query
+          name: owner
+          schema:
+            type: boolean
+          description: Whether the request returns project owner.
       responses:
         '200':
           description: Requested project.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Project"
+                $ref: "#/components/schemas/ProjectDetails"
         '404':
           description: Project not found.
           content:
@@ -177,22 +197,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
-  /project/{idProject}/details:
-    get:
-      summary: Get project, and its volumes and models.
-      operationId: projectDetails
-      tags:
-        - Project
-      parameters:
-        - $ref: '#/components/parameters/idProject'
-      responses:
-        '201':
-          description: Project details.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProjectDetails"
 
   /project/{idProject}/deep-clone:
     post:
@@ -294,22 +298,31 @@ paths:
         - Volume
       parameters:
         - $ref: '#/components/parameters/idVolume'
-      responses:
-        '200':
-          description: Requested volume info.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Volume"
-
-  /volume/{idVolume}/details:
-    get:
-      summary: Fetch volume info with the related raw volume, sparse label and pseudo label data.
-      operationId: getVolumeDetails
-      tags:
-        - Volume
-      parameters:
-        - $ref: '#/components/parameters/idVolume'
+        - in: query
+          name: rawData
+          schema:
+            type: boolean
+          description: Whether the request returns volume raw data.
+        - in: query
+          name: sparseVolumes
+          schema:
+            type: boolean
+          description: Whether the request returns volume sparse label volumes.
+        - in: query
+          name: pseudoVolumes
+          schema:
+            type: boolean
+          description: Whether the request returns volume pseudo label volumes.
+        - in: query
+          name: results
+          schema:
+            type: boolean
+          description: Whether the request returns volume results.
+        - in: query
+          name: projects
+          schema:
+            type: boolean
+          description: Whether the request returns volume projects.
       responses:
         '200':
           description: Requested volume info.
@@ -635,28 +648,22 @@ paths:
 
   /model/{idModel}:
     get:
-      summary: Fetch Model info.
+      summary: Fetch Model info
       operationId: getModelById
       tags:
         - Model
       parameters:
         - $ref: '#/components/parameters/idModel'
-      responses:
-        '200':
-          description: Requested model info.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Model"
-
-  /model/{idModel}/details:
-    get:
-      summary: Fetch model info with the related checkpoints.
-      operationId: getModelDetails
-      tags:
-        - Model
-      parameters:
-        - $ref: '#/components/parameters/idModel'
+        - in: query
+          name: checkpoints
+          schema:
+            type: boolean
+          description: Whether the request returns model checkpoints.
+        - in: query
+          name: projects
+          schema:
+            type: boolean
+          description: Whether the request returns model projects.
       responses:
         '200':
           description: Requested model info.

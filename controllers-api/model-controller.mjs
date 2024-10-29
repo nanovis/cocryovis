@@ -4,23 +4,30 @@ import Model from "../models/model.mjs";
 
 export default class ModelController {
     static async getModel(req, res) {
-        const model = await Model.getById(Number(req.params.idModel));
-
-        return res.status(200).json(model);
-    }
-
-    static async getModelDetails(req, res) {
-        const model = await Model.getByIdDeep(Number(req.params.idModel));
+        const options = this.#parseOptionQuery(req);
+        const model = await Model.getById(Number(req.params.idModel), options);
 
         return res.status(200).json(model);
     }
 
     static async getModelsFromProject(req, res) {
+        const options = ModelController.#parseOptionQuery(req);
         const models = await Model.getModelsFromProject(
-            Number(req.params.idProject)
+            Number(req.params.idProject),
+            options
         );
 
         return res.status(200).json(models);
+    }
+
+    /**
+     * @returns {import("../models/model.mjs").Options}
+     */
+    static #parseOptionQuery(req) {
+        return {
+            checkpoints: !!req?.query?.checkpoints,
+            projects: !!req?.query?.projects,
+        };
     }
 
     static async createModel(req, res) {

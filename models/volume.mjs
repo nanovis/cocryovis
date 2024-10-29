@@ -18,6 +18,7 @@ import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 /**
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
+ * @typedef {{rawData?: boolean, sparseVolumes?: boolean, pseudoVolumes?: boolean, results?: boolean, projects?: boolean }} Options
  */
 
 export default class Volume extends DatabaseModel {
@@ -30,17 +31,48 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @return {Promise<VolumeDB>}
+     * @param {Options} options
      */
-    static async getById(id) {
-        return await super.getById(id);
+    static async getById(
+        id,
+        {
+            rawData = false,
+            sparseVolumes = false,
+            pseudoVolumes = false,
+            results = false,
+            projects = false,
+        } = {}
+    ) {
+        const entry = await this.db.findUnique({
+            where: { id: id },
+            include: {
+                rawData: rawData,
+                sparseVolumes: sparseVolumes,
+                pseudoVolumes: pseudoVolumes,
+                results: results,
+                projects: projects,
+            },
+        });
+        if (entry === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
+        }
+        return entry;
     }
 
     /**
      * @param {Number} projectId
-     * @return {Promise<VolumeDB[]>}
+     * @param {Options} options
      */
-    static async getVolumesFromProject(projectId) {
+    static async getVolumesFromProject(
+        projectId,
+        {
+            rawData = false,
+            sparseVolumes = false,
+            pseudoVolumes = false,
+            results = false,
+            projects = false,
+        } = {}
+    ) {
         return await this.db.findMany({
             where: {
                 projects: {
@@ -48,6 +80,13 @@ export default class Volume extends DatabaseModel {
                         id: projectId,
                     },
                 },
+            },
+            include: {
+                rawData: rawData,
+                sparseVolumes: sparseVolumes,
+                pseudoVolumes: pseudoVolumes,
+                results: results,
+                projects: projects,
             },
         });
     }
@@ -58,33 +97,6 @@ export default class Volume extends DatabaseModel {
      */
     static async getByIds(ids) {
         return await super.getByIds(ids);
-    }
-
-    /**
-     * @param {Number} id
-     */
-    static async getByIdDeep(
-        id,
-        {
-            rawData = false,
-            sparseVolumes = false,
-            pseudoVolumes = false,
-            results = false,
-        }
-    ) {
-        let entry = await this.db.findUnique({
-            where: { id: id },
-            include: {
-                rawData: rawData,
-                sparseVolumes: sparseVolumes,
-                pseudoVolumes: pseudoVolumes,
-                results: results,
-            },
-        });
-        if (!entry) {
-            throw MissingResourceError.fromId(id, this.modelName);
-        }
-        return entry;
     }
 
     /**

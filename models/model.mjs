@@ -11,6 +11,7 @@ import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
+ * @typedef {{checkpoints?: boolean, projects?: boolean }} Options
  */
 
 export default class Model extends DatabaseModel {
@@ -23,10 +24,20 @@ export default class Model extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @return {Promise<ModelDB>}
+     * @param {Options} options
      */
-    static async getById(id) {
-        return await super.getById(id);
+    static async getById(id, { checkpoints = false, projects = false } = {}) {
+        const entry = await this.db.findUniqueOrThrow({
+            where: { id: id },
+            include: {
+                checkpoints: checkpoints,
+                projects: projects,
+            },
+        });
+        if (entry === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
+        }
+        return entry;
     }
 
     /**
@@ -38,26 +49,13 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     */
-    static async getByIdDeep(id) {
-        const entry = await this.db.findUnique({
-            where: { id: id },
-            include: {
-                checkpoints: true,
-            },
-        });
-        if (entry === null) {
-            throw MissingResourceError.fromId(id, this.modelName);
-        }
-        return entry;
-    }
-
-    /**
      * @param {Number} projectId
-     * @return {Promise<ModelDB[]>}
+     * @param {Options} options
      */
-    static async getModelsFromProject(projectId) {
+    static async getModelsFromProject(
+        projectId,
+        { checkpoints = false, projects = false } = {}
+    ) {
         return await this.db.findMany({
             where: {
                 projects: {
@@ -65,6 +63,10 @@ export default class Model extends DatabaseModel {
                         id: projectId,
                     },
                 },
+            },
+            include: {
+                checkpoints: checkpoints,
+                projects: projects,
             },
         });
     }

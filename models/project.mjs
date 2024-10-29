@@ -14,6 +14,7 @@ import { MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
+ * @typedef {{ volumes?: boolean, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean }} Options
  */
 
 export default class Project extends DatabaseModel {
@@ -25,42 +26,44 @@ export default class Project extends DatabaseModel {
 
     /**
      * @param {Number} userId
-     * @return {Promise<ProjectDB[]>}
+     * @param {Options} options
      */
-    static async getUserProjects(userId) {
+    static async getUserProjects(
+        userId,
+        { volumes = false, models = false, owner = false } = {}
+    ) {
         return await this.db.findMany({
             where: {
                 ownerId: userId,
             },
-        });
-    }
-
-    /**
-     * @param {Number} id
-     * @return {Promise<ProjectDB>}
-     */
-    static async getById(id) {
-        return await super.getById(id);
-    }
-
-    /**
-     * @param {Number} id
-     * @return {Promise<ProjectDB>}
-     */
-    static async getByIdDeep(id) {
-        const project = await this.db.findUnique({
-            where: {
-                id: id,
-            },
             include: {
-                volumes: true,
-                models: true,
+                volumes: volumes,
+                models: models,
+                owner: owner,
             },
         });
-        if (project === null) {
+    }
+
+    /**
+     * @param {Number} id
+     * @param {Options} options
+     */
+    static async getById(
+        id,
+        { volumes = false, models = false, owner = false } = {}
+    ) {
+        const entry = await this.db.findUnique({
+            where: { id: id },
+            include: {
+                volumes: volumes,
+                models: models,
+                owner: owner,
+            },
+        });
+        if (entry === null) {
             throw MissingResourceError.fromId(id, this.modelName);
         }
-        return project;
+        return entry;
     }
 
     /**
