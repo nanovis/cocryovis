@@ -1,6 +1,6 @@
 {
-    "rampLow": 0.45,
-	"rampHigh": 0.55,
+    "rampLow": 0,
+	"rampHigh": 0,
 	"color" : {
 		"x" : 255.0,
 		"y" : 255.0,

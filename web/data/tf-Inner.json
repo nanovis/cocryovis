@@ -1,10 +1,10 @@
 {
-    "rampLow": 0.2,
-	"rampHigh": 0.25,
-    "color": {
-        "x": 34,
-        "y": 51,
-        "z": 120
-    },
-	"comment" : "inner"
+  "rampLow": 0.7,
+  "rampHigh": 1,
+  "color": {
+    "x": 34,
+    "y": 51,
+    "z": 120
+  },
+  "comment": "tf-2"
 }
