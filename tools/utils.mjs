@@ -207,4 +207,67 @@ export default class Utils {
             });
         });
     }
+
+    /**
+     * @param {import("archiver").Archiver} archive
+     * @param {String[]} settings
+     * @param {String[]} rawFilePaths
+     * @param {Number?} rawVolumeChannel
+     * @returns {Promise<any>}
+     */
+    static async packVisualizationArchive(
+        archive,
+        settings,
+        rawFilePaths,
+        rawVolumeChannel = null
+    ) {
+        rawFilePaths.forEach((rawFilePath) => {
+            archive.file(rawFilePath, {
+                name: path.basename(rawFilePath),
+            });
+        });
+
+        const settingsFileNames = [];
+
+        for (const volumeSettings of settings) {
+            const settingsReference = JSON.parse(volumeSettings);
+            settingsReference.name = "Volume";
+
+            if (settingsReference.transferFunction) {
+                const publicTFPath = path.join(
+                    "web",
+                    "data",
+                    settingsReference.transferFunction
+                );
+                if (fileSystem.existsSync(publicTFPath)) {
+                    archive.file(publicTFPath, {
+                        name: path.join(
+                            "transfer-functions",
+                            settingsReference.transferFunction
+                        ),
+                    });
+                } else {
+                    delete settingsReference.transferFunction;
+                }
+            }
+
+            const settingsFileName =
+                path.parse(settingsReference.file).name + ".json";
+
+            archive.append(JSON.stringify(settingsReference), {
+                name: settingsFileName,
+            });
+
+            settingsFileNames.push(settingsFileName);
+        }
+
+        const configData = { files: settingsFileNames };
+        if (rawVolumeChannel) {
+            configData.rawVolumeChannel = rawVolumeChannel;
+        }
+
+        archive.append(JSON.stringify(configData), {
+            name: `config.json`,
+        });
+    }
 }

@@ -785,7 +785,7 @@ paths:
                 type: string
 
   /checkpoint/to-text:
-    get:
+    post:
       summary: Format checkpoint as a text file 
       operationId: checkpointToText
       tags:

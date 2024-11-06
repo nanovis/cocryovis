@@ -96,8 +96,6 @@ app.use(session(sess));
 // API
 app.use("/api", projectsApi);
 
-app.use(express.static("web", { index: false }));
-app.use(express.static(appConfig.dataPath, { index: false }));
 app.use("/logs", express.static("logs", { index: false }));
 
 // 404 Error

@@ -7,8 +7,9 @@ import {
 } from "../models/volume-data-factory.mjs";
 import path from "path";
 import { ApiError } from "../tools/error-handler.mjs";
-import appConfig from "../tools/config.mjs";
 import fileSystem from "fs";
+import archiver from "archiver";
+import Utils from "../tools/utils.mjs";
 
 export default class VolumeDataController {
     /**
@@ -32,7 +33,7 @@ export default class VolumeDataController {
         if (!volumeData.rawFilePath) {
             throw new ApiError(400, "Volume Data is missing a raw file.");
         }
-        
+
         res.setHeader("Content-Type", "application/octet-stream");
         res.setHeader(
             "Content-Disposition",
@@ -50,7 +51,7 @@ export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
      */
-    static async visualizeSingleVolume(type, req, res) {
+    static async getVolumeVisualizationFiles(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
             Number(req.params.idVolumeData)
         );
@@ -68,40 +69,24 @@ export default class VolumeDataController {
             );
         }
 
-        const serverURL = `${req.protocol}://${req.get("host")}`;
-
-        const visualizationFiles = [];
-
-        const rawFileReference = {
-            url: new URL(
-                path.relative(appConfig.dataPath, volumeData.rawFilePath),
-                serverURL
-            ).toString(),
-            filename: path.basename(volumeData.rawFilePath),
-        };
-        const settingsReference = {
-            data: JSON.parse(volumeData.settings),
-            filename: `${path.parse(volumeData.rawFilePath).name}.json`,
-            name: "Volume",
-        };
-
-        visualizationFiles.push(rawFileReference);
-        visualizationFiles.push({
-            url: new URL("/data/session.json", serverURL).toString(),
-            filename: "session.json",
-        });
-        visualizationFiles.push({
-            url: new URL("/data/tf-default.json", serverURL).toString(),
-            filename: "tf-default.json",
+        const archive = archiver("zip", {
+            zlib: { level: 9 },
         });
 
-        const configData = { files: [settingsReference.filename] };
+        res.setHeader("Content-Type", "application/zip");
+        res.setHeader(
+            "Content-Disposition",
+            'attachment; filename="volume.zip"'
+        );
+        archive.pipe(res);
 
-        return res.json({
-            settingsReference: settingsReference,
-            files: visualizationFiles,
-            config: configData,
-        });
+        await Utils.packVisualizationArchive(
+            archive,
+            [volumeData.settings],
+            [volumeData.rawFilePath]
+        );
+
+        archive.finalize();
     }
 
     /**

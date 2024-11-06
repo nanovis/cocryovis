@@ -3,9 +3,10 @@
 import path from "path";
 import Result from "../models/result.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
-import { prepareDataForDownload } from "../tools/file-handler.mjs";
-import appConfig from "../tools/config.mjs";
 import fileSystem from "fs";
+import AdmZip from "adm-zip";
+import archiver from "archiver";
+import Utils from "../tools/utils.mjs";
 
 export default class ResultController {
     static async getById(req, res) {
@@ -40,15 +41,32 @@ export default class ResultController {
             throw new ApiError(400, "Result has no files.");
         }
 
-        const filePaths = [];
+        result.files.sort((a, b) => a.index - b.index);
+
+        const configData = {
+            rawVolumeChannel: result.rawVolumeChannel,
+            files: [],
+        };
+        const zip = new AdmZip();
+
         for (const file of result.files) {
-            filePaths.push(path.join(result.folderPath, file.rawFileName));
-            filePaths.push(path.join(result.folderPath, file.settingsFileName));
+            zip.addLocalFile(path.join(result.folderPath, file.rawFileName));
+            zip.addLocalFile(
+                path.join(result.folderPath, file.settingsFileName)
+            );
+            configData.files.push(file.settingsFileName);
         }
-        const data = prepareDataForDownload(filePaths, `Result_${result.id}`);
+        zip.addFile(
+            "config.json",
+            Buffer.from(JSON.stringify(configData, null, 4))
+        );
+
         res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
-        return res.send(data.zipBuffer);
+        res.set(
+            "Content-Disposition",
+            `attachment; filename=Result_${result.id}`
+        );
+        return res.send(zip.toBuffer());
     }
 
     // static async downloadResultFile(req, res) {
@@ -98,89 +116,41 @@ export default class ResultController {
             );
         }
 
-        const serverURL = `${req.protocol}://${req.get("host")}`;
+        const archive = archiver("zip", {
+            zlib: { level: 9 },
+        });
 
-        const settingsReferences = [];
-        const visualizationFiles = [];
-        const transferFunctions = new Set();
+        res.setHeader("Content-Type", "application/zip");
+        res.setHeader(
+            "Content-Disposition",
+            'attachment; filename="volume.zip"'
+        );
+        archive.pipe(res);
 
         const fileReferences = result.files;
         fileReferences.sort((a, b) => a.index - b.index);
 
-        for (const fileReference of fileReferences) {
-            const settingsFilePath = path.join(
-                result.folderPath,
-                fileReference.settingsFileName
-            );
+        const settings = [];
+        for (const settingsFile of fileReferences.map(
+            (reference) => reference.settingsFileName
+        )) {
             const settingsReferenceFile = await fileSystem.promises.readFile(
-                settingsFilePath,
+                path.join(result.folderPath, settingsFile),
                 "utf8"
             );
-            const settingsReference = JSON.parse(
-                settingsReferenceFile.toString()
-            );
-            settingsReferences.push({
-                data: settingsReference,
-                filename: fileReference.settingsFileName,
-                name: fileReference.name,
-            });
-            const rawFilePath = path.join(
-                result.folderPath,
-                settingsReference.file
-            );
-            if (!fileSystem.existsSync(rawFilePath)) {
-                throw new ApiError(
-                    500,
-                    "Result is missing files and thus cannot be visualized."
-                );
-            }
-            visualizationFiles.push({
-                url: new URL(
-                    path.relative(appConfig.dataPath, rawFilePath),
-                    serverURL
-                ).toString(),
-                filename: path.basename(settingsReference.file),
-            });
-            if (
-                settingsReference.transferFunction &&
-                !transferFunctions.has(settingsReference.transferFunction)
-            ) {
-                const { tfBasePath, tfPath } =
-                    ResultController.#getTransferFunctionPath(
-                        result.folderPath,
-                        settingsReference.transferFunction
-                    );
-                visualizationFiles.push({
-                    url: new URL(
-                        path.relative(tfBasePath, tfPath),
-                        serverURL
-                    ).toString(),
-                    filename: settingsReference.transferFunction,
-                });
-            }
+            settings.push(settingsReferenceFile.toString());
         }
 
-        visualizationFiles.push({
-            url: new URL("/data/session.json", serverURL).toString(),
-            filename: "session.json",
-        });
-        visualizationFiles.push({
-            url: new URL("/data/tf-default.json", serverURL).toString(),
-            filename: "tf-default.json",
-        });
-
-        const configData = {
-            rawVolumeChannel: result.rawVolumeChannel,
-            files: settingsReferences.map(
-                (settingsReference) => settingsReference.filename
+        await Utils.packVisualizationArchive(
+            archive,
+            settings,
+            fileReferences.map((reference) =>
+                path.join(result.folderPath, reference.rawFileName)
             ),
-        };
+            result.rawVolumeChannel
+        );
 
-        return res.json({
-            settingsReferences: settingsReferences,
-            files: visualizationFiles,
-            config: configData,
-        });
+        archive.finalize();
     }
 
     /**

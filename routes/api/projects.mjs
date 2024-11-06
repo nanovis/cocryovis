@@ -134,7 +134,7 @@ projectsApi.get(`/volumeData/:type/:idVolumeData/data`, restrictApi,
     
 // Visualize
 projectsApi.get(`/volumeData/:type/:idVolumeData/visualization-data`, restrictApi, 
-    async (req, res) => VolumeDataController.visualizeSingleVolume(VolumeDataType.mapName(req.params.type), req, res));
+    async (req, res) => VolumeDataController.getVolumeVisualizationFiles(VolumeDataType.mapName(req.params.type), req, res));
 
 // Create from Files
 projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi, 
@@ -212,13 +212,13 @@ projectsApi.get(`/model/:idModel/checkpoints`, restrictApi, CheckpointController
 projectsApi.post(`/model/:idModel/checkpoints`, restrictApi, CheckpointController.uploadCheckpoints);
 
 // Download checkpoint
-projectsApi.get(`/checkpoint/:idCheckpoint/download`, CheckpointController.downloadCheckpoint);
+projectsApi.get(`/checkpoint/:idCheckpoint/download`, restrictApi, CheckpointController.downloadCheckpoint);
 
 // Download checkpoint
-projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, CheckpointController.checkpointToText);
+projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, restrictApi, CheckpointController.checkpointToText);
 
-// Download checkpoint
-projectsApi.get(`/checkpoint/to-text`, CheckpointController.checkpointFileToText);
+// Convert checkpoint to text
+projectsApi.post(`/checkpoint/to-text`, CheckpointController.checkpointFileToText);
 
 /////// RESULTS
 // Get Result

@@ -23,6 +23,7 @@
   "dependencies": {
     "@prisma/client": "^5.18.0",
     "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "async-express-decorator": "^1.1.0",
     "better-sqlite3": "^11.3.0",
     "better-sqlite3-session-store": "^0.1.0",
