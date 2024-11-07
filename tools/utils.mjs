@@ -267,4 +267,31 @@ export default class Utils {
             name: `config.json`,
         });
     }
+
+    /**
+     * @param {Object} obj
+     * @param {Object} template
+     * @returns {Boolean}
+     */
+    static matchesTemplate(obj, template) {
+        return Object.keys(template).every((key) => {
+            const templateValue = template[key];
+            const objValue = obj[key];
+
+            if (Array.isArray(templateValue)) {
+                if (!Array.isArray(objValue)) return false;
+
+                return objValue.every((item) =>
+                    Utils.matchesTemplate(item, templateValue[0])
+                );
+            } else if (
+                typeof templateValue === "object" &&
+                templateValue !== null
+            ) {
+                return Utils.matchesTemplate(objValue, templateValue);
+            } else {
+                return typeof objValue === templateValue;
+            }
+        });
+    }
 }

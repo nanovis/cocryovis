@@ -180,31 +180,14 @@ export default class VolumeController {
 
         const annotations = JSON.parse(annotationsFile.toString("utf8"));
 
-        if (!Array.isArray(annotations) || annotations.length < 1) {
-            throw new ApiError(400, "No annotations found.");
-        }
-
-        const annotationEntry = annotations[0];
-
-        if (
-            !annotationEntry.dimensions ||
-            !annotationEntry.kernelSize ||
-            !annotationEntry.positions
-        ) {
-            throw new ApiError(400, "Annotation file missing required fields.");
-        }
-
-        if (
-            !Array.isArray(annotationEntry.positions) ||
-            annotationEntry.positions.length < 1
-        ) {
-            throw new ApiError(400, "No annotation entries found.");
+        if (!Array.isArray(annotations)) {
+            throw new ApiError(400, "Unknown annotations format.");
         }
 
         const sparseLabel = await Volume.addAnnotations(
             Number(req.params.idVolume),
             Number(req.session.user.id),
-            annotationEntry
+            annotations
         );
 
         return res.json(sparseLabel);

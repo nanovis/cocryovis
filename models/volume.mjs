@@ -387,7 +387,7 @@ export default class Volume extends DatabaseModel {
      * @property {Number} x
      * @property {Number} y
      * @property {Number} z
-     * @param {{volumeName: String, dimensions: xyz, kernelSize: xyz, positions: xyz[]}} annotations
+     * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async addAnnotations(id, ownerId, annotations) {
@@ -403,13 +403,11 @@ export default class Volume extends DatabaseModel {
                     );
 
                     const outputFile =
-                        path.parse(annotations.volumeName).name +
+                        path.parse(annotations[0].volumeName).name +
                         "_annotated.raw";
                     const outputPath = path.join(tempFolderPath, outputFile);
                     const settings = await annotationsToVolume(
-                        annotations.dimensions,
-                        annotations.kernelSize,
-                        annotations.positions,
+                        annotations,
                         outputPath
                     );
 
