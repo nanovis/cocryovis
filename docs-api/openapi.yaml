@@ -839,17 +839,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ResultDetails"
 
-  /result/{idResult}/download:
+  /result/{idResult}/data:
     get:
       summary: Download result files
-      operationId: downloadResult
+      operationId: getResultData
       tags:
         - Result
       parameters:
         - $ref: '#/components/parameters/idResult'
       responses:
         '200':
-          description: ZIP file containing result files.
+          description: ZIP file containing result files, including transfer functions and config for visualization.
           content:
             application/zip:
               schema:
@@ -885,22 +885,6 @@ paths:
   #             description: Indicates that the response should be downloaded as an attachment.
   #             schema:
   #               type: string
-
-  /result/{idResult}/visualization-data:
-    get:
-      summary: Get Visualization Data for Result
-      operationId: getResultVisualizationData
-      tags:
-        - Result
-      parameters:
-        - $ref: '#/components/parameters/idResult'
-      responses:
-        '200':
-          description: Visualization Data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VisualizationDataMultiVolume'
 
   /volume/{idVolume}/results:
     post:

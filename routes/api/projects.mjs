@@ -237,11 +237,8 @@ projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.crea
 // actions.get(`/:idProject/result/:idResult/delete`, restrictApi, ResultController.deleteResult);
 projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultController.removeFromVolume);
 
-// Download Result
-projectsApi.get(`/result/:idResult/download`, restrictApi, ResultController.downloadResult);
-
 // Download Result File
 // projectsApi.get(`/result/:idResult/download/:fileIndex`, restrictApi, ResultController.downloadResultFile);
 
 // Result vizualization data
-projectsApi.get(`/result/:idResult/visualization-data`, restrictApi, ResultController.getVisualizationData);
+projectsApi.get(`/result/:idResult/data`, restrictApi, ResultController.getResultData);

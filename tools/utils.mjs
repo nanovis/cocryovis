@@ -210,7 +210,7 @@ export default class Utils {
 
     /**
      * @param {import("archiver").Archiver} archive
-     * @param {String[]} settings
+     * @param {import("../models/volume-data.mjs").VolumeDataSettings[]} settings
      * @param {String[]} rawFilePaths
      * @param {Number?} rawVolumeChannel
      * @returns {Promise<any>}
@@ -230,31 +230,28 @@ export default class Utils {
         const settingsFileNames = [];
 
         for (const volumeSettings of settings) {
-            const settingsReference = JSON.parse(volumeSettings);
-            settingsReference.name = "Volume";
-
-            if (settingsReference.transferFunction) {
+            if (volumeSettings.transferFunction) {
                 const publicTFPath = path.join(
                     "web",
                     "data",
-                    settingsReference.transferFunction
+                    volumeSettings.transferFunction
                 );
                 if (fileSystem.existsSync(publicTFPath)) {
                     archive.file(publicTFPath, {
                         name: path.join(
                             "transfer-functions",
-                            settingsReference.transferFunction
+                            volumeSettings.transferFunction
                         ),
                     });
                 } else {
-                    delete settingsReference.transferFunction;
+                    delete volumeSettings.transferFunction;
                 }
             }
 
             const settingsFileName =
-                path.parse(settingsReference.file).name + ".json";
+                path.parse(volumeSettings.file).name + ".json";
 
-            archive.append(JSON.stringify(settingsReference), {
+            archive.append(JSON.stringify(volumeSettings, null, 2), {
                 name: settingsFileName,
             });
 
@@ -266,7 +263,7 @@ export default class Utils {
             configData.rawVolumeChannel = rawVolumeChannel;
         }
 
-        archive.append(JSON.stringify(configData), {
+        archive.append(JSON.stringify(configData, null, 2), {
             name: `config.json`,
         });
     }

@@ -19,6 +19,19 @@ import { ApiError } from "../tools/error-handler.mjs";
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
  * @typedef { RawVolumeDataDB | SparseLabelVolumeDataDB | PseudoLabelVolumeDataDB } VolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB
+ *
+ * @typedef {Object} VolumeDataSettings
+ * @property {String} file
+ * @property {{x: Number, y: Number, z:Number}} size
+ * @property {{x: Number, y: Number, z:Number}} ratio
+ * @property {Number} bytesPerVoxel
+ * @property {Number} usedBits
+ * @property {Number} skipBytes
+ * @property {Boolean} isLittleEndian
+ * @property {Boolean} isSigned
+ * @property {Number} addValue
+ * @property {String?} transferFunction
+ * @property {String?} name
  */
 
 /**
@@ -349,7 +362,10 @@ export default class VolumeData extends DatabaseModel {
      * @return {Promise<Object>}
      */
     static async uploadFiles(id, files, preventRawFileOverride = false) {
-        const unpackedFiles = await unpackFiles(files, this.acceptedFileExtensions);
+        const unpackedFiles = await unpackFiles(
+            files,
+            this.acceptedFileExtensions
+        );
 
         let newRawFile = null;
         let newSettingFile = null;

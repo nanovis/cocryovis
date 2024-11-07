@@ -32,42 +32,42 @@ export default class ResultController {
         return res.json(result);
     }
 
-    static async downloadResult(req, res) {
-        const result = await Result.getByIdDeep(Number(req.params.idResult), {
-            files: true,
-        });
+    // static async downloadResult(req, res) {
+    //     const result = await Result.getByIdDeep(Number(req.params.idResult), {
+    //         files: true,
+    //     });
 
-        if (!result.files) {
-            throw new ApiError(400, "Result has no files.");
-        }
+    //     if (!result.files) {
+    //         throw new ApiError(400, "Result has no files.");
+    //     }
 
-        result.files.sort((a, b) => a.index - b.index);
+    //     result.files.sort((a, b) => a.index - b.index);
 
-        const configData = {
-            rawVolumeChannel: result.rawVolumeChannel,
-            files: [],
-        };
-        const zip = new AdmZip();
+    //     const configData = {
+    //         rawVolumeChannel: result.rawVolumeChannel,
+    //         files: [],
+    //     };
+    //     const zip = new AdmZip();
 
-        for (const file of result.files) {
-            zip.addLocalFile(path.join(result.folderPath, file.rawFileName));
-            zip.addLocalFile(
-                path.join(result.folderPath, file.settingsFileName)
-            );
-            configData.files.push(file.settingsFileName);
-        }
-        zip.addFile(
-            "config.json",
-            Buffer.from(JSON.stringify(configData, null, 4))
-        );
+    //     for (const file of result.files) {
+    //         zip.addLocalFile(path.join(result.folderPath, file.rawFileName));
+    //         zip.addLocalFile(
+    //             path.join(result.folderPath, file.settingsFileName)
+    //         );
+    //         configData.files.push(file.settingsFileName);
+    //     }
+    //     zip.addFile(
+    //         "config.json",
+    //         Buffer.from(JSON.stringify(configData, null, 4))
+    //     );
 
-        res.set("Content-Type", "application/zip");
-        res.set(
-            "Content-Disposition",
-            `attachment; filename=Result_${result.id}`
-        );
-        return res.send(zip.toBuffer());
-    }
+    //     res.set("Content-Type", "application/zip");
+    //     res.set(
+    //         "Content-Disposition",
+    //         `attachment; filename=Result_${result.id}`
+    //     );
+    //     return res.send(zip.toBuffer());
+    // }
 
     // static async downloadResultFile(req, res) {
     //     const result = await Result.getById(Number(req.params.idResult));
@@ -105,7 +105,7 @@ export default class ResultController {
         return res.sendStatus(204);
     }
 
-    static async getVisualizationData(req, res) {
+    static async getResultData(req, res) {
         const result = await Result.getByIdDeep(Number(req.params.idResult), {
             files: true,
         });
@@ -120,64 +120,38 @@ export default class ResultController {
             zlib: { level: 9 },
         });
 
-        res.setHeader("Content-Type", "application/zip");
-        res.setHeader(
-            "Content-Disposition",
-            'attachment; filename="volume.zip"'
-        );
+        res.attachment(`Result_${result.id}.zip`);
         archive.pipe(res);
 
         const fileReferences = result.files;
         fileReferences.sort((a, b) => a.index - b.index);
 
         const settings = [];
-        for (const settingsFile of fileReferences.map(
-            (reference) => reference.settingsFileName
-        )) {
+        const rawFileNames = [];
+        for (const reference of fileReferences) {
             const settingsReferenceFile = await fileSystem.promises.readFile(
-                path.join(result.folderPath, settingsFile),
+                path.join(result.folderPath, reference.settingsFileName),
                 "utf8"
             );
-            settings.push(settingsReferenceFile.toString());
+            const settingsReference = JSON.parse(
+                settingsReferenceFile.toString()
+            );
+            settingsReference.name = reference.name;
+            settings.push(settingsReference);
+
+            rawFileNames.push(
+                path.join(result.folderPath, reference.rawFileName)
+            );
         }
 
         await Utils.packVisualizationArchive(
             archive,
             settings,
-            fileReferences.map((reference) =>
-                path.join(result.folderPath, reference.rawFileName)
-            ),
+            rawFileNames,
             result.rawVolumeChannel
         );
 
         archive.finalize();
-    }
-
-    /**
-     * @param {String} resultFolderPath
-     * @param {String} transferFunction
-     */
-    static #getTransferFunctionPath(resultFolderPath, transferFunction) {
-        if (
-            fileSystem.existsSync(path.join(resultFolderPath, transferFunction))
-        ) {
-            return {
-                basePath: transferFunction,
-                path: path.join(resultFolderPath, transferFunction),
-            };
-        } else if (
-            fileSystem.existsSync(path.join("web/data", transferFunction))
-        ) {
-            return {
-                tfBasePath: "web",
-                tfPath: path.join("web/data", transferFunction),
-            };
-        }
-
-        throw new ApiError(
-            500,
-            `The transfer function ${transferFunction} is missing from the server.`
-        );
     }
 
     static async createFromFiles(req, res) {

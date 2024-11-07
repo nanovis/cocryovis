@@ -82,7 +82,7 @@ export default class VolumeDataController {
 
         await Utils.packVisualizationArchive(
             archive,
-            [volumeData.settings],
+            [JSON.parse(volumeData.settings)],
             [volumeData.rawFilePath]
         );
 
