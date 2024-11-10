@@ -4,17 +4,24 @@ import path from "path";
 import Result from "../models/result.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import fileSystem from "fs";
-import AdmZip from "adm-zip";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 
 export default class ResultController {
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getById(req, res) {
         const result = await Result.getById(Number(req.params.idResult));
 
         return res.json(result);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getDetails(req, res) {
         const result = await Result.getByIdDeep(Number(req.params.idResult), {
             checkpoint: true,
@@ -24,6 +31,10 @@ export default class ResultController {
         return res.json(result);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getFromVolume(req, res) {
         const result = await Result.getFromVolume(Number(req.params.idVolume), {
             checkpoint: true,
@@ -92,19 +103,34 @@ export default class ResultController {
     //     return res.send(data.zipBuffer);
     // }
 
-    static async deleteResult(req, res) {
-        await Result.del(Number(req.params.idResult));
-        return res.sendStatus(204);
-    }
+    // /**
+    //  * @param {AuthenticatedRequest} req
+    //  * @param {import("express").Response} res
+    //  */
+    // static async deleteResult(req, res) {
+    //     await Result.del(Number(req.params.idResult));
+    //     return res.sendStatus(204);
+    // }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async removeFromVolume(req, res) {
-        await Result.removeFromVolume(
+        const volumeId = Number(req.params.idVolume);
+
+        const result = await Result.removeFromVolume(
             Number(req.params.idResult),
-            Number(req.params.idVolume)
+            volumeId
         );
+
         return res.sendStatus(204);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getResultData(req, res) {
         const result = await Result.getByIdDeep(Number(req.params.idResult), {
             files: true,
@@ -154,6 +180,10 @@ export default class ResultController {
         archive.finalize();
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async createFromFiles(req, res) {
         if (!req.files || !req.files.files) {
             throw new ApiError(400, "No file uploaded");

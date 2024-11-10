@@ -17,7 +17,9 @@ export default class NanoOetziController {
      * @param {NanoOetziHandler} nanoOetzi
      */
     static async getNanoOetziUserTaskHistory(nanoOetzi, req, res) {
-        const taskHistory = nanoOetzi.getUserTaskHistory(req.session.user.id);
+        const taskHistory = nanoOetzi.taskHistory.getUserTaskHistory(
+            req.session.user.id
+        );
 
         return res.json(taskHistory);
     }

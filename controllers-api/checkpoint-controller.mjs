@@ -8,6 +8,10 @@ import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
 
 export default class CheckpointController {
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getCheckpoint(req, res) {
         const checkpoint = await Checkpoint.getById(
             Number(req.params.idCheckpoint)
@@ -15,6 +19,10 @@ export default class CheckpointController {
         return res.json(checkpoint);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getCheckpointsFromModel(req, res) {
         const checkpoints = await Checkpoint.getFromModel(
             Number(req.params.idModel)
@@ -22,23 +30,28 @@ export default class CheckpointController {
         return res.json(checkpoints);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async uploadCheckpoints(req, res) {
         if (!req.files || !req.files.files) {
             throw new ApiError(400, "No files uploaded.");
         }
 
-        let files = req.files.files;
-        if (!Array.isArray(req.files.files)) {
-            files = [req.files.files];
-        }
         const checkpoints = await Checkpoint.createFromFiles(
             Number(req.session.user.id),
             Number(req.params.idModel),
-            files
+            Array.isArray(req.files.files) ? req.files.files : [req.files.files]
         );
+        
         return res.status(201).json(checkpoints);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async downloadCheckpoint(req, res) {
         const checkpoint = await Checkpoint.getById(
             Number(req.params.idCheckpoint)
@@ -52,19 +65,32 @@ export default class CheckpointController {
         return res.send(data.zipBuffer);
     }
 
-    static async deleteCheckpoint(req, res) {
-        await Checkpoint.del(Number(req.params.idCheckpoint));
-        return res.sendStatus(204);
-    }
+    // static async deleteCheckpoint(req, res) {
+    //     const checkpoint = await Checkpoint.del(
+    //         Number(req.params.idCheckpoint)
+    //     );
+    //     res.sendStatus(204);
+    // }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async removeFromModel(req, res) {
-        await Checkpoint.removeFromModel(
+        const modelId = Number(req.params.idModel);
+
+        const checkpoint = await Checkpoint.removeFromModel(
             Number(req.params.idCheckpoint),
-            Number(req.params.idModel)
+            modelId
         );
+
         return res.sendStatus(204);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async checkpointToText(req, res) {
         const checkpoint = await Checkpoint.getById(
             Number(req.params.idCheckpoint)
@@ -79,9 +105,20 @@ export default class CheckpointController {
         return res.send(checkpointTxt);
     }
 
+    /**
+     * @param {UnauthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async checkpointFileToText(req, res) {
         if (!req.files || !req.files.checkpoint) {
             throw new ApiError(400, "No files uploaded.");
+        }
+
+        if (Array.isArray(req.files.checkpoint)) {
+            throw new ApiError(
+                400,
+                "Only one checkpoint file can be parsed at a time."
+            );
         }
 
         /** @type {fileUpload.UploadedFile} */

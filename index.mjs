@@ -21,6 +21,8 @@ import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
 import appConfig from "./tools/config.mjs";
 import { logErrors, clientErrorHandler } from "./tools/error-handler.mjs";
+import WebSocketManager from "./tools/websocket-manager.mjs";
+import http from "http";
 
 const port = argv[2] || 8080;
 const app = express();
@@ -82,6 +84,8 @@ const sess = {
         maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
     },
 };
+// @ts-ignore
+const sessionParser = session(sess);
 
 if (app.get("env") === "production") {
     // app.set('trust proxy', 1)
@@ -90,13 +94,16 @@ if (app.get("env") === "production") {
     app.use(helmet());
 }
 
-// @ts-ignore
-app.use(session(sess));
+app.use(sessionParser);
 
 // API
 app.use("/api", projectsApi);
 
 app.use("/logs", express.static("logs", { index: false }));
+
+const server = http.createServer(app);
+// Websockets
+WebSocketManager.initializeWebSocketInstance(server, sessionParser);
 
 // 404 Error
 app.use(function (req, res) {
@@ -110,6 +117,6 @@ app.use(logErrors);
 app.use(clientErrorHandler);
 
 // Running server
-app.listen(port, () => {
+server.listen(port, () => {
     console.log("listening on port " + port);
 });

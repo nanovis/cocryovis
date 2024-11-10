@@ -8,6 +8,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").User } UserDB
+ * @typedef {{ id: Number, username: String, name: String, email: String }} PublicUser
  */
 
 export default class User extends DatabaseModel {
@@ -147,6 +148,7 @@ export default class User extends DatabaseModel {
 
     /**
      * @param {UserDB} user
+     * @returns {PublicUser}
      */
     static toPublic(user) {
         return {

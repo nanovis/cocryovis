@@ -17,6 +17,7 @@ import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
+import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -26,7 +27,7 @@ const execPromise = promisify(exec);
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
  */
 
-class IlastikHandlerTaskHistory {
+class TaskHistoryInstance {
     /** @type {Number} */ userId;
     /** @type {Number} */ volumeId;
     /** @type {String} */ taskStatus;
@@ -53,23 +54,79 @@ class IlastikHandlerTaskHistory {
     }
 }
 
+class TaskHistory {
+    /** @type {TaskHistoryInstance[]} */ #taskHistory = [];
+
+    /** @param {TaskHistoryInstance} instance */
+    async update(instance) {
+        this.#taskHistory.push(instance);
+        const userId = instance.userId;
+        const userTaskHistory = await this.getUserTaskHistory(userId);
+        WebSocketManager.broadcastAction(
+            [userId],
+            [],
+            ActionTypes.IlastikTaskHistoryUpdated,
+            userTaskHistory
+        );
+    }
+
+    /**
+     * @param {Number} userId
+     */
+    async getUserTaskHistory(userId) {
+        const userTaskHistory = this.#taskHistory.filter(
+            (t) => t.userId === userId
+        );
+
+        const volumes = await Volume.getByIds(
+            userTaskHistory.map((i) => i.volumeId)
+        );
+        const volumeMap = Utils.arrayToMap(volumes, "id");
+
+        const result = userTaskHistory.map(function (t) {
+            const volume = volumeMap.get(t.volumeId);
+            return {
+                volumeName: volume.name,
+                volumeId: volume.id,
+                taskStatus: t.taskStatus,
+                logFile: t.logFile.fileName,
+            };
+        });
+
+        return result.reverse();
+    }
+}
+
 export default class IlastikHandler {
     static rawDataset = "/raw_data";
     static labelsDataset = "/labels";
     static pseudoLabelsDataset = "/pseudo_labels";
 
     /** @type {TaskQueue} */ #taskQueue;
-    /** @type {IlastikHandlerTaskHistory[]} */ taskHistory = [];
+    /** @type {TaskHistory} */ taskHistory = new TaskHistory();
 
     constructor(config) {
         this.config = config;
-        this.#taskQueue = new TaskQueue();
+        this.#taskQueue = new TaskQueue(
+            this.#onTaskQueueChange.bind(this),
+            this.#onTaskQueueChange.bind(this)
+        );
 
         Object.preventExtensions(this);
     }
 
     isInferenceRunning() {
         return this.#taskQueue.hasPendingTask;
+    }
+
+    async #onTaskQueueChange() {
+        const taskQueue = await this.getTaskQueue();
+        WebSocketManager.broadcastAction(
+            [],
+            [],
+            ActionTypes.IlastikQueueUpdated,
+            taskQueue
+        );
     }
 
     /**
@@ -106,32 +163,6 @@ export default class IlastikHandler {
                 volumeId: volume.id,
             };
         });
-    }
-
-    /**
-     * @param {Number} userId
-     */
-    async getUserTaskHistory(userId) {
-        const userTaskHistory = this.taskHistory.filter(
-            (t) => t.userId === userId
-        );
-
-        const volumes = await Volume.getByIds(
-            userTaskHistory.map((i) => i.volumeId)
-        );
-        const volumeMap = Utils.arrayToMap(volumes, "id");
-
-        const result = userTaskHistory.map(function (t) {
-            const volume = volumeMap.get(t.volumeId);
-            return {
-                volumeName: volume.name,
-                volumeId: volume.id,
-                taskStatus: t.taskStatus,
-                logFile: t.logFile.fileName,
-            };
-        });
-
-        return result.reverse();
     }
 
     /**
@@ -268,7 +299,7 @@ export default class IlastikHandler {
      * @param {Number} volumeId
      * @param {Number} userId
      * @param {String} outputPath
-     * @returns {Promise<void>}
+     * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
     async #generateLabels(volumeId, userId, outputPath) {
         const logFile = await LogFile.createLogFile("label-generation");
@@ -363,29 +394,41 @@ export default class IlastikHandler {
                 labelDirectory
             );
 
-            await Volume.addPseudoLabelsFromFolder(
+            const pseudoLabeledVolumes = await Volume.addPseudoLabelsFromFolder(
                 labelDirectory,
                 userId,
                 volume.id,
                 volume.sparseVolumes
             );
 
-            this.taskHistory.push(
-                new IlastikHandlerTaskHistory(
+            this.taskHistory.update(
+                new TaskHistoryInstance(
                     userId,
                     volumeId,
-                    IlastikHandlerTaskHistory.status.success,
+                    TaskHistoryInstance.status.success,
                     logFile
                 )
             );
+
+            WebSocketManager.broadcastAction(
+                [userId],
+                [],
+                ActionTypes.InsertPseudoVolumes,
+                {
+                    pseudoLabeledVolumes: pseudoLabeledVolumes,
+                    volumeId: volumeId,
+                }
+            );
+
+            return pseudoLabeledVolumes;
         } catch (error) {
-            console.log(`Ilastik label generation error: ${error}`);
+            console.error(`Ilastik label generation error: ${error}`);
             await logFile.writeLog(`exec error: ${error}`);
-            this.taskHistory.push(
-                new IlastikHandlerTaskHistory(
+            this.taskHistory.update(
+                new TaskHistoryInstance(
                     userId,
                     volumeId,
-                    IlastikHandlerTaskHistory.status.fail,
+                    TaskHistoryInstance.status.fail,
                     logFile
                 )
             );

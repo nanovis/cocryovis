@@ -3,6 +3,10 @@
 import Project from "../models/project.mjs";
 
 export default class ProjectController {
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getAllUserProjects(req, res) {
         const options = ProjectController.#parseOptionQuery(req);
         const projects = await Project.getUserProjects(
@@ -13,6 +17,10 @@ export default class ProjectController {
         return res.json(projects);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async getProject(req, res) {
         const options = ProjectController.#parseOptionQuery(req);
         const project = await Project.getById(
@@ -24,6 +32,7 @@ export default class ProjectController {
     }
 
     /**
+     * @param {AuthenticatedRequest} req
      * @returns {import("../models/project.mjs").Options}
      */
     static #parseOptionQuery(req) {
@@ -41,23 +50,37 @@ export default class ProjectController {
         return options;
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async createProject(req, res) {
         const project = await Project.create(
             req.body.name,
             req.body.description,
             req.session.user.id
         );
+
         return res.status(201).json(project);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async deepCloneProject(req, res) {
         const project = await Project.deepClone(
             Number(req.params.idProject),
             req.session.user.id
         );
+
         return res.status(201).json(project);
     }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async deleteProject(req, res) {
         const project = await Project.del(Number(req.params.idProject));
 

@@ -18,6 +18,7 @@ import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 /**
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
+ * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
  * @typedef {{rawData?: boolean, sparseVolumes?: boolean, pseudoVolumes?: boolean, results?: boolean, projects?: boolean }} Options
  */
 
@@ -470,7 +471,7 @@ export default class Volume extends DatabaseModel {
      * @param {Number} ownerId
      * @param {Number} volumeId
      * @param {SparseLabelVolumeDataDB[]} originalLabels
-     * @returns {Promise<void>}
+     * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
     static async addPseudoLabelsFromFolder(
         folderPath,
@@ -500,6 +501,8 @@ export default class Volume extends DatabaseModel {
 
                 const newFolders = [];
                 const files = await fsPromises.readdir(folderPath);
+
+                const newPseudoLabels = [];
                 try {
                     for (let i = 0; i < files.length; i++) {
                         const filePath = path.join(folderPath, files[i]);
@@ -518,7 +521,10 @@ export default class Volume extends DatabaseModel {
                                 tx
                             );
                         newFolders.push(pseudoLabelVolumeData.path);
+                        newPseudoLabels.push(pseudoLabelVolumeData);
                     }
+
+                    return newPseudoLabels;
                 } catch (error) {
                     newFolders.forEach((folder) => {
                         try {

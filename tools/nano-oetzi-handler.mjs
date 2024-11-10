@@ -18,6 +18,7 @@ import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
+import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -98,11 +99,11 @@ export class TrainingTaskProperties extends TaskProperties {
     }
 }
 
-class TaskHistory {
-    static status = {
+class TaskHistoryInstance {
+    static status = Object.freeze({
         success: "success",
         fail: "fail",
-    };
+    });
 
     /**
      * @param {String} taskStatus
@@ -118,93 +119,28 @@ class TaskHistory {
     }
 }
 
-export default class NanoOetziHandler {
-    /** @type {TaskQueue} */ #taskQueue;
-    /** @type {TaskHistory[]} */ taskHistory = [];
+class TaskHistory {
+    /** @type {TaskHistoryInstance[]} */ #taskHistory = [];
 
-    constructor(config) {
-        this.config = config;
-        this.#taskQueue = new TaskQueue();
-
-        Object.preventExtensions(this);
+    /** @param {TaskHistoryInstance} instance */
+    async update(instance) {
+        this.#taskHistory.push(instance);
+        const userId = instance.taskProperties.userId;
+        const userTaskHistory = await this.getUserTaskHistory(userId);
+        WebSocketManager.broadcastAction(
+            [userId],
+            [],
+            ActionTypes.NanoOetziTaskHistoryUpdated,
+            userTaskHistory
+        );
     }
 
-    isInferenceRunning() {
-        return this.#taskQueue.hasPendingTask;
-    }
-
-    /**
-     * @returns {TaskProperties[]}
-     */
-    get queuedIdentifiers() {
-        return this.#taskQueue.queuedIdentifiers;
-    }
-
-    async getTaskQueue() {
-        const users = await User.getByIds(
-            this.queuedIdentifiers.map((i) => i.userId)
-        );
-        const usersMap = Utils.arrayToMap(users, "id");
-
-        const volumes = await Volume.getByIds(
-            this.queuedIdentifiers
-                .filter((i) => i instanceof InferenceTaskProperties)
-                .map((i) => i.volumeId)
-        );
-        const volumeMap = Utils.arrayToMap(volumes, "id");
-
-        const checkpoints = await Checkpoint.getByIds(
-            this.queuedIdentifiers
-                .filter((i) => i instanceof InferenceTaskProperties)
-                .map((i) => i.checkpointId)
-        );
-        const checkpointMap = Utils.arrayToMap(checkpoints, "id");
-
-        const models = await Model.getByIds(
-            this.queuedIdentifiers
-                .filter((i) => i instanceof TrainingTaskProperties)
-                .map((i) => i.modelId)
-        );
-        const modelMap = Utils.arrayToMap(models, "id");
-
-        let inferenceIndex = 0;
-        let trainingIndex = 0;
-        return this.queuedIdentifiers.map(function (t) {
-            const user = usersMap.get(t.userId);
-            let entry = {
-                userId: user.id,
-                username: user.username,
-                type: t.type,
-            };
-            if (t instanceof InferenceTaskProperties) {
-                const checkpoint = checkpointMap.get(t.checkpointId);
-                const volume = volumeMap.get(t.volumeId);
-
-                entry.volumeId = volume.id;
-                entry.volumeName = volume.name;
-                entry.checkpointId = checkpoint.id;
-                entry.checkpointName = path.basename(checkpoint.filePath);
-                inferenceIndex++;
-            }
-            if (t instanceof TrainingTaskProperties) {
-                const model = modelMap.get(t.modelId);
-
-                entry.modelId = model.id;
-                entry.modelName = model.name;
-                trainingIndex++;
-            }
-            return entry;
-        });
-    }
-
-    /**
-     * @param {Number} userId
-     */
+    /** @param {Number} userId */
     async getUserTaskHistory(userId) {
-        const userTaskHistory = this.taskHistory.filter(
+        const userTaskHistory = this.#taskHistory.filter(
             (t) => t.taskProperties.userId === userId
         );
-        const taskProperties = this.taskHistory.map((t) => t.taskProperties);
+        const taskProperties = this.#taskHistory.map((t) => t.taskProperties);
 
         const volumes = await Volume.getByIds(
             taskProperties
@@ -258,6 +194,99 @@ export default class NanoOetziHandler {
         });
 
         return result.reverse();
+    }
+}
+
+export default class NanoOetziHandler {
+    /** @type {TaskQueue} */ #taskQueue;
+    /** @type {TaskHistory} */ taskHistory = new TaskHistory();
+
+    constructor(config) {
+        this.config = config;
+        this.#taskQueue = new TaskQueue(
+            this.#onTaskQueueChange.bind(this),
+            this.#onTaskQueueChange.bind(this)
+        );
+
+        Object.preventExtensions(this);
+    }
+
+    isInferenceRunning() {
+        return this.#taskQueue.hasPendingTask;
+    }
+
+    async #onTaskQueueChange() {
+        const taskQueue = await this.getTaskQueue();
+        WebSocketManager.broadcastAction(
+            [],
+            [],
+            ActionTypes.NanoOetziQueueUpdated,
+            taskQueue
+        );
+    }
+
+    /**
+     * @returns {TaskProperties[]}
+     */
+    get queuedIdentifiers() {
+        return this.#taskQueue.queuedIdentifiers;
+    }
+
+    async getTaskQueue() {
+        const identifiers = this.queuedIdentifiers;
+
+        const users = await User.getByIds(identifiers.map((i) => i.userId));
+        const usersMap = Utils.arrayToMap(users, "id");
+
+        const volumes = await Volume.getByIds(
+            identifiers
+                .filter((i) => i instanceof InferenceTaskProperties)
+                .map((i) => i.volumeId)
+        );
+        const volumeMap = Utils.arrayToMap(volumes, "id");
+
+        const checkpoints = await Checkpoint.getByIds(
+            identifiers
+                .filter((i) => i instanceof InferenceTaskProperties)
+                .map((i) => i.checkpointId)
+        );
+        const checkpointMap = Utils.arrayToMap(checkpoints, "id");
+
+        const models = await Model.getByIds(
+            identifiers
+                .filter((i) => i instanceof TrainingTaskProperties)
+                .map((i) => i.modelId)
+        );
+        const modelMap = Utils.arrayToMap(models, "id");
+
+        let inferenceIndex = 0;
+        let trainingIndex = 0;
+        return identifiers.map(function (t) {
+            const user = usersMap.get(t.userId);
+            let entry = {
+                userId: user.id,
+                username: user.username,
+                type: t.type,
+            };
+            if (t instanceof InferenceTaskProperties) {
+                const checkpoint = checkpointMap.get(t.checkpointId);
+                const volume = volumeMap.get(t.volumeId);
+
+                entry.volumeId = volume.id;
+                entry.volumeName = volume.name;
+                entry.checkpointId = checkpoint.id;
+                entry.checkpointName = path.basename(checkpoint.filePath);
+                inferenceIndex++;
+            }
+            if (t instanceof TrainingTaskProperties) {
+                const model = modelMap.get(t.modelId);
+
+                entry.modelId = model.id;
+                entry.modelName = model.name;
+                trainingIndex++;
+            }
+            return entry;
+        });
     }
 
     createTemporaryOutputPath() {
@@ -413,9 +442,9 @@ export default class NanoOetziHandler {
                 `Result entry created.\n\nSaving task history...\n`
             );
 
-            this.taskHistory.push(
-                new TaskHistory(
-                    TaskHistory.status.success,
+            this.taskHistory.update(
+                new TaskHistoryInstance(
+                    TaskHistoryInstance.status.success,
                     logFile,
                     taskProperties
                 )
@@ -423,6 +452,13 @@ export default class NanoOetziHandler {
 
             await logFile.writeLog(
                 `Task history saved.\n\nINFERENCE FINISHED!\n`
+            );
+
+            WebSocketManager.broadcastAction(
+                [userId],
+                [],
+                ActionTypes.InsertResult,
+                { result: result, volumeId: volumeId }
             );
 
             return result;
@@ -439,9 +475,9 @@ export default class NanoOetziHandler {
                     `Filed to remove nano oetzi inference cache: ${error}`
                 );
             }
-            this.taskHistory.push(
-                new TaskHistory(
-                    TaskHistory.status.fail,
+            this.taskHistory.update(
+                new TaskHistoryInstance(
+                    TaskHistoryInstance.status.fail,
                     logFile,
                     taskProperties
                 )
@@ -549,9 +585,9 @@ export default class NanoOetziHandler {
             ...volumeLocks,
         ]);
 
-        WriteMultiLock.withWriteMultiLock(multiLock, () => {
+        WriteMultiLock.withWriteMultiLock(multiLock, async () => {
             try {
-                return this.#taskQueue.enqueue(
+                return await this.#taskQueue.enqueue(
                     () =>
                         this.#runTraining(
                             modelId,
@@ -711,9 +747,9 @@ export default class NanoOetziHandler {
                 `New checkpoint created.\n\nSaving task history...\n`
             );
 
-            this.taskHistory.push(
-                new TaskHistory(
-                    TaskHistory.status.success,
+            this.taskHistory.update(
+                new TaskHistoryInstance(
+                    TaskHistoryInstance.status.success,
                     logFile,
                     taskProperties
                 )
@@ -721,6 +757,13 @@ export default class NanoOetziHandler {
 
             await logFile.writeLog(
                 `Task history saved.\n\nTRAINING FINISHED!\n`
+            );
+
+            WebSocketManager.broadcastAction(
+                [userId],
+                [],
+                ActionTypes.InsertCheckpoint,
+                { checkpoint: checkpoint, modelId: modelId }
             );
 
             return checkpoint;
@@ -738,9 +781,9 @@ export default class NanoOetziHandler {
                 );
             }
             removeTempFiles = false;
-            this.taskHistory.push(
-                new TaskHistory(
-                    TaskHistory.status.fail,
+            this.taskHistory.update(
+                new TaskHistoryInstance(
+                    TaskHistoryInstance.status.fail,
                     logFile,
                     taskProperties
                 )

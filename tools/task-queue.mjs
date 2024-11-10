@@ -2,12 +2,26 @@
 
 export default class TaskQueue {
     /**
-     * @type {{action: function, identifiers:Object?, resolve: function, reject: function}[]}
+     * @typedef {{action: function, identifiers:Object?, resolve: function, reject: function}} Task
      */
+
+    /** @type {Task[]} */
     #queue = [];
     #pendingProcess = false;
 
-    constructor() {}
+    /** @type {() => Promise<void> | null} */
+    #onQueued = null;
+    /** @type {() => Promise<void> | null} */
+    #onDequeued = null;
+
+    /**
+     * @param {() => Promise<void> | null} onQueued
+     * @param {() => Promise<void> | null} onDequeued
+     */
+    constructor(onQueued = null, onDequeued = null) {
+        this.#onQueued = onQueued;
+        this.#onDequeued = onDequeued;
+    }
 
     /**
      * @returns {Number}
@@ -37,6 +51,9 @@ export default class TaskQueue {
     enqueue(action, identifiers = null) {
         return new Promise((resolve, reject) => {
             this.#queue.push({ action, identifiers, resolve, reject });
+            if (this.#onQueued) {
+                this.#onQueued();
+            }
             this.dequeue();
         });
     }
@@ -61,6 +78,9 @@ export default class TaskQueue {
             task.reject(error);
         } finally {
             this.#queue.shift();
+            if (this.#onDequeued) {
+                await this.#onDequeued();
+            }
             this.dequeue();
         }
 

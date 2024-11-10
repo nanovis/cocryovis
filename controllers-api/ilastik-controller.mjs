@@ -28,7 +28,9 @@ export default class IlastikController {
      * @param {IlastikHandler} ilastik
      */
     static async getIlastikUserTaskHistory(ilastik, req, res) {
-        const taskHistory = ilastik.getUserTaskHistory(req.session.user.id);
+        const taskHistory = ilastik.taskHistory.getUserTaskHistory(
+            req.session.user.id
+        );
 
         return res.json(taskHistory);
     }
