@@ -14,7 +14,7 @@ export default class ProjectController {
             options
         );
 
-        return res.json(projects);
+        res.json(projects);
     }
 
     /**
@@ -28,7 +28,7 @@ export default class ProjectController {
             options
         );
 
-        return res.json(project);
+        res.json(project);
     }
 
     /**
@@ -61,7 +61,7 @@ export default class ProjectController {
             req.session.user.id
         );
 
-        return res.status(201).json(project);
+        res.status(201).json(project);
     }
 
     /**
@@ -74,7 +74,7 @@ export default class ProjectController {
             req.session.user.id
         );
 
-        return res.status(201).json(project);
+        res.status(201).json(project);
     }
 
     /**
@@ -84,6 +84,6 @@ export default class ProjectController {
     static async deleteProject(req, res) {
         const project = await Project.del(Number(req.params.idProject));
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 }

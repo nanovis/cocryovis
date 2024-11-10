@@ -79,7 +79,7 @@ export default class UserController {
     static async getLoggedUserData(req, res) {
         try {
             if (req.session != null) {
-                return res.json(req.session.user);
+                res.json(req.session.user);
             } else {
                 res.sendStatus(401);
             }
@@ -103,7 +103,7 @@ export default class UserController {
         const nanoOetziTaskHistory =
             await nanoOetzi.taskHistory.getUserTaskHistory(req.session.user.id);
 
-        return res.json({
+        res.json({
             ilastikTaskQueue: ilastikTaskQueue,
             ilastikTaskHistory: ilastikTaskHistory,
             nanoOetziTaskQueue: nanoOetziTaskQueue,

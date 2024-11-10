@@ -23,6 +23,7 @@ const ilastikHandler = new IlastikHandler(config.ilastik);
 const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
 
 // toAsyncRouter removes the need to call next() on async errors.
+/** @type {Router} */
 export const projectsApi = toAsyncRouter(express.Router());
 
 ///////////////////////
@@ -32,7 +33,7 @@ export const projectsApi = toAsyncRouter(express.Router());
 projectsApi.post('/login', UserController.login);
 projectsApi.post('/logout', UserController.logout);
 projectsApi.post('/register', UserController.register);
-projectsApi.get('/getLoggedUserData', UserController.getLoggedUserData);
+projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserData);
 
 projectsApi.get(`/status`, restrictApi, 
     async (req, res) => UserController.getStatus(ilastikHandler, nanoOetzi, req, res));

@@ -14,17 +14,21 @@ import Utils from "../tools/utils.mjs";
 export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async getById(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
             Number(req.params.idVolumeData)
         );
 
-        return res.json(volumeData);
+        res.json(volumeData);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async getData(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
@@ -50,6 +54,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async getVolumeVisualizationFiles(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
@@ -91,6 +97,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async createFromFiles(type, req, res) {
         if (!req.files || !req.files.files) {
@@ -110,11 +118,13 @@ export default class VolumeDataController {
             files
         );
 
-        return res.status(201).json(volumeData);
+        res.status(201).json(volumeData);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async createFromMrcFile(type, req, res) {
         if (type != VolumeDataType.RawVolumeData) {
@@ -128,17 +138,23 @@ export default class VolumeDataController {
             throw new ApiError(400, "No file uploaded");
         }
 
+        if (Array.isArray(req.files.files)) {
+            throw new ApiError(400, "Too many files uploaded.");
+        }
+
         const volumeData = RawVolumeData.createFromMrcFile(
             req.session.user.id,
             Number(req.params.idVolume),
             req.files.files
         );
 
-        return res.status(201).json(volumeData);
+        res.status(201).json(volumeData);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async downloadFullVolumeData(type, req, res) {
         const data = await VolumeDataFactory.getClass(
@@ -149,11 +165,13 @@ export default class VolumeDataController {
             "Content-Disposition",
             "attachment; filename=" + data.name
         );
-        return res.send(data.zipBuffer);
+        res.send(data.zipBuffer);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async downloadRawFile(type, req, res) {
         const data = await VolumeDataFactory.getClass(
@@ -166,11 +184,13 @@ export default class VolumeDataController {
         );
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", "attachment; filename=" + data.name);
-        return res.send(data.zipBuffer);
+        res.send(data.zipBuffer);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async downloadSettingsFile(type, req, res) {
         const data = await VolumeDataFactory.getClass(
@@ -183,11 +203,13 @@ export default class VolumeDataController {
         );
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", "attachment; filename=" + data.name);
-        return res.send(data.zipBuffer);
+        res.send(data.zipBuffer);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async downloadMrcFile(type, req, res) {
         if (type != VolumeDataType.RawVolumeData) {
@@ -204,11 +226,13 @@ export default class VolumeDataController {
         );
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", "attachment; filename=" + data.name);
-        return res.send(data.zipBuffer);
+        res.send(data.zipBuffer);
     }
 
     /**
      * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async removeFromVolume(type, req, res) {
         await VolumeDataFactory.getClass(type).removeFromVolume(
@@ -216,6 +240,6 @@ export default class VolumeDataController {
             Number(req.params.idVolume)
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 }

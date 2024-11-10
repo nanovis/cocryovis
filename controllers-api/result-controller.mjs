@@ -15,7 +15,7 @@ export default class ResultController {
     static async getById(req, res) {
         const result = await Result.getById(Number(req.params.idResult));
 
-        return res.json(result);
+        res.json(result);
     }
 
     /**
@@ -28,7 +28,7 @@ export default class ResultController {
             files: true,
         });
 
-        return res.json(result);
+        res.json(result);
     }
 
     /**
@@ -40,7 +40,7 @@ export default class ResultController {
             checkpoint: true,
         });
 
-        return res.json(result);
+        res.json(result);
     }
 
     /**
@@ -55,7 +55,7 @@ export default class ResultController {
             volumeId
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 
     /**
@@ -136,6 +136,6 @@ export default class ResultController {
             files
         );
 
-        return res.json(result);
+        res.json(result);
     }
 }

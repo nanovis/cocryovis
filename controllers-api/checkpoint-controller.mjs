@@ -16,7 +16,7 @@ export default class CheckpointController {
         const checkpoint = await Checkpoint.getById(
             Number(req.params.idCheckpoint)
         );
-        return res.json(checkpoint);
+        res.json(checkpoint);
     }
 
     /**
@@ -27,7 +27,7 @@ export default class CheckpointController {
         const checkpoints = await Checkpoint.getFromModel(
             Number(req.params.idModel)
         );
-        return res.json(checkpoints);
+        res.json(checkpoints);
     }
 
     /**
@@ -45,7 +45,7 @@ export default class CheckpointController {
             Array.isArray(req.files.files) ? req.files.files : [req.files.files]
         );
         
-        return res.status(201).json(checkpoints);
+        res.status(201).json(checkpoints);
     }
 
     /**
@@ -62,7 +62,7 @@ export default class CheckpointController {
         );
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", "attachment; filename=" + data.name);
-        return res.send(data.zipBuffer);
+        res.send(data.zipBuffer);
     }
 
     /**
@@ -77,7 +77,7 @@ export default class CheckpointController {
             modelId
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 
     /**
@@ -95,7 +95,7 @@ export default class CheckpointController {
 
         const checkpointTxt = await Utils.ckptToText(checkpoint.filePath);
 
-        return res.send(checkpointTxt);
+        res.send(checkpointTxt);
     }
 
     /**
@@ -121,6 +121,6 @@ export default class CheckpointController {
             checkpointFile.tempFilePath
         );
 
-        return res.send(checkpointTxt);
+        res.send(checkpointTxt);
     }
 }

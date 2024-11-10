@@ -16,7 +16,7 @@ export default class VolumeController {
             options
         );
 
-        return res.status(200).json(volume);
+        res.status(200).json(volume);
     }
 
     /**
@@ -30,7 +30,7 @@ export default class VolumeController {
             options
         );
 
-        return res.status(200).json(volumes);
+        res.status(200).json(volumes);
     }
 
     /**
@@ -60,7 +60,7 @@ export default class VolumeController {
             Number(req.params.idProject)
         );
 
-        return res.status(201).json(volume);
+        res.status(201).json(volume);
     }
 
     /**
@@ -73,7 +73,7 @@ export default class VolumeController {
             req.session.user.id,
             Number(req.params.idProject)
         );
-        return res.status(201).json(volume);
+        res.status(201).json(volume);
     }
 
     /**
@@ -86,7 +86,7 @@ export default class VolumeController {
             Number(req.params.idProject)
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 
     /**
@@ -116,6 +116,6 @@ export default class VolumeController {
             annotations
         );
 
-        return res.json(sparseLabel);
+        res.json(sparseLabel);
     }
 }

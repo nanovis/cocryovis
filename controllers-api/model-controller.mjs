@@ -11,7 +11,7 @@ export default class ModelController {
         const options = this.#parseOptionQuery(req);
         const model = await Model.getById(Number(req.params.idModel), options);
 
-        return res.status(200).json(model);
+        res.status(200).json(model);
     }
 
     /**
@@ -25,7 +25,7 @@ export default class ModelController {
             options
         );
 
-        return res.status(200).json(models);
+        res.status(200).json(models);
     }
 
     /**
@@ -51,7 +51,7 @@ export default class ModelController {
             Number(req.params.idProject)
         );
 
-        return res.status(201).json(model);
+        res.status(201).json(model);
     }
 
     /**
@@ -65,7 +65,7 @@ export default class ModelController {
             Number(req.params.idProject)
         );
 
-        return res.status(201).json(model);
+        res.status(201).json(model);
     }
 
     /**
@@ -80,6 +80,6 @@ export default class ModelController {
             projectId
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 }

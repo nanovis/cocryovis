@@ -6,26 +6,32 @@ import Utils from "../tools/utils.mjs";
 export default class NanoOetziController {
     /**
      * @param {NanoOetziHandler} nanoOetzi
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async getNanoOetziTaskQueue(nanoOetzi, req, res) {
         const taskQueue = nanoOetzi.getTaskQueue();
 
-        return res.json(taskQueue);
+        res.json(taskQueue);
     }
 
     /**
      * @param {NanoOetziHandler} nanoOetzi
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async getNanoOetziUserTaskHistory(nanoOetzi, req, res) {
         const taskHistory = nanoOetzi.taskHistory.getUserTaskHistory(
             req.session.user.id
         );
 
-        return res.json(taskHistory);
+        res.json(taskHistory);
     }
 
     /**
      * @param {NanoOetziHandler} nanoOetzi
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async queueInference(nanoOetzi, req, res) {
         const checkpointId = Number(req.body.checkpointId);
@@ -37,11 +43,13 @@ export default class NanoOetziController {
             Number(req.session.user.id)
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 
     /**
      * @param {NanoOetziHandler} nanoOetzi
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
      */
     static async queueTraining(nanoOetzi, req, res) {
         const trainingVolumesIds = Utils.parseStringArray(
@@ -62,6 +70,6 @@ export default class NanoOetziController {
             testingVolumesIds
         );
 
-        return res.sendStatus(204);
+        res.sendStatus(204);
     }
 }

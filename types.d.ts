@@ -3,7 +3,7 @@ import { Session } from "express-session";
 
 declare global {
     type UnauthenticatedRequest = Request & {
-        files: import("express-fileupload").FileArray;
+        files?: import("express-fileupload").FileArray;
     };
 
     type AuthenticatedRequest = UnauthenticatedRequest & {
