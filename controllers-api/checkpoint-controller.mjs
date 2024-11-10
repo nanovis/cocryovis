@@ -65,13 +65,6 @@ export default class CheckpointController {
         return res.send(data.zipBuffer);
     }
 
-    // static async deleteCheckpoint(req, res) {
-    //     const checkpoint = await Checkpoint.del(
-    //         Number(req.params.idCheckpoint)
-    //     );
-    //     res.sendStatus(204);
-    // }
-
     /**
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res

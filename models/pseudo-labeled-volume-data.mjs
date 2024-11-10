@@ -164,15 +164,6 @@ export default class PseudoLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
-     * @param {fileUpload.UploadedFile[]} files
-     * @return {Promise<PseudoVolumeDataDB>}
-     */
-    static async uploadFiles(id, files) {
-        return await super.uploadFiles(id, files, true);
-    }
-
-    /**
      * @param {Number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
      * @return {Promise<String[]>}

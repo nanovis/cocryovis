@@ -223,30 +223,6 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<RawVolumeDataDB>}
-     */
-    static async removeMrcFile(id) {
-        let volumeData = await this.getById(id);
-        const mrcFilePath = volumeData.mrcFilePath;
-        if (!mrcFilePath) {
-            throw new ApiError(400, "Volume Data has no associated mrc file.");
-        }
-        volumeData = await this.db.update({
-            where: { id: id },
-            data: { mrcFilePath: null },
-        });
-        try {
-            await fsPromises.rm(mrcFilePath, { recursive: true, force: true });
-        } catch (error) {
-            console.error(
-                `Failed to remove raw file ${mrcFilePath} from disk.\n${error.toString()}`
-            );
-        }
-        return volumeData;
-    }
-
-    /**
      * @param {RawVolumeDataDB} volumeData
      * @returns {String[]}
      */
@@ -266,86 +242,6 @@ export default class RawVolumeData extends VolumeData {
             });
         }
         super.deleteVolumeDataFiles(volumeData);
-    }
-
-    /**
-     * @param {Number} id
-     * @param {fileUpload.UploadedFile[]} files
-     * @return {Promise<RawVolumeDataDB>}
-     */
-    static async uploadFiles(id, files) {
-        return await super.uploadFiles(id, files, true);
-    }
-
-    /**
-     * @param {Number} id
-     * @param {fileUpload.UploadedFile} file
-     * @return {Promise<RawVolumeDataDB>}
-     */
-    static async uploadMrcFile(id, file) {
-        const unpackedFiles = await unpackFiles([file], [".mrc"]);
-        if (unpackedFiles.length == 0) {
-            throw new ApiError(400, "No valid MRC file found.");
-        }
-
-        let volumeData = await this.getById(id);
-
-        if (volumeData.mrcFilePath) {
-            throw new ApiError(
-                400,
-                "Once a MRC File is uploaded to a Raw Volume Data it cannot be changed."
-            );
-        }
-
-        if (volumeData.rawFilePath) {
-            throw new ApiError(
-                400,
-                "Once a Raw File is uploaded to a Raw Volume Data a MRC file can no longer be added."
-            );
-        }
-
-        const mrcFilePath = await unpackedFiles[0].saveAs(volumeData.path);
-
-        try {
-            const { rawFileName, settings } = await Utils.mrcToRaw(
-                mrcFilePath,
-                volumeData.path
-            );
-
-            try {
-                const changes = {
-                    rawFilePath: path.join(volumeData.path, rawFileName),
-                    settings: JSON.stringify(settings),
-                    mrcFilePath: mrcFilePath,
-                };
-                volumeData = await this.update(id, changes);
-            } catch (error) {
-                try {
-                    await fsPromises.rm(rawFileName, {
-                        force: true,
-                    });
-                } catch (error) {
-                    console.error(
-                        "Failed Volume Data Upload: Failed to delete the converted raw data file."
-                    );
-                }
-                throw error;
-            }
-        } catch (error) {
-            try {
-                await fsPromises.rm(mrcFilePath, {
-                    force: true,
-                });
-            } catch (error) {
-                console.error(
-                    "Failed Volume Data Upload: Failed to delete the uploaded MRC file."
-                );
-            }
-
-            throw error;
-        }
-
-        return volumeData;
     }
 
     /**

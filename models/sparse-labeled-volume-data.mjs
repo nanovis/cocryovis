@@ -181,15 +181,6 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
-     * @param {fileUpload.UploadedFile[]} files
-     * @return {Promise<SparseLabelVolumeDataDB>}
-     */
-    static async uploadFiles(id, files, preventRawFileOverride = false) {
-        return super.uploadFiles(id, files, preventRawFileOverride);
-    }
-
-    /**
      * @param {String} filePath
      * @param {Number} ownerId
      * @param {Number} volumeId

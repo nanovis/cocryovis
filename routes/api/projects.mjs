@@ -1,6 +1,6 @@
 // @ts-check
 
-import express from 'express';
+import express, { Router } from 'express';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import NanoOetziHandler from '../../tools/nano-oetzi-handler.mjs';
 import { restrictApi } from '../../middleware/restrict.mjs';
@@ -103,20 +103,7 @@ projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, Volu
 projectsApi.get(`/volume/:idVolume`, restrictApi, VolumeController.getVolume);
 
 // Remove Volume
-// actions.get(`/:idProject/volume/:idVolume/delete`, restrictApi, VolumeController.removeVolume);
 projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.removeFromProject);
-
-// // Upload Raw Data
-// projectsApi.put(`/volume/:idVolume/raw-data/upload`, VolumeController.uploadRawData);
-
-// // Upload Mrc File to Raw Data
-// projectsApi.put(`/volume/:idVolume/raw-data/upload-mrc`, restrictApi, VolumeController.uploadMrcFile);
-
-// // Add Sparse Labeled Volume
-// projectsApi.put(`/volume/:idVolume/add-sparse-label-volume`, restrictApi, VolumeController.addSparseLabelVolume);
-
-// // Add Pseudo Labeled Volume
-// projectsApi.put(`/volume/:idVolume/add-pseudo-label-volume`, restrictApi, VolumeController.addPseudoLabelVolume);
 
 // Process Sparse Labels
 projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, 
@@ -144,15 +131,6 @@ projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi,
 projectsApi.post(`/volume/:idVolume/volumeData/:type/from-mrc-file`, restrictApi,
     async (req, res) => (VolumeDataController.createFromMrcFile(VolumeDataType.mapName(req.params.type), req, res)));
 
-
-// // Add Files to Volume Data
-// projectsApi.put(`/volumeData/:type/:idVolumeData/upload-files`, restrictApi, 
-//     async (req, res) => (VolumeDataController.addFiles(VolumeDataType.mapName(req.params.type), req, res)));
-
-// Add Mrc File to Volume Data
-// projectsApi.post(`/:idProject/volumeData/:type/:idVolumeData/upload-mrc-file`, 
-//     async (req, res) => VolumeDataController.addMrcFile(VolumeDataType.mapName(req.params.type), req, res));
-
 // Download Raw Volume Data
 projectsApi.get(`/volumeData/:type/:idVolumeData/download-full`, restrictApi, 
     async (req, res) => VolumeDataController.downloadFullVolumeData(VolumeDataType.mapName(req.params.type), req, res));
@@ -167,16 +145,8 @@ projectsApi.get(`/volumeData/:type/:idVolumeData/download-mrc-file`, restrictApi
     async (req, res) => VolumeDataController.downloadMrcFile(VolumeDataType.mapName(req.params.type), req, res));
 
 // Delete Volume Data
-// actions.get(`/:idProject/volumeData/:type/:idVolumeData/delete-full`, restrictApi, 
-//     async (req, res) => VolumeDataController.deleteFullVolumeData(VolumeDataType.mapName(req.params.type), req, res));
 projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi, 
     async (req, res) => VolumeDataController.removeFromVolume(VolumeDataType.mapName(req.params.type), req, res));
-
-// projectsApi.get(`/:idProject/volumeData/:type/:idVolumeData/delete-raw-file`, restrictApi, 
-//     async (req, res) => VolumeDataController.removeRawFile(VolumeDataType.mapName(req.params.type), req, res));
-
-// projectsApi.get(`/:idProject/volumeData/:type/:idVolumeData/delete-mrc-file`, restrictApi, 
-//     async (req, res) => VolumeDataController.removeMrcFile(VolumeDataType.mapName(req.params.type), req, res));
   
 /////// MODELS
 
@@ -193,7 +163,6 @@ projectsApi.post(`/project/:idProject/model/:idModel/clone`, restrictApi, ModelC
 projectsApi.get(`/model/:idModel`, restrictApi, ModelController.getModel);
 
 // Remove Model
-// actions.get(`/:idProject/model/:idModel/delete`, restrictApi, ModelController.removeModel);
 projectsApi.delete(`/project/:idProject/model/:idModel`, restrictApi, ModelController.removeFromProject);
 
 /////// CHECKPOINTS
@@ -202,7 +171,6 @@ projectsApi.delete(`/project/:idProject/model/:idModel`, restrictApi, ModelContr
 projectsApi.get(`/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.getCheckpoint);
 
 // Delete checkpoint
-// actions.get(`/:idProject/model/:idModel/checkpoint/:idCheckpoint/delete`, restrictApi, CheckpointController.deleteCheckpoint);
 projectsApi.delete(`/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
 
 // Get checkpoints from model
@@ -234,11 +202,7 @@ projectsApi.get(`/volume/:idVolume/results`, restrictApi, ResultController.getFr
 projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
 
 // Remove Result
-// actions.get(`/:idProject/result/:idResult/delete`, restrictApi, ResultController.deleteResult);
 projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultController.removeFromVolume);
-
-// Download Result File
-// projectsApi.get(`/result/:idResult/download/:fileIndex`, restrictApi, ResultController.downloadResultFile);
 
 // Result vizualization data
 projectsApi.get(`/result/:idResult/data`, restrictApi, ResultController.getResultData);

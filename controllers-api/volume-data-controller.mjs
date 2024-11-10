@@ -140,49 +140,6 @@ export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
      */
-    static async addFiles(type, req, res) {
-        if (!req.files || !req.files.files) {
-            throw new ApiError(400, "No file uploaded");
-        }
-
-        let files = req.files.files;
-        if (!Array.isArray(files)) {
-            files = [files];
-        }
-
-        const volumeData = await VolumeDataFactory.getClass(type).uploadFiles(
-            Number(req.params.idVolumeData),
-            files
-        );
-
-        return res.json(volumeData);
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     */
-    static async addMrcFile(type, req, res) {
-        if (type != VolumeDataType.RawVolumeData) {
-            throw new ApiError(
-                400,
-                "This operation is only avaliable on Raw Volumes."
-            );
-        }
-
-        if (!req.files || !req.files.files) {
-            throw new ApiError(404, "No file uploaded");
-        }
-
-        const volumeData = RawVolumeData.uploadMrcFile(
-            Number(req.params.idVolumeData),
-            req.files.files
-        );
-        return res.json(volumeData);
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     */
     static async downloadFullVolumeData(type, req, res) {
         const data = await VolumeDataFactory.getClass(
             type
@@ -248,43 +205,6 @@ export default class VolumeDataController {
         res.set("Content-Type", "application/zip");
         res.set("Content-Disposition", "attachment; filename=" + data.name);
         return res.send(data.zipBuffer);
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     */
-    static async deleteFullVolumeData(type, req, res) {
-        await VolumeDataFactory.getClass(type).del(
-            Number(req.params.idVolumeData)
-        );
-
-        return res.sendStatus(204);
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     */
-    static async removeRawFile(type, req, res) {
-        await VolumeDataFactory.getClass(type).removeRawFile(
-            Number(req.params.idVolumeData)
-        );
-
-        return res.sendStatus(204);
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     */
-    static async removeMrcFile(type, req, res) {
-        if (type != VolumeDataType.RawVolumeData) {
-            throw new ApiError(
-                400,
-                "This operation is only avaliable on Raw Volumes."
-            );
-        }
-        await RawVolumeData.removeMrcFile(Number(req.params.idVolumeData));
-
-        return res.sendStatus(204);
     }
 
     /**

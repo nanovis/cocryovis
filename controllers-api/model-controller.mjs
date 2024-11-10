@@ -68,15 +68,6 @@ export default class ModelController {
         return res.status(201).json(model);
     }
 
-    // /**
-    //  * @param {AuthenticatedRequest} req
-    //  * @param {import("express").Response} res
-    //  */
-    // static async removeModel(req, res) {
-    //     await Model.del(Number(req.params.idModel));
-    //     return res.sendStatus(204);
-    // }
-
     /**
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
