@@ -434,15 +434,17 @@ export default class IlastikHandler {
             );
             throw error;
         } finally {
-            try {
-                await fsPromises.rm(outputPath, {
-                    recursive: true,
-                    force: true,
-                });
-            } catch (error) {
-                console.error(
-                    `Filed to remove ilastik inference cache: ${error}`
-                );
+            if (appConfig.ilastik.cleanTemporaryFiles) {
+                try {
+                    await fsPromises.rm(outputPath, {
+                        recursive: true,
+                        force: true,
+                    });
+                } catch (error) {
+                    console.error(
+                        `Filed to remove ilastik inference cache: ${error}`
+                    );
+                }
             }
         }
     }
@@ -504,13 +506,20 @@ export default class IlastikHandler {
      * @param {VolumeDB & {rawData: RawVolumeDataDB, sparseVolumes: SparseLabelVolumeDataDB[], pseudoVolumes: PseudoLabelVolumeDataDB[]}} volume
      */
     static #checkVolumeProperties(volume) {
+        if (volume.sparseVolumes.length < 2) {
+            throw new ApiError(
+                400,
+                "Pseudo Labels Generation error: Volume requires at least two sparse labels."
+            );
+        }
+
         if (
             volume.sparseVolumes.length + volume.pseudoVolumes.length >
             appConfig.maxVolumeChannels
         ) {
             throw new ApiError(
                 400,
-                "Volume does not have enough space to generate pseudo labels from sparse label set."
+                "Pseudo Labels Generation error: Volume does not have enough empty space to pseudo label slots."
             );
         }
 
@@ -520,11 +529,14 @@ export default class IlastikHandler {
                 "Pseudo Labels Generation error: Raw Data is missing."
             );
         }
-        if (!volume.sparseVolumes || volume.sparseVolumes.length === 0) {
-            throw new ApiError(
-                400,
-                "Pseudo Labels Generation error: Sparse Label Data is missing."
-            );
+
+        for (const sparseLabel of volume.sparseVolumes) {
+            if (!sparseLabel || !sparseLabel.rawFilePath) {
+                throw new ApiError(
+                    400,
+                    "Pseudo Labels Generation error: Sparse Label Data is missing."
+                );
+            }
         }
     }
 }

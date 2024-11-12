@@ -14,7 +14,8 @@
         "inference": "run_ilastik.sh",
         "create_project_command": "train_headless.py",
         "model_file_name": "model_project.ilp",
-        "workCache": "cache/ilastik"
+        "workCache": "cache/ilastik",
+        "cleanTemporaryFiles": true
     },
     "nanoOetzi": {
         "path": "../nano-oetzi/",
