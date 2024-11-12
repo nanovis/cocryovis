@@ -185,17 +185,14 @@ export class WriteMultiLock {
     /**
      * @template T
      * @param {WriteMultiLock} multilock
-     * @param {() => T} operation
-     * @returns {Promise<T>}
+     * @param {() => Promise<T>} operation
      */
-    static async withWriteMultiLock(multilock, operation) {
+    static withWriteMultiLock(multilock, operation) {
         multilock.requestLocks();
 
-        try {
-            return await operation();
-        } finally {
+        operation().finally(() => {
             multilock.removeLocks();
-        }
+        });
     }
 }
 
