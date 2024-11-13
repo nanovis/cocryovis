@@ -11,40 +11,40 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  username      String    @unique
-  name          String
-  email         String
-  passwordSalt  String
-  passwordHash  String
-  projects      Project[]
-  volumes       Volume[]
+  id                    Int                     @id @default(autoincrement())
+  username              String                  @unique
+  name                  String
+  email                 String
+  passwordSalt          String
+  passwordHash          String
+  projects              Project[]
+  volumes               Volume[]
   rawVolumeData         RawVolumeData[]
   sparseLabelVolumeData SparseLabelVolumeData[]
   pseudoLabelVolumeData PseudoLabelVolumeData[]
-  models      Model[]
-  checkpoints Checkpoint[]
-  results     Result[]
+  models                Model[]
+  checkpoints           Checkpoint[]
+  results               Result[]
 }
 
 model Project {
-  id            Int       @id @default(autoincrement())
-  name          String
-  description   String
-  owner         User      @relation(fields: [ownerId], references: [id])
-  ownerId       Int
-  volumes       Volume[]
-  models        Model[]
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  volumes     Volume[]
+  models      Model[]
 }
 
 model Volume {
-  id            Int             @id @default(autoincrement())
+  id            Int                     @id @default(autoincrement())
   name          String
   description   String
-  owner         User            @relation(fields: [ownerId], references: [id])
+  owner         User                    @relation(fields: [ownerId], references: [id])
   ownerId       Int
   projects      Project[]
-  rawData       RawVolumeData?  @relation(fields: [rawDataId], references: [id])  
+  rawData       RawVolumeData?          @relation(fields: [rawDataId], references: [id])
   rawDataId     Int?
   sparseVolumes SparseLabelVolumeData[]
   pseudoVolumes PseudoLabelVolumeData[]
@@ -52,83 +52,83 @@ model Volume {
 }
 
 model RawVolumeData {
-  id                Int     @id @default(autoincrement())
-  path              String?
-  owner             User    @relation(fields: [ownerId], references: [id])
-  ownerId           Int
-  rawFilePath       String?
-  settings          String?
-  mrcFilePath       String?
-  volumes           Volume[]
-  results           Result[]
+  id          Int      @id @default(autoincrement())
+  path        String?
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  rawFilePath String?
+  settings    String?
+  mrcFilePath String?
+  volumes     Volume[]
+  results     Result[]
 }
 
 model SparseLabelVolumeData {
-  id                Int     @id @default(autoincrement())
-  path              String?
-  owner             User    @relation(fields: [ownerId], references: [id])
-  ownerId           Int
-  rawFilePath       String?
-  settings          String?
-  volumes           Volume[]
-  derivedLabels     PseudoLabelVolumeData[]
+  id            Int                     @id @default(autoincrement())
+  path          String?
+  owner         User                    @relation(fields: [ownerId], references: [id])
+  ownerId       Int
+  rawFilePath   String?
+  settings      String?
+  volumes       Volume[]
+  derivedLabels PseudoLabelVolumeData[]
 }
 
 model PseudoLabelVolumeData {
-  id                Int     @id @default(autoincrement())
-  path              String?
-  owner             User    @relation(fields: [ownerId], references: [id])
-  ownerId           Int
-  rawFilePath       String?
-  settings          String?
-  volumes           Volume[]
-  checkpoints       Checkpoint[]
-  originalLabel     SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id])
-  originalLabelId   Int?
+  id              Int                    @id @default(autoincrement())
+  path            String?
+  owner           User                   @relation(fields: [ownerId], references: [id])
+  ownerId         Int
+  rawFilePath     String?
+  settings        String?
+  volumes         Volume[]
+  checkpoints     Checkpoint[]
+  originalLabel   SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id])
+  originalLabelId Int?
 }
 
 model Model {
-  id            Int             @id @default(autoincrement())
-  name          String
-  description   String
-  owner         User            @relation(fields: [ownerId], references: [id])
-  ownerId       Int
-  projects      Project[]
-  checkpoints   Checkpoint[]
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String
+  owner       User         @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  projects    Project[]
+  checkpoints Checkpoint[]
 }
 
 model Checkpoint {
-  id            Int             @id @default(autoincrement())
-  filePath      String?
-  folderPath    String?
-  owner         User            @relation(fields: [ownerId], references: [id])
-  ownerId       Int
-  models        Model[]
-  results       Result[]
-  labels        PseudoLabelVolumeData[]
+  id         Int                     @id @default(autoincrement())
+  filePath   String?
+  folderPath String?
+  owner      User                    @relation(fields: [ownerId], references: [id])
+  ownerId    Int
+  models     Model[]
+  results    Result[]
+  labels     PseudoLabelVolumeData[]
 }
 
 model Result {
-  id                Int             @id @default(autoincrement())
-  folderPath        String?
-  files             ResultFile[]
-  rawVolumeChannel  Int?
-  logFile           String?
-  owner             User            @relation(fields: [ownerId], references: [id])
-  ownerId           Int
-  checkpoint        Checkpoint      @relation(fields: [checkpointId], references: [id])
-  checkpointId      Int
-  volumeData        RawVolumeData   @relation(fields: [volumeDataId], references: [id])
-  volumeDataId      Int
-  volumes           Volume[]
+  id               Int           @id @default(autoincrement())
+  folderPath       String?
+  files            ResultFile[]
+  rawVolumeChannel Int?
+  logFile          String?
+  owner            User          @relation(fields: [ownerId], references: [id])
+  ownerId          Int
+  checkpoint       Checkpoint    @relation(fields: [checkpointId], references: [id])
+  checkpointId     Int
+  volumeData       RawVolumeData @relation(fields: [volumeDataId], references: [id])
+  volumeDataId     Int
+  volumes          Volume[]
 }
 
 model ResultFile {
-  id                Int     @id @default(autoincrement())
-  name              String
-  rawFileName       String
-  settingsFileName  String
-  index             Int
-  result            Result  @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  resultId          Int
+  id               Int    @id @default(autoincrement())
+  name             String
+  rawFileName      String
+  settingsFileName String
+  index            Int
+  result           Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId         Int
 }
