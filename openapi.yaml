@@ -1112,50 +1112,50 @@ paths:
 components:
   schemas:
     User:
-      $ref: "./schemas/User.yaml"
+      $ref: "./docs-api/schemas/User.yaml"
     Project:
-      $ref: "./schemas/Project.yaml#/Project"
+      $ref: "./docs-api/schemas/Project.yaml#/Project"
     ProjectDetails:
-      $ref: "./schemas/Project.yaml#/ProjectDetails"
+      $ref: "./docs-api/schemas/Project.yaml#/ProjectDetails"
     Volume:
-      $ref: "./schemas/Volume.yaml#/Volume"
+      $ref: "./docs-api/schemas/Volume.yaml#/Volume"
     VolumeDetails:
-      $ref: "./schemas/Volume.yaml#/VolumeDetails"
+      $ref: "./docs-api/schemas/Volume.yaml#/VolumeDetails"
     RawData:
-      $ref: "./schemas/RawData.yaml"
+      $ref: "./docs-api/schemas/RawData.yaml"
     SparseLabelVolumeData:
-      $ref: "./schemas/SparseLabelVolumeData.yaml"
+      $ref: "./docs-api/schemas/SparseLabelVolumeData.yaml"
     PseudoLabelVolumeData:
-      $ref: "./schemas/PseudoLabelVolumeData.yaml"
+      $ref: "./docs-api/schemas/PseudoLabelVolumeData.yaml"
     VolumeData:
       oneOf:
       - $ref: "#/components/schemas/RawData"
       - $ref: "#/components/schemas/SparseLabelVolumeData"
       - $ref: "#/components/schemas/PseudoLabelVolumeData"
     Model:
-      $ref: "./schemas/Model.yaml#/Model"
+      $ref: "./docs-api/schemas/Model.yaml#/Model"
     ModelDetails:
-      $ref: "./schemas/Model.yaml#/ModelDetails"
+      $ref: "./docs-api/schemas/Model.yaml#/ModelDetails"
     Result:
-      $ref: "./schemas/Result.yaml#/Result"
+      $ref: "./docs-api/schemas/Result.yaml#/Result"
     ResultDetails:
-      $ref: "./schemas/Result.yaml#/ResultDetails"
+      $ref: "./docs-api/schemas/Result.yaml#/ResultDetails"
     Checkpoint:
-      $ref: "./schemas/Checkpoint.yaml"
+      $ref: "./docs-api/schemas/Checkpoint.yaml"
     NanooetziInferenceTask:
-      $ref: "./schemas/Nanooetzi.yaml#/InferenceTask"
+      $ref: "./docs-api/schemas/Nanooetzi.yaml#/InferenceTask"
     NanooetziTrainingTask:
-      $ref: "./schemas/Nanooetzi.yaml#/TrainingTask"
+      $ref: "./docs-api/schemas/Nanooetzi.yaml#/TrainingTask"
     NanooetziInferenceHistory:
-      $ref: "./schemas/Nanooetzi.yaml#/InferenceHistory"
+      $ref: "./docs-api/schemas/Nanooetzi.yaml#/InferenceHistory"
     NanooetziTrainingHistory:
-      $ref: "./schemas/Nanooetzi.yaml#/TrainingHistory"
+      $ref: "./docs-api/schemas/Nanooetzi.yaml#/TrainingHistory"
     VisualizationData:
-      $ref: "./schemas/VisualizationData.yaml#/VisualizationData"
+      $ref: "./docs-api/schemas/VisualizationData.yaml#/VisualizationData"
     VisualizationDataMultiVolume:
-      $ref: "./schemas/VisualizationData.yaml#/VisualizationDataMultiVolume"
+      $ref: "./docs-api/schemas/VisualizationData.yaml#/VisualizationDataMultiVolume"
     Error:
-      $ref: "./schemas/Error.yaml"
+      $ref: "./docs-api/schemas/Error.yaml"
     ZipFile:
       type: string
       format: binary
