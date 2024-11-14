@@ -13,6 +13,7 @@ db.json
 .vscode/
 .venv/
 /temp/
+/modules/*
 
 sessions/*.db
 sessions/*.db-shm

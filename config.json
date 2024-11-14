@@ -8,9 +8,9 @@
     "safeMode": false,
     "logPath": "./logs/",
     "ilastik": {
-        "path": "../ilastik/",
-        "scripts_path": "../ilastik/bin/",
-        "python": "../ilastik/bin/python",
+        "path": "./modules/ilastik/",
+        "scripts_path": "bin/",
+        "python": "./modules/ilastik/bin/python",
         "inference": "run_ilastik.sh",
         "create_project_command": "train_headless.py",
         "model_file_name": "model_project.ilp",

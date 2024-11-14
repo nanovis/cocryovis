@@ -282,7 +282,11 @@ export default class IlastikHandler {
         const sparseLabelFullPath =
             path.resolve(sparseLabelPath) + IlastikHandler.labelsDataset;
         let params = [
-            this.config.scripts_path + this.config.create_project_command,
+            path.join(
+                this.config.path,
+                this.config.scripts_path,
+                this.config.create_project_command
+            ),
             modelOutputFullPath,
             '"' + rawDataFullPath + '"',
             '"' + sparseLabelFullPath + '"',
