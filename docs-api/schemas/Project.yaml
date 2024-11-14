@@ -4,7 +4,7 @@ Project:
     - id
     - name
     - description
-    - ownerId
+    - creatorId
   properties:
     id:
       type: integer
@@ -13,7 +13,7 @@ Project:
       type: string
     description:
       type: string
-    ownerId:
+    creatorId:
       type: integer
       format: int64
 
@@ -23,7 +23,7 @@ ProjectDetails:
     - id
     - name
     - description
-    - ownerId
+    - creatorId
   properties:
     id:
       type: integer
@@ -32,7 +32,7 @@ ProjectDetails:
       type: string
     description:
       type: string
-    ownerId:
+    creatorId:
       type: integer
       format: int64
     volumes:

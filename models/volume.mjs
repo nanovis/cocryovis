@@ -121,17 +121,17 @@ export default class Volume extends DatabaseModel {
     /**
      * @param {String} name
      * @param {String} description
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} projectId
      * @return {Promise<VolumeDB>}
      */
-    static async create(name, description, ownerId, projectId) {
+    static async create(name, description, creatorId, projectId) {
         return Project.withWriteLock(projectId, [this.modelName], () => {
             return this.db.create({
                 data: {
                     name: name,
                     description: description,
-                    ownerId: ownerId,
+                    creatorId: creatorId,
                     projects: {
                         connect: { id: projectId },
                     },
@@ -142,24 +142,24 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {Number} sourceId
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} projectId
      * @return {Promise<VolumeDB>}
      */
-    static async clone(sourceId, ownerId, projectId) {
+    static async clone(sourceId, creatorId, projectId) {
         return await prismaManager.db.$transaction(async (tx) => {
-            return this.cloneTransaction(tx, sourceId, ownerId, projectId);
+            return this.cloneTransaction(tx, sourceId, creatorId, projectId);
         });
     }
 
     /**
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
      * @param {Number} sourceId
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number?} projectId
      * @return {Promise<VolumeDB>}
      */
-    static async cloneTransaction(tx, sourceId, ownerId, projectId = null) {
+    static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
         const sourceVolume = await tx.volume.findUnique({
             where: { id: sourceId },
             include: {
@@ -188,7 +188,7 @@ export default class Volume extends DatabaseModel {
         const newVolumeData = {
             name: sourceVolume.name,
             description: sourceVolume.description,
-            ownerId: ownerId,
+            creatorId: creatorId,
             rawDataId: sourceVolume.rawDataId,
             sparseVolumes: {
                 connect: sourceVolume.sparseVolumes,
@@ -383,7 +383,7 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @typedef {Object} xyz
      * @property {Number} x
      * @property {Number} y
@@ -391,7 +391,7 @@ export default class Volume extends DatabaseModel {
      * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
-    static async addAnnotations(id, ownerId, annotations) {
+    static async addAnnotations(id, creatorId, annotations) {
         let tempFolderPath = null;
 
         return this.withWriteLock(
@@ -434,7 +434,7 @@ export default class Volume extends DatabaseModel {
                             const sparseVolume =
                                 await SparseLabeledVolumeData.fromRawFile(
                                     outputPath,
-                                    ownerId,
+                                    creatorId,
                                     volume.id,
                                     JSON.stringify(settings),
                                     tx
@@ -468,14 +468,14 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {String} folderPath
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {SparseLabelVolumeDataDB[]} originalLabels
      * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
     static async addPseudoLabelsFromFolder(
         folderPath,
-        ownerId,
+        creatorId,
         volumeId,
         originalLabels
     ) {
@@ -514,7 +514,7 @@ export default class Volume extends DatabaseModel {
                         const pseudoLabelVolumeData =
                             await PseudoLabeledVolumeData.fromRawFile(
                                 filePath,
-                                ownerId,
+                                creatorId,
                                 volumeId,
                                 originalLabels[i].id,
                                 settings,

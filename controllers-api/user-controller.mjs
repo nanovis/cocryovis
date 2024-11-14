@@ -89,6 +89,18 @@ export default class UserController {
     }
 
     /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async getAllUsers(req, res) {
+        const users = await User.getAllUsers();
+
+        const publicUserData = users.map((user) => User.toPublic(user));
+
+        res.json(publicUserData);
+    }
+
+    /**
      * @param {IlastikHandler} ilastik
      * @param {NanoOetziHandler} nanoOetzi
      * @param {AuthenticatedRequest} req

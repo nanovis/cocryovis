@@ -5,7 +5,7 @@ Result:
     - folderPath
     - files
     - rawVolumeChannel
-    - ownerId
+    - creatorId
     - checkpointId
     - volumeDataId
   properties:
@@ -22,7 +22,7 @@ Result:
     rawVolumeChannel:
       type: integer
       nullable: true
-    ownerId:
+    creatorId:
       type: integer
       format: int64
     checkpointId:
@@ -39,7 +39,7 @@ ResultDetails:
     - folderPath
     - files
     - rawVolumeChannel
-    - ownerId
+    - creatorId
     - checkpointId
     - volumeDataId
     - checkpoint
@@ -57,7 +57,7 @@ ResultDetails:
     rawVolumeChannel:
       type: integer
       nullable: true
-    ownerId:
+    creatorId:
       type: integer
       format: int64
     checkpointId:

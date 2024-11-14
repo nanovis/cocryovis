@@ -4,7 +4,7 @@ Volume:
     - id
     - name
     - description
-    - ownerId
+    - creatorId
     - rawDataId
   properties:
     id:
@@ -14,7 +14,7 @@ Volume:
       type: string
     description:
       type: string
-    ownerId:
+    creatorId:
       type: integer
       format: int64
     rawDataId:
@@ -28,7 +28,7 @@ VolumeDetails:
     - id
     - name
     - description
-    - ownerId
+    - creatorId
     - rawDataId
   properties:
     id:
@@ -38,7 +38,7 @@ VolumeDetails:
       type: string
     description:
       type: string
-    ownerId:
+    creatorId:
       type: integer
       format: int64
     rawDataId:

@@ -100,15 +100,15 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} checkpointId
      * @param {Number} volumeDataId
      * @param {Number} volumeId
      */
-    static async create(ownerId, checkpointId, volumeDataId, volumeId) {
+    static async create(creatorId, checkpointId, volumeDataId, volumeId) {
         return await this.db.create({
             data: {
-                ownerId: ownerId,
+                creatorId: creatorId,
                 checkpointId: checkpointId,
                 volumeDataId: volumeDataId,
                 volumes: {
@@ -121,7 +121,7 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} checkpointId
      * @param {Number} volumeDataId
      * @param {Number} volumeId
@@ -136,7 +136,7 @@ export default class Result extends DatabaseModel {
      * @param {String?} logFile
      */
     static async createFromFolder(
-        ownerId,
+        creatorId,
         checkpointId,
         volumeDataId,
         volumeId,
@@ -162,7 +162,7 @@ export default class Result extends DatabaseModel {
                     /** @type {ResultDB} */
                     let result = await tx.result.create({
                         data: {
-                            ownerId: ownerId,
+                            creatorId: creatorId,
                             checkpointId: checkpointId,
                             volumeDataId: volumeDataId,
                             volumes: {
@@ -249,7 +249,7 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} checkpointId
      * @param {Number} volumeDataId
      * @param {Number} volumeId
@@ -257,7 +257,7 @@ export default class Result extends DatabaseModel {
      * @param {fileUpload.UploadedFile[]} files
      */
     static async createFromFiles(
-        ownerId,
+        creatorId,
         checkpointId,
         volumeDataId,
         volumeId,
@@ -329,7 +329,7 @@ export default class Result extends DatabaseModel {
                     /** @type {ResultDB} */
                     let result = await tx.result.create({
                         data: {
-                            ownerId: ownerId,
+                            creatorId: creatorId,
                             checkpointId: checkpointId,
                             volumeDataId: volumeDataId,
                             volumes: {

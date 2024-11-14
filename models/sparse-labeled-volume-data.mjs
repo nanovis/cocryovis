@@ -37,22 +37,22 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @return {Promise<SparseLabelVolumeDataDB>}
      */
-    static async create(ownerId, volumeId) {
-        return await super.create(ownerId, volumeId);
+    static async create(creatorId, volumeId) {
+        return await super.create(creatorId, volumeId);
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {fileUpload.UploadedFile[]} files
      * @return {Promise<SparseLabelVolumeDataDB>}
      */
-    static async createFromFiles(ownerId, volumeId, files) {
-        return await super.createFromFiles(ownerId, volumeId, files);
+    static async createFromFiles(creatorId, volumeId, files) {
+        return await super.createFromFiles(creatorId, volumeId, files);
     }
 
     /**
@@ -182,7 +182,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
 
     /**
      * @param {String} filePath
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {String} settings
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
@@ -190,14 +190,14 @@ export default class SparseLabeledVolumeData extends VolumeData {
      */
     static async fromRawFile(
         filePath,
-        ownerId,
+        creatorId,
         volumeId,
         settings,
         tx = prismaManager.db
     ) {
         let sparseVolume = await tx.sparseLabelVolumeData.create({
             data: {
-                ownerId: ownerId,
+                creatorId: creatorId,
                 volumes: {
                     connect: { id: volumeId },
                 },

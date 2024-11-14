@@ -38,22 +38,22 @@ export default class PseudoLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @return {Promise<PseudoVolumeDataDB>}
      */
-    static async create(ownerId, volumeId) {
-        return await super.create(ownerId, volumeId);
+    static async create(creatorId, volumeId) {
+        return await super.create(creatorId, volumeId);
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {fileUpload.UploadedFile[]} files
      * @return {Promise<PseudoVolumeDataDB>}
      */
-    static async createFromFiles(ownerId, volumeId, files) {
-        return await super.createFromFiles(ownerId, volumeId, files);
+    static async createFromFiles(creatorId, volumeId, files) {
+        return await super.createFromFiles(creatorId, volumeId, files);
     }
 
     /**
@@ -217,7 +217,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
 
     /**
      * @param {String} filePath
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {Number} originalLabelId
      * @param {String} settings
@@ -226,7 +226,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      */
     static async fromRawFile(
         filePath,
-        ownerId,
+        creatorId,
         volumeId,
         originalLabelId,
         settings,
@@ -234,7 +234,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
     ) {
         let pseudoVolume = await client.pseudoLabelVolumeData.create({
             data: {
-                ownerId: ownerId,
+                creatorId: creatorId,
                 originalLabelId: originalLabelId,
                 settings: settings,
                 volumes: {

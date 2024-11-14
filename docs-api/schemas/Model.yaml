@@ -4,7 +4,7 @@ Model:
     - id
     - name
     - description
-    - ownerId
+    - creatorId
   properties:
     id:
       type: integer
@@ -13,7 +13,7 @@ Model:
       type: string
     description:
       type: string
-    ownerId:
+    creatorId:
       type: integer
       format: int64
 
@@ -23,7 +23,7 @@ ModelDetails:
     - id
     - name
     - description
-    - ownerId
+    - creatorId
   properties:
     id:
       type: integer
@@ -32,7 +32,7 @@ ModelDetails:
       type: string
     description:
       type: string
-    ownerId:
+    creatorId:
       type: integer
       format: int64
     checkpoints:

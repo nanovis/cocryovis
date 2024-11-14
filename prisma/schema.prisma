@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -25,6 +24,8 @@ model User {
   models                Model[]
   checkpoints           Checkpoint[]
   results               Result[]
+
+  projectAccess ProjectAccess[]
 }
 
 model Project {
@@ -35,14 +36,26 @@ model Project {
   ownerId     Int
   volumes     Volume[]
   models      Model[]
+
+  projectAccess ProjectAccess[]
+}
+
+model ProjectAccess {
+  user        User    @relation(fields: [userId], references: [id])
+  userId      Int
+  project     Project @relation(fields: [projectId], references: [id])
+  projectId   Int
+  accessLevel Int
+
+  @@id([userId, projectId])
 }
 
 model Volume {
   id            Int                     @id @default(autoincrement())
   name          String
   description   String
-  owner         User                    @relation(fields: [ownerId], references: [id])
-  ownerId       Int
+  creator       User?                   @relation(fields: [creatorId], references: [id])
+  creatorId     Int?
   projects      Project[]
   rawData       RawVolumeData?          @relation(fields: [rawDataId], references: [id])
   rawDataId     Int?
@@ -54,8 +67,8 @@ model Volume {
 model RawVolumeData {
   id          Int      @id @default(autoincrement())
   path        String?
-  owner       User     @relation(fields: [ownerId], references: [id])
-  ownerId     Int
+  creator     User?    @relation(fields: [creatorId], references: [id])
+  creatorId   Int?
   rawFilePath String?
   settings    String?
   mrcFilePath String?
@@ -66,8 +79,8 @@ model RawVolumeData {
 model SparseLabelVolumeData {
   id            Int                     @id @default(autoincrement())
   path          String?
-  owner         User                    @relation(fields: [ownerId], references: [id])
-  ownerId       Int
+  creator       User?                   @relation(fields: [creatorId], references: [id])
+  creatorId     Int?
   rawFilePath   String?
   settings      String?
   volumes       Volume[]
@@ -77,8 +90,8 @@ model SparseLabelVolumeData {
 model PseudoLabelVolumeData {
   id              Int                    @id @default(autoincrement())
   path            String?
-  owner           User                   @relation(fields: [ownerId], references: [id])
-  ownerId         Int
+  creator         User?                  @relation(fields: [creatorId], references: [id])
+  creatorId       Int?
   rawFilePath     String?
   settings        String?
   volumes         Volume[]
@@ -91,8 +104,8 @@ model Model {
   id          Int          @id @default(autoincrement())
   name        String
   description String
-  owner       User         @relation(fields: [ownerId], references: [id])
-  ownerId     Int
+  creator     User?        @relation(fields: [creatorId], references: [id])
+  creatorId   Int?
   projects    Project[]
   checkpoints Checkpoint[]
 }
@@ -101,8 +114,8 @@ model Checkpoint {
   id         Int                     @id @default(autoincrement())
   filePath   String?
   folderPath String?
-  owner      User                    @relation(fields: [ownerId], references: [id])
-  ownerId    Int
+  creator    User?                   @relation(fields: [creatorId], references: [id])
+  creatorId  Int?
   models     Model[]
   results    Result[]
   labels     PseudoLabelVolumeData[]
@@ -114,8 +127,8 @@ model Result {
   files            ResultFile[]
   rawVolumeChannel Int?
   logFile          String?
-  owner            User          @relation(fields: [ownerId], references: [id])
-  ownerId          Int
+  creator          User?         @relation(fields: [creatorId], references: [id])
+  creatorId        Int?
   checkpoint       Checkpoint    @relation(fields: [checkpointId], references: [id])
   checkpointId     Int
   volumeData       RawVolumeData @relation(fields: [volumeDataId], references: [id])

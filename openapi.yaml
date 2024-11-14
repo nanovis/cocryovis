@@ -92,6 +92,20 @@ paths:
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/User"
+
+  /users:
+    get:
+      summary: Gets all user data
+      operationId: GetAllUsers
+      tags:
+        - User
+      responses:
+        "200":
+          description: Publicly available data on all users.
+          content:
+            application/json:
+              schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/User"

@@ -54,6 +54,31 @@ export default class ProjectController {
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
+    static async getAccessInfo(req, res) {
+        const accessInfo = await Project.getAccessInfo(
+            Number(req.params.idProject)
+        );
+
+        res.json(accessInfo);
+    }
+
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async setAccess(req, res) {
+        const accessInfo = await Project.setAccess(
+            Number(req.params.idProject),
+            req.body
+        );
+
+        res.json(accessInfo);
+    }
+
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
     static async createProject(req, res) {
         const project = await Project.create(
             req.body.name,

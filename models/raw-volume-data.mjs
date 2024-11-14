@@ -41,31 +41,31 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @return {Promise<RawVolumeDataDB>}
      */
-    static async create(ownerId, volumeId) {
-        return await super.create(ownerId, volumeId);
+    static async create(creatorId, volumeId) {
+        return await super.create(creatorId, volumeId);
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {fileUpload.UploadedFile[]} files
      * @return {Promise<RawVolumeDataDB>}
      */
-    static async createFromFiles(ownerId, volumeId, files) {
-        return await super.createFromFiles(ownerId, volumeId, files);
+    static async createFromFiles(creatorId, volumeId, files) {
+        return await super.createFromFiles(creatorId, volumeId, files);
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {fileUpload.UploadedFile} file
      * @return {Promise<Object>}
      */
-    static async createFromMrcFile(ownerId, volumeId, file) {
+    static async createFromMrcFile(creatorId, volumeId, file) {
         return await Volume.withWriteLock(
             volumeId,
             [this.modelName],
@@ -97,7 +97,7 @@ export default class RawVolumeData extends VolumeData {
                             /** @type {RawVolumeDataDB} */
                             const volumeData = await tx.rawVolumeData.create({
                                 data: {
-                                    ownerId: ownerId,
+                                    creatorId: creatorId,
                                     volumes: {
                                         connect: { id: volumeId },
                                     },

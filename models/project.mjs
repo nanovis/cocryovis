@@ -14,6 +14,7 @@ import { MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
+ * @typedef { import("@prisma/client").ProjectAccess } ProjectAccess
  * @typedef {{ volumes?: boolean, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean }} Options
  */
 
@@ -42,6 +43,46 @@ export default class Project extends DatabaseModel {
                 owner: owner,
             },
         });
+    }
+
+    /**
+     * @param {Number} id
+     * @returns {Promise<{userId: Number, accessLevel: Number}[]>}
+     */
+    static async getAccessInfo(id) {
+        const projectAccess = await prismaManager.db.projectAccess.findMany({
+            where: {
+                projectId: id,
+            },
+            select: {
+                userId: true,
+                accessLevel: true,
+            },
+        });
+        return projectAccess;
+    }
+
+    /**
+     * @param {Number} id
+     * @param {{userId: Number, accessLevel: Number}[]} accessInfo
+     * @returns {Promise<ProjectAccess[]>}
+     */
+    static async setAccess(id, accessInfo) {
+        const project = await this.getById(id);
+
+        accessInfo = accessInfo.filter(
+            (info) => info.userId !== project.ownerId
+        );
+
+        const projectAccess =
+            await prismaManager.db.projectAccess.createManyAndReturn({
+                data: accessInfo.map((accessInfo) => ({
+                    projectId: id,
+                    userId: accessInfo.userId,
+                    accessLevel: accessInfo.accessLevel,
+                })),
+            });
+        return projectAccess;
     }
 
     /**

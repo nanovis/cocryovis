@@ -61,18 +61,18 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @return {Promise<Object>}
      */
-    static async create(ownerId, volumeId) {
+    static async create(creatorId, volumeId) {
         return Volume.withWriteLock(volumeId, [this.modelName], () => {
             return prismaManager.db.$transaction(
                 async (tx) => {
                     /** @type {VolumeDataDB} */
                     const volumeData = await tx[this.modelName].create({
                         data: {
-                            ownerId: ownerId,
+                            creatorId: creatorId,
                             volumes: {
                                 connect: { id: volumeId },
                             },
@@ -102,12 +102,12 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} volumeId
      * @param {fileUpload.UploadedFile[]} files
      * @return {Promise<Object>}
      */
-    static async createFromFiles(ownerId, volumeId, files) {
+    static async createFromFiles(creatorId, volumeId, files) {
         return await Volume.withWriteLock(
             volumeId,
             [this.modelName],
@@ -152,7 +152,7 @@ export default class VolumeData extends DatabaseModel {
                         /** @type {VolumeDataDB} */
                         let volumeData = await tx[this.modelName].create({
                             data: {
-                                ownerId: ownerId,
+                                creatorId: creatorId,
                                 volumes: {
                                     connect: { id: volumeId },
                                 },

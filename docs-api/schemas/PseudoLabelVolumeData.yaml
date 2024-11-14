@@ -2,7 +2,7 @@ type: object
 required:
   - id
   - path
-  - ownerId
+  - creatorId
   - rawFilePath
   - settings
   - originalLabelId
@@ -13,7 +13,7 @@ properties:
   path:
     type: string
     nullable: true
-  ownerId:
+  creatorId:
     type: integer
     format: int64
   rawFilePath:

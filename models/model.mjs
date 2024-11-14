@@ -74,17 +74,17 @@ export default class Model extends DatabaseModel {
     /**
      * @param {String} name
      * @param {String} description
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} projectId
      * @return {Promise<ModelDB>}
      */
-    static async create(name, description, ownerId, projectId) {
+    static async create(name, description, creatorId, projectId) {
         return Project.withWriteLock(projectId, [this.modelName], () => {
             return this.db.create({
                 data: {
                     name: name,
                     description: description,
-                    ownerId: ownerId,
+                    creatorId: creatorId,
                     projects: {
                         connect: { id: projectId },
                     },
@@ -95,24 +95,24 @@ export default class Model extends DatabaseModel {
 
     /**
      * @param {Number} sourceId
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} projectId
      * @return {Promise<ModelDB>}
      */
-    static async clone(sourceId, ownerId, projectId) {
+    static async clone(sourceId, creatorId, projectId) {
         return await prismaManager.db.$transaction(async (tx) => {
-            return this.cloneTransaction(tx, sourceId, ownerId, projectId);
+            return this.cloneTransaction(tx, sourceId, creatorId, projectId);
         });
     }
 
     /**
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
      * @param {Number} sourceId
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number?} projectId
      * @return {Promise<ModelDB>}
      */
-    static async cloneTransaction(tx, sourceId, ownerId, projectId = null) {
+    static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
         const sourceModel = await tx.model.findUnique({
             where: { id: sourceId },
             include: {
@@ -131,7 +131,7 @@ export default class Model extends DatabaseModel {
         const newModelData = {
             name: sourceModel.name,
             description: sourceModel.description,
-            ownerId: ownerId,
+            creatorId: creatorId,
             projects: {
                 connect: { id: projectId },
             },

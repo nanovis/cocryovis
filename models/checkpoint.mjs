@@ -62,15 +62,15 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} modelId
      * @return {Promise<CheckpointDB>}
      */
-    static async create(ownerId, modelId) {
+    static async create(creatorId, modelId) {
         return prismaManager.db.$transaction(async (tx) => {
             let checkpoint = await tx[this.modelName].create({
                 data: {
-                    ownerId: ownerId,
+                    creatorId: creatorId,
                     models: {
                         connect: { id: modelId },
                     },
@@ -96,12 +96,12 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} modelId
      * @param {fileUpload.UploadedFile[]} files
      * @return {Promise<CheckpointDB[]>}
      */
-    static async createFromFiles(ownerId, modelId, files) {
+    static async createFromFiles(creatorId, modelId, files) {
         const unpackedFiles = await unpackFiles(files, this.acceptedFileExtensions);
         /** @type {CheckpointDB[]} */
         const result = [];
@@ -113,7 +113,7 @@ export default class Checkpoint extends DatabaseModel {
                         /** @type {CheckpointDB} */
                         let checkpoint = await tx.checkpoint.create({
                             data: {
-                                ownerId: ownerId,
+                                creatorId: creatorId,
                                 models: {
                                     connect: { id: modelId },
                                 },
@@ -151,14 +151,14 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} ownerId
+     * @param {Number} creatorId
      * @param {Number} modelId
      * @param {Number[]} labelIds
      * @param {String} folderPath
      * @param {String} filePath
      */
     static async createFromFolder(
-        ownerId,
+        creatorId,
         modelId,
         labelIds,
         folderPath,
@@ -170,7 +170,7 @@ export default class Checkpoint extends DatabaseModel {
                     /** @type {CheckpointDB} */
                     let checkpoint = await tx.checkpoint.create({
                         data: {
-                            ownerId: ownerId,
+                            creatorId: creatorId,
                             models: {
                                 connect: { id: modelId },
                             },

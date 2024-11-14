@@ -35,6 +35,8 @@ projectsApi.post('/logout', UserController.logout);
 projectsApi.post('/register', UserController.register);
 projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserData);
 
+projectsApi.get('/users', restrictApi, UserController.getAllUsers);
+
 projectsApi.get(`/status`, restrictApi, 
     async (req, res) => UserController.getStatus(ilastikHandler, nanoOetzi, req, res));
 
@@ -50,6 +52,12 @@ projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 
 // Get Project
 projectsApi.get(`/project/:idProject`, restrictApi, ProjectController.getProject);
+
+// Get Project Access Info
+projectsApi.get(`/project/:idProject/access`, restrictApi, ProjectController.getAccessInfo);
+
+// Set Project Access Info
+projectsApi.post(`/project/:idProject/access`, restrictApi, ProjectController.setAccess);
 
 // Deep Clone Project
 projectsApi.post(`/project/:idProject/deep-clone`, restrictApi, ProjectController.deepCloneProject);
