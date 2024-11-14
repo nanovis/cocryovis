@@ -417,7 +417,9 @@ export default class NanoOetziHandler {
             const command = this.config.python + " " + params.join(" ");
 
             const { stdout, stderr } = await execPromise(command, {
-                cwd: path.resolve(this.config.scripts),
+                cwd: path.resolve(
+                    path.join(this.config.path, this.config.scripts)
+                ),
             });
             await logFile.writeLog(
                 `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
@@ -699,7 +701,9 @@ export default class NanoOetziHandler {
             command = `${this.config.python} \"${this.config.training.command}\" \"${outputAbsolutePath}\" --min_epochs ${this.config.training.min_epochs} --max_epochs ${this.config.training.max_epochs}`;
 
             execResult = await execPromise(command, {
-                cwd: path.resolve(this.config.scripts),
+                cwd: path.resolve(
+                    path.join(this.config.path, this.config.scripts)
+                ),
             });
 
             await logFile.writeLog(

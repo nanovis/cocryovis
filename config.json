@@ -18,10 +18,8 @@
         "cleanTemporaryFiles": true
     },
     "nanoOetzi": {
-        "path": "../nano-oetzi/",
-        "data": "../nano-oetzi/data/",
-        "models": "../nano-oetzi/models/",
-        "scripts": "../nano-oetzi/segmentation/",
+        "path": "./modules/nano-oetzi/",
+        "scripts": "segmentation/",
         "python": "python",
         "workCache": "cache/nano-oetzi",
         "maxQueueSize": 20,

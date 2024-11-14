@@ -1,0 +1,4 @@
+[submodule "modules/nano-oetzi"]
+	path = modules/nano-oetzi
+	url = https://github.com/nanovis/nano-oetzi.git
+	branch = web-server

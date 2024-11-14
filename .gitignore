@@ -13,7 +13,9 @@ db.json
 .vscode/
 .venv/
 /temp/
-/modules/*
+/modules/ilastik
+!/modules/.gitkeep
+!/modules/nano-oetzi
 
 sessions/*.db
 sessions/*.db-shm
