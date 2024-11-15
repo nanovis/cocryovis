@@ -9,7 +9,7 @@
   "scripts": {
     "prisma:init": "prisma migrate dev --name init",
     "start": "node index.mjs",
-    "start:dev": "nodemon index.mjs --watch false"
+    "start:dev": "nodemon index.mjs"
   },
   "repository": {
     "type": "git",
