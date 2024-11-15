@@ -8,7 +8,8 @@
   },
   "scripts": {
     "prisma:init": "prisma migrate dev --name init",
-    "start": "node index.mjs"
+    "start": "node index.mjs",
+    "start:dev": "nodemon index.mjs --watch false"
   },
   "repository": {
     "type": "git",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "nodemon": "^3.1.7",
     "prisma": "^5.18.0"
   }
 }
