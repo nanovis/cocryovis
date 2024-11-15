@@ -142,7 +142,7 @@ export default class VolumeDataController {
             throw new ApiError(400, "Too many files uploaded.");
         }
 
-        const volumeData = RawVolumeData.createFromMrcFile(
+        const volumeData = await RawVolumeData.createFromMrcFile(
             req.session.user.id,
             Number(req.params.idVolume),
             req.files.files
