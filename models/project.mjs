@@ -35,7 +35,18 @@ export default class Project extends DatabaseModel {
     ) {
         return await this.db.findMany({
             where: {
-                ownerId: userId,
+                OR: [
+                    {
+                        ownerId: userId,
+                    },
+                    {
+                        projectAccess: {
+                            some: {
+                                userId: userId,
+                            },
+                        },
+                    },
+                ],
             },
             include: {
                 volumes: volumes,

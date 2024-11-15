@@ -26,6 +26,8 @@ model User {
   results               Result[]
 
   projectAccess ProjectAccess[]
+
+  @@index(fields: [username])
 }
 
 model Project {
@@ -38,6 +40,8 @@ model Project {
   models      Model[]
 
   projectAccess ProjectAccess[]
+
+  @@index(fields: [ownerId])
 }
 
 model ProjectAccess {
