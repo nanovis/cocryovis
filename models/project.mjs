@@ -53,6 +53,11 @@ export default class Project extends DatabaseModel {
                 volumes: volumes,
                 models: models,
                 owner: owner,
+                projectAccess: {
+                    where: {
+                        userId: userId,
+                    },
+                },
             },
         });
     }

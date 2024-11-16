@@ -8,6 +8,7 @@
   },
   "scripts": {
     "prisma:init": "prisma migrate dev --name init",
+    "prisma:db": "npx prisma studio",
     "start": "node index.mjs",
     "start:dev": "nodemon index.mjs"
   },
