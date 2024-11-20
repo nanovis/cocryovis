@@ -46,6 +46,7 @@ projectsApi.get(`/status`, restrictApi,
 
 // Get Project List
 projectsApi.get(`/projects`, restrictApi, ProjectController.getAllUserProjects);
+projectsApi.get(`/projects-deep`, restrictApi, ProjectController.getAllUserProjectsDeep);
 
 // Create New Project
 projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);

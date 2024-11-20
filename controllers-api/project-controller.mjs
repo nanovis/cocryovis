@@ -13,7 +13,15 @@ export default class ProjectController {
             req.session.user.id,
             options
         );
+        res.json(projects);
+    }
 
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async getAllUserProjectsDeep(req, res) {
+        const projects = await Project.getUserProjectsDeep(req.session.user.id);
         res.json(projects);
     }
 
@@ -37,10 +45,30 @@ export default class ProjectController {
      */
     static #parseOptionQuery(req) {
         const options = {
-            volumes: !!req?.query?.volumes,
+            volumes: (() => {
+                if (!req?.query?.volumes) return false;
+                const fullVolume = req.query.volumes === "full";
+                const query = {};
+                if (req.query.rawData || fullVolume) {
+                    query.rawData = true;
+                }
+                if (req.query.sparseVolumes || fullVolume) {
+                    query.sparseVolumes = true;
+                }
+                if (req.query.pseudoVolumes || fullVolume) {
+                    query.pseudoVolumes = true;
+                }
+                if (req.query.results || fullVolume) {
+                    query.results = true;
+                }
+
+                return Object.keys(query).length > 0
+                    ? { include: query }
+                    : true;
+            })(),
             models: (() => {
                 if (!req?.query?.models) return false;
-                return req?.query?.checkpoints
+                return req.query.checkpoints || req.query.models === "full"
                     ? { include: { checkpoints: true } }
                     : true;
             })(),

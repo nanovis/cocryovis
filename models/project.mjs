@@ -15,7 +15,7 @@ import { MissingResourceError } from "../tools/error-handler.mjs";
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
  * @typedef { import("@prisma/client").ProjectAccess } ProjectAccess
- * @typedef { { volumes?: boolean, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options
+ * @typedef { { volumes?: boolean | { include: import("./volume.mjs").Options }, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options
  * @typedef { {userId: Number, accessLevel: Number} } AccessInfo
  */
 
@@ -34,7 +34,7 @@ export default class Project extends DatabaseModel {
         userId,
         { volumes = false, models = false, owner = false } = {}
     ) {
-        return await this.db.findMany({
+        const projects = await this.db.findMany({
             where: {
                 OR: [
                     {
@@ -59,6 +59,76 @@ export default class Project extends DatabaseModel {
                     },
                 },
             },
+        });
+
+        return projects.map(({ projectAccess, ...project }) => {
+            let updatedProject = { ...project, accessLevel: -1 };
+
+            if (project.ownerId === userId) {
+                updatedProject.accessLevel = 2;
+            } else if (projectAccess.length > 0) {
+                updatedProject.accessLevel = projectAccess[0].accessLevel;
+            }
+
+            return updatedProject;
+        });
+    }
+
+    /**
+     * @param {Number} userId
+     */
+    static async getUserProjectsDeep(userId) {
+        const projects = await this.db.findMany({
+            where: {
+                OR: [
+                    {
+                        ownerId: userId,
+                    },
+                    {
+                        projectAccess: {
+                            some: {
+                                userId: userId,
+                            },
+                        },
+                    },
+                ],
+            },
+            include: {
+                volumes: {
+                    include: {
+                        rawData: true,
+                        sparseVolumes: true,
+                        pseudoVolumes: true,
+                        results: {
+                            include: {
+                                checkpoint: true,
+                            },
+                        },
+                    },
+                },
+                models: {
+                    include: {
+                        checkpoints: true,
+                    },
+                },
+                projectAccess: {
+                    where: {
+                        userId: userId,
+                    },
+                },
+            },
+        });
+
+        return projects.map(({ projectAccess, ...project }) => {
+            let updatedProject = { ...project, accessLevel: -1 };
+
+            if (project.ownerId === userId) {
+                updatedProject.accessLevel = 2;
+            } else if (projectAccess.length > 0) {
+                updatedProject.accessLevel = projectAccess[0].accessLevel;
+            }
+
+            return updatedProject;
         });
     }
 
