@@ -232,8 +232,7 @@ export default class Utils {
         for (const volumeSettings of settings) {
             if (volumeSettings.transferFunction) {
                 const publicTFPath = path.join(
-                    "web",
-                    "data",
+                    "transfer-functions",
                     volumeSettings.transferFunction
                 );
                 if (fileSystem.existsSync(publicTFPath)) {

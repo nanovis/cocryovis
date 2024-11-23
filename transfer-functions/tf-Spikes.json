@@ -1,0 +1,10 @@
+{
+  "rampLow": 0.34,
+  "rampHigh": 0.45,
+  "color": {
+    "x": 207,
+    "y": 31,
+    "z": 97
+  },
+  "comment": "tf-0"
+}
