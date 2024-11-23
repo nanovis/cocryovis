@@ -2,3 +2,6 @@
 	path = modules/nano-oetzi
 	url = https://github.com/nanovis/nano-oetzi.git
 	branch = web-server
+[submodule "client"]
+	path = client
+	url = https://github.com/CirilBohak/VolWeb-UI.git

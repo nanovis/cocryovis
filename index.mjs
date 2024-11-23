@@ -99,6 +99,17 @@ app.use(sessionParser);
 // API
 app.use("/api", projectsApi);
 
+const clientPath = path.join("client", "build");
+
+if (fileSystem.existsSync(clientPath)) {
+    app.use(express.static(clientPath));
+    app.get("/", function (req, res) {
+        res.sendFile(path.join(clientPath, "index.html"));
+    });
+} else {
+    console.warn("No client build found, serving api only!");
+}
+
 app.use("/logs", express.static("logs", { index: false }));
 
 const server = http.createServer(app);
