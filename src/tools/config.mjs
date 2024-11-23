@@ -1,10 +1,10 @@
-import {readFileSync} from "fs";
+import { readFileSync } from "fs";
 
 class Config {
     config;
 
     constructor() {
-        this.config = JSON.parse(readFileSync('./config.json', 'utf8'));
+        this.config = JSON.parse(readFileSync("./config.json", "utf8"));
     }
 
     static getInstance() {
@@ -14,8 +14,6 @@ class Config {
         return this.instance;
     }
 }
-
-
 
 const appConfig = Config.getInstance().config;
 

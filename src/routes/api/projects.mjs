@@ -5,16 +5,16 @@ import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import NanoOetziHandler from '../../tools/nano-oetzi-handler.mjs';
 import { restrictApi } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
-import ProjectController from '../../controllers-api/project-controller.mjs';
-import VolumeController from '../../controllers-api/volume-controller.mjs';
-import VolumeDataController from '../../controllers-api/volume-data-controller.mjs';
+import ProjectController from '../../controllers/project-controller.mjs';
+import VolumeController from '../../controllers/volume-controller.mjs';
+import VolumeDataController from '../../controllers/volume-data-controller.mjs';
 import { VolumeDataType } from '../../models/volume-data-factory.mjs';
-import ModelController from '../../controllers-api/model-controller.mjs';
-import CheckpointController from '../../controllers-api/checkpoint-controller.mjs';
-import ResultController from '../../controllers-api/result-controller.mjs';
-import IlastikController from '../../controllers-api/ilastik-controller.mjs';
-import NanoOetziController from '../../controllers-api/nano-oetzi-controller.mjs';
-import UserController from '../../controllers-api/user-controller.mjs';
+import ModelController from '../../controllers/model-controller.mjs';
+import CheckpointController from '../../controllers/checkpoint-controller.mjs';
+import ResultController from '../../controllers/result-controller.mjs';
+import IlastikController from '../../controllers/ilastik-controller.mjs';
+import NanoOetziController from '../../controllers/nano-oetzi-controller.mjs';
+import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'
 
 // Config

@@ -44,7 +44,7 @@ export default class CheckpointController {
             Number(req.params.idModel),
             Array.isArray(req.files.files) ? req.files.files : [req.files.files]
         );
-        
+
         res.status(201).json(checkpoints);
     }
 
