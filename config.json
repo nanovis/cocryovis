@@ -1,8 +1,8 @@
 {
     "idleSessionExpirationMin": 30,
     "tempPath": "./temp",
-    "annotationsCachePath": "./cache/annotations/",
-    "mrcCachePath": "./cache/mrc/",
+    "annotationsCachePath": "./temp/annotations/",
+    "mrcCachePath": "./temp/mrc/",
     "dataPath": "./data",
     "maxVolumeChannels": 4,
     "safeMode": false,
@@ -14,14 +14,14 @@
         "inference": "run_ilastik.sh",
         "create_project_command": "train_headless.py",
         "model_file_name": "model_project.ilp",
-        "workCache": "cache/ilastik",
+        "workCache": "temp/ilastik",
         "cleanTemporaryFiles": true
     },
     "nanoOetzi": {
         "path": "./modules/nano-oetzi/",
         "scripts": "segmentation/",
         "python": "python",
-        "workCache": "cache/nano-oetzi",
+        "workCache": "temp/nano-oetzi",
         "maxQueueSize": 20,
         "meanFiltering": {
             "command": "mean_filtering.py"
