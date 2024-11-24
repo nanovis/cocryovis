@@ -3,7 +3,7 @@
 import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import IlastikHandler from "../tools/ilastik-handler.mjs";
-import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
+import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 
 export default class UserController {
     /**
@@ -102,18 +102,18 @@ export default class UserController {
 
     /**
      * @param {IlastikHandler} ilastik
-     * @param {NanoOetziHandler} nanoOetzi
+     * @param {GPUTaskHandler} gpuTaskHandler
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
-    static async getStatus(ilastik, nanoOetzi, req, res) {
+    static async getStatus(ilastik, gpuTaskHandler, req, res) {
         const ilastikTaskQueue = await ilastik.getTaskQueue();
         const ilastikTaskHistory = await ilastik.taskHistory.getUserTaskHistory(
             req.session.user.id
         );
-        const nanoOetziTaskQueue = await nanoOetzi.getTaskQueue();
+        const nanoOetziTaskQueue = await gpuTaskHandler.getTaskQueue();
         const nanoOetziTaskHistory =
-            await nanoOetzi.taskHistory.getUserTaskHistory(req.session.user.id);
+            await gpuTaskHandler.taskHistory.getUserTaskHistory(req.session.user.id);
 
         res.json({
             ilastikTaskQueue: ilastikTaskQueue,

@@ -1,27 +1,27 @@
 // @ts-check
 
-import NanoOetziHandler from "../tools/nano-oetzi-handler.mjs";
+import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 import Utils from "../tools/utils.mjs";
 
 export default class NanoOetziController {
     /**
-     * @param {NanoOetziHandler} nanoOetzi
+     * @param {GPUTaskHandler} gpuTaskHandler
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
-    static async getNanoOetziTaskQueue(nanoOetzi, req, res) {
-        const taskQueue = nanoOetzi.getTaskQueue();
+    static async getNanoOetziTaskQueue(gpuTaskHandler, req, res) {
+        const taskQueue = gpuTaskHandler.getTaskQueue();
 
         res.json(taskQueue);
     }
 
     /**
-     * @param {NanoOetziHandler} nanoOetzi
+     * @param {GPUTaskHandler} gpuTaskHandler
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
-    static async getNanoOetziUserTaskHistory(nanoOetzi, req, res) {
-        const taskHistory = nanoOetzi.taskHistory.getUserTaskHistory(
+    static async getNanoOetziUserTaskHistory(gpuTaskHandler, req, res) {
+        const taskHistory = gpuTaskHandler.taskHistory.getUserTaskHistory(
             req.session.user.id
         );
 
@@ -29,15 +29,15 @@ export default class NanoOetziController {
     }
 
     /**
-     * @param {NanoOetziHandler} nanoOetzi
+     * @param {GPUTaskHandler} gpuTaskHandler
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
-    static async queueInference(nanoOetzi, req, res) {
+    static async queueInference(gpuTaskHandler, req, res) {
         const checkpointId = Number(req.body.checkpointId);
         const volumeId = Number(req.body.volumeId);
 
-        await nanoOetzi.queueInference(
+        await gpuTaskHandler.queueInference(
             checkpointId,
             volumeId,
             Number(req.session.user.id)
@@ -47,11 +47,11 @@ export default class NanoOetziController {
     }
 
     /**
-     * @param {NanoOetziHandler} nanoOetzi
+     * @param {GPUTaskHandler} gpuTaskHandler
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
-    static async queueTraining(nanoOetzi, req, res) {
+    static async queueTraining(gpuTaskHandler, req, res) {
         const trainingVolumesIds = Utils.parseStringArray(
             req.body.trainingVolumes
         );
@@ -62,7 +62,7 @@ export default class NanoOetziController {
             req.body.testingVolumes
         );
 
-        await nanoOetzi.queueTraining(
+        await gpuTaskHandler.queueTraining(
             Number(req.body.modelId),
             Number(req.session.user.id),
             trainingVolumesIds,

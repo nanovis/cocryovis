@@ -137,7 +137,7 @@ export default class IlastikHandler {
     }
 
     async getVersion() {
-        const command = `${this.config.python} -c \"import ilastik; print ilastik.__version__\"`;
+        const command = `${this.config.ilastik.python} -c \"import ilastik; print ilastik.__version__\"`;
         const { stdout, stderr } = await execPromise(command);
         return stdout;
     }
@@ -172,7 +172,7 @@ export default class IlastikHandler {
      * @returns {Promise<void>}
      */
     async queueLabelGeneration(volumeId, userId, outputPath = null) {
-        if (this.#taskQueue.size >= this.config.maxQueueSize) {
+        if (this.#taskQueue.size >= this.config.ilastikQueueSize) {
             throw new ApiError(
                 400,
                 "Failed Attempt to queue label generation: Too many tasks in queue."
@@ -188,7 +188,9 @@ export default class IlastikHandler {
         IlastikHandler.#checkVolumeProperties(volume);
 
         if (!outputPath) {
-            outputPath = Utils.createTemporaryFolder(this.config.workCache);
+            outputPath = Utils.createTemporaryFolder(
+                this.config.ilastik.workCache
+            );
         }
 
         const multiLock = new WriteMultiLock([
@@ -250,7 +252,10 @@ export default class IlastikHandler {
             '"' + rawDataFullPath + '"',
         ];
         const command =
-            this.config.path + this.config.inference + " " + params.join(" ");
+            this.config.ilastik.path +
+            this.config.ilastik.inference +
+            " " +
+            params.join(" ");
 
         const { stdout, stderr } = await execPromise(command);
         await logFile.writeLog(`stdout: \n${stdout}\nstderr: \n${stderr}`);
@@ -275,7 +280,7 @@ export default class IlastikHandler {
 
         const modelOutputFullPath = path.join(
             path.resolve(outputPath),
-            this.config.model_file_name
+            this.config.ilastik.model_file_name
         );
         const rawDataFullPath =
             path.resolve(rawDataPath) + IlastikHandler.rawDataset;
@@ -283,15 +288,15 @@ export default class IlastikHandler {
             path.resolve(sparseLabelPath) + IlastikHandler.labelsDataset;
         let params = [
             path.join(
-                this.config.path,
-                this.config.scripts_path,
-                this.config.create_project_command
+                this.config.ilastik.path,
+                this.config.ilastik.scripts_path,
+                this.config.ilastik.create_project_command
             ),
             modelOutputFullPath,
             '"' + rawDataFullPath + '"',
             '"' + sparseLabelFullPath + '"',
         ];
-        const command = this.config.python + " " + params.join(" ");
+        const command = this.config.ilastik.python + " " + params.join(" ");
 
         const { stdout, stderr } = await execPromise(command);
         await logFile.writeLog(`stdout: \n${stdout}\nstderr: \n${stderr}`);

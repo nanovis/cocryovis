@@ -7,6 +7,8 @@
     "maxVolumeChannels": 4,
     "safeMode": false,
     "logPath": "./logs/",
+    "ilastikQueueSize": 20,
+    "gpuQueueSize": 20,
     "ilastik": {
         "path": "./modules/ilastik/",
         "scripts_path": "bin/",
@@ -22,7 +24,6 @@
         "scripts": "segmentation/",
         "python": "python",
         "workCache": "temp/nano-oetzi",
-        "maxQueueSize": 20,
         "meanFiltering": {
             "command": "mean_filtering.py"
         },

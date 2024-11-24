@@ -2,7 +2,7 @@
 
 import express, { Router } from 'express';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
-import NanoOetziHandler from '../../tools/nano-oetzi-handler.mjs';
+import GPUTaskHandler from '../../tools/gpu-task-handler.mjs';
 import { restrictApi } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
 import ProjectController from '../../controllers/project-controller.mjs';
@@ -19,8 +19,8 @@ import toAsyncRouter from 'async-express-decorator'
 
 // Config
 const config = appConfig;
-const ilastikHandler = new IlastikHandler(config.ilastik);
-const nanoOetzi = new NanoOetziHandler(config.nanoOetzi);
+const ilastikHandler = new IlastikHandler(config);
+const gpuTaskHandler = new GPUTaskHandler(config);
 
 // toAsyncRouter removes the need to call next() on async errors.
 /** @type {Router} */
@@ -38,7 +38,7 @@ projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserD
 projectsApi.get('/users', restrictApi, UserController.getAllUsers);
 
 projectsApi.get(`/status`, restrictApi, 
-    async (req, res) => UserController.getStatus(ilastikHandler, nanoOetzi, req, res));
+    async (req, res) => UserController.getStatus(ilastikHandler, gpuTaskHandler, req, res));
 
 ///////////////////////
 /////// PROJECTS
@@ -84,19 +84,19 @@ projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi,
 
 // Get Nano Oetzi task queue
 projectsApi.get(`/nanooetzi-task-queue`, restrictApi,
-    async (req, res) => NanoOetziController.getNanoOetziTaskQueue(nanoOetzi, req, res));
+    async (req, res) => NanoOetziController.getNanoOetziTaskQueue(gpuTaskHandler, req, res));
 
 // Get Nano Oetzi task history
 projectsApi.get(`/nanooetzi-task-history`, restrictApi,
-    async (req, res) => NanoOetziController.getNanoOetziUserTaskHistory(nanoOetzi, req, res));
+    async (req, res) => NanoOetziController.getNanoOetziUserTaskHistory(gpuTaskHandler, req, res));
 
 // Inference
 projectsApi.post(`/queue-inference`, restrictApi,
-    async (req, res) => NanoOetziController.queueInference(nanoOetzi, req, res));
+    async (req, res) => NanoOetziController.queueInference(gpuTaskHandler, req, res));
 
 // Run training
 projectsApi.post(`/queue-training`, restrictApi, 
-    async (req, res) => NanoOetziController.queueTraining(nanoOetzi, req, res));
+    async (req, res) => NanoOetziController.queueTraining(gpuTaskHandler, req, res));
 
 /////// VOLUMES
 

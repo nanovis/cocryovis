@@ -197,7 +197,7 @@ class TaskHistory {
     }
 }
 
-export default class NanoOetziHandler {
+export default class GPUTaskHandler {
     /** @type {TaskQueue} */ #taskQueue;
     /** @type {TaskHistory} */ taskHistory = new TaskHistory();
 
@@ -291,7 +291,7 @@ export default class NanoOetziHandler {
 
     createTemporaryOutputPath() {
         let tempFolderPath = path.join(
-            this.config.workCache,
+            this.config.nanoOetzi.workCache,
             Utils.getInverseDateString()
         );
         while (fileSystem.existsSync(tempFolderPath)) {
@@ -309,7 +309,7 @@ export default class NanoOetziHandler {
      * @returns {Promise<void>}
      */
     async queueInference(checkpointId, volumeId, userId, outputPath = null) {
-        if (this.#taskQueue.size >= this.config.maxQueueSize) {
+        if (this.#taskQueue.size >= this.config.gpuQueueSize) {
             throw new ApiError(
                 400,
                 "Failed Attempt to start inference: Too many tasks in queue."
@@ -319,7 +319,7 @@ export default class NanoOetziHandler {
         const volume = await Volume.getById(volumeId, { rawData: true });
         const checkpoint = await Checkpoint.getById(checkpointId);
 
-        NanoOetziHandler.#checkInferenceInput(volume, checkpoint);
+        GPUTaskHandler.#checkInferenceInput(volume, checkpoint);
 
         if (!outputPath) {
             outputPath = this.createTemporaryOutputPath();
@@ -381,7 +381,7 @@ export default class NanoOetziHandler {
             });
             const checkpoint = await Checkpoint.getById(checkpointId);
 
-            NanoOetziHandler.#checkInferenceInput(volume, checkpoint);
+            GPUTaskHandler.#checkInferenceInput(volume, checkpoint);
 
             tempSettingsPath = path.join(
                 volume.rawData.path,
@@ -406,19 +406,23 @@ export default class NanoOetziHandler {
 
             const checkpointAbsolutePath = path.resolve(checkpoint.filePath);
             let params = [
-                "./" + this.config.inference.command,
+                "./" + this.config.nanoOetzi.inference.command,
                 inferenceDataAbsolutePath,
                 outputAbsolutePath,
                 "-m " + checkpointAbsolutePath,
             ];
-            if (this.config.inference.cleanTemporaryFiles) {
+            if (this.config.nanoOetzi.inference.cleanTemporaryFiles) {
                 params.push("-c True");
             }
-            const command = this.config.python + " " + params.join(" ");
+            const command =
+                this.config.nanoOetzi.python + " " + params.join(" ");
 
             const { stdout, stderr } = await execPromise(command, {
                 cwd: path.resolve(
-                    path.join(this.config.path, this.config.scripts)
+                    path.join(
+                        this.config.nanoOetzi.path,
+                        this.config.nanoOetzi.scripts
+                    )
                 ),
             });
             await logFile.writeLog(
@@ -537,7 +541,7 @@ export default class NanoOetziHandler {
                 "Failed Attempt to start training: Missing test data."
             );
         }
-        if (this.#taskQueue.size >= this.config.maxQueueSize) {
+        if (this.#taskQueue.size >= this.config.gpuQueueSize) {
             throw new ApiError(
                 400,
                 "Failed Attempt to start inference: Too many tasks in queue."
@@ -683,7 +687,7 @@ export default class NanoOetziHandler {
             const configAbsolutePath = path.resolve(configPath);
             const outputAbsolutePath = path.resolve(workFolder);
 
-            let command = `${this.config.python} \"${path.join(
+            let command = `${this.config.nanoOetzi.python} \"${path.join(
                 "tools-python",
                 "raws-to-train-sets.py"
             )}\" -i \"${configAbsolutePath}\" -o \"${outputAbsolutePath}\"`;
@@ -698,11 +702,14 @@ export default class NanoOetziHandler {
                 `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nLauching training script...\n`
             );
 
-            command = `${this.config.python} \"${this.config.training.command}\" \"${outputAbsolutePath}\" --min_epochs ${this.config.training.min_epochs} --max_epochs ${this.config.training.max_epochs}`;
+            command = `${this.config.nanoOetzi.python} \"${this.config.nanoOetzi.training.command}\" \"${outputAbsolutePath}\" --min_epochs ${this.config.nanoOetzi.training.min_epochs} --max_epochs ${this.config.nanoOetzi.training.max_epochs}`;
 
             execResult = await execPromise(command, {
                 cwd: path.resolve(
-                    path.join(this.config.path, this.config.scripts)
+                    path.join(
+                        this.config.nanoOetzi.path,
+                        this.config.nanoOetzi.scripts
+                    )
                 ),
             });
 
@@ -898,7 +905,7 @@ export default class NanoOetziHandler {
             if (properties.dimensions == null) {
                 properties.dimensions = volumeSettings["size"];
             } else {
-                NanoOetziHandler.#checkDimensions(
+                GPUTaskHandler.#checkDimensions(
                     volumeSettings["size"],
                     properties.dimensions
                 );
@@ -936,7 +943,7 @@ export default class NanoOetziHandler {
                         "NanoOetzi inference error: One or more pseudo labeled volumes have an unsopported data format."
                     );
                 }
-                NanoOetziHandler.#checkDimensions(
+                GPUTaskHandler.#checkDimensions(
                     pseudoVolumeSettings["size"],
                     properties.dimensions
                 );
