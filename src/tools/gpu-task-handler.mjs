@@ -385,7 +385,7 @@ export default class GPUTaskHandler {
 
             tempSettingsPath = path.join(
                 volume.rawData.path,
-                `${path.parse(volume.rawData.rawFilePath).name}.json`
+                `${Utils.stripExtension(volume.rawData.rawFilePath)}.json`
             );
             await fsPromises.writeFile(
                 tempSettingsPath,

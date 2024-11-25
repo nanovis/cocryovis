@@ -31,6 +31,14 @@ export default class Utils {
     }
 
     /**
+     * @param {String} fileName
+     * @returns {String}
+     */
+    static stripExtension(fileName) {
+        return path.parse(fileName).name;
+    }
+
+    /**
      * @param {String} inputFile
      * @param {String} outputPath
      */
@@ -74,7 +82,7 @@ export default class Utils {
      */
     static generateUniqueFileName(filePath) {
         const folder = path.dirname(filePath);
-        const fileName = path.parse(filePath).name;
+        const fileName = Utils.stripExtension(filePath);
         const extension = path.extname(filePath);
         let counter = 1;
 
@@ -248,7 +256,7 @@ export default class Utils {
             }
 
             const settingsFileName =
-                path.parse(volumeSettings.file).name + ".json";
+                Utils.stripExtension(volumeSettings.file) + ".json";
 
             archive.append(JSON.stringify(volumeSettings, null, 2), {
                 name: settingsFileName,

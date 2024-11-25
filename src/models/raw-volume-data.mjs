@@ -266,7 +266,7 @@ export default class RawVolumeData extends VolumeData {
             const settings = JSON.parse(volumeData.settings);
             const settingsJSON = JSON.stringify(settings, null, 4);
             zip.addFile(
-                `${path.parse(volumeData.rawFilePath).name}.json`,
+                `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
                 Buffer.from(settingsJSON)
             );
             hasFiles = true;
@@ -280,9 +280,9 @@ export default class RawVolumeData extends VolumeData {
             throw new ApiError(404, "No files to download.");
         }
 
-        let outputFileName = `${this.modelName}_${
-            path.parse(volumeData.path).name
-        }`;
+        let outputFileName = `${this.modelName}_${Utils.stripExtension(
+            volumeData.path
+        )}`;
 
         return {
             name: `${outputFileName}.zip`,

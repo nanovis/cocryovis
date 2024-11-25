@@ -384,7 +384,7 @@ export default class VolumeData extends DatabaseModel {
             const settings = JSON.parse(volumeData.settings);
             const settingsJSON = JSON.stringify(settings, null, 4);
             zip.addFile(
-                `${path.parse(volumeData.rawFilePath).name}.json`,
+                `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
                 Buffer.from(settingsJSON)
             );
             hasFiles = true;
@@ -394,9 +394,9 @@ export default class VolumeData extends DatabaseModel {
             throw new ApiError(404, "No files to download.");
         }
 
-        const outputFileName = `${this.modelName}_${
-            path.parse(volumeData.path).name
-        }`;
+        const outputFileName = `${this.modelName}_${Utils.stripExtension(
+            volumeData.path
+        )}`;
         return {
             name: `${outputFileName}.zip`,
             zipBuffer: zip.toBuffer(),

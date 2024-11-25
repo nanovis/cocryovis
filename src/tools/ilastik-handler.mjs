@@ -236,7 +236,7 @@ export default class IlastikHandler {
         const modelFullPath = path.resolve(modelPath);
         const resultsFilePath = path.join(
             labelsOutputPath,
-            `${path.parse(rawDataPath).name}_pseudo_labels.h5`
+            `${Utils.stripExtension(rawDataPath)}_pseudo_labels.h5`
         );
 
         let params = [
@@ -362,9 +362,9 @@ export default class IlastikHandler {
             }
 
             const rawH5FileName =
-                path.parse(volume.rawData.rawFilePath).name + ".h5";
+                Utils.stripExtension(volume.rawData.rawFilePath) + ".h5";
             const labelsH5FileName =
-                path.parse(volume.rawData.rawFilePath).name + "_labels.h5";
+                Utils.stripExtension(volume.rawData.rawFilePath) + "_labels.h5";
 
             const rawH5Path = path.join(outputPath, rawH5FileName);
             const labelsH5Path = path.join(outputPath, labelsH5FileName);

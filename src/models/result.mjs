@@ -353,9 +353,9 @@ export default class Result extends DatabaseModel {
                         settingFile.transferFunction = Result.#getTFName(
                             volumeDescriptors[i].name
                         );
-                        const settingFileName = `${
-                            path.parse(pendingFile.filteredFileName).name
-                        }.json`;
+                        const settingFileName = `${Utils.stripExtension(
+                            pendingFile.filteredFileName
+                        )}.json`;
 
                         await pendingFile.saveAs(resultPath);
                         await fsPromises.writeFile(
@@ -386,9 +386,9 @@ export default class Result extends DatabaseModel {
 
                     if (meanFilteredFilePath !== null) {
                         const volumeName = "Mean3-Inverted";
-                        const meanFilteredFileName = `${
-                            path.parse(volumeData.rawFilePath).name
-                        }_mean3_inverted.raw`;
+                        const meanFilteredFileName = `${Utils.stripExtension(
+                            volumeData.rawFilePath
+                        )}_mean3_inverted.raw`;
 
                         const settingFile = { ...settings };
                         settingFile.file = meanFilteredFileName;
@@ -400,9 +400,9 @@ export default class Result extends DatabaseModel {
                             path.join(resultPath, meanFilteredFileName)
                         );
 
-                        const settingFileName = `${
-                            path.parse(meanFilteredFileName).name
-                        }.json`;
+                        const settingFileName = `${Utils.stripExtension(
+                            meanFilteredFileName
+                        )}.json`;
 
                         await fsPromises.writeFile(
                             path.join(resultPath, settingFileName),

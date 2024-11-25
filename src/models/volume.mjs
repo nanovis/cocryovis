@@ -404,7 +404,7 @@ export default class Volume extends DatabaseModel {
                     );
 
                     const outputFile =
-                        path.parse(annotations[0].volumeName).name +
+                        Utils.stripExtension(annotations[0].volumeName) +
                         "_annotated.raw";
                     const outputPath = path.join(tempFolderPath, outputFile);
                     const settings = await annotationsToVolume(
