@@ -4,4 +4,4 @@
 	branch = web-server
 [submodule "client"]
 	path = client
-	url = https://github.com/CirilBohak/VolWeb-UI.git
+	url = https://github.com/nanovis/VolWeb-UI.git
