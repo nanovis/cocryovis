@@ -11,11 +11,11 @@ The Nano-Ötzi requires CUDA Toolkit. It was tested with 11.3, 11.6 and 11.7. On
 ## Setup
 Make sure submodules are installed by running ```git pull --recurse-submodules```
 
-Dowload Ilastik by running ```./install_ilastik.sh```
+Download Ilastik by running ```./install_ilastik.sh```
 
 Install python packages via ```pip install -r requirements.txt```
 
-In the root folder create a ```.env``` file with the following entries:
+In the root folder create a ```.env``` file with the following entries or add them to the local environment:
 ```
 # Path to main sqlite database
 DATABASE_URL=file:./db.sqlite
@@ -32,13 +32,13 @@ To setup the database run:
 
 ```npm run prisma:init```
 
+To setup the client run:
+
+```./build_client.sh```
+
 To run the server run:
 
 ```npm start```
-
-## Default User Credentials
-Username: ciril \
-Password: nanovis
 
 ## Ilastik
 The Ilastik used in our setup is standard Ilastik version with adapted script for headless operation which was provided to us by the Ilastik developer.
