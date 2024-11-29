@@ -1,7 +1,7 @@
 [submodule "modules/nano-oetzi"]
 	path = modules/nano-oetzi
-	url = https://github.com/nanovis/nano-oetzi.git
+	url = ../nano-oetzi
 	branch = web-server
 [submodule "client"]
 	path = client
-	url = https://github.com/nanovis/VolWeb-UI.git
+	url = ../VolWeb-UI
