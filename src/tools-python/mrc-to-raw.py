@@ -4,19 +4,7 @@ import mrcfile
 from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
-
-
-def generate_unique_filename(directory, filename):
-    name, extension = os.path.splitext(filename)
-    
-    unique_filename = filename
-    counter = 1
-
-    while os.path.exists(os.path.join(directory, unique_filename)):
-        unique_filename = f"{name}_{counter}{extension}"
-        counter += 1
-
-    return unique_filename
+from utils import generate_unique_filename, generate_settings_object
 
 
 def mrc_to_raw(mrc_file_path, output_path):
@@ -55,31 +43,17 @@ def mrc_to_raw(mrc_file_path, output_path):
             is_signed = False
         else:
             raise Exception("MRC file data is in incompatible format.")
-        
+
         raw_filename = generate_unique_filename(output_path, raw_file_output)
 
         data.tofile(os.path.join(output_path, raw_filename))
 
-        json_output = {
-            "file": raw_filename,
-            "size": {
-                "x": mrc.header.nx.item(),
-                "y": mrc.header.ny.item(),
-                "z": mrc.header.nz.item()
-            },
-            "ratio": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "bytesPerVoxel": bytes_per_voxel,
-            "usedBits": used_bits,
-            "skipBytes": 0,
-            "isLittleEndian": True,
-            "isSigned": is_signed,
-            "addValue": 0,
-            "transferFunction": "tf-default.json"
-        }
+        json_output = generate_settings_object(raw_filename,
+                                               mrc.header.nx.item(),
+                                               mrc.header.ny.item(),
+                                               mrc.header.nz.item(),
+                                               bytes_per_voxel, used_bits,
+                                               is_signed, True)
 
         # with open(os.path.join(output_path, json_file_output), "w") as outfile:
         #     outfile.write(json.dumps(json_output, indent=2))
@@ -87,9 +61,20 @@ def mrc_to_raw(mrc_file_path, output_path):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser('Convert a MRC volume into a RAW data file with JSON setting.')
-    parser.add_argument('-i', '--input', dest="input", type=str, help='Input MRC file', required=True)
-    parser.add_argument('-o' '--output', dest="output", type=str, help='Output directory', required=True)
+    parser = ArgumentParser(
+        'Convert a MRC volume into a RAW data file with JSON setting.')
+    parser.add_argument('-i',
+                        '--input',
+                        dest="input",
+                        type=str,
+                        help='Input MRC file',
+                        required=True)
+    parser.add_argument('-o'
+                        '--output',
+                        dest="output",
+                        type=str,
+                        help='Output directory',
+                        required=True)
     args = parser.parse_args()
 
     mrc_to_raw(Path(args.input), Path(args.output))

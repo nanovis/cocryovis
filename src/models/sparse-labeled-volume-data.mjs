@@ -4,10 +4,10 @@ import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "fs/promises";
 import path from "path";
-import fileUpload from "express-fileupload";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
+import { PendingUpload } from "../tools/file-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
@@ -48,11 +48,17 @@ export default class SparseLabeledVolumeData extends VolumeData {
     /**
      * @param {Number} creatorId
      * @param {Number} volumeId
-     * @param {fileUpload.UploadedFile[]} files
+     * @param {PendingUpload[]} files
+     * @param {Boolean?} skipLock
      * @return {Promise<SparseLabelVolumeDataDB>}
      */
-    static async createFromFiles(creatorId, volumeId, files) {
-        return await super.createFromFiles(creatorId, volumeId, files);
+    static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
+        return await super.createFromFiles(
+            creatorId,
+            volumeId,
+            files,
+            skipLock
+        );
     }
 
     /**

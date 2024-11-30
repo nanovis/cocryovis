@@ -93,6 +93,7 @@ export class PendingFile extends PendingUpload {
     }
 
     /**
+     * @param {String} folderPath
      * @return {Promise<String>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
@@ -161,6 +162,7 @@ export class PendingZipFile extends PendingUpload {
     }
 
     /**
+     * @param {String} folderPath
      * @return {Promise<String>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
@@ -192,6 +194,73 @@ export class PendingZipFile extends PendingUpload {
             filteredFileName
         );
 
+        return fullPath;
+    }
+}
+
+/**
+ * @extends {PendingUpload}
+ */
+export class PendingLocalFile extends PendingUpload {
+    /**
+     * @param {String} path
+     */
+    constructor(path) {
+        super();
+        /** @type {String} */
+        this.path = path;
+        Object.preventExtensions(this);
+    }
+
+    /**
+     * @return {String}
+     */
+    get fileName() {
+        return path.basename(this.path);
+    }
+
+    /**
+     * @return {String}
+     */
+    get filteredFileName() {
+        return Utils.fileNameFilter(this.fileName);
+    }
+
+    /**
+     * @return {String}
+     */
+    get fileExtension() {
+        return path.extname(this.fileName);
+    }
+
+    /**
+     * @return {Promise<Buffer>}
+     */
+    async getData() {
+        const contents = await fsPromises.readFile(this.path);
+        return contents;
+    }
+
+    /**
+     * @param {String} folderPath
+     * @return {Promise<String>}
+     */
+    async saveAs(folderPath, fileNameOverride = null) {
+        const filteredFileName =
+            fileNameOverride != null
+                ? fileNameOverride
+                : Utils.fileNameFilter(this.fileName);
+        const fullPath = path.join(folderPath, filteredFileName);
+        if (fileSystem.existsSync(fullPath)) {
+            if (appConfig.safeMode) {
+                throw new Error(
+                    `Error saving file: File with the same name already exists.`
+                );
+            } else {
+                await rm(fullPath, { recursive: true, force: true });
+            }
+        }
+        await fsPromises.rename(this.path, fullPath);
         return fullPath;
     }
 }

@@ -19,6 +19,8 @@ import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
+import fileUpload from "express-fileupload";
+import { PendingLocalFile } from "./file-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -40,26 +42,24 @@ class TaskProperties {
 
     /**
      * @param {Number} userId
-     * @param {String} type
      */
-    constructor(userId, type) {
+    constructor(userId) {
         this.userId = userId;
-        this.type = type;
     }
 }
 
 export class InferenceTaskProperties extends TaskProperties {
     /** @type {Number} */ checkpointId;
     /** @type {Number} */ volumeId;
+    /** @type {String} */ type = "inference";
 
     /**
      * @param {Number} userId
-     * @param {String} type
      * @param {Number} checkpointId
      * @param {Number} volumeId
      */
-    constructor(userId, type, checkpointId, volumeId) {
-        super(userId, type);
+    constructor(userId, checkpointId, volumeId) {
+        super(userId);
         this.checkpointId = checkpointId;
         this.volumeId = volumeId;
 
@@ -72,10 +72,10 @@ export class TrainingTaskProperties extends TaskProperties {
     /** @type {Number[]} */ trainingVolumesIds;
     /** @type {Number[]} */ validationVolumesIds;
     /** @type {Number[]} */ testingVolumesIds;
+    /** @type {String} */ type = "training";
 
     /**
      * @param {Number} userId
-     * @param {String} type
      * @param {Number} modelId
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
@@ -83,17 +83,32 @@ export class TrainingTaskProperties extends TaskProperties {
      */
     constructor(
         userId,
-        type,
         modelId,
         trainingVolumesIds,
         validationVolumesIds,
         testingVolumesIds
     ) {
-        super(userId, type);
+        super(userId);
         this.modelId = modelId;
         this.trainingVolumesIds = trainingVolumesIds;
         this.validationVolumesIds = validationVolumesIds;
         this.testingVolumesIds = testingVolumesIds;
+
+        Object.preventExtensions(this);
+    }
+}
+
+export class ReconstructionTaskProperties extends TaskProperties {
+    /** @type {Number} */ volumeId;
+    /** @type {String} */ type = "reconstruction";
+
+    /**
+     * @param {Number} userId
+     * @param {Number} volumeId
+     */
+    constructor(userId, volumeId) {
+        super(userId);
+        this.volumeId = volumeId;
 
         Object.preventExtensions(this);
     }
@@ -124,15 +139,19 @@ class TaskHistory {
 
     /** @param {TaskHistoryInstance} instance */
     async update(instance) {
-        this.#taskHistory.push(instance);
-        const userId = instance.taskProperties.userId;
-        const userTaskHistory = await this.getUserTaskHistory(userId);
-        WebSocketManager.broadcastAction(
-            [userId],
-            [],
-            ActionTypes.NanoOetziTaskHistoryUpdated,
-            userTaskHistory
-        );
+        try {
+            this.#taskHistory.push(instance);
+            const userId = instance.taskProperties.userId;
+            const userTaskHistory = await this.getUserTaskHistory(userId);
+            WebSocketManager.broadcastAction(
+                [userId],
+                [],
+                ActionTypes.NanoOetziTaskHistoryUpdated,
+                userTaskHistory
+            );
+        } catch (error) {
+            console.error("Failed to update task history: " + error);
+        }
     }
 
     /** @param {Number} userId */
@@ -144,7 +163,11 @@ class TaskHistory {
 
         const volumes = await Volume.getByIds(
             taskProperties
-                .filter((t) => t instanceof InferenceTaskProperties)
+                .filter(
+                    (t) =>
+                        t instanceof InferenceTaskProperties ||
+                        t instanceof ReconstructionTaskProperties
+                )
                 .map((t) => t.volumeId)
         );
         const volumeMap = Utils.arrayToMap(volumes, "id");
@@ -163,8 +186,6 @@ class TaskHistory {
         );
         const modelMap = Utils.arrayToMap(models, "id");
 
-        let inferenceIndex = 0;
-        let trainingIndex = 0;
         const result = userTaskHistory.map(function (t) {
             let entry = {
                 type: t.taskProperties.type,
@@ -181,14 +202,18 @@ class TaskHistory {
                 entry.volumeName = volume.name;
                 entry.checkpointId = checkpoint.id;
                 entry.checkpointName = path.basename(checkpoint.filePath);
-                inferenceIndex++;
             }
             if (t.taskProperties instanceof TrainingTaskProperties) {
                 const model = modelMap.get(t.taskProperties.modelId);
 
                 entry.modelId = model.id;
                 entry.modelName = model.name;
-                trainingIndex++;
+            }
+            if (t.taskProperties instanceof ReconstructionTaskProperties) {
+                const volume = volumeMap.get(t.taskProperties.volumeId);
+
+                entry.volumeId = volume?.id ?? -1;
+                entry.volumeName = volume?.name ?? "Deleted";
             }
             return entry;
         });
@@ -216,13 +241,17 @@ export default class GPUTaskHandler {
     }
 
     async #onTaskQueueChange() {
-        const taskQueue = await this.getTaskQueue();
-        WebSocketManager.broadcastAction(
-            [],
-            [],
-            ActionTypes.NanoOetziQueueUpdated,
-            taskQueue
-        );
+        try {
+            const taskQueue = await this.getTaskQueue();
+            WebSocketManager.broadcastAction(
+                [],
+                [],
+                ActionTypes.NanoOetziQueueUpdated,
+                taskQueue
+            );
+        } catch (error) {
+            console.error("Failed to broadcast task queue update: " + error);
+        }
     }
 
     /**
@@ -240,7 +269,11 @@ export default class GPUTaskHandler {
 
         const volumes = await Volume.getByIds(
             identifiers
-                .filter((i) => i instanceof InferenceTaskProperties)
+                .filter(
+                    (i) =>
+                        i instanceof InferenceTaskProperties ||
+                        i instanceof ReconstructionTaskProperties
+                )
                 .map((i) => i.volumeId)
         );
         const volumeMap = Utils.arrayToMap(volumes, "id");
@@ -259,8 +292,6 @@ export default class GPUTaskHandler {
         );
         const modelMap = Utils.arrayToMap(models, "id");
 
-        let inferenceIndex = 0;
-        let trainingIndex = 0;
         return identifiers.map(function (t) {
             const user = usersMap.get(t.userId);
             let entry = {
@@ -276,14 +307,18 @@ export default class GPUTaskHandler {
                 entry.volumeName = volume.name;
                 entry.checkpointId = checkpoint.id;
                 entry.checkpointName = path.basename(checkpoint.filePath);
-                inferenceIndex++;
             }
             if (t instanceof TrainingTaskProperties) {
                 const model = modelMap.get(t.modelId);
 
                 entry.modelId = model.id;
                 entry.modelName = model.name;
-                trainingIndex++;
+            }
+            if (t instanceof ReconstructionTaskProperties) {
+                const volume = volumeMap.get(t.volumeId);
+
+                entry.volumeId = volume.id;
+                entry.volumeName = volume.name;
             }
             return entry;
         });
@@ -343,12 +378,7 @@ export default class GPUTaskHandler {
                             userId,
                             outputPath
                         ),
-                    new InferenceTaskProperties(
-                        userId,
-                        TaskProperties.type.inference,
-                        checkpointId,
-                        volumeId
-                    )
+                    new InferenceTaskProperties(userId, checkpointId, volumeId)
                 );
             } catch (error) {
                 console.error(
@@ -370,7 +400,6 @@ export default class GPUTaskHandler {
         let tempSettingsPath = null;
         const taskProperties = new InferenceTaskProperties(
             userId,
-            TaskProperties.type.inference,
             checkpointId,
             volumeId
         );
@@ -606,7 +635,6 @@ export default class GPUTaskHandler {
                         ),
                     new TrainingTaskProperties(
                         userId,
-                        TaskProperties.type.training,
                         modelId,
                         trainingVolumesIds,
                         validationVolumesIds,
@@ -644,7 +672,6 @@ export default class GPUTaskHandler {
         const workFolder = path.join(outputPath, "training-data");
         const taskProperties = new TrainingTaskProperties(
             userId,
-            TaskProperties.type.training,
             modelId,
             trainingVolumesIds,
             validationVolumesIds,
@@ -688,6 +715,7 @@ export default class GPUTaskHandler {
             const outputAbsolutePath = path.resolve(workFolder);
 
             let command = `${this.config.nanoOetzi.python} \"${path.join(
+                "src",
                 "tools-python",
                 "raws-to-train-sets.py"
             )}\" -i \"${configAbsolutePath}\" -o \"${outputAbsolutePath}\"`;
@@ -996,6 +1024,201 @@ export default class GPUTaskHandler {
                 400,
                 "Failed Attempt to start inference: Checkpoint file does not exist"
             );
+        }
+    }
+
+    /**
+     * @param {fileUpload.UploadedFile} tiltSeriesFile
+     * @param {Object} options
+     * @param {Number} volumeId
+     * @param {Number} userId
+     * @returns {Promise<void>}
+     */
+    async queueTiltSeriesReconstruction(
+        tiltSeriesFile,
+        options,
+        volumeId,
+        userId
+    ) {
+        if (this.#taskQueue.size >= this.config.gpuQueueSize) {
+            throw new ApiError(
+                400,
+                "Failed Attempt to start tilt series reconstruction: Too many tasks in queue."
+            );
+        }
+
+        const outputPath = this.createTemporaryOutputPath();
+
+        const multiLock = new WriteMultiLock([
+            Volume.lockManager.generateLockInstance(volumeId, [
+                RawVolumeData.modelName,
+            ]),
+            User.lockManager.generateLockInstance(userId),
+        ]);
+
+        WriteMultiLock.withWriteMultiLock(multiLock, async () => {
+            try {
+                return await this.#taskQueue.enqueue(
+                    () =>
+                        this.#runTiltSeriesReconstruction(
+                            tiltSeriesFile,
+                            options,
+                            volumeId,
+                            userId,
+                            outputPath
+                        ),
+                    new ReconstructionTaskProperties(userId, volumeId)
+                );
+            } catch (error) {
+                console.error(
+                    `Reconstruction task by User with id ${userId} failed.`
+                );
+            }
+        });
+    }
+
+    /**
+     * @param {fileUpload.UploadedFile} tiltSeriesFile
+     * @param {Object | undefined} options
+     * @param {Number} volumeId
+     * @param {Number} userId
+     * @param {String} outputPath
+     * @returns {Promise<RawVolumeDataDB>}
+     */
+    async #runTiltSeriesReconstruction(
+        tiltSeriesFile,
+        options,
+        volumeId,
+        userId,
+        outputPath
+    ) {
+        const logFile = await LogFile.createLogFile("reconstruction");
+        const taskProperties = new ReconstructionTaskProperties(
+            userId,
+            volumeId
+        );
+
+        try {
+            fsPromises.mkdir(outputPath, { recursive: true });
+
+            await logFile.writeLog("Tilt series reconstruction started\n");
+
+            const inputFileAbsolutePath = path.resolve(
+                tiltSeriesFile.tempFilePath
+            );
+            const inputFileName = Utils.stripExtension(tiltSeriesFile.name);
+
+            const outputAbsolutePath = path.resolve(
+                path.join(outputPath, inputFileName)
+            );
+
+            const params = [
+                "filename",
+                inputFileAbsolutePath,
+                "result_filename",
+                outputAbsolutePath,
+            ];
+
+            if (options) {
+                for (const [key, value] of Object.entries(options)) {
+                    params.push(key);
+                    params.push(value.toString());
+                }
+            }
+
+            const command =
+                "./" +
+                this.config.Proximal_CryoET.executable +
+                " " +
+                params.join(" ");
+
+            const { stdout, stderr } = await execPromise(command, {
+                cwd: path.resolve(this.config.Proximal_CryoET.path),
+            });
+
+            await logFile.writeLog(
+                `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nTilt series reconstruction finished\n\nConverting output to raw...\n`
+            );
+
+            const { rawFileName, settings } = await Utils.analyzeToRaw(
+                outputAbsolutePath + ".hdr",
+                outputPath
+            );
+
+            const rawFilePath = path.join(outputPath, rawFileName);
+            const settingsFilePath = path.join(outputPath, "settings.json");
+
+            await fsPromises.writeFile(
+                settingsFilePath,
+                JSON.stringify(settings),
+                "utf8"
+            );
+
+            const rawData = await RawVolumeData.createFromFiles(
+                userId,
+                volumeId,
+                [
+                    new PendingLocalFile(rawFilePath),
+                    new PendingLocalFile(settingsFilePath),
+                ],
+                true
+            );
+
+            await logFile.writeLog(
+                `Raw data created.\n\nSaving task history...\n`
+            );
+
+            this.taskHistory.update(
+                new TaskHistoryInstance(
+                    TaskHistoryInstance.status.success,
+                    logFile,
+                    taskProperties
+                )
+            );
+
+            WebSocketManager.broadcastAction(
+                [userId],
+                [],
+                ActionTypes.AddRawData,
+                { volumeId: volumeId, rawData: rawData }
+            );
+
+            await logFile.writeLog(
+                `Task history saved.\n\nRECONSTRUCTION FINISHED!\n`
+            );
+
+            return rawData;
+        } catch (error) {
+            await logFile.writeLog(`ERROR: \n${error}`);
+            console.error(`Tilt series reconstruction error: ${error}`);
+            try {
+                await fsPromises.rm(outputPath, {
+                    recursive: true,
+                    force: true,
+                });
+            } catch (error) {
+                console.error(
+                    `Filed to remove nano oetzi inference cache: ${error}`
+                );
+            }
+            this.taskHistory.update(
+                new TaskHistoryInstance(
+                    TaskHistoryInstance.status.fail,
+                    logFile,
+                    taskProperties
+                )
+            );
+            throw error;
+        } finally {
+            try {
+                await fsPromises.rm(tiltSeriesFile.tempFilePath, {
+                    force: true,
+                });
+            } catch {
+                console.error(
+                    "Inference: Failed to remove the temporary setting file."
+                );
+            }
         }
     }
 }

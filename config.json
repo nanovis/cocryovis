@@ -37,5 +37,9 @@
             "min_epochs": 1,
             "max_epochs": 1
         }
+    },
+    "Proximal_CryoET": {
+        "path": "./modules/Proximal_CryoET/",
+        "executable": "CUDA_PROXIMAL_SART"
     }
 }

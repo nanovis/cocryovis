@@ -11,6 +11,7 @@ export const ActionTypes = Object.freeze({
     InsertPseudoVolumes: "InsertPseudoVolumes",
     InsertResult: "InsertResult",
     InsertCheckpoint: "InsertCheckpoint",
+    AddRawData: "AddRawData",
 
     IlastikQueueUpdated: "IlastikQueueUpdated",
     IlastikTaskHistoryUpdated: "IlastikTaskHistoryUpdated",

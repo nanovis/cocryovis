@@ -7,8 +7,7 @@ import DatabaseModel from "./database-model.mjs";
 import appConfig from "../tools/config.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import Utils from "../tools/utils.mjs";
-import fileUpload from "express-fileupload";
-import { unpackFiles } from "../tools/file-handler.mjs";
+import { PendingUpload } from "../tools/file-handler.mjs";
 import AdmZip from "adm-zip";
 import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
@@ -104,23 +103,19 @@ export default class VolumeData extends DatabaseModel {
     /**
      * @param {Number} creatorId
      * @param {Number} volumeId
-     * @param {fileUpload.UploadedFile[]} files
+     * @param {PendingUpload[]} files
+     * @param {Boolean?} skipLock
      * @return {Promise<Object>}
      */
-    static async createFromFiles(creatorId, volumeId, files) {
+    static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
         return await Volume.withWriteLock(
             volumeId,
             [this.modelName],
             async () => {
-                const unpackedFiles = await unpackFiles(
-                    files,
-                    this.acceptedFileExtensions
-                );
-
                 let rawFile = null;
                 let settingsFile = null;
 
-                for (const unpackedFile of unpackedFiles) {
+                for (const unpackedFile of files) {
                     if (
                         !rawFile &&
                         Utils.isFileExtensionAccepted(
@@ -196,7 +191,8 @@ export default class VolumeData extends DatabaseModel {
                         timeout: 60000,
                     }
                 );
-            }
+            },
+            skipLock
         );
     }
 

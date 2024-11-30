@@ -34,6 +34,18 @@ export default class VolumeController {
     }
 
     /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async getVolumesFromProjectDeep(req, res) {
+        const volumes = await Volume.getVolumesFromProjectDeep(
+            Number(req.params.idProject)
+        );
+
+        res.status(200).json(volumes);
+    }
+
+    /**
      * @returns {import("../models/volume.mjs").Options}
      */
     static #parseOptionQuery(req) {

@@ -98,10 +98,18 @@ projectsApi.post(`/queue-inference`, restrictApi,
 projectsApi.post(`/queue-training`, restrictApi, 
     async (req, res) => NanoOetziController.queueTraining(gpuTaskHandler, req, res));
 
+
+/////// CRYO-ET
+
+projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
+    async (req, res) => NanoOetziController.queueTiltSeriesReconstruction(gpuTaskHandler, req, res));
+
+
 /////// VOLUMES
 
 // Get Volumes from project
 projectsApi.get(`/project/:idProject/volumes`, restrictApi, VolumeController.getVolumesFromProject);
+projectsApi.get(`/project/:idProject/volumes/deep`, restrictApi, VolumeController.getVolumesFromProjectDeep);
 
 // Create New Volume
 projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);

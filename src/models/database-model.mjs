@@ -108,10 +108,12 @@ export default class DatabaseModel {
      * @param {Number} id
      * @param {String[]?} connections
      * @param {() => T} operation
+     * @param {Boolean?} ignore
      * @returns {Promise<T>}
      */
-    static async withWriteLock(id, connections, operation) {
-        if (this.lockManager === null) return await operation();
+    static async withWriteLock(id, connections, operation, ignore = false) {
+        // ignore is a temporary solution, need a better locking system
+        if (this.lockManager === null || ignore) return await operation();
 
         const lockInstance = this.lockManager.requestLock(id, connections);
 

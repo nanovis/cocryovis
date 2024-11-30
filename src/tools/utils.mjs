@@ -44,14 +44,37 @@ export default class Utils {
      */
     static async mrcToRaw(inputFile, outputPath) {
         const command = `${appConfig.nanoOetzi.python} \"${path.join(
+            "src",
             "tools-python",
             "mrc-to-raw.py"
         )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
         const { stdout, stderr } = await execPromise(command);
-        fs.writeFileSync(
-            path.join(outputPath, "mrc-to-raw.log"),
-            `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
-        );
+        // fs.writeFileSync(
+        //     path.join(outputPath, "mrc-to-raw.log"),
+        //     `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
+        // );
+        const data = JSON.parse(stdout);
+        return {
+            rawFileName: data["file"],
+            settings: data,
+        };
+    }
+
+    /**
+     * @param {String} inputFile
+     * @param {String} outputPath
+     */
+    static async analyzeToRaw(inputFile, outputPath) {
+        const command = `${appConfig.nanoOetzi.python} \"${path.join(
+            "src",
+            "tools-python",
+            "analyze-to-raw.py"
+        )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
+        const { stdout, stderr } = await execPromise(command);
+        // fs.writeFileSync(
+        //     path.join(outputPath, "analyze-to-raw.log"),
+        //     `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
+        // );
         const data = JSON.parse(stdout);
         return {
             rawFileName: data["file"],
@@ -176,6 +199,7 @@ export default class Utils {
         }
 
         const command = `${appConfig.nanoOetzi.python} \"${path.join(
+            "src",
             "tools-python",
             "mean-filter.py"
         )}\" ${params.join(" ")}`;
@@ -191,7 +215,7 @@ export default class Utils {
     static async ckptToText(checkpointPath) {
         return new Promise((resolve, reject) => {
             const pythonProcess = spawn(appConfig.nanoOetzi.python, [
-                path.join("tools-python", "ckpt-to-text.py"),
+                path.join("src", "tools-python", "ckpt-to-text.py"),
                 "-c",
                 path.resolve(checkpointPath),
             ]);

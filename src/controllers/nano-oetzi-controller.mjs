@@ -1,5 +1,6 @@
 // @ts-check
 
+import { ApiError } from "../tools/error-handler.mjs";
 import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 import Utils from "../tools/utils.mjs";
 
@@ -68,6 +69,35 @@ export default class NanoOetziController {
             trainingVolumesIds,
             validationVolumesIds,
             testingVolumesIds
+        );
+
+        res.sendStatus(204);
+    }
+
+    /**
+     * @param {GPUTaskHandler} gpuTaskHandler
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async queueTiltSeriesReconstruction(gpuTaskHandler, req, res) {
+        if (!req.files || !req.files.tiltSeries) {
+            throw new ApiError(400, "No files uploaded.");
+        }
+
+        if (Array.isArray(req.files.tiltSeries)) {
+            throw new ApiError(
+                400,
+                "Only one tilt series can be added to volume."
+            );
+        }
+
+        const data = JSON.parse(req.body.data);
+
+        await gpuTaskHandler.queueTiltSeriesReconstruction(
+            req.files.tiltSeries,
+            data.options,
+            Number(data.volumeId),
+            req.session.user.id
         );
 
         res.sendStatus(204);

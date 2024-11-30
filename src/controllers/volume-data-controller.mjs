@@ -10,6 +10,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
+import { unpackFiles } from "../tools/file-handler.mjs";
 
 export default class VolumeDataController {
     /**
@@ -110,12 +111,17 @@ export default class VolumeDataController {
             files = [files];
         }
 
-        const volumeData = await VolumeDataFactory.getClass(
-            type
-        ).createFromFiles(
+        const VolumeDataClass = VolumeDataFactory.getClass(type);
+
+        const unpackedFiles = await unpackFiles(
+            files,
+            VolumeDataClass.acceptedFileExtensions
+        );
+
+        const volumeData = await VolumeDataClass.createFromFiles(
             req.session.user.id,
             Number(req.params.idVolume),
-            files
+            unpackedFiles
         );
 
         res.status(201).json(volumeData);

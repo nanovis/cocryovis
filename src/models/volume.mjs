@@ -93,6 +93,31 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
+     * @param {Number} projectId
+     */
+    static async getVolumesFromProjectDeep(projectId) {
+        return await this.db.findMany({
+            where: {
+                projects: {
+                    some: {
+                        id: projectId,
+                    },
+                },
+            },
+            include: {
+                rawData: true,
+                sparseVolumes: true,
+                pseudoVolumes: true,
+                results: {
+                    include: {
+                        checkpoint: true,
+                    },
+                },
+            },
+        });
+    }
+
+    /**
      * @param {Number[]} ids
      * @return {Promise<VolumeDB[]>}
      */
