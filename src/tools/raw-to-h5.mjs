@@ -31,8 +31,7 @@ export async function rawToH5(
         "-log False",
     ];
     const command = `${appConfig.ilastik.python} \"${path.join(
-        "src",
-        "tools-python",
+        "python-scripts",
         "raw-to-h5.py"
     )}\" ${params.join(" ")}`;
 
@@ -60,8 +59,7 @@ export async function labelsToH5(
         "-log False",
     ];
     const command = `${appConfig.ilastik.python} \"${path.join(
-        "src",
-        "tools-python",
+        "python-scripts",
         "labels-to-h5.py"
     )}\" ${params.join(" ")}`;
 
@@ -81,8 +79,7 @@ export async function H5ToLabels(labelPath, datasetName, outputPath) {
         `-o \"${outputPath}\"`,
     ];
     const command = `${appConfig.ilastik.python} \"${path.join(
-        "src",
-        "tools-python",
+        "python-scripts",
         "h5-to-labels.py"
     )}\" ${params.join(" ")}`;
 

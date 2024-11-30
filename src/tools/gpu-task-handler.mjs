@@ -715,8 +715,7 @@ export default class GPUTaskHandler {
             const outputAbsolutePath = path.resolve(workFolder);
 
             let command = `${this.config.nanoOetzi.python} \"${path.join(
-                "src",
-                "tools-python",
+                "python-scripts",
                 "raws-to-train-sets.py"
             )}\" -i \"${configAbsolutePath}\" -o \"${outputAbsolutePath}\"`;
 

@@ -16,6 +16,7 @@ db.json
 /modules/ilastik
 !/modules/.gitkeep
 !/modules/nano-oetzi
+python-scripts/__pycache__
 
 sessions/*.db
 sessions/*.db-shm
