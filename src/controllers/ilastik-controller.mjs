@@ -16,28 +16,4 @@ export default class IlastikController {
 
         res.sendStatus(201);
     }
-
-    /**
-     * @param {IlastikHandler} ilastik
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
-     */
-    static async getIlastikTaskQueue(ilastik, req, res) {
-        const taskQueue = ilastik.getTaskQueue();
-
-        res.json(taskQueue);
-    }
-
-    /**
-     * @param {IlastikHandler} ilastik
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
-     */
-    static async getIlastikUserTaskHistory(ilastik, req, res) {
-        const taskHistory = ilastik.taskHistory.getUserTaskHistory(
-            req.session.user.id
-        );
-
-        res.json(taskHistory);
-    }
 }

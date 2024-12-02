@@ -1,6 +1,7 @@
 // @ts-check
 
 import WebSocket, { WebSocketServer } from "ws";
+import { sanitize } from "../middleware/sanitizer.mjs";
 
 /**
  * Enum websocket broadcast actions.
@@ -12,11 +13,10 @@ export const ActionTypes = Object.freeze({
     InsertResult: "InsertResult",
     InsertCheckpoint: "InsertCheckpoint",
     AddRawData: "AddRawData",
+    InsertTaskHistory: "InsertTaskHistory",
 
-    IlastikQueueUpdated: "IlastikQueueUpdated",
-    IlastikTaskHistoryUpdated: "IlastikTaskHistoryUpdated",
-    NanoOetziQueueUpdated: "NanoOetziQueueUpdated",
-    NanoOetziTaskHistoryUpdated: "NanoOetziTaskHistoryUpdated",
+    CPUQueueUpdated: "CPUQueueUpdated",
+    GPUQueueUpdated: "GPUQueueUpdated",
 });
 
 // TODO: this sort of behaves like a singleton which is not ideal, should be rewritten.
@@ -70,10 +70,12 @@ export default class WebSocketManager {
         WebSocketManager.#webSocketInstance?.broadcastMessage(
             userIds,
             ignoreSessionIds,
-            JSON.stringify({
-                actionType: actionType,
-                actionContent: actionContent,
-            })
+            JSON.stringify(
+                sanitize({
+                    actionType: actionType,
+                    actionContent: actionContent,
+                })
+            )
         );
     }
 }

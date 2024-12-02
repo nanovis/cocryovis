@@ -2,8 +2,7 @@
 
 import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
-import IlastikHandler from "../tools/ilastik-handler.mjs";
-import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
+import TaskHistory from "../models/task-history.mjs";
 
 export default class UserController {
     /**
@@ -18,14 +17,17 @@ export default class UserController {
             req.body.name,
             req.body.email
         );
+
+        const userData = User.toPublic(user);
+
         req.session.regenerate(function (err) {
             if (err) return next(err);
 
-            req.session.user = user;
+            req.session.user = userData;
 
             req.session.save(function (err) {
                 if (err) return next(err);
-                res.status(201).json(User.toPublic(user));
+                res.status(201).json(userData);
             });
         });
     }
@@ -42,17 +44,17 @@ export default class UserController {
                 req.body.password
             );
 
-            const UserData = User.toPublic(user);
+            const userData = User.toPublic(user);
 
             req.session.regenerate(function (err) {
                 if (err) return next(err);
 
-                req.session.user = user;
+                req.session.user = userData;
 
                 req.session.save(function (err) {
                     if (err) return next(err);
 
-                    res.json(UserData);
+                    res.json(userData);
                 });
 
                 console.log("User " + req.body.username + " just logged in.");
@@ -95,31 +97,22 @@ export default class UserController {
     static async getAllUsers(req, res) {
         const users = await User.getAllUsers();
 
-        const publicUserData = users.map((user) => User.toPublic(user));
-
-        res.json(publicUserData);
+        res.json(users);
     }
 
     /**
-     * @param {IlastikHandler} ilastik
-     * @param {GPUTaskHandler} gpuTaskHandler
      * @param {AuthenticatedRequest} req
      * @param {import("express").Response} res
      */
-    static async getStatus(ilastik, gpuTaskHandler, req, res) {
-        const ilastikTaskQueue = await ilastik.getTaskQueue();
-        const ilastikTaskHistory = await ilastik.taskHistory.getUserTaskHistory(
-            req.session.user.id
-        );
-        const nanoOetziTaskQueue = await gpuTaskHandler.getTaskQueue();
-        const nanoOetziTaskHistory =
-            await gpuTaskHandler.taskHistory.getUserTaskHistory(req.session.user.id);
+    static async getStatus(req, res) {
+        const taskHistory = await TaskHistory.getFromUser(req.session.user.id);
+        const cpuTaskQueue = await TaskHistory.getCPUTaskQueue();
+        const gpuTaskQueue = await TaskHistory.getGPUTaskQueue();
 
         res.json({
-            ilastikTaskQueue: ilastikTaskQueue,
-            ilastikTaskHistory: ilastikTaskHistory,
-            nanoOetziTaskQueue: nanoOetziTaskQueue,
-            nanoOetziTaskHistory: nanoOetziTaskHistory,
+            taskHistory: taskHistory,
+            cpuTaskQueue: cpuTaskQueue,
+            gpuTaskQueue: gpuTaskQueue,
         });
     }
 }

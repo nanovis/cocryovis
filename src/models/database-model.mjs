@@ -66,14 +66,16 @@ export default class DatabaseModel {
     /**
      * @param {Number} id
      * @param {Object} changes
+     * @param {Object} include
      * @return {Promise<Object>}
      */
-    static async update(id, changes) {
+    static async update(id, changes, include = null) {
         return this.withWriteLock(id, null, () => {
             try {
                 return this.db.update({
                     where: { id: id },
                     data: changes,
+                    include: include
                 });
             } catch (error) {
                 if (error instanceof Prisma.PrismaClientKnownRequestError) {

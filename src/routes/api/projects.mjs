@@ -37,8 +37,7 @@ projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserD
 
 projectsApi.get('/users', restrictApi, UserController.getAllUsers);
 
-projectsApi.get(`/status`, restrictApi, 
-    async (req, res) => UserController.getStatus(ilastikHandler, gpuTaskHandler, req, res));
+projectsApi.get(`/status`, restrictApi, UserController.getStatus);
 
 ///////////////////////
 /////// PROJECTS
@@ -68,27 +67,11 @@ projectsApi.delete(`/project/:idProject`, restrictApi, ProjectController.deleteP
 
 /////// ILASTIK
 
-// Get Ilastik task queue
-projectsApi.get(`/ilastik-task-queue`, restrictApi,
-    async (req, res) => IlastikController.getIlastikTaskQueue(ilastikHandler, req, res));
-
-// Get Ilastik task history
-projectsApi.get(`/ilastik-task-history`, restrictApi,
-    async (req, res) => IlastikController.getIlastikUserTaskHistory(ilastikHandler, req, res));
-
 // Run Ilastik inference
 projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi,
     async (req, res) => IlastikController.queuePseudoLabelsGeneration(ilastikHandler, req, res));
 
 /////// NANO OETZI
-
-// Get Nano Oetzi task queue
-projectsApi.get(`/nanooetzi-task-queue`, restrictApi,
-    async (req, res) => NanoOetziController.getNanoOetziTaskQueue(gpuTaskHandler, req, res));
-
-// Get Nano Oetzi task history
-projectsApi.get(`/nanooetzi-task-history`, restrictApi,
-    async (req, res) => NanoOetziController.getNanoOetziUserTaskHistory(gpuTaskHandler, req, res));
 
 // Inference
 projectsApi.post(`/queue-inference`, restrictApi,

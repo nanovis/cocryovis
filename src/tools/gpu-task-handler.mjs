@@ -21,6 +21,7 @@ import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import fileUpload from "express-fileupload";
 import { PendingLocalFile } from "./file-handler.mjs";
+import TaskHistory from "../models/task-history.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -31,297 +32,17 @@ import { PendingLocalFile } from "./file-handler.mjs";
  * @typedef { VolumeDB & {rawData: RawVolumeDataDB, pseudoVolumes: PseudoVolumeDataDB[]} } DeepVolume
  */
 
-class TaskProperties {
-    /** @type {Number} */ userId;
-    /** @type {String} */ type;
-
-    static type = {
-        inference: "inference",
-        training: "training",
-    };
-
-    /**
-     * @param {Number} userId
-     */
-    constructor(userId) {
-        this.userId = userId;
-    }
-}
-
-export class InferenceTaskProperties extends TaskProperties {
-    /** @type {Number} */ checkpointId;
-    /** @type {Number} */ volumeId;
-    /** @type {String} */ type = "inference";
-
-    /**
-     * @param {Number} userId
-     * @param {Number} checkpointId
-     * @param {Number} volumeId
-     */
-    constructor(userId, checkpointId, volumeId) {
-        super(userId);
-        this.checkpointId = checkpointId;
-        this.volumeId = volumeId;
-
-        Object.preventExtensions(this);
-    }
-}
-
-export class TrainingTaskProperties extends TaskProperties {
-    /** @type {Number} */ modelId;
-    /** @type {Number[]} */ trainingVolumesIds;
-    /** @type {Number[]} */ validationVolumesIds;
-    /** @type {Number[]} */ testingVolumesIds;
-    /** @type {String} */ type = "training";
-
-    /**
-     * @param {Number} userId
-     * @param {Number} modelId
-     * @param {Number[]} trainingVolumesIds
-     * @param {Number[]} validationVolumesIds
-     * @param {Number[]} testingVolumesIds
-     */
-    constructor(
-        userId,
-        modelId,
-        trainingVolumesIds,
-        validationVolumesIds,
-        testingVolumesIds
-    ) {
-        super(userId);
-        this.modelId = modelId;
-        this.trainingVolumesIds = trainingVolumesIds;
-        this.validationVolumesIds = validationVolumesIds;
-        this.testingVolumesIds = testingVolumesIds;
-
-        Object.preventExtensions(this);
-    }
-}
-
-export class ReconstructionTaskProperties extends TaskProperties {
-    /** @type {Number} */ volumeId;
-    /** @type {String} */ type = "reconstruction";
-
-    /**
-     * @param {Number} userId
-     * @param {Number} volumeId
-     */
-    constructor(userId, volumeId) {
-        super(userId);
-        this.volumeId = volumeId;
-
-        Object.preventExtensions(this);
-    }
-}
-
-class TaskHistoryInstance {
-    static status = Object.freeze({
-        success: "success",
-        fail: "fail",
-    });
-
-    /**
-     * @param {String} taskStatus
-     * @param {LogFile} logFile
-     * @param {TaskProperties} taskProperties
-     */
-    constructor(taskStatus, logFile, taskProperties) {
-        this.taskProperties = taskProperties;
-        this.taskStatus = taskStatus;
-        this.logFile = logFile;
-
-        Object.preventExtensions(this);
-    }
-}
-
-class TaskHistory {
-    /** @type {TaskHistoryInstance[]} */ #taskHistory = [];
-
-    /** @param {TaskHistoryInstance} instance */
-    async update(instance) {
-        try {
-            this.#taskHistory.push(instance);
-            const userId = instance.taskProperties.userId;
-            const userTaskHistory = await this.getUserTaskHistory(userId);
-            WebSocketManager.broadcastAction(
-                [userId],
-                [],
-                ActionTypes.NanoOetziTaskHistoryUpdated,
-                userTaskHistory
-            );
-        } catch (error) {
-            console.error("Failed to update task history: " + error);
-        }
-    }
-
-    /** @param {Number} userId */
-    async getUserTaskHistory(userId) {
-        const userTaskHistory = this.#taskHistory.filter(
-            (t) => t.taskProperties.userId === userId
-        );
-        const taskProperties = this.#taskHistory.map((t) => t.taskProperties);
-
-        const volumes = await Volume.getByIds(
-            taskProperties
-                .filter(
-                    (t) =>
-                        t instanceof InferenceTaskProperties ||
-                        t instanceof ReconstructionTaskProperties
-                )
-                .map((t) => t.volumeId)
-        );
-        const volumeMap = Utils.arrayToMap(volumes, "id");
-
-        const checkpoints = await Checkpoint.getByIds(
-            taskProperties
-                .filter((t) => t instanceof InferenceTaskProperties)
-                .map((t) => t.checkpointId)
-        );
-        const checkpointMap = Utils.arrayToMap(checkpoints, "id");
-
-        const models = await Model.getByIds(
-            taskProperties
-                .filter((t) => t instanceof TrainingTaskProperties)
-                .map((t) => t.modelId)
-        );
-        const modelMap = Utils.arrayToMap(models, "id");
-
-        const result = userTaskHistory.map(function (t) {
-            let entry = {
-                type: t.taskProperties.type,
-                taskStatus: t.taskStatus,
-                logFile: t.logFile.fileName,
-            };
-            if (t.taskProperties instanceof InferenceTaskProperties) {
-                const checkpoint = checkpointMap.get(
-                    t.taskProperties.checkpointId
-                );
-                const volume = volumeMap.get(t.taskProperties.volumeId);
-
-                entry.volumeId = volume.id;
-                entry.volumeName = volume.name;
-                entry.checkpointId = checkpoint.id;
-                entry.checkpointName = path.basename(checkpoint.filePath);
-            }
-            if (t.taskProperties instanceof TrainingTaskProperties) {
-                const model = modelMap.get(t.taskProperties.modelId);
-
-                entry.modelId = model.id;
-                entry.modelName = model.name;
-            }
-            if (t.taskProperties instanceof ReconstructionTaskProperties) {
-                const volume = volumeMap.get(t.taskProperties.volumeId);
-
-                entry.volumeId = volume?.id ?? -1;
-                entry.volumeName = volume?.name ?? "Deleted";
-            }
-            return entry;
-        });
-
-        return result.reverse();
-    }
-}
-
 export default class GPUTaskHandler {
     /** @type {TaskQueue} */ #taskQueue;
-    /** @type {TaskHistory} */ taskHistory = new TaskHistory();
 
     constructor(config) {
         this.config = config;
-        this.#taskQueue = new TaskQueue(
-            this.#onTaskQueueChange.bind(this),
-            this.#onTaskQueueChange.bind(this)
-        );
-
+        this.#taskQueue = new TaskQueue();
         Object.preventExtensions(this);
     }
 
     isInferenceRunning() {
         return this.#taskQueue.hasPendingTask;
-    }
-
-    async #onTaskQueueChange() {
-        try {
-            const taskQueue = await this.getTaskQueue();
-            WebSocketManager.broadcastAction(
-                [],
-                [],
-                ActionTypes.NanoOetziQueueUpdated,
-                taskQueue
-            );
-        } catch (error) {
-            console.error("Failed to broadcast task queue update: " + error);
-        }
-    }
-
-    /**
-     * @returns {TaskProperties[]}
-     */
-    get queuedIdentifiers() {
-        return this.#taskQueue.queuedIdentifiers;
-    }
-
-    async getTaskQueue() {
-        const identifiers = this.queuedIdentifiers;
-
-        const users = await User.getByIds(identifiers.map((i) => i.userId));
-        const usersMap = Utils.arrayToMap(users, "id");
-
-        const volumes = await Volume.getByIds(
-            identifiers
-                .filter(
-                    (i) =>
-                        i instanceof InferenceTaskProperties ||
-                        i instanceof ReconstructionTaskProperties
-                )
-                .map((i) => i.volumeId)
-        );
-        const volumeMap = Utils.arrayToMap(volumes, "id");
-
-        const checkpoints = await Checkpoint.getByIds(
-            identifiers
-                .filter((i) => i instanceof InferenceTaskProperties)
-                .map((i) => i.checkpointId)
-        );
-        const checkpointMap = Utils.arrayToMap(checkpoints, "id");
-
-        const models = await Model.getByIds(
-            identifiers
-                .filter((i) => i instanceof TrainingTaskProperties)
-                .map((i) => i.modelId)
-        );
-        const modelMap = Utils.arrayToMap(models, "id");
-
-        return identifiers.map(function (t) {
-            const user = usersMap.get(t.userId);
-            let entry = {
-                userId: user.id,
-                username: user.username,
-                type: t.type,
-            };
-            if (t instanceof InferenceTaskProperties) {
-                const checkpoint = checkpointMap.get(t.checkpointId);
-                const volume = volumeMap.get(t.volumeId);
-
-                entry.volumeId = volume.id;
-                entry.volumeName = volume.name;
-                entry.checkpointId = checkpoint.id;
-                entry.checkpointName = path.basename(checkpoint.filePath);
-            }
-            if (t instanceof TrainingTaskProperties) {
-                const model = modelMap.get(t.modelId);
-
-                entry.modelId = model.id;
-                entry.modelName = model.name;
-            }
-            if (t instanceof ReconstructionTaskProperties) {
-                const volume = volumeMap.get(t.volumeId);
-
-                entry.volumeId = volume.id;
-                entry.volumeName = volume.name;
-            }
-            return entry;
-        });
     }
 
     createTemporaryOutputPath() {
@@ -370,15 +91,23 @@ export default class GPUTaskHandler {
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
             try {
-                return await this.#taskQueue.enqueue(
-                    () =>
-                        this.#runInference(
-                            checkpointId,
-                            volumeId,
-                            userId,
-                            outputPath
-                        ),
-                    new InferenceTaskProperties(userId, checkpointId, volumeId)
+                const taskHistory = await TaskHistory.create({
+                    userId: userId,
+                    volumeId: volumeId,
+                    checkpointId: checkpointId,
+                    taskType: TaskHistory.type.Inference,
+                    taskStatus: TaskHistory.status.enqueued,
+                    enqueuedTime: new Date(),
+                });
+
+                return await this.#taskQueue.enqueue(() =>
+                    this.#runInference(
+                        checkpointId,
+                        volumeId,
+                        userId,
+                        outputPath,
+                        taskHistory.id
+                    )
                 );
             } catch (error) {
                 console.error(
@@ -393,18 +122,26 @@ export default class GPUTaskHandler {
      * @param {Number} volumeId
      * @param {Number} userId
      * @param {String} outputPath
+     * @param {Number} taskHistoryId
      * @returns {Promise<ResultDB>}
      */
-    async #runInference(checkpointId, volumeId, userId, outputPath) {
+    async #runInference(
+        checkpointId,
+        volumeId,
+        userId,
+        outputPath,
+        taskHistoryId
+    ) {
         const logFile = await LogFile.createLogFile("inference");
         let tempSettingsPath = null;
-        const taskProperties = new InferenceTaskProperties(
-            userId,
-            checkpointId,
-            volumeId
-        );
 
         try {
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.running,
+                startTime: new Date(),
+                logFile: logFile.fileName,
+            });
+
             const volume = await Volume.getById(volumeId, {
                 rawData: true,
             });
@@ -477,13 +214,10 @@ export default class GPUTaskHandler {
                 `Result entry created.\n\nSaving task history...\n`
             );
 
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    TaskHistoryInstance.status.success,
-                    logFile,
-                    taskProperties
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.finished,
+                endTime: new Date(),
+            });
 
             await logFile.writeLog(
                 `Task history saved.\n\nINFERENCE FINISHED!\n`
@@ -510,13 +244,10 @@ export default class GPUTaskHandler {
                     `Filed to remove nano oetzi inference cache: ${error}`
                 );
             }
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    TaskHistoryInstance.status.fail,
-                    logFile,
-                    taskProperties
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.failed,
+                endTime: new Date(),
+            });
             throw error;
         } finally {
             if (tempSettingsPath != null) {
@@ -622,23 +353,24 @@ export default class GPUTaskHandler {
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
             try {
-                return await this.#taskQueue.enqueue(
-                    () =>
-                        this.#runTraining(
-                            modelId,
-                            userId,
-                            trainingVolumesIds,
-                            validationVolumesIds,
-                            testingVolumesIds,
-                            outputPath,
-                            removeTempFiles
-                        ),
-                    new TrainingTaskProperties(
-                        userId,
+                const taskHistory = await TaskHistory.create({
+                    userId: userId,
+                    modelId: modelId,
+                    taskType: TaskHistory.type.Training,
+                    taskStatus: TaskHistory.status.enqueued,
+                    enqueuedTime: new Date(),
+                });
+
+                return await this.#taskQueue.enqueue(() =>
+                    this.#runTraining(
                         modelId,
+                        userId,
                         trainingVolumesIds,
                         validationVolumesIds,
-                        testingVolumesIds
+                        testingVolumesIds,
+                        outputPath,
+                        taskHistory.id,
+                        removeTempFiles
                     )
                 );
             } catch (error) {
@@ -656,6 +388,7 @@ export default class GPUTaskHandler {
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
      * @param {String} outputPath
+     * @param {Number} taskHistoryId
      * @param {boolean} removeTempFiles
      * @returns {Promise<CheckpointDB>}
      */
@@ -666,19 +399,19 @@ export default class GPUTaskHandler {
         validationVolumesIds,
         testingVolumesIds,
         outputPath,
+        taskHistoryId,
         removeTempFiles = true
     ) {
         const logFile = await LogFile.createLogFile("training");
         const workFolder = path.join(outputPath, "training-data");
-        const taskProperties = new TrainingTaskProperties(
-            userId,
-            modelId,
-            trainingVolumesIds,
-            validationVolumesIds,
-            testingVolumesIds
-        );
 
         try {
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.running,
+                startTime: new Date(),
+                logFile: logFile.fileName,
+            });
+
             await logFile.writeLog(
                 "Nano-Oetzi training started\n--------------\n"
             );
@@ -785,13 +518,10 @@ export default class GPUTaskHandler {
                 `New checkpoint created.\n\nSaving task history...\n`
             );
 
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    TaskHistoryInstance.status.success,
-                    logFile,
-                    taskProperties
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.finished,
+                endTime: new Date(),
+            });
 
             await logFile.writeLog(
                 `Task history saved.\n\nTRAINING FINISHED!\n`
@@ -819,13 +549,10 @@ export default class GPUTaskHandler {
                 );
             }
             removeTempFiles = false;
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    TaskHistoryInstance.status.fail,
-                    logFile,
-                    taskProperties
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.failed,
+                endTime: new Date(),
+            });
             throw error;
         } finally {
             if (removeTempFiles) {
@@ -1057,16 +784,23 @@ export default class GPUTaskHandler {
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
             try {
-                return await this.#taskQueue.enqueue(
-                    () =>
-                        this.#runTiltSeriesReconstruction(
-                            tiltSeriesFile,
-                            options,
-                            volumeId,
-                            userId,
-                            outputPath
-                        ),
-                    new ReconstructionTaskProperties(userId, volumeId)
+                const taskHistory = await TaskHistory.create({
+                    userId: userId,
+                    volumeId: volumeId,
+                    taskType: TaskHistory.type.Reconstruction,
+                    taskStatus: TaskHistory.status.enqueued,
+                    enqueuedTime: new Date(),
+                });
+
+                return await this.#taskQueue.enqueue(() =>
+                    this.#runTiltSeriesReconstruction(
+                        tiltSeriesFile,
+                        options,
+                        volumeId,
+                        userId,
+                        outputPath,
+                        taskHistory.id
+                    )
                 );
             } catch (error) {
                 console.error(
@@ -1082,6 +816,7 @@ export default class GPUTaskHandler {
      * @param {Number} volumeId
      * @param {Number} userId
      * @param {String} outputPath
+     * @param {Number} taskHistoryId
      * @returns {Promise<RawVolumeDataDB>}
      */
     async #runTiltSeriesReconstruction(
@@ -1089,15 +824,18 @@ export default class GPUTaskHandler {
         options,
         volumeId,
         userId,
-        outputPath
+        outputPath,
+        taskHistoryId
     ) {
         const logFile = await LogFile.createLogFile("reconstruction");
-        const taskProperties = new ReconstructionTaskProperties(
-            userId,
-            volumeId
-        );
 
         try {
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.running,
+                startTime: new Date(),
+                logFile: logFile.fileName,
+            });
+
             fsPromises.mkdir(outputPath, { recursive: true });
 
             await logFile.writeLog("Tilt series reconstruction started\n");
@@ -1167,13 +905,10 @@ export default class GPUTaskHandler {
                 `Raw data created.\n\nSaving task history...\n`
             );
 
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    TaskHistoryInstance.status.success,
-                    logFile,
-                    taskProperties
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.finished,
+                endTime: new Date(),
+            });
 
             WebSocketManager.broadcastAction(
                 [userId],
@@ -1200,13 +935,10 @@ export default class GPUTaskHandler {
                     `Filed to remove nano oetzi inference cache: ${error}`
                 );
             }
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    TaskHistoryInstance.status.fail,
-                    logFile,
-                    taskProperties
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.failed,
+                endTime: new Date(),
+            });
             throw error;
         } finally {
             try {

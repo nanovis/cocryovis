@@ -2,26 +2,14 @@
 
 export default class TaskQueue {
     /**
-     * @typedef {{action: function, identifiers:Object?, resolve: function, reject: function}} Task
+     * @typedef {{action: function, resolve: function, reject: function}} Task
      */
 
     /** @type {Task[]} */
     #queue = [];
     #pendingProcess = false;
 
-    /** @type {() => Promise<void> | null} */
-    #onQueued = null;
-    /** @type {() => Promise<void> | null} */
-    #onDequeued = null;
-
-    /**
-     * @param {() => Promise<void> | null} onQueued
-     * @param {() => Promise<void> | null} onDequeued
-     */
-    constructor(onQueued = null, onDequeued = null) {
-        this.#onQueued = onQueued;
-        this.#onDequeued = onDequeued;
-    }
+    constructor() {}
 
     /**
      * @returns {Number}
@@ -38,22 +26,11 @@ export default class TaskQueue {
     }
 
     /**
-     * @returns {Object[]}
-     */
-    get queuedIdentifiers() {
-        return this.#queue.map((q) => q.identifiers);
-    }
-
-    /**
      * @param {function} action
-     * @param {Object?} identifiers
      */
-    enqueue(action, identifiers = null) {
+    enqueue(action) {
         return new Promise((resolve, reject) => {
-            this.#queue.push({ action, identifiers, resolve, reject });
-            if (this.#onQueued) {
-                this.#onQueued();
-            }
+            this.#queue.push({ action, resolve, reject });
             this.dequeue();
         });
     }
@@ -78,9 +55,6 @@ export default class TaskQueue {
             task.reject(error);
         } finally {
             this.#queue.shift();
-            if (this.#onDequeued) {
-                await this.#onDequeued();
-            }
             this.dequeue();
         }
 

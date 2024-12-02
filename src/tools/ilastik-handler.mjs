@@ -18,6 +18,7 @@ import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
+import TaskHistory from "../models/task-history.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -27,91 +28,16 @@ const execPromise = promisify(exec);
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
  */
 
-class TaskHistoryInstance {
-    /** @type {Number} */ userId;
-    /** @type {Number} */ volumeId;
-    /** @type {String} */ taskStatus;
-    /** @type {LogFile} */ logFile;
-
-    static status = {
-        success: "success",
-        fail: "fail",
-    };
-
-    /**
-     * @param {Number} userId
-     * @param {Number} volumeId
-     * @param {String} taskStatus
-     * @param {LogFile} logFile
-     */
-    constructor(userId, volumeId, taskStatus, logFile) {
-        this.userId = userId;
-        this.volumeId = volumeId;
-        this.taskStatus = taskStatus;
-        this.logFile = logFile;
-
-        Object.preventExtensions(this);
-    }
-}
-
-class TaskHistory {
-    /** @type {TaskHistoryInstance[]} */ #taskHistory = [];
-
-    /** @param {TaskHistoryInstance} instance */
-    async update(instance) {
-        this.#taskHistory.push(instance);
-        const userId = instance.userId;
-        const userTaskHistory = await this.getUserTaskHistory(userId);
-        WebSocketManager.broadcastAction(
-            [userId],
-            [],
-            ActionTypes.IlastikTaskHistoryUpdated,
-            userTaskHistory
-        );
-    }
-
-    /**
-     * @param {Number} userId
-     */
-    async getUserTaskHistory(userId) {
-        const userTaskHistory = this.#taskHistory.filter(
-            (t) => t.userId === userId
-        );
-
-        const volumes = await Volume.getByIds(
-            userTaskHistory.map((i) => i.volumeId)
-        );
-        const volumeMap = Utils.arrayToMap(volumes, "id");
-
-        const result = userTaskHistory.map(function (t) {
-            const volume = volumeMap.get(t.volumeId);
-            return {
-                volumeName: volume.name,
-                volumeId: volume.id,
-                taskStatus: t.taskStatus,
-                logFile: t.logFile.fileName,
-            };
-        });
-
-        return result.reverse();
-    }
-}
-
 export default class IlastikHandler {
     static rawDataset = "/raw_data";
     static labelsDataset = "/labels";
     static pseudoLabelsDataset = "/pseudo_labels";
 
     /** @type {TaskQueue} */ #taskQueue;
-    /** @type {TaskHistory} */ taskHistory = new TaskHistory();
 
     constructor(config) {
         this.config = config;
-        this.#taskQueue = new TaskQueue(
-            this.#onTaskQueueChange.bind(this),
-            this.#onTaskQueueChange.bind(this)
-        );
-
+        this.#taskQueue = new TaskQueue();
         Object.preventExtensions(this);
     }
 
@@ -119,50 +45,10 @@ export default class IlastikHandler {
         return this.#taskQueue.hasPendingTask;
     }
 
-    async #onTaskQueueChange() {
-        const taskQueue = await this.getTaskQueue();
-        WebSocketManager.broadcastAction(
-            [],
-            [],
-            ActionTypes.IlastikQueueUpdated,
-            taskQueue
-        );
-    }
-
-    /**
-     * @returns {{userId: Number, volumeId: Number}[]}
-     */
-    get queuedIdentifiers() {
-        return this.#taskQueue.queuedIdentifiers;
-    }
-
     async getVersion() {
         const command = `${this.config.ilastik.python} -c \"import ilastik; print ilastik.__version__\"`;
         const { stdout, stderr } = await execPromise(command);
         return stdout;
-    }
-
-    async getTaskQueue() {
-        const users = await User.getByIds(
-            this.queuedIdentifiers.map((i) => i.userId)
-        );
-        const usersMap = Utils.arrayToMap(users, "id");
-
-        const volumes = await Volume.getByIds(
-            this.queuedIdentifiers.map((i) => i.volumeId)
-        );
-        const volumeMap = Utils.arrayToMap(volumes, "id");
-
-        return this.queuedIdentifiers.map(function (t) {
-            const user = usersMap.get(t.userId);
-            const volume = volumeMap.get(t.volumeId);
-            return {
-                userId: user.id,
-                username: user.username,
-                volumeName: volume.name,
-                volumeId: volume.id,
-            };
-        });
     }
 
     /**
@@ -204,9 +90,21 @@ export default class IlastikHandler {
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
             try {
-                return await this.#taskQueue.enqueue(
-                    () => this.#generateLabels(volumeId, userId, outputPath),
-                    { userId: userId, volumeId: volumeId }
+                const taskHistory = await TaskHistory.create({
+                    userId: userId,
+                    volumeId: volumeId,
+                    taskType: TaskHistory.type.LabelInference,
+                    taskStatus: TaskHistory.status.enqueued,
+                    enqueuedTime: new Date(),
+                });
+
+                return await this.#taskQueue.enqueue(() =>
+                    this.#generateLabels(
+                        volumeId,
+                        userId,
+                        outputPath,
+                        taskHistory.id
+                    )
                 );
             } catch {
                 console.error(
@@ -308,12 +206,19 @@ export default class IlastikHandler {
      * @param {Number} volumeId
      * @param {Number} userId
      * @param {String} outputPath
+     * @param {Number} taskHistoryId
      * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
-    async #generateLabels(volumeId, userId, outputPath) {
+    async #generateLabels(volumeId, userId, outputPath, taskHistoryId) {
         const logFile = await LogFile.createLogFile("label-generation");
 
         try {
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.running,
+                startTime: new Date(),
+                logFile: logFile.fileName,
+            });
+
             const volume = await Volume.getById(volumeId, {
                 rawData: true,
                 sparseVolumes: true,
@@ -410,14 +315,10 @@ export default class IlastikHandler {
                 volume.sparseVolumes
             );
 
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    userId,
-                    volumeId,
-                    TaskHistoryInstance.status.success,
-                    logFile
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.finished,
+                endTime: new Date(),
+            });
 
             WebSocketManager.broadcastAction(
                 [userId],
@@ -433,14 +334,10 @@ export default class IlastikHandler {
         } catch (error) {
             console.error(`Ilastik label generation error: ${error}`);
             await logFile.writeLog(`exec error: ${error}`);
-            this.taskHistory.update(
-                new TaskHistoryInstance(
-                    userId,
-                    volumeId,
-                    TaskHistoryInstance.status.fail,
-                    logFile
-                )
-            );
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.failed,
+                endTime: new Date(),
+            });
             throw error;
         } finally {
             if (appConfig.ilastik.cleanTemporaryFiles) {

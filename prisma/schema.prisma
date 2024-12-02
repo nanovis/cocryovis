@@ -26,6 +26,7 @@ model User {
   results               Result[]
 
   projectAccess ProjectAccess[]
+  TaskHistory   TaskHistory[]
 
   @@index(fields: [username])
 }
@@ -58,7 +59,7 @@ model Volume {
   id            Int                     @id @default(autoincrement())
   name          String
   description   String
-  creator       User?                   @relation(fields: [creatorId], references: [id])
+  creator       User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId     Int?
   projects      Project[]
   rawData       RawVolumeData?          @relation(fields: [rawDataId], references: [id])
@@ -66,12 +67,13 @@ model Volume {
   sparseVolumes SparseLabelVolumeData[]
   pseudoVolumes PseudoLabelVolumeData[]
   results       Result[]
+  TaskHistory   TaskHistory[]
 }
 
 model RawVolumeData {
   id          Int      @id @default(autoincrement())
   path        String?
-  creator     User?    @relation(fields: [creatorId], references: [id])
+  creator     User?    @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId   Int?
   rawFilePath String?
   settings    String?
@@ -83,7 +85,7 @@ model RawVolumeData {
 model SparseLabelVolumeData {
   id            Int                     @id @default(autoincrement())
   path          String?
-  creator       User?                   @relation(fields: [creatorId], references: [id])
+  creator       User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId     Int?
   rawFilePath   String?
   settings      String?
@@ -94,35 +96,37 @@ model SparseLabelVolumeData {
 model PseudoLabelVolumeData {
   id              Int                    @id @default(autoincrement())
   path            String?
-  creator         User?                  @relation(fields: [creatorId], references: [id])
+  creator         User?                  @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId       Int?
   rawFilePath     String?
   settings        String?
   volumes         Volume[]
   checkpoints     Checkpoint[]
-  originalLabel   SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id])
+  originalLabel   SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id], onDelete: SetNull)
   originalLabelId Int?
 }
 
 model Model {
-  id          Int          @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   name        String
   description String
-  creator     User?        @relation(fields: [creatorId], references: [id])
+  creator     User?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId   Int?
   projects    Project[]
   checkpoints Checkpoint[]
+  TaskHistory TaskHistory[]
 }
 
 model Checkpoint {
-  id         Int                     @id @default(autoincrement())
-  filePath   String?
-  folderPath String?
-  creator    User?                   @relation(fields: [creatorId], references: [id])
-  creatorId  Int?
-  models     Model[]
-  results    Result[]
-  labels     PseudoLabelVolumeData[]
+  id          Int                     @id @default(autoincrement())
+  filePath    String?
+  folderPath  String?
+  creator     User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId   Int?
+  models      Model[]
+  results     Result[]
+  labels      PseudoLabelVolumeData[]
+  TaskHistory TaskHistory[]
 }
 
 model Result {
@@ -131,7 +135,7 @@ model Result {
   files            ResultFile[]
   rawVolumeChannel Int?
   logFile          String?
-  creator          User?         @relation(fields: [creatorId], references: [id])
+  creator          User?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId        Int?
   checkpoint       Checkpoint    @relation(fields: [checkpointId], references: [id])
   checkpointId     Int
@@ -148,4 +152,22 @@ model ResultFile {
   index            Int
   result           Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
   resultId         Int
+}
+
+model TaskHistory {
+  id           Int         @id @default(autoincrement())
+  taskType     Int // Types: 0 - LabelInference, 1 - Training, 2 - Inference, 3 - Reconstruction
+  taskStatus   Int // Status: 0 - Enqueued, 1 - Running, 2 - Finished, 3 - Failed
+  user         User        @relation(fields: [userId], references: [id])
+  userId       Int
+  logFile      String?
+  enqueuedTime DateTime
+  startTime    DateTime?
+  endTime      DateTime?
+  volume       Volume?     @relation(fields: [volumeId], references: [id], onDelete: SetNull)
+  volumeId     Int?
+  model        Model?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  modelId      Int?
+  checkpoint   Checkpoint? @relation(fields: [checkpointId], references: [id], onDelete: SetNull)
+  checkpointId Int?
 }
