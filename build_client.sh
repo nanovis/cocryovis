@@ -20,4 +20,4 @@ fi
 export REACT_APP_API_URL="$API_URL"
 
 # Run the build command
-cd client && npm install && npm run build
+cd client && npm install --include=dev && npm run build
