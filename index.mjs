@@ -104,11 +104,6 @@ const startServer = async () => {
             helmet({
                 originAgentCluster: false,
                 crossOriginOpenerPolicy: false,
-                contentSecurityPolicy: {
-                    directives: {
-                        scriptSrc: ["'self'", "'unsafe-inline'"],
-                    },
-                },
             })
         );
     }
