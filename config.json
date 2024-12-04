@@ -10,9 +10,9 @@
     "ilastikQueueSize": 20,
     "gpuQueueSize": 20,
     "ilastik": {
-        "path": "./modules/ilastik/",
+        "path": "./modules/ilastik/ilastik",
         "scripts_path": "bin/",
-        "python": "./modules/ilastik/bin/python",
+        "python": "./modules/ilastik/ilastik/bin/python",
         "inference": "run_ilastik.sh",
         "create_project_command": "train_headless.py",
         "model_file_name": "model_project.ilp",
