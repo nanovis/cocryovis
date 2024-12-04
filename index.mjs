@@ -30,8 +30,15 @@ const startServer = async () => {
     const port = argv[2] || 8080;
     const app = express();
 
-    app.use(cors({}));
+    app.use(
+        cors({
+            credentials: true,
+            origin: "http://localhost:3000",
+            exposedHeaders: ["Content-Disposition"],
+        })
+    );
     app.use(function (req, res, next) {
+        res.header("Access-Control-Allow-Origin", "http://localhost:3000");
         res.header("Access-Control-Allow-Credentials", "true");
         res.header(
             "Access-Control-Allow-Methods",
@@ -93,7 +100,17 @@ const startServer = async () => {
         // app.set('trust proxy', 1)
         sess.cookie.secure = true;
         sess.cookie.HttpOnly = true;
-        app.use(helmet());
+        app.use(
+            helmet({
+                originAgentCluster: false,
+                crossOriginOpenerPolicy: false,
+                contentSecurityPolicy: {
+                    directives: {
+                        scriptSrc: ["'self'", "'unsafe-inline'"],
+                    },
+                },
+            })
+        );
     }
 
     app.use(sessionParser);
