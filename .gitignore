@@ -13,8 +13,8 @@ db.json
 .vscode/
 .venv/
 /temp/
-/modules/ilastik/ilastik
-!/modules/ilastik/.gitkeep
+/modules/ilastik
+!/modules/.gitkeep
 !/modules/nano-oetzi
 python-scripts/__pycache__
 
