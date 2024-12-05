@@ -23,11 +23,17 @@ import appConfig from "./src/tools/config.mjs";
 import { logErrors, clientErrorHandler } from "./src/tools/error-handler.mjs";
 import WebSocketManager from "./src/tools/websocket-manager.mjs";
 import http from "http";
+import https from "https";
 import TaskHistory from "./src/models/task-history.mjs";
 import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
 
 const startServer = async () => {
-    const port = argv[2] || 8080;
+    const host = argv[3] || process.env.HOST || "localhost";
+    const port = Number(argv[2]) || Number(process.env.PORT) || 8080;
+    const useHttps = argv[4]
+        ? argv[4] === "true"
+        : process.env.HTTPS === "true";
+
     const app = express();
 
     app.use(
@@ -102,7 +108,11 @@ const startServer = async () => {
         sess.cookie.HttpOnly = true;
         app.use(
             helmet({
-                contentSecurityPolicy: false,
+                contentSecurityPolicy: {
+                    directives: {
+                        scriptSrc: ["'wasm-unsafe-eval'"],
+                    },
+                },
                 originAgentCluster: false,
                 crossOriginOpenerPolicy: false,
             })
@@ -129,7 +139,27 @@ const startServer = async () => {
 
     app.use("/logs", express.static("logs", { index: false }));
 
-    const server = http.createServer(app);
+    let server = null;
+
+    if (useHttps) {
+        console.log("Initializing https server");
+        server = https.createServer(
+            {
+                key: Buffer.from(
+                    process.env.SSL_KEY_CONTENT,
+                    "base64"
+                ).toString("utf8"),
+                cert: Buffer.from(
+                    process.env.SSL_CRT_CONTENT,
+                    "base64"
+                ).toString("utf8"),
+            },
+            app
+        );
+    } else {
+        console.log("Initializing http server");
+        server = http.createServer(app);
+    }
     // Websockets
     WebSocketManager.initializeWebSocketInstance(server, sessionParser);
 
@@ -146,8 +176,8 @@ const startServer = async () => {
 
     await TaskHistory.clearOngoing();
 
-    server.listen(port, () => {
-        console.log("listening on port " + port);
+    server.listen(port, host, () => {
+        console.log("listening on " + host + ":" + port);
     });
 };
 
