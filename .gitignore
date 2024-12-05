@@ -14,7 +14,7 @@ db.json
 .venv/
 /temp/
 /modules/ilastik
-!/modules/.gitkeep
+!/modules/ilastik/.gitkeep
 !/modules/nano-oetzi
 python-scripts/__pycache__
 
