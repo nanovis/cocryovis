@@ -102,6 +102,7 @@ const startServer = async () => {
         sess.cookie.HttpOnly = true;
         app.use(
             helmet({
+                contentSecurityPolicy: false,
                 originAgentCluster: false,
                 crossOriginOpenerPolicy: false,
             })
