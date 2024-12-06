@@ -98,14 +98,17 @@ const startServer = async () => {
         secret: process.env.SESSION_SECRET,
         rolling: true,
         cookie: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
             maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
+            sameSite: 'strict'
         },
     };
     // @ts-ignore
     const sessionParser = session(sess);
 
     if (app.get("env") === "production") {
-        // app.set('trust proxy', 1)
+        app.set('trust proxy', 1)
         sess.cookie.secure = true;
         sess.cookie.HttpOnly = true;
         app.use(
