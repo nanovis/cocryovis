@@ -28,11 +28,13 @@ import TaskHistory from "./src/models/task-history.mjs";
 import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
 
 const startServer = async () => {
-    const host = argv[3] || process.env.HOST || "localhost";
-    const port = Number(argv[2]) || Number(process.env.PORT) || 8080;
+    const host = argv[3] ?? process.env.HOST ?? "localhost";
     const useHttps = argv[4]
         ? argv[4] === "true"
         : process.env.HTTPS === "true";
+
+    const port =
+        Number(argv[2]) || Number(process.env.PORT) || (useHttps ? 443 : 8080);
 
     const app = express();
 
@@ -110,7 +112,7 @@ const startServer = async () => {
             helmet({
                 contentSecurityPolicy: {
                     directives: {
-                        scriptSrc: ["'wasm-unsafe-eval'"],
+                        scriptSrc: ["'self'", "'unsafe-eval'"],
                     },
                 },
                 originAgentCluster: false,
@@ -143,16 +145,38 @@ const startServer = async () => {
 
     if (useHttps) {
         console.log("Initializing https server");
+
+        let keyContent = null;
+        if (process.env.SSL_KEY_CONTENT) {
+            keyContent = Buffer.from(
+                process.env.SSL_KEY_CONTENT,
+                "base64"
+            ).toString("utf8");
+        } else if (process.env.SSL_KEY_PATH) {
+            keyContent = fileSystem.readFileSync(process.env.SSL_KEY_PATH);
+        }
+
+        let certContent = null;
+        if (process.env.SSL_CRT_CONTENT) {
+            certContent = Buffer.from(
+                process.env.SSL_CRT_CONTENT,
+                "base64"
+            ).toString("utf8");
+        } else if (process.env.SSL_CRT_PATH) {
+            certContent = fileSystem.readFileSync(process.env.SSL_CRT_PATH);
+        }
+
+        if (!keyContent || !certContent) {
+            console.error(
+                "No SSL key or certificate provided, exiting with error!"
+            );
+            process.exit(1);
+        }
+
         server = https.createServer(
             {
-                key: Buffer.from(
-                    process.env.SSL_KEY_CONTENT,
-                    "base64"
-                ).toString("utf8"),
-                cert: Buffer.from(
-                    process.env.SSL_CRT_CONTENT,
-                    "base64"
-                ).toString("utf8"),
+                key: keyContent,
+                cert: certContent,
             },
             app
         );
