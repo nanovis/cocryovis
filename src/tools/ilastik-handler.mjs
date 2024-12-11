@@ -38,6 +38,7 @@ export default class IlastikHandler {
     constructor(config) {
         this.config = config;
         this.#taskQueue = new TaskQueue();
+        this.ilastikTempDirectory = path.join(this.config.tempPath, "ilastik");
         Object.preventExtensions(this);
     }
 
@@ -74,9 +75,7 @@ export default class IlastikHandler {
         IlastikHandler.#checkVolumeProperties(volume);
 
         if (!outputPath) {
-            outputPath = Utils.createTemporaryFolder(
-                this.config.ilastik.workCache
-            );
+            outputPath = Utils.createTemporaryFolder(this.ilastikTempDirectory);
         }
 
         const multiLock = new WriteMultiLock([

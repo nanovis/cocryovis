@@ -23,6 +23,7 @@ import appConfig from "../tools/config.mjs";
 export default class RawVolumeData extends VolumeData {
     static modelName = "rawVolumeData";
     static lockManager = new WriteLockManager(this.modelName);
+    static mrcTempDirectory = path.join(appConfig.tempPath, "mrc");
 
     static get db() {
         return prismaManager.db.rawVolumeData;
@@ -80,11 +81,12 @@ export default class RawVolumeData extends VolumeData {
                 if (unpackedFiles.length == 0) {
                     throw new ApiError(400, "No valid MRC file found.");
                 }
-                await fsPromises.mkdir(appConfig.mrcCachePath, {
+
+                await fsPromises.mkdir(RawVolumeData.mrcTempDirectory, {
                     recursive: true,
                 });
                 const tempDirectory = await fsPromises.mkdtemp(
-                    appConfig.mrcCachePath
+                    RawVolumeData.mrcTempDirectory
                 );
 
                 try {

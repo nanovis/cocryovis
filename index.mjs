@@ -202,6 +202,12 @@ const startServer = async () => {
     app.use(clientErrorHandler);
 
     await TaskHistory.clearOngoing();
+    if (appConfig.cleanTempOnStartup) {
+        await fileSystem.promises.rm(appConfig.tempPath, {
+            recursive: true,
+            force: true,
+        });
+    }
 
     server.listen(port, host, () => {
         console.log("listening on " + host + ":" + port);

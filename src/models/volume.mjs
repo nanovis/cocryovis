@@ -25,6 +25,9 @@ import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 export default class Volume extends DatabaseModel {
     static modelName = "volume";
     static lockManager = new WriteLockManager(this.modelName);
+    static annotationsTempDirectory = path.join(
+        appConfig.tempPath, "annotations"
+    );
 
     static get db() {
         return prismaManager.db.volume;
@@ -425,7 +428,7 @@ export default class Volume extends DatabaseModel {
             async () => {
                 try {
                     tempFolderPath = Utils.createTemporaryFolder(
-                        appConfig.annotationsCachePath
+                        Volume.annotationsTempDirectory
                     );
 
                     const outputFile =

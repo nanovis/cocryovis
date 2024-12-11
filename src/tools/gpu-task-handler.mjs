@@ -38,6 +38,7 @@ export default class GPUTaskHandler {
     constructor(config) {
         this.config = config;
         this.#taskQueue = new TaskQueue();
+        this.gpuTaskTempDirectory = path.join(this.config.tempPath, "gpuTasks");
         Object.preventExtensions(this);
     }
 
@@ -47,7 +48,7 @@ export default class GPUTaskHandler {
 
     createTemporaryOutputPath() {
         let tempFolderPath = path.join(
-            this.config.nanoOetzi.workCache,
+            this.gpuTaskTempDirectory,
             Utils.getInverseDateString()
         );
         while (fileSystem.existsSync(tempFolderPath)) {
@@ -555,7 +556,7 @@ export default class GPUTaskHandler {
             });
             throw error;
         } finally {
-            if (removeTempFiles) {
+            if (this.config.nanoOetzi.cleanTemporaryFiles) {
                 try {
                     await fsPromises.rm(workFolder, {
                         recursive: true,
@@ -925,6 +926,12 @@ export default class GPUTaskHandler {
         } catch (error) {
             await logFile.writeLog(`ERROR: \n${error}`);
             console.error(`Tilt series reconstruction error: ${error}`);
+            await TaskHistory.update(taskHistoryId, {
+                taskStatus: TaskHistory.status.failed,
+                endTime: new Date(),
+            });
+            throw error;
+        } finally {
             try {
                 await fsPromises.rm(outputPath, {
                     recursive: true,
@@ -935,12 +942,6 @@ export default class GPUTaskHandler {
                     `Filed to remove nano oetzi inference cache: ${error}`
                 );
             }
-            await TaskHistory.update(taskHistoryId, {
-                taskStatus: TaskHistory.status.failed,
-                endTime: new Date(),
-            });
-            throw error;
-        } finally {
             try {
                 await fsPromises.rm(tiltSeriesFile.tempFilePath, {
                     force: true,

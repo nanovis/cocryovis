@@ -1,8 +1,7 @@
 {
     "idleSessionExpirationMin": 30,
-    "tempPath": "./temp",
-    "annotationsCachePath": "./temp/annotations/",
-    "mrcCachePath": "./temp/mrc/",
+    "tempPath": "./data/temp",
+    "cleanTempOnStartup": true,
     "dataPath": "./data",
     "maxVolumeChannels": 4,
     "safeMode": false,
@@ -16,14 +15,12 @@
         "inference": "run_ilastik.sh",
         "create_project_command": "train_headless.py",
         "model_file_name": "model_project.ilp",
-        "workCache": "temp/ilastik",
         "cleanTemporaryFiles": true
     },
     "nanoOetzi": {
         "path": "./modules/nano-oetzi/",
         "scripts": "segmentation/",
         "python": "python",
-        "workCache": "temp/nano-oetzi",
         "meanFiltering": {
             "command": "mean_filtering.py"
         },
@@ -35,7 +32,8 @@
         "training": {
             "command": "train.py",
             "min_epochs": 1,
-            "max_epochs": 1
+            "max_epochs": 1,
+            "cleanTemporaryFiles": true
         }
     },
     "Proximal_CryoET": {
