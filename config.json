@@ -9,7 +9,7 @@
     "ilastikQueueSize": 20,
     "gpuQueueSize": 20,
     "ilastik": {
-        "path": "./modules/ilastik",
+        "path": "./modules/ilastik/",
         "scripts_path": "bin/",
         "python": "./modules/ilastik/bin/python",
         "inference": "run_ilastik.sh",
