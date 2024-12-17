@@ -28,6 +28,7 @@ export default class User extends DatabaseModel {
      */
     static async authenticate(username, password) {
         const user = await User.getByUsername(username);
+
         return await new Promise((resolve, reject) => {
             User.hasher(
                 { password: password, salt: user.passwordSalt },

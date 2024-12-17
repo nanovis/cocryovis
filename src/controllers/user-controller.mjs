@@ -20,16 +20,11 @@ export default class UserController {
 
         const userData = User.toPublic(user);
 
-        req.session.regenerate(function (err) {
-            if (err) return next(err);
+        await UserController.#regenerateSession(req);
+        req.session.user = userData;
+        await UserController.#saveSession(req);
 
-            req.session.user = userData;
-
-            req.session.save(function (err) {
-                if (err) return next(err);
-                res.status(201).json(userData);
-            });
-        });
+        res.status(201).json(userData);
     }
 
     /**
@@ -46,22 +41,33 @@ export default class UserController {
 
             const userData = User.toPublic(user);
 
-            req.session.regenerate(function (err) {
-                if (err) return next(err);
+            await UserController.#regenerateSession(req);
+            req.session.user = userData;
+            await UserController.#saveSession(req);
+            console.log("User " + req.body.username + " just logged in.");
 
-                req.session.user = userData;
-
-                req.session.save(function (err) {
-                    if (err) return next(err);
-
-                    res.json(userData);
-                });
-
-                console.log("User " + req.body.username + " just logged in.");
-            });
+            res.json(userData);
         } catch {
             throw new ApiError(401, "Authentication Failed");
         }
+    }
+
+    static async #regenerateSession(req) {
+        return new Promise((resolve, reject) => {
+            req.session.regenerate((err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+    }
+
+    static async #saveSession(req) {
+        return new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
     }
 
     /**
