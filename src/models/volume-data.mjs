@@ -378,6 +378,7 @@ export default class VolumeData extends DatabaseModel {
         }
         if (downloadSettingsFile && volumeData.settings != null) {
             const settings = JSON.parse(volumeData.settings);
+            delete settings.transferFunction;
             const settingsJSON = JSON.stringify(settings, null, 4);
             zip.addFile(
                 `${Utils.stripExtension(volumeData.rawFilePath)}.json`,

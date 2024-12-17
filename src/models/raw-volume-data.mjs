@@ -272,6 +272,7 @@ export default class RawVolumeData extends VolumeData {
         }
         if (downloadSettingsFile && volumeData.settings != null) {
             const settings = JSON.parse(volumeData.settings);
+            delete settings.transferFunction;
             const settingsJSON = JSON.stringify(settings, null, 4);
             zip.addFile(
                 `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
