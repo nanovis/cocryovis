@@ -852,9 +852,9 @@ export default class GPUTaskHandler {
 
             const params = [
                 "filename",
-                inputFileAbsolutePath,
+                `\"${inputFileAbsolutePath}\"`,
                 "result_filename",
-                outputAbsolutePath,
+                `\"${outputAbsolutePath}\"`,
             ];
 
             if (options) {
