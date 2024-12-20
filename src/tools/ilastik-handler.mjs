@@ -229,41 +229,7 @@ export default class IlastikHandler {
             IlastikHandler.#checkVolumeProperties(volume);
 
             const settings = JSON.parse(volume.rawData.settings);
-            if (
-                !Object.hasOwn(settings, "bytesPerVoxel") ||
-                settings.bytesPerVoxel != 1
-            ) {
-                throw new ApiError(
-                    400,
-                    "Pseudo Labels Generation error: The generation only supports uint8 data format."
-                );
-            }
-            if (!Object.hasOwn(settings, "size")) {
-                throw new ApiError(
-                    400,
-                    "Pseudo Labels Generation error: Missing data dimensions data."
-                );
-            }
             const dimensions = settings.size;
-            for (const sparseLabel of volume.sparseVolumes) {
-                const settings = JSON.parse(sparseLabel.settings);
-                if (
-                    !Object.hasOwn(settings, "bytesPerVoxel") ||
-                    settings.bytesPerVoxel != 1
-                ) {
-                    throw new ApiError(
-                        400,
-                        "Pseudo Labels Generation error: The generation only supports uint8 data format."
-                    );
-                }
-                if (!Object.hasOwn(settings, "size")) {
-                    throw new ApiError(
-                        400,
-                        "Pseudo Labels Generation error: Missing data dimensions data."
-                    );
-                }
-                IlastikHandler.#checkDimensions(dimensions, settings.size);
-            }
 
             const rawH5FileName =
                 Utils.stripExtension(volume.rawData.rawFilePath) + ".h5";
@@ -442,6 +408,43 @@ export default class IlastikHandler {
                     "Pseudo Labels Generation error: Sparse Label Data is missing."
                 );
             }
+        }
+
+        const settings = JSON.parse(volume.rawData.settings);
+        if (
+            !Object.hasOwn(settings, "bytesPerVoxel") ||
+            settings.bytesPerVoxel != 1
+        ) {
+            throw new ApiError(
+                400,
+                "Pseudo Labels Generation error: The generation only supports uint8 data format."
+            );
+        }
+        if (!Object.hasOwn(settings, "size")) {
+            throw new ApiError(
+                400,
+                "Pseudo Labels Generation error: Missing data dimensions data."
+            );
+        }
+        const dimensions = settings.size;
+        for (const sparseLabel of volume.sparseVolumes) {
+            const settings = JSON.parse(sparseLabel.settings);
+            if (
+                !Object.hasOwn(settings, "bytesPerVoxel") ||
+                settings.bytesPerVoxel != 1
+            ) {
+                throw new ApiError(
+                    400,
+                    "Pseudo Labels Generation error: The generation only supports uint8 data format."
+                );
+            }
+            if (!Object.hasOwn(settings, "size")) {
+                throw new ApiError(
+                    400,
+                    "Pseudo Labels Generation error: Missing data dimensions data."
+                );
+            }
+            IlastikHandler.#checkDimensions(dimensions, settings.size);
         }
     }
 }
