@@ -44,7 +44,7 @@ export default class Utils {
      */
     static async mrcToRaw(inputFile, outputPath) {
         const command = `${appConfig.nanoOetzi.python} \"${path.join(
-            "python-scripts",
+            "./python-scripts",
             "mrc-to-raw.py"
         )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
         const { stdout, stderr } = await execPromise(command);
@@ -65,7 +65,7 @@ export default class Utils {
      */
     static async analyzeToRaw(inputFile, outputPath) {
         const command = `${appConfig.nanoOetzi.python} \"${path.join(
-            "python-scripts",
+            "./python-scripts",
             "analyze-to-raw.py"
         )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
         const { stdout, stderr } = await execPromise(command);
@@ -193,7 +193,7 @@ export default class Utils {
         }
 
         const command = `${appConfig.nanoOetzi.python} \"${path.join(
-            "python-scripts",
+            "./python-scripts",
             "mean-filter.py"
         )}\" ${params.join(" ")}`;
 
@@ -208,7 +208,7 @@ export default class Utils {
     static async ckptToText(checkpointPath) {
         return new Promise((resolve, reject) => {
             const pythonProcess = spawn(appConfig.nanoOetzi.python, [
-                path.join("python-scripts", "ckpt-to-text.py"),
+                path.join("./python-scripts", "ckpt-to-text.py"),
                 "-c",
                 path.resolve(checkpointPath),
             ]);

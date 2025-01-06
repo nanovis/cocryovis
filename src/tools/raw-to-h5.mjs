@@ -4,6 +4,7 @@ import { exec } from "child_process";
 import appConfig from "./config.mjs";
 import path from "path";
 import { promisify } from "util";
+import LogFile from "./log-manager.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -16,12 +17,14 @@ const execPromise = promisify(exec);
  * @param {{x: Number, y: Number, z: Number}} dimensions
  * @param {String} outputPath
  * @param {String} datasetName
+ * @param {LogFile} logFile
  */
 export async function rawToH5(
     rawVolumePath,
     dimensions,
     outputPath,
-    datasetName
+    datasetName,
+    logFile=null
 ) {
     let params = [
         `-r \"${rawVolumePath}\"`,
@@ -31,11 +34,16 @@ export async function rawToH5(
         "-log False",
     ];
     const command = `${appConfig.ilastik.python} \"${path.join(
-        "python-scripts",
+        "./python-scripts",
         "raw-to-h5.py"
     )}\" ${params.join(" ")}`;
 
-    await execPromise(command);
+    const { stdout, stderr } = await execPromise(command);
+    if (logFile) {
+        await logFile.writeLog(stdout);
+        await logFile.writeLog(stderr);
+    }
+
     return outputPath;
 }
 
@@ -44,12 +52,14 @@ export async function rawToH5(
  * @param {{x: Number, y: Number, z: Number}} dimensions
  * @param {String} outputPath
  * @param {String} datasetName
+ * @param {LogFile} logFile
  */
 export async function labelsToH5(
     labelPaths,
     dimensions,
     outputPath,
-    datasetName
+    datasetName,
+    logFile=null
 ) {
     let params = [
         `-l \"${labelPaths.join('" "')}\"`,
@@ -59,11 +69,16 @@ export async function labelsToH5(
         "-log False",
     ];
     const command = `${appConfig.ilastik.python} \"${path.join(
-        "python-scripts",
+        "./python-scripts",
         "labels-to-h5.py"
     )}\" ${params.join(" ")}`;
 
-    await execPromise(command);
+    const { stdout, stderr } = await execPromise(command);
+    if (logFile) {
+        await logFile.writeLog(stdout);
+        await logFile.writeLog(stderr);
+    }
+
     return outputPath;
 }
 
@@ -71,18 +86,24 @@ export async function labelsToH5(
  * @param {String} labelPath
  * @param {String} datasetName
  * @param {String} outputPath
+ * @param {LogFile} logFile
  */
-export async function H5ToLabels(labelPath, datasetName, outputPath) {
+export async function H5ToLabels(labelPath, datasetName, outputPath, logFile=null) {
     let params = [
         `-l \"${labelPath}\"`,
         `-s \"${datasetName}\"`,
         `-o \"${outputPath}\"`,
     ];
     const command = `${appConfig.ilastik.python} \"${path.join(
-        "python-scripts",
+        "./python-scripts",
         "h5-to-labels.py"
     )}\" ${params.join(" ")}`;
 
-    await execPromise(command);
+    const { stdout, stderr } = await execPromise(command);
+    if (logFile) {
+        await logFile.writeLog(stdout);
+        await logFile.writeLog(stderr);
+    }
+
     return outputPath;
 }

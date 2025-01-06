@@ -245,7 +245,8 @@ export default class IlastikHandler {
                 volume.sparseVolumes,
                 dimensions,
                 rawH5Path,
-                labelsH5Path
+                labelsH5Path,
+                logFile
             );
             await logFile.writeLog("Data conversion to HDF5 complete.");
 
@@ -270,7 +271,8 @@ export default class IlastikHandler {
             await H5ToLabels(
                 resultPath,
                 IlastikHandler.pseudoLabelsDataset,
-                labelDirectory
+                labelDirectory,
+                logFile
             );
 
             const pseudoLabeledVolumes = await Volume.addPseudoLabelsFromFolder(
@@ -326,13 +328,15 @@ export default class IlastikHandler {
      * @param {{x: Number, y: Number, z: Number}} dimensions
      * @param {String} rawOutputPath
      * @param {String} labelsOutputPath
+     * @param {LogFile} logFile
      */
     async #convertDataToH5(
         rawData,
         sparseLabelsStack,
         dimensions,
         rawOutputPath,
-        labelsOutputPath
+        labelsOutputPath,
+        logFile=null
     ) {
         if (fileSystem.existsSync(rawOutputPath)) {
             await fsPromises.rm(rawOutputPath, {
@@ -349,13 +353,15 @@ export default class IlastikHandler {
             rawData.rawFilePath,
             dimensions,
             rawOutputPath,
-            IlastikHandler.rawDataset
+            IlastikHandler.rawDataset,
+            logFile
         );
         await labelsToH5(
             sparseLabelsStack.map((l) => l.rawFilePath),
             dimensions,
             labelsOutputPath,
-            IlastikHandler.labelsDataset
+            IlastikHandler.labelsDataset,
+            logFile
         );
     }
 
