@@ -1,0 +1,145 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+/* .app {
+    display: flex;
+    flex-direction: column;
+} */
+
+.app {
+  height: 100vh; /* Set app height to viewport height */
+  display: flex;
+  flex-direction: column;
+}
+
+.loader {
+  position: absolute;
+  top: calc(50% - 25px);
+  left: calc(50% - 25px);
+  width: 50px !important;
+  height: 50px !important;
+  border: 5px solid rgba(0, 0, 0, 0.1);
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 1000;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes load8 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#root {
+  height: 100%;
+}
+
+#rendering {
+  flex-grow: 1;
+  background-color: rgb(0, 0, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100vh;
+  height: auto;
+}
+
+#force {
+  height: 100% !important;
+}
+
+.signin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /*height: calc(100vh - 10px);  Adjust as needed */
+  margin-top: 10px;
+}
+
+/* .chatbox-container
+  {
+    position: fixed; 
+    top: 40%;
+    left: 70%;    
+    height: 55%;
+    width: 25%;  
+    z-index: 1000;   
+  } */
+.circleButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: fixed;
+  top: 82%;
+  left: 95%;
+  border: none;
+  background-color: #20262c;
+  font-size: small;
+  color: rgb(255, 255, 255);
+  text-align: center;
+  line-height: 40px;
+  cursor: pointer;
+  z-index: 1000;
+}
+.chatbox {
+  position: fixed;
+  top: 40%;
+  left: 70%;
+  width: 25%;
+  height: 50%;
+  z-index: 1000;
+}
+.rce-mbox-text {
+  color: black !important;
+}
+
+.hidden {
+  display: none;
+}
+
+.spinning-icon {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px; /* Set the width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Make the scrollbar track transparent */
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--colorNeutralForeground3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--colorNeutralForeground3Hover);
+}
