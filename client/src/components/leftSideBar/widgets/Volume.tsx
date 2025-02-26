@@ -1,0 +1,1188 @@
+import {
+  makeStyles,
+  tokens,
+  Button,
+  Tooltip,
+  mergeClasses,
+  Menu,
+  MenuTrigger,
+  MenuButton,
+  MenuPopover,
+  MenuList,
+  MenuItem,
+} from "@fluentui/react-components";
+import {
+  Add24Regular,
+  AddFilled,
+  ArrowCircleLeft28Regular,
+  ArrowDownload20Regular,
+  ArrowSync24Regular,
+  ArrowUpload20Regular,
+  Checkmark16Filled,
+  Delete20Regular,
+  ErrorCircle16Filled,
+  ProjectionScreen20Regular,
+  Stack24Regular,
+} from "@fluentui/react-icons";
+import { useState, useRef } from "react";
+import DeleteVolumeDialog from "./elements/DeleteVolumeDialog";
+import CreateVolumeDialog from "./elements/CreateVolumeDialog";
+import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
+import Utils from "../../../functions/Utils";
+import { toast } from "react-toastify";
+import DeleteDialog from "../../shared/DeleteDialog";
+import { CONFIG } from "../../../Constants";
+import "../../../App.css";
+import globalStyles from "../../GlobalStyles";
+import ComboboxSearch from "../../shared/ComboboxSearch";
+import ProcessTiltSeriesDialog, {
+  TiltSeriesOptions,
+} from "../../shared/ProcessTiltSeriesDialog";
+import { observer } from "mobx-react-lite";
+import { useMst } from "../../../stores/RootStore";
+import {
+  LabeledVolumeTypes,
+  VolumeInstance,
+} from "../../../stores/userState/VolumeModel";
+import {
+  WriteAccessTooltipContent,
+  WriteAccessTooltipContentWrapper,
+} from "../../shared/WriteAccessTooltip";
+import { ResultInstance } from "../../../stores/userState/ResultModel";
+
+const useStyles = makeStyles({
+  visualizeButton: {
+    width: "115px",
+    "&:enabled": {
+      border: 0,
+    },
+  },
+  uploadDownloadButtom: {
+    width: "188px",
+  },
+});
+
+type RawDataTypes = "RawVolumeData" | LabeledVolumeTypes;
+
+interface Props {
+  open: boolean;
+  close: () => void;
+}
+
+const Volume = observer(({ open, close }: Props) => {
+  const { user, uiState } = useMst();
+
+  const activeProject = user?.userProjects.activeProject;
+  const projectVolumes = activeProject?.projectVolumes;
+  const selectedVolumeId = projectVolumes?.selectedVolumeId;
+  const selectedVolume = projectVolumes?.selectedVolume;
+  const volumeResults = selectedVolume?.volumeResults;
+  const selectedResultId = volumeResults?.selectedResultId;
+  const selectedResult = volumeResults?.selectedResult;
+  const results = selectedVolume?.volumeResults.results;
+
+  const classes = useStyles();
+  const globalClasses = globalStyles();
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isDeleteResultDialogOpen, setDeleteResultDialogOpen] = useState(false);
+  const [isLoadingResults, setLoadingResults] = useState(false);
+  const [isLoadingVolumes, setLoadingVolumes] = useState(false);
+  const [isUploadingData, setIsUploadingData] = useState(false);
+  const [isTiltSeriesDialogOpen, setIsTiltSeriesDialogOpen] = useState(false);
+
+  const rawDataFileRef = useRef<HTMLInputElement | null>(null);
+  const mrcFileRef = useRef<HTMLInputElement | null>(null);
+  const sparseLabelFileRef = useRef<HTMLInputElement | null>(null);
+  const pseudoLabelFileRef = useRef<HTMLInputElement | null>(null);
+
+  const isPageBusy = () => {
+    return isLoadingResults || isLoadingVolumes || isUploadingData;
+  };
+
+  const handleVolumeSelect = async (value: string | null) => {
+    try {
+      if (!value) {
+        return;
+      }
+
+      projectVolumes?.setSelectedVolumeId(Number(value));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const createVolume = () => {
+    setCreateDialogOpen(true);
+  };
+
+  const openDeleteDialog = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const closeCreateDialog = () => {
+    setCreateDialogOpen(false);
+  };
+
+  const handleCloseCheckpointDialog = () => {
+    setDeleteResultDialogOpen(false);
+  };
+
+  const confirmDeleteVolume = async () => {
+    try {
+      if (!selectedVolumeId) {
+        return;
+      }
+      await projectVolumes?.removeVolume(selectedVolumeId);
+      closeDeleteDialog();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleCreateVolume = async (name: string, description: string) => {
+    try {
+      await projectVolumes?.createVolume(name, description);
+
+      closeCreateDialog();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleRawDataFileChange = async (event: FileChangeEvent) => {
+    try {
+      if (!event.target.files) {
+        return;
+      }
+
+      setIsUploadingData(true);
+      await selectedVolume?.uploadRawVolume(event.target.files);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsUploadingData(false);
+      if (rawDataFileRef.current) {
+        rawDataFileRef.current.value = "";
+      }
+    }
+  };
+
+  const handleMrcFileChange = async (event: FileChangeEvent) => {
+    try {
+      if (!event.target.files) {
+        return;
+      }
+
+      setIsUploadingData(true);
+      await selectedVolume?.uploadMrcVolume(event.target.files);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsUploadingData(false);
+      if (mrcFileRef.current) {
+        mrcFileRef.current.value = "";
+      }
+    }
+  };
+
+  const tiltSeriesUpload = async (
+    file: File,
+    options: TiltSeriesOptions,
+    serverSide?: boolean
+  ) => {
+    let toastId = null;
+    if (!selectedVolumeId) {
+      return;
+    }
+
+    try {
+      setIsUploadingData(true);
+
+      if (serverSide) {
+        if (!file) {
+          throw new Error("No file found.");
+        }
+
+        if (!file.name.endsWith(".ali")) {
+          throw new Error("Wrong file format.");
+        }
+
+        const formData = new FormData();
+        formData.append("tiltSeries", file);
+        formData.append(
+          "data",
+          JSON.stringify({
+            volumeId: selectedVolumeId,
+            options: options,
+          })
+        );
+        await Utils.sendRequestWithToast(
+          `tilt-series-reconstruction`,
+          {
+            method: "POST",
+            body: formData,
+          },
+          { successText: "Tilt series reconstruction successfuly queued!" }
+        );
+      } else {
+        toastId = toast.loading("Processing data...");
+        const { parsedSettings, fileData } =
+          await Utils.convertTiltSeriesToRawData(file, options.volume_depth);
+
+        toast.update(toastId, {
+          render: "Uploading data to the server...",
+          isLoading: true,
+          autoClose: false,
+        });
+
+        await selectedVolume?.uploadTiltSeries(parsedSettings, fileData);
+
+        toast.update(toastId, {
+          render: "Data successfully uploaded!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+          closeOnClick: true,
+        });
+      }
+    } catch (error) {
+      if (toastId !== null) {
+        const errMsg = Utils.getErrorMessage(error);
+        toast.update(toastId, {
+          render: errMsg,
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+          closeOnClick: true,
+        });
+      }
+      console.error("Error:", error);
+      throw error;
+    } finally {
+      setIsUploadingData(false);
+    }
+  };
+
+  const handleVisualisationRequest = async (
+    dataType: RawDataTypes,
+    id: number | undefined
+  ) => {
+    let toastId = null;
+
+    if (!id) {
+      return;
+    }
+
+    try {
+      toastId = toast.loading("Fetching visualization data...");
+
+      const response = await Utils.sendReq(
+        `volumeData/${dataType}/${id}/visualization-data`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      toast.update(toastId, {
+        render: "Processing vizualization data...",
+        isLoading: true,
+        autoClose: false,
+      });
+
+      const contents = await response.blob();
+      const fileMap = await Utils.zipToFileMap(contents);
+
+      await uiState.visualizeVolume(fileMap, selectedVolume);
+
+      toast.dismiss(toastId);
+    } catch (error) {
+      if (toastId !== null) {
+        const errMsg = Utils.getErrorMessage(error);
+        toast.update(toastId, {
+          render: errMsg,
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+          closeOnClick: true,
+        });
+      }
+      console.error("Error:", error);
+    }
+  };
+
+  // dataType options = 'RawVolumeData', 'SparseLabeledVolumeData', 'PseudoLabeledVolumeData'.
+  const handleResultVisualisationRequest = async () => {
+    let toastId = null;
+
+    try {
+      toastId = toast.loading("Fetching visualization data...");
+
+      const response = await Utils.sendReq(`result/${selectedResultId}/data`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      toast.update(toastId, {
+        render: "Processing vizualization data...",
+        isLoading: true,
+        autoClose: false,
+      });
+
+      const contents = await response.blob();
+      const fileMap = await Utils.zipToFileMap(contents);
+
+      await uiState.visualizeVolume(fileMap, selectedResult);
+
+      toast.dismiss(toastId);
+    } catch (error) {
+      if (toastId !== null) {
+        const errMsg = Utils.getErrorMessage(error);
+
+        toast.update(toastId, {
+          render: errMsg,
+          type: "error",
+          isLoading: false,
+          autoClose: 2000,
+          closeOnClick: true,
+        });
+      }
+      console.error("Error:", error);
+    }
+  };
+
+  const queuePseudoLabelGeneration = async () => {
+    if (!selectedVolumeId) {
+      return;
+    }
+    try {
+      await Utils.sendRequestWithToast(
+        `volume/${selectedVolumeId}/queue-pseudo-label-generation`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+        { successText: "Label generation successfuly queued!" }
+      );
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const refreshVolumes = async () => {
+    try {
+      setLoadingVolumes(true);
+      await projectVolumes?.refreshVolumes();
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoadingVolumes(false);
+    }
+  };
+
+  const handleSparseLabelFileChange = async (event: FileChangeEvent) => {
+    try {
+      if (!event.target.files) {
+        return;
+      }
+
+      setIsUploadingData(true);
+      await selectedVolume?.uploadSparseLabelVolume(event.target.files);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsUploadingData(false);
+      if (sparseLabelFileRef.current) {
+        sparseLabelFileRef.current.value = "";
+      }
+    }
+  };
+
+  const handlePseudoLabelFileChange = async (event: FileChangeEvent) => {
+    try {
+      if (!event.target.files) {
+        return;
+      }
+
+      setIsUploadingData(true);
+      await selectedVolume?.uploadPseudoLabelVolume(event.target.files);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsUploadingData(false);
+      if (pseudoLabelFileRef.current) {
+        pseudoLabelFileRef.current.value = "";
+      }
+    }
+  };
+
+  const handleVolumeDataConfirmDelete = async (
+    dataType: LabeledVolumeTypes,
+    dataId: number | undefined
+  ) => {
+    try {
+      if (!dataId) {
+        return;
+      }
+      await selectedVolume?.deleteLabeledVolume(dataType, dataId);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  // Download handlers
+  const handleDownloadVolumeData = async (
+    dataType: RawDataTypes,
+    id: number | undefined
+  ) => {
+    try {
+      if (!id) {
+        return;
+      }
+
+      const response = await Utils.sendRequestWithToast(
+        `volumeData/${dataType}/${id}/download-full`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+        { successText: "Download Successful" }
+      );
+
+      await Utils.downloadFile(response);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  //Function to handle Result Checks
+  const handleResultSelect = (value: string | null) => {
+    if (!value) {
+      return;
+    }
+
+    try {
+      volumeResults?.setSelectedResultId(Number(value));
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  //Functions to handle result buttons
+  const handleDownloadResultFiles = async () => {
+    try {
+      if (!selectedResultId) {
+        return;
+      }
+
+      const response = await Utils.sendRequestWithToast(
+        `result/${selectedResultId}/data`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+        { successText: "Download Successful" }
+      );
+
+      await Utils.downloadFile(response);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const removeResult = async () => {
+    try {
+      if (!selectedResultId) {
+        return;
+      }
+
+      await volumeResults?.removeResult(selectedResultId);
+      setDeleteResultDialogOpen(false);
+    } catch (error) {
+      console.error("Error", error);
+    }
+  };
+
+  const refreshVolumeResultsData = async () => {
+    try {
+      setLoadingResults(true);
+      await volumeResults?.refreshResults();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingResults(false);
+    }
+  };
+
+  const hasRawData = () => {
+    return selectedVolume?.rawData;
+  };
+
+  const canUploadRawData = () => {
+    return selectedVolume && !hasRawData();
+  };
+
+  const isVolumeSelected = () => {
+    return selectedVolume;
+  };
+
+  const resultActionsDisabled = () => {
+    return !selectedVolume || isPageBusy();
+  };
+
+  const volumeSelectionProperties = (volume: VolumeInstance) => {
+    return {
+      children: volume.name,
+      value: volume.id.toString(),
+      tooltip: (
+        <div className={globalClasses.selectionDropdownTooltip}>
+          <b>ID:</b> {volume.id}
+          {volume.description.length > 0 && (
+            <>
+              <br />
+              <b>Description:</b> {volume?.description}
+            </>
+          )}
+        </div>
+      ),
+    };
+  };
+
+  const volumeSelectionList = () => {
+    const selectionList: Array<{
+      children: string;
+      value: string;
+      tooltip: JSX.Element;
+    }> = [];
+    projectVolumes?.volumes.forEach((volume) =>
+      selectionList.push(volumeSelectionProperties(volume))
+    );
+    return selectionList;
+  };
+
+  const resultSelectionProperties = (result: ResultInstance) => {
+    return {
+      children: `Result ${result.id}`,
+      value: result.id.toString(),
+      tooltip: (
+        <div className={globalClasses.selectionDropdownTooltip}>
+          <b>ID:</b> {result.id}
+          <br />
+          <b>Checkpoint:</b>{" "}
+          {Utils.getFileNameFromPath(result?.checkpoint?.filePath)}
+        </div>
+      ),
+    };
+  };
+
+  const resultSelectionList = () => {
+    const selectionList: Array<{
+      children: string;
+      value: string;
+      tooltip: JSX.Element;
+    }> = [];
+    results?.forEach((result) =>
+      selectionList.push(resultSelectionProperties(result))
+    );
+    return selectionList;
+  };
+
+  return open ? (
+    <div className={globalClasses.leftSidebar}>
+      <div className={globalClasses.sidebarContents}>
+        <div className={globalClasses.sidebarHeader}>
+          <h1>Data</h1>
+          <div
+            onClick={close}
+            className={globalClasses.closeSidebarIconContainer}
+          >
+            <ArrowCircleLeft28Regular
+              className={globalClasses.closeSidebarIcon}
+            />
+          </div>
+        </div>
+        <div className={globalClasses.siderbarBody}>
+          <h2 className={globalClasses.sectionTitle}>Volume</h2>
+
+          {/* Dropdown for selecting project volumes */}
+          <div className={globalClasses.drowdownActionsContainer}>
+            <ComboboxSearch
+              selectionList={volumeSelectionList()}
+              selectedOption={
+                selectedVolume
+                  ? volumeSelectionProperties(selectedVolume)
+                  : undefined
+              }
+              onOptionSelect={handleVolumeSelect}
+              placeholder="Select a volume"
+              noOptionsMessage="No volumes match your search."
+              className={globalClasses.selectionDropdown}
+              disabled={
+                isPageBusy() ||
+                !projectVolumes ||
+                projectVolumes?.volumes.size === 0
+              }
+            />
+            <Tooltip
+              content={
+                <WriteAccessTooltipContentWrapper
+                  content={"Add a New Volume"}
+                  hasWriteAccess={activeProject?.hasWriteAccess}
+                />
+              }
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                appearance="subtle"
+                icon={<AddFilled />}
+                disabled={isPageBusy() || !activeProject?.hasWriteAccess}
+                onClick={createVolume}
+              />
+            </Tooltip>
+            <Tooltip
+              content="Refresh Volume Data"
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                appearance="subtle"
+                icon={
+                  <ArrowSync24Regular
+                    className={mergeClasses(
+                      isLoadingVolumes && "spinning-icon"
+                    )}
+                  />
+                }
+                disabled={isPageBusy()}
+                onClick={refreshVolumes}
+              />
+            </Tooltip>
+          </div>
+          <div className={globalClasses.actionButtonRow}>
+            {!isVolumeSelected() || canUploadRawData() ? (
+              <Menu>
+                <MenuTrigger disableButtonEnhancement>
+                  <MenuButton
+                    disabled={
+                      !canUploadRawData() || !activeProject?.hasWriteAccess
+                    }
+                    appearance="primary"
+                    className={mergeClasses(
+                      globalClasses.actionButtonDropdown,
+                      classes.uploadDownloadButtom
+                    )}
+                  >
+                    <div className={globalClasses.actionButtonIconContainer}>
+                      <ArrowUpload20Regular />
+                    </div>
+                    <div className="buttonText">Upload Raw Data</div>
+                  </MenuButton>
+                </MenuTrigger>
+
+                <MenuPopover>
+                  <MenuList>
+                    <MenuItem
+                      disabled={isPageBusy() || !activeProject?.hasWriteAccess}
+                      onClick={() => rawDataFileRef.current?.click()}
+                    >
+                      Raw data file and descriptor
+                    </MenuItem>
+                    <MenuItem
+                      disabled={isPageBusy() || !activeProject?.hasWriteAccess}
+                      onClick={() => mrcFileRef.current?.click()}
+                    >
+                      MRC data file
+                    </MenuItem>
+                    <MenuItem
+                      disabled={isPageBusy() || !activeProject?.hasWriteAccess}
+                      onClick={() => setIsTiltSeriesDialogOpen(true)}
+                    >
+                      Tilt Series
+                    </MenuItem>
+                  </MenuList>
+                </MenuPopover>
+              </Menu>
+            ) : (
+              <Button
+                appearance="secondary"
+                className={mergeClasses(
+                  globalClasses.actionButton,
+                  classes.uploadDownloadButtom
+                )}
+                disabled={!hasRawData() || isPageBusy()}
+                onClick={() =>
+                  handleDownloadVolumeData(
+                    "RawVolumeData",
+                    selectedVolume?.rawData?.id
+                  )
+                }
+              >
+                <div className={globalClasses.actionButtonIconContainer}>
+                  <ArrowDownload20Regular />
+                </div>
+                <div className="buttonText">Download Raw Data</div>
+              </Button>
+            )}
+
+            <Tooltip
+              content="Visualize Raw Data"
+              relationship="label"
+              appearance="inverted"
+              hideDelay={0}
+            >
+              <Button
+                appearance="primary"
+                className={mergeClasses(
+                  globalClasses.actionButton,
+                  classes.visualizeButton
+                )}
+                disabled={!hasRawData() || isPageBusy()}
+                onClick={() =>
+                  handleVisualisationRequest(
+                    "RawVolumeData",
+                    selectedVolume?.rawData?.id
+                  )
+                }
+              >
+                <div className={globalClasses.actionButtonIconContainer}>
+                  <ProjectionScreen20Regular />
+                </div>
+                <div className="buttonText">Visualize</div>
+              </Button>
+            </Tooltip>
+
+            <Tooltip
+              content={
+                <WriteAccessTooltipContentWrapper
+                  content={"Remove Volume from the Project"}
+                  hasWriteAccess={activeProject?.hasWriteAccess}
+                />
+              }
+              relationship="label"
+              appearance="inverted"
+              hideDelay={0}
+            >
+              <Button
+                className={mergeClasses(
+                  globalClasses.actionButton,
+                  selectedVolume && globalClasses.actionButtonDelete
+                )}
+                disabled={
+                  !selectedVolume ||
+                  isPageBusy() ||
+                  !activeProject?.hasWriteAccess
+                }
+                onClick={openDeleteDialog}
+              >
+                <div className={globalClasses.actionButtonIconContainer}>
+                  <Delete20Regular />
+                </div>
+                <div className="buttonText">Remove</div>
+              </Button>
+            </Tooltip>
+          </div>
+
+          <input
+            type="file"
+            onChange={handleRawDataFileChange}
+            accept=".raw, .json, .zip"
+            multiple
+            ref={rawDataFileRef}
+            className={globalClasses.hiddenInput}
+          />
+          <input
+            type="file"
+            onChange={handleMrcFileChange}
+            accept=".mrc, .zip"
+            ref={mrcFileRef}
+            className={globalClasses.hiddenInput}
+          />
+
+          <ProcessTiltSeriesDialog
+            open={isTiltSeriesDialogOpen}
+            onClose={() => setIsTiltSeriesDialogOpen(false)}
+            onSubmit={tiltSeriesUpload}
+            showServerVariant={true}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <h3 className={globalClasses.subSectionTitle}>Sparse Labels</h3>
+            <Tooltip
+              content={
+                <WriteAccessTooltipContentWrapper
+                  content={"Add Sparse Label Volume"}
+                  hasWriteAccess={activeProject?.hasWriteAccess}
+                />
+              }
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                style={{
+                  marginRight: "10px",
+                }}
+                size="large"
+                appearance="subtle"
+                icon={<Add24Regular />}
+                disabled={
+                  !selectedVolume ||
+                  selectedVolume?.sparseVolumes.size >= 4 ||
+                  !activeProject?.hasWriteAccess
+                }
+                onClick={() => sparseLabelFileRef.current?.click()}
+              />
+            </Tooltip>
+          </div>
+
+          <input
+            type="file"
+            onChange={handleSparseLabelFileChange}
+            accept=".raw, .json, .zip"
+            multiple
+            ref={sparseLabelFileRef}
+            className={globalClasses.hiddenInput}
+          />
+
+          {Array.from({ length: CONFIG.maxLabels }, (v, index) => (
+            <div key={index}>
+              {selectedVolume &&
+              index < selectedVolume?.sparseVolumeArray.length ? (
+                <ItemTitleDownloadDelete
+                  title={Utils.getFileNameFromPath(
+                    selectedVolume?.sparseVolumeArray[index].rawFilePath
+                  )}
+                  onDownload={() =>
+                    handleDownloadVolumeData(
+                      "SparseLabeledVolumeData",
+                      selectedVolume?.sparseVolumeArray[index].id
+                    )
+                  }
+                  onVisualize={() =>
+                    handleVisualisationRequest(
+                      "SparseLabeledVolumeData",
+                      selectedVolume?.sparseVolumeArray[index].id
+                    )
+                  }
+                  onDelete={() =>
+                    handleVolumeDataConfirmDelete(
+                      "SparseLabeledVolumeData",
+                      selectedVolume?.sparseVolumeArray[index].id
+                    )
+                  }
+                  deleteQuestion={Utils.getFileNameFromPath(
+                    selectedVolume?.sparseVolumeArray[index].rawFilePath
+                  )}
+                  deleteTitle={"Remove Sparse Volume Data?"}
+                  preventChanges={!activeProject?.hasWriteAccess}
+                />
+              ) : (
+                <ItemTitleDownloadDelete inactive={true} />
+              )}
+            </div>
+          ))}
+
+          {/* Horizontal Line */}
+          <hr
+            style={{
+              margin: "2px 0",
+              border: "1px solid",
+              borderColor: tokens.colorNeutralBackground1Hover,
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <h3
+              className={globalClasses.subSectionTitle}
+              style={{ marginRight: "auto" }}
+            >
+              Pseudo Labels
+            </h3>
+
+            <Tooltip
+              content={
+                <div>
+                  Create Pseudo Label Volumes (Ilastik)
+                  <br />
+                  <div>
+                    {!selectedVolume ||
+                    selectedVolume?.sparseVolumeArray.length < 2 ? (
+                      <ErrorCircle16Filled className={globalClasses.failIcon} />
+                    ) : (
+                      <Checkmark16Filled
+                        className={globalClasses.successIcon}
+                      />
+                    )}
+
+                    <span
+                      style={{
+                        marginLeft: "3px",
+                        verticalAlign: "middle",
+                        color: tokens.colorNeutralForeground2,
+                      }}
+                    >
+                      Requires at least 2 Sparse Labels.
+                    </span>
+                  </div>
+                  <WriteAccessTooltipContent
+                    hasWriteAccess={activeProject?.hasWriteAccess}
+                  />
+                </div>
+              }
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                style={{}}
+                size="large"
+                appearance="subtle"
+                icon={<Stack24Regular />}
+                disabled={
+                  !selectedVolume ||
+                  selectedVolume?.sparseVolumeArray.length < 2 ||
+                  selectedVolume?.sparseVolumeArray.length +
+                    selectedVolume?.pseudoVolumeArray.length >
+                    4 ||
+                  !activeProject?.hasWriteAccess
+                }
+                onClick={queuePseudoLabelGeneration}
+              />
+            </Tooltip>
+
+            <Tooltip
+              content={
+                <WriteAccessTooltipContentWrapper
+                  content={"Add Pseudo Label Volume"}
+                  hasWriteAccess={activeProject?.hasWriteAccess}
+                />
+              }
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                style={{
+                  marginRight: "10px",
+                }}
+                size="large"
+                appearance="subtle"
+                icon={<Add24Regular />}
+                disabled={
+                  !selectedVolume ||
+                  selectedVolume?.pseudoVolumeArray.length >= 4 ||
+                  !activeProject?.hasWriteAccess
+                }
+                onClick={() => pseudoLabelFileRef.current?.click()}
+              />
+            </Tooltip>
+          </div>
+
+          <input
+            type="file"
+            onChange={handlePseudoLabelFileChange}
+            accept=".raw, .json, .zip"
+            multiple
+            ref={pseudoLabelFileRef}
+            className={globalClasses.hiddenInput}
+          />
+
+          {Array.from({ length: CONFIG.maxLabels }, (v, index) => (
+            <div key={index}>
+              {selectedVolume &&
+              index < selectedVolume?.pseudoVolumeArray.length ? (
+                <ItemTitleDownloadDelete
+                  title={Utils.getFileNameFromPath(
+                    selectedVolume?.pseudoVolumeArray[index].rawFilePath
+                  )}
+                  onDownload={() =>
+                    handleDownloadVolumeData(
+                      "PseudoLabeledVolumeData",
+                      selectedVolume?.pseudoVolumeArray[index].id
+                    )
+                  }
+                  onVisualize={() =>
+                    handleVisualisationRequest(
+                      "PseudoLabeledVolumeData",
+                      selectedVolume?.pseudoVolumeArray[index].id
+                    )
+                  }
+                  onDelete={() =>
+                    handleVolumeDataConfirmDelete(
+                      "PseudoLabeledVolumeData",
+                      selectedVolume?.pseudoVolumeArray[index].id
+                    )
+                  }
+                  deleteQuestion={Utils.getFileNameFromPath(
+                    selectedVolume?.pseudoVolumeArray[index].rawFilePath
+                  )}
+                  deleteTitle={"Remove Pseudo Volume Data?"}
+                  preventChanges={!activeProject?.hasWriteAccess}
+                />
+              ) : (
+                <ItemTitleDownloadDelete inactive={true} />
+              )}
+            </div>
+          ))}
+
+          {/* Horizontal Line */}
+          <hr
+            style={{
+              margin: "2px 0",
+              border: "1px solid",
+              borderColor: tokens.colorNeutralBackground1Hover,
+            }}
+          />
+
+          <h3 className={globalClasses.subSectionTitle}>Results</h3>
+
+          {/* Results List Dropdown */}
+          <div className={globalClasses.drowdownActionsContainer}>
+            <ComboboxSearch
+              selectionList={resultSelectionList()}
+              selectedOption={
+                selectedResult
+                  ? resultSelectionProperties(selectedResult)
+                  : undefined
+              }
+              onOptionSelect={handleResultSelect}
+              placeholder="Select a result"
+              noOptionsMessage="No results match your search."
+              className={globalClasses.selectionDropdown}
+              disabled={
+                !selectedVolume || isPageBusy() || !results || results.size < 1
+              }
+            />
+            <Tooltip
+              content="Refresh result data."
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                appearance="subtle"
+                icon={
+                  <ArrowSync24Regular
+                    className={mergeClasses(
+                      isLoadingResults && "spinning-icon"
+                    )}
+                  />
+                }
+                disabled={resultActionsDisabled()}
+                onClick={() => refreshVolumeResultsData()}
+              />
+            </Tooltip>
+          </div>
+
+          <div className={globalClasses.actionButtonRow}>
+            <Button
+              appearance="secondary"
+              className={mergeClasses(
+                globalClasses.actionButton,
+                classes.uploadDownloadButtom
+              )}
+              onClick={handleDownloadResultFiles}
+              disabled={!selectedResultId}
+            >
+              <div className={globalClasses.actionButtonIconContainer}>
+                <ArrowDownload20Regular />
+              </div>
+              <div className="buttonText">Download Files</div>
+            </Button>
+            <Tooltip
+              content="Visualize Result"
+              relationship="label"
+              appearance="inverted"
+              hideDelay={0}
+            >
+              <Button
+                appearance="primary"
+                className={mergeClasses(
+                  globalClasses.actionButton,
+                  classes.visualizeButton
+                )}
+                disabled={!selectedResultId}
+                onClick={handleResultVisualisationRequest}
+              >
+                <div className={globalClasses.actionButtonIconContainer}>
+                  <ProjectionScreen20Regular />
+                </div>
+                <div className="buttonText">Visualize</div>
+              </Button>
+            </Tooltip>
+            <Tooltip
+              content={
+                <WriteAccessTooltipContentWrapper
+                  content={"Remove Result from the Volume"}
+                  hasWriteAccess={activeProject?.hasWriteAccess}
+                />
+              }
+              relationship="label"
+              appearance="inverted"
+              hideDelay={0}
+            >
+              <Button
+                className={mergeClasses(
+                  globalClasses.actionButton,
+                  selectedVolume && globalClasses.actionButtonDelete
+                )}
+                disabled={!selectedResultId || !activeProject?.hasWriteAccess}
+                onClick={() => setDeleteResultDialogOpen(true)}
+              >
+                <div className={globalClasses.actionButtonIconContainer}>
+                  <Delete20Regular />
+                </div>
+                <div className="buttonText">Remove</div>
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteVolumeDialog
+        open={isDeleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={confirmDeleteVolume}
+      />
+
+      {/* Create Volume Dialog */}
+      <CreateVolumeDialog
+        open={isCreateDialogOpen}
+        onClose={closeCreateDialog}
+        onCreate={handleCreateVolume}
+      />
+
+      {/* Remove Result Dialog */}
+      <DeleteDialog
+        TitleText={"Remove Result?"}
+        BodyText={
+          "Do you want to remove the selected result from the current volume?"
+        }
+        open={isDeleteResultDialogOpen}
+        onClose={handleCloseCheckpointDialog}
+        onConfirm={removeResult}
+      />
+    </div>
+  ) : null;
+});
+
+export default Volume;

@@ -1,0 +1,167 @@
+import { flow, getParent, Instance, isAlive, types } from "mobx-state-tree";
+import { ModelDB, ProjectModels } from "./ModelModel";
+import { ProjectVolumes, VolumeDB } from "./VolumeModel";
+import Utils from "../../functions/Utils";
+
+interface ProjectDB {
+  id: number;
+  name: string;
+  description: string;
+  ownerId: number;
+  accessLevel: number;
+  volumes: VolumeDB[];
+  models: ModelDB[];
+}
+
+export const Project = types
+  .model({
+    id: types.identifierNumber,
+    name: types.string,
+    description: types.string,
+    ownerId: types.integer,
+    accessLevel: types.integer,
+    projectVolumes: ProjectVolumes,
+    projectModels: ProjectModels,
+  })
+  .views((self) => ({
+    get user() {
+      return getParent(self, 2);
+    },
+    get hasWriteAccess() {
+      return self.accessLevel >= 1;
+    },
+  }));
+
+export interface ProjectInstance extends Instance<typeof Project> {}
+
+export const UserProjects = types
+  .model({
+    projects: types.map(Project),
+    activeProjectId: types.maybe(types.integer),
+    state: types.enumeration("State", ["pending", "done", "error"]),
+  })
+  .views((self) => ({
+    get user() {
+      return getParent(self);
+    },
+    get activeProject() {
+      return self.activeProjectId
+        ? self.projects.get(self.activeProjectId)
+        : undefined;
+    },
+  }))
+  .actions((self) => ({
+    setActiveProject(projectId: number) {
+      if (!self.projects.has(projectId)) {
+        throw new Error(`Project with id ${projectId} not found`);
+      }
+      self.activeProjectId = projectId;
+    },
+    fetchProjects: flow(function* fetchProjects() {
+      self.state = "pending";
+      try {
+        const response = yield Utils.sendReq("projects-deep", {
+          method: "GET",
+        });
+        // Check if the model is still alive after async call
+        if (!isAlive(self)) {
+          return;
+        }
+
+        const projects = yield response.json();
+        if (!isAlive(self)) {
+          return;
+        }
+
+        self.projects.clear();
+        let foundProjectId = false;
+        projects.forEach((project: ProjectDB) => {
+          self.projects.set(project.id, {
+            ...project,
+            projectModels: { projectId: project.id },
+            projectVolumes: { projectId: project.id },
+          });
+
+          const newProject = self.projects.get(project.id);
+
+          newProject?.projectVolumes.setVolumes(project.volumes);
+          newProject?.projectModels.setModels(project.models);
+
+          if (self.activeProjectId == project.id) {
+            foundProjectId = true;
+          }
+        });
+        if (!foundProjectId) {
+          self.activeProjectId = undefined;
+        }
+        self.state = "done";
+      } catch (error) {
+        console.error("Failed to fetch projects", error);
+        self.state = "error";
+      }
+    }),
+    createProject: flow(function* createProject(
+      projectName: string,
+      projectDescription: string
+    ) {
+      self.state = "pending";
+      try {
+        const response = yield Utils.sendRequestWithToast("projects", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: projectName,
+            description: projectDescription,
+          }),
+        });
+        // Check if the model is still alive after async call
+        if (!isAlive(self)) {
+          return;
+        }
+
+        const project = yield response.json();
+        if (!isAlive(self)) {
+          return;
+        }
+
+        console.log(project);
+
+        self.projects.set(project.id, {
+          ...project,
+          accessLevel: 2,
+          projectModels: { projectId: project.id },
+          projectVolumes: { projectId: project.id },
+        });
+
+        self.activeProjectId = project.id;
+
+        self.state = "done";
+      } catch (error) {
+        console.error("Failed to fetch projects", error);
+        self.state = "error";
+      }
+    }),
+    deleteProject: flow(function* deleteProject(projectId: number) {
+      self.state = "pending";
+      try {
+        yield Utils.sendRequestWithToast(`project/${projectId}`, {
+          method: "DELETE",
+        });
+        if (!isAlive(self)) {
+          return;
+        }
+
+        self.projects.delete(projectId.toString());
+
+        self.activeProjectId = undefined;
+
+        self.state = "done";
+      } catch (error) {
+        console.error("Failed to delete project", error);
+        self.state = "error";
+      }
+    }),
+  }));
+
+export interface UserProjectsInstance extends Instance<typeof UserProjects> {}

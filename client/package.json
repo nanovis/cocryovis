@@ -1,0 +1,53 @@
+{
+  "name": "volweb",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@fluentui/react-components": "^9.40.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "file-saver": "^2.0.5",
+    "js-cookie": "^3.0.5",
+    "jszip": "^3.10.1",
+    "mobx": "^6.13.5",
+    "mobx-react-lite": "^4.0.7",
+    "mobx-state-tree": "^6.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-toastify": "^10.0.6",
+    "react-use-websocket": "4.10.1",
+    "react-window": "latest",
+    "reactflow": "^11.11.3",
+    "scheduler": "^0.23.2",
+    "serve": "^14.2.3",
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-transform-private-property-in-object": "^7.25.9",
+    "@types/file-saver": "^2.0.7",
+    "@types/js-cookie": "^3.0.6",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "start2": "set HTTPS=true && set PORT=8080 && set SSL_CRT_FILE=reactcert/cert.pem && set SSL_KEY_FILE=reactcert/key.pem && set HTTPS_CERT=reactcert/cert.pem && set HTTPS_KEY=reactcert/key.pem && react-scripts start",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
