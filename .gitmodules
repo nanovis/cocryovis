@@ -2,6 +2,3 @@
 	path = modules/nano-oetzi
 	url = ../nano-oetzi
 	branch = web-server
-[submodule "client"]
-	path = client
-	url = ../VolWeb-UI
