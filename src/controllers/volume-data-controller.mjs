@@ -7,10 +7,11 @@ import {
 } from "../models/volume-data-factory.mjs";
 import path from "path";
 import { ApiError } from "../tools/error-handler.mjs";
-import fileSystem from "fs";
+import fileSystem, { fstat } from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
-import { unpackFiles } from "../tools/file-handler.mjs";
+import { PendingLocalFile, unpackFiles } from "../tools/file-handler.mjs";
+import fsPromises from "node:fs/promises";
 
 export default class VolumeDataController {
     /**
@@ -148,13 +149,49 @@ export default class VolumeDataController {
             throw new ApiError(400, "Too many files uploaded.");
         }
 
+        const unpackedFiles = await unpackFiles([req.files.files], [".mrc"]);
+        if (unpackedFiles.length == 0) {
+            throw new ApiError(400, "No valid MRC file found.");
+        }
+
         const volumeData = await RawVolumeData.createFromMrcFile(
             req.session.user.id,
             Number(req.params.idVolume),
-            req.files.files
+            unpackedFiles[0]
         );
 
         res.status(201).json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async createFromMrcUrl(type, req, res) {
+        if (!req.body.url || !Utils.isValidHttpUrl(req.body.url)) {
+            throw new ApiError(400, "Invalid URL.");
+        }
+
+        const filePath = await Utils.downloadAndSaveFile(req.body.url);
+
+        const file = new PendingLocalFile(filePath);
+
+        try {
+            const volumeData = await RawVolumeData.createFromMrcFile(
+                req.session.user.id,
+                Number(req.params.idVolume),
+                file
+            );
+            res.status(201).json(volumeData);
+        } catch (error) {
+            await fsPromises.rm(filePath, {
+                recursive: true,
+                force: true,
+            });
+
+            throw error;
+        }
     }
 
     /**
@@ -166,12 +203,15 @@ export default class VolumeDataController {
         const data = await VolumeDataFactory.getClass(
             type
         ).prepareDataForDownload(Number(req.params.idVolumeData));
+
         res.type("application/zip");
         res.setHeader(
             "Content-Disposition",
-            "attachment; filename=" + data.name
+            `attachment; filename="${data.name}"`
         );
-        res.send(data.zipBuffer);
+        data.archive.pipe(res);
+
+        data.archive.finalize();
     }
 
     /**
@@ -188,9 +228,15 @@ export default class VolumeDataController {
             false,
             false
         );
-        res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
-        res.send(data.zipBuffer);
+
+        res.type("application/zip");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${data.name}"`
+        );
+        data.archive.pipe(res);
+
+        data.archive.finalize();
     }
 
     /**
@@ -207,9 +253,15 @@ export default class VolumeDataController {
             true,
             false
         );
-        res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
-        res.send(data.zipBuffer);
+
+        res.type("application/zip");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${data.name}"`
+        );
+        data.archive.pipe(res);
+
+        data.archive.finalize();
     }
 
     /**
@@ -230,9 +282,15 @@ export default class VolumeDataController {
             false,
             true
         );
-        res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
-        res.send(data.zipBuffer);
+
+        res.type("application/zip");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${data.name}"`
+        );
+        data.archive.pipe(res);
+
+        data.archive.finalize();
     }
 
     /**

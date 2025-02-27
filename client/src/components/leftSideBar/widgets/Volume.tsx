@@ -49,6 +49,7 @@ import {
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
 import { ResultInstance } from "../../../stores/userState/ResultModel";
+import UrlImportDialog from "./elements/UrlImportDialog";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -90,6 +91,7 @@ const Volume = observer(({ open, close }: Props) => {
   const [isLoadingVolumes, setLoadingVolumes] = useState(false);
   const [isUploadingData, setIsUploadingData] = useState(false);
   const [isTiltSeriesDialogOpen, setIsTiltSeriesDialogOpen] = useState(false);
+  const [isUrlUploadDialogOpen, setIsUrlUploadDialogOpen] = useState(false);
 
   const rawDataFileRef = useRef<HTMLInputElement | null>(null);
   const mrcFileRef = useRef<HTMLInputElement | null>(null);
@@ -703,6 +705,12 @@ const Volume = observer(({ open, close }: Props) => {
                     </MenuItem>
                     <MenuItem
                       disabled={isPageBusy() || !activeProject?.hasWriteAccess}
+                      onClick={() => setIsUrlUploadDialogOpen(true)}
+                    >
+                      MRC from URL
+                    </MenuItem>
+                    <MenuItem
+                      disabled={isPageBusy() || !activeProject?.hasWriteAccess}
                       onClick={() => setIsTiltSeriesDialogOpen(true)}
                     >
                       Tilt Series
@@ -811,6 +819,12 @@ const Volume = observer(({ open, close }: Props) => {
             onClose={() => setIsTiltSeriesDialogOpen(false)}
             onSubmit={tiltSeriesUpload}
             showServerVariant={true}
+          />
+
+          <UrlImportDialog
+            open={isUrlUploadDialogOpen}
+            volume={selectedVolume}
+            onClose={() => setIsUrlUploadDialogOpen(false)}
           />
 
           <div

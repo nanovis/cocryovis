@@ -38,26 +38,33 @@ const startServer = async () => {
 
     const app = express();
 
-    app.use(
-        cors({
-            credentials: true,
-            origin: "http://localhost:3000",
-            exposedHeaders: ["Content-Disposition"],
-        })
-    );
-    app.use(function (req, res, next) {
-        res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-        res.header("Access-Control-Allow-Credentials", "true");
-        res.header(
-            "Access-Control-Allow-Methods",
-            "GET,PUT,POST,DELETE,OPTIONS"
-        );
-        res.header(
-            "Access-Control-Allow-Headers",
-            "Origin,X-Requested-With,Content-Type,Accept,content-type,application/json"
-        );
-        next();
-    });
+    const allowedOrigins = [
+        "http://localhost:3000",
+        "https://files.cryoetdataportal.cziscience.com",
+    ];
+
+    const corsOptions = {
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        credentials: true,
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+            "Content-Disposition",
+            "Origin",
+            "X-Requested-With",
+            "application/json",
+        ],
+        exposedHeaders: ["Content-Disposition"],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+    };
+
+    app.use(cors(corsOptions));
 
     // config
     app.set("view engine", "ejs");

@@ -147,6 +147,33 @@ export const Volume = types
 
       self.setRawVolume(rawData);
     }),
+    uploadMrcUrl: flow(function* uploadMrcVolume(url: string) {
+      if (!Utils.isValidHttpUrl(url)) {
+        toast.error(`Invalid URL.`);
+        throw new Error("Invalid URL.");
+      }
+
+      const response = yield Utils.sendRequestWithToast(
+        `volume/${self.id}/volumeData/RawVolumeData/from-mrc-url`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: url,
+          }),
+        }
+      );
+      if (!isAlive(self)) {
+        return;
+      }
+      const rawData: RawVolumeSnapshotIn = yield response.json();
+      if (!isAlive(self)) {
+        return;
+      }
+
+      self.setRawVolume(rawData);
+    }),
     uploadTiltSeries: flow(function* uploadMrcVolume(
       parsedSettings: any,
       fileData: ArrayBuffer

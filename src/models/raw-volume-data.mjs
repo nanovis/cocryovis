@@ -1,17 +1,16 @@
 // @ts-check
 
-import AdmZip from "adm-zip";
 import path from "path";
 import Utils from "../tools/utils.mjs";
 import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "node:fs/promises";
-import fileUpload from "express-fileupload";
-import { PendingUpload, unpackFiles } from "../tools/file-handler.mjs";
+import { PendingUpload } from "../tools/file-handler.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import appConfig from "../tools/config.mjs";
+import archiver from "archiver";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -69,7 +68,7 @@ export default class RawVolumeData extends VolumeData {
     /**
      * @param {Number} creatorId
      * @param {Number} volumeId
-     * @param {fileUpload.UploadedFile} file
+     * @param {PendingUpload} file
      * @return {Promise<Object>}
      */
     static async createFromMrcFile(creatorId, volumeId, file) {
@@ -77,11 +76,6 @@ export default class RawVolumeData extends VolumeData {
             volumeId,
             [this.modelName],
             async () => {
-                const unpackedFiles = await unpackFiles([file], [".mrc"]);
-                if (unpackedFiles.length == 0) {
-                    throw new ApiError(400, "No valid MRC file found.");
-                }
-
                 await fsPromises.mkdir(RawVolumeData.mrcTempDirectory, {
                     recursive: true,
                 });
@@ -92,9 +86,7 @@ export default class RawVolumeData extends VolumeData {
                 try {
                     /* Save to temporary directory and perform operations there 
                     so we don't clog up the database with long transaction. */
-                    const mrcFilePathTemp = await unpackedFiles[0].saveAs(
-                        tempDirectory
-                    );
+                    const mrcFilePathTemp = await file.saveAs(tempDirectory);
                     const { rawFileName, settings } = await Utils.mrcToRaw(
                         mrcFilePathTemp,
                         tempDirectory
@@ -259,29 +251,35 @@ export default class RawVolumeData extends VolumeData {
         id,
         downloadRawFile = true,
         downloadSettingsFile = true,
-        downloadMrcFile = true
+        downloadMrcFile = false
     ) {
         const volumeData = await this.getById(id);
 
         let hasFiles = false;
 
-        const zip = new AdmZip();
+        const archive = archiver("zip", {
+            zlib: { level: 9 },
+        });
+
         if (downloadRawFile && volumeData.rawFilePath != null) {
-            zip.addLocalFile(volumeData.rawFilePath);
+            archive.file(volumeData.rawFilePath, {
+                name: path.basename(volumeData.rawFilePath),
+            });
             hasFiles = true;
         }
         if (downloadSettingsFile && volumeData.settings != null) {
             const settings = JSON.parse(volumeData.settings);
             delete settings.transferFunction;
             const settingsJSON = JSON.stringify(settings, null, 4);
-            zip.addFile(
-                `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
-                Buffer.from(settingsJSON)
-            );
+            archive.append(settingsJSON, {
+                name: `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
+            });
             hasFiles = true;
         }
         if (downloadMrcFile && volumeData.mrcFilePath != null) {
-            zip.addLocalFile(volumeData.mrcFilePath);
+            archive.file(volumeData.mrcFilePath, {
+                name: path.basename(volumeData.mrcFilePath),
+            });
             hasFiles = true;
         }
 
@@ -289,13 +287,13 @@ export default class RawVolumeData extends VolumeData {
             throw new ApiError(404, "No files to download.");
         }
 
-        let outputFileName = `${this.modelName}_${Utils.stripExtension(
+        const outputFileName = `${this.modelName}_${Utils.stripExtension(
             volumeData.path
         )}`;
 
         return {
             name: `${outputFileName}.zip`,
-            zipBuffer: zip.toBuffer(),
+            archive: archive,
         };
     }
 

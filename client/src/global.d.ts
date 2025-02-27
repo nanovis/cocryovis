@@ -33,7 +33,7 @@ interface Module {
   loadForSart: (fileName: string, volume_depth: number) => Promise<string>;
   FS: {
     writeFile: (filename, data) => Promise<void>;
-    readFile: (filename, options?) => Promise<Uint8Array | string>;
+    readFile: (filename, options?) => Promise<Uint8Array | string | ArrayBuffer>;
   };
 
   enable_early_ray_termination: (state: boolean) => void;

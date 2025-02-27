@@ -122,6 +122,8 @@ export default class Utils {
     let filename = filenameOverwrite;
     if (filename === null) {
       const disposition = response.headers.get("Content-Disposition");
+      console.log(response)
+      console.log(response.headers);
       if (disposition && disposition.indexOf("attachment") !== -1) {
         const matches = disposition.match(/filename="?([^";]+)"?/);
         if (matches && matches[1]) {
@@ -229,8 +231,7 @@ export default class Utils {
         Utils.InplaceMapMerge(fullFileMap, fileMap, (key) => {
           throw new Error(`Duplicate file: ${key}`);
         });
-      }
-      else {
+      } else {
         fullFileMap.set(file.name, file);
       }
     }
@@ -399,4 +400,16 @@ export default class Utils {
 
     return output;
   };
+
+  static isValidHttpUrl(string: string) {
+    let url;
+
+    try {
+      url = new URL(string);
+    } catch (_) {
+      return false;
+    }
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
 }

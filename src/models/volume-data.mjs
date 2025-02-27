@@ -8,9 +8,9 @@ import appConfig from "../tools/config.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import Utils from "../tools/utils.mjs";
 import { PendingUpload } from "../tools/file-handler.mjs";
-import AdmZip from "adm-zip";
 import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
+import archiver from "archiver";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -371,19 +371,23 @@ export default class VolumeData extends DatabaseModel {
 
         let hasFiles = false;
 
-        const zip = new AdmZip();
+        const archive = archiver("zip", {
+            zlib: { level: 9 },
+        });
+
         if (downloadRawFile && volumeData.rawFilePath != null) {
-            zip.addLocalFile(volumeData.rawFilePath);
+            archive.file(volumeData.rawFilePath, {
+                name: path.basename(volumeData.rawFilePath),
+            });
             hasFiles = true;
         }
         if (downloadSettingsFile && volumeData.settings != null) {
             const settings = JSON.parse(volumeData.settings);
             delete settings.transferFunction;
             const settingsJSON = JSON.stringify(settings, null, 4);
-            zip.addFile(
-                `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
-                Buffer.from(settingsJSON)
-            );
+            archive.append(settingsJSON, {
+                name: `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
+            });
             hasFiles = true;
         }
 
@@ -396,7 +400,7 @@ export default class VolumeData extends DatabaseModel {
         )}`;
         return {
             name: `${outputFileName}.zip`,
-            zipBuffer: zip.toBuffer(),
+            archive: archive,
         };
     }
 }

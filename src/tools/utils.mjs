@@ -2,7 +2,7 @@
 
 import fileSystem from "fs";
 import path from "path";
-import AdmZip from "adm-zip";
+import https from "https";
 import { exec, spawn } from "child_process";
 import appConfig from "./config.mjs";
 import { promisify } from "node:util";
@@ -317,5 +317,84 @@ export default class Utils {
                 return typeof objValue === templateValue;
             }
         });
+    }
+
+    /**
+     * @param {string} string
+     * @returns {Boolean}
+     */
+    static isValidHttpUrl(string) {
+        let url;
+
+        try {
+            url = new URL(string);
+        } catch (_) {
+            return false;
+        }
+
+        return url.protocol === "http:" || url.protocol === "https:";
+    }
+
+    /**
+     * @param {string} url
+     * @param {string} filePath
+     * @returns {Promise<void>}
+     */
+    static async downloadFile(url, filePath) {
+        try {
+            const directory = path.dirname(filePath);
+            if (!fs.existsSync(directory)) {
+                fs.mkdirSync(directory, { recursive: true });
+            }
+            const fileStream = fs.createWriteStream(filePath);
+
+            await new Promise((resolve, reject) => {
+                https
+                    .get(url, (response) => {
+                        if (response.statusCode !== 200) {
+                            reject(
+                                new Error(
+                                    `Failed to fetch ${url}: ${response.statusCode}`
+                                )
+                            );
+                            return;
+                        }
+
+                        response.pipe(fileStream);
+                        fileStream.on("finish", resolve);
+                        fileStream.on("error", reject);
+                    })
+                    .on("error", reject);
+            });
+
+            console.log("Download complete");
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * @param {string} url
+     * @returns {Promise<string>}
+     */
+    static async downloadAndSaveFile(url) {
+        try {
+            const tempDir = path.join(appConfig.tempPath, "downloads");
+
+            const originalFileName = path.basename(new URL(url).pathname);
+            const ext = path.extname(originalFileName);
+            const baseName = path.basename(originalFileName, ext);
+            const uniqueName = `${baseName}_${Date.now()}${ext}`;
+            const filePath = path.join(tempDir, uniqueName);
+            if (fs.existsSync(filePath)) {
+                throw new Error("File already exists.");
+            }
+
+            await Utils.downloadFile(url, filePath);
+
+            return filePath;
+        } catch (error) {
+            throw error;
+        }
     }
 }
