@@ -6,7 +6,7 @@ import {
 } from "@fluentui/react-components";
 
 import { makeStyles, Tooltip } from "@fluentui/react-components";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TooltipWrapper from "./TooltipWrapper";
 
 const useStyles = makeStyles({});
@@ -61,6 +61,10 @@ const ComboboxSearch = <
   // Prevents on close effect from being executed after selecting an option
   const blockClosed = useRef(false);
 
+  useEffect(() => {
+    setSearchQuery(selectedOption ? optionToText(selectedOption) : "");
+  }, [selectedOption]);
+
   const selectionOptions = useComboboxFilter(searchQuery, selectionList, {
     noOptionsMessage: noOptionsMessage,
     optionToText: optionToText,
@@ -75,7 +79,6 @@ const ComboboxSearch = <
       onOptionSelect(null);
       return;
     }
-    setSearchQuery(data.optionText ?? "");
     onOptionSelect(data.optionValue ?? null);
     blockClosed.current = true;
   };
