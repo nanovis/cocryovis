@@ -8,11 +8,13 @@ import WidgetToggleButton from "../shared/WidgetToggleButton";
 import {
   ArrowUpload24Regular,
   BorderNone24Regular,
+  InfoRegular,
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
 import { useRef } from "react";
 import Utils from "../../functions/Utils";
 import { convertMRCToRaw } from "../../functions/MrcParser";
+import About from "./widgets/About";
 
 const widgets: Array<WidgetDefinition> = [
   {
@@ -26,6 +28,12 @@ const widgets: Array<WidgetDefinition> = [
     labelPositioning: "before",
     LabelIcon: SlideSettings24Regular,
     widget: RenderSettings,
+  },
+  {
+    title: "About",
+    labelPositioning: "before",
+    LabelIcon: InfoRegular,
+    widget: About,
   },
 ];
 
