@@ -17,6 +17,7 @@ import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
 import Utils from "../../functions/Utils";
 import { files } from "jszip";
+import { convertMRCToRaw } from "../../functions/MrcParser";
 
 const useStyles = makeStyles({
   element: {
@@ -57,53 +58,76 @@ const IconBar = observer(({ openIcons, toggleIcons }: Props) => {
     toggleIcons(id);
   };
 
-  const visualizeFileInput = async (event: FileChangeEvent) => {
-    if (!event.target.files || event.target.files.length === 0) {
+const visualizeFileInput = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputElement = event.target as HTMLInputElement;
+    if (!inputElement.files || inputElement.files.length === 0) {
       return;
     }
-
-    let filesArray = Array.from(event.target.files);
-    const rawFile = filesArray.find((file) => file.name.endsWith(".raw"));
-    const hasJsonFile = filesArray.some((file) => file.name.endsWith(".json"));
-    
-    // Standard JSON metadata file with the raw file name
-    if (rawFile && !hasJsonFile) {
-        console.log(hasJsonFile, "------------------");
-        const defaultJsonContent = {
-          file: rawFile.name,
-          size: { x: 512, y: 512, z: 512 },
-          ratio: { x: 1.0, y: 1.0, z: 1.0 },
-          bytesPerVoxel: 1,
-          usedBits: 8,
-          skipBytes: 0,
-          isLittleEndian: true,
-          isSigned: false,
-          addValue: 0,
-        };
   
-        const defaultJson = new File(
-          [JSON.stringify(defaultJsonContent, null, 2)],
-          `${rawFile.name.replace(".raw", ".json")}`,
-          { type: "application/json" }
+    // Convert FileList to array.
+    let filesArray = Array.from(inputElement.files);
+  
+    const mrcFile = filesArray.find((file) =>
+      file.name.toLowerCase().endsWith(".mrc")
+    );
+  
+    if (mrcFile) {
+      try {
+        const { rawFile, jsonFile } = await convertMRCToRaw(mrcFile);
+        // Remove the original .mrc file from the list
+        filesArray = filesArray.filter(
+          (file) => !file.name.toLowerCase().endsWith(".mrc")
         );
-  
-        filesArray.push(defaultJson);
+        // Add the generated .raw and .json files
+        filesArray.push(rawFile, jsonFile);
+      } catch (error) {
+        console.error("Error converting MRC file:", error);
+        return;
       }
-    
-
-    // Since unpack needs a FileList
+    }
+    //.raw or .zip files, if no JSON metadata file, generate a default one
+    const rawFile = filesArray.find((file) =>
+      file.name.toLowerCase().endsWith(".raw")
+    );
+    const hasJsonFile = filesArray.some((file) =>
+      file.name.toLowerCase().endsWith(".json")
+    );
+  
+    if (rawFile && !hasJsonFile) {
+      const defaultJsonContent = {
+        file: rawFile.name,
+        size: { x: 512, y: 512, z: 512 },
+        ratio: { x: 1.0, y: 1.0, z: 1.0 },
+        bytesPerVoxel: 1,
+        usedBits: 8,
+        skipBytes: 0,
+        isLittleEndian: true,
+        isSigned: false,
+        addValue: 0,
+      };
+  
+      const defaultJson = new File(
+        [JSON.stringify(defaultJsonContent, null, 2)],
+        rawFile.name.replace(/\.raw$/i, ".json"),
+        { type: "application/json" }
+      );
+  
+      filesArray.push(defaultJson);
+    }
+  
+    //downstream code requires a FileList, we use DataTransfer to create a new FileList
     const dataTransfer = new DataTransfer();
     filesArray.forEach((file) => dataTransfer.items.add(file));
     const updatedFileList = dataTransfer.files;
-
+  
     const fileMap = await Utils.unpackAndcreateFileMap(updatedFileList);
-
     await uiState.visualizeVolume(fileMap, undefined);
-
-    if (visFilesRef.current) {
-      visFilesRef.current.value = "";
+  
+    const visFilesRef = document.getElementById("fileInput") as HTMLInputElement;
+    if (visFilesRef) {
+      visFilesRef.value = "";
     }
-};
+  };
 
   return (
     <div
@@ -183,7 +207,7 @@ const IconBar = observer(({ openIcons, toggleIcons }: Props) => {
       <input
         type="file"
         onChange={visualizeFileInput}
-        accept=".raw, .json, .zip"
+        accept=".raw, .json, .zip, .mrc"
         multiple
         ref={visFilesRef}
         className={globalClasses.hiddenInput}
