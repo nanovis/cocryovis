@@ -1,12 +1,10 @@
 // @ts-check
 
-import { exec } from "child_process";
 import fileSystem from "fs";
 import path from "path";
 import fsPromises from "node:fs/promises";
 import { H5ToLabels, labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 import Utils from "./utils.mjs";
-import { promisify } from "util";
 import TaskQueue from "./task-queue.mjs";
 import Volume from "../models/volume.mjs";
 import appConfig from "./config.mjs";
@@ -19,7 +17,6 @@ import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
-const execPromise = promisify(exec);
 
 /**
  * @typedef { import("@prisma/client").Volume } VolumeDB
@@ -44,12 +41,6 @@ export default class IlastikHandler {
 
     isInferenceRunning() {
         return this.#taskQueue.hasPendingTask;
-    }
-
-    async getVersion() {
-        const command = `${this.config.ilastik.python} -c \"import ilastik; print ilastik.__version__\"`;
-        const { stdout, stderr } = await execPromise(command);
-        return stdout;
     }
 
     /**
@@ -136,26 +127,24 @@ export default class IlastikHandler {
             `${Utils.stripExtension(rawDataPath)}_pseudo_labels.h5`
         );
 
-        let params = [
-            "--headless",
-            `--project=\"${modelFullPath}\"`,
-            '--output_format="hdf5"',
-            '--export_source="Probabilities"',
-            "--export_dtype=uint8",
-            '--pipeline_result_drange="(0.0,1.0)"',
-            '--export_drange="(0,255)"',
-            `--output_internal_path=\"${IlastikHandler.pseudoLabelsDataset}\"`,
-            `--output_filename_format=\"${resultsFilePath}\"`,
-            '"' + rawDataFullPath + '"',
-        ];
-        const command =
-            this.config.ilastik.path +
-            this.config.ilastik.inference +
-            " " +
-            params.join(" ");
-
-        const { stdout, stderr } = await execPromise(command);
-        await logFile.writeLog(`stdout: \n${stdout}\nstderr: \n${stderr}`);
+        await Utils.runScript(
+            this.config.ilastik.path + this.config.ilastik.inference,
+            [
+                "--headless",
+                `--project=${modelFullPath}`,
+                "--output_format=hdf5",
+                "--export_source=Probabilities",
+                "--export_dtype=uint8",
+                "--pipeline_result_drange=(0.0,1.0)",
+                "--export_drange=(0,255)",
+                `--output_internal_path=${IlastikHandler.pseudoLabelsDataset}`,
+                `--output_filename_format=${resultsFilePath}`,
+                rawDataFullPath,
+            ],
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
 
         return resultsFilePath;
     }
@@ -183,20 +172,23 @@ export default class IlastikHandler {
             path.resolve(rawDataPath) + IlastikHandler.rawDataset;
         const sparseLabelFullPath =
             path.resolve(sparseLabelPath) + IlastikHandler.labelsDataset;
-        let params = [
-            path.join(
-                this.config.ilastik.path,
-                this.config.ilastik.scripts_path,
-                this.config.ilastik.create_project_command
-            ),
-            modelOutputFullPath,
-            '"' + rawDataFullPath + '"',
-            '"' + sparseLabelFullPath + '"',
-        ];
-        const command = this.config.ilastik.python + " " + params.join(" ");
 
-        const { stdout, stderr } = await execPromise(command);
-        await logFile.writeLog(`stdout: \n${stdout}\nstderr: \n${stderr}`);
+        await Utils.runScript(
+            this.config.ilastik.python,
+            [
+                path.join(
+                    this.config.ilastik.path,
+                    this.config.ilastik.scripts_path,
+                    this.config.ilastik.create_project_command
+                ),
+                modelOutputFullPath,
+                rawDataFullPath,
+                sparseLabelFullPath,
+            ],
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
 
         return modelOutputFullPath;
     }
@@ -336,7 +328,7 @@ export default class IlastikHandler {
         dimensions,
         rawOutputPath,
         labelsOutputPath,
-        logFile=null
+        logFile = null
     ) {
         if (fileSystem.existsSync(rawOutputPath)) {
             await fsPromises.rm(rawOutputPath, {

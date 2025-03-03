@@ -46,7 +46,11 @@ export default class LogFile {
      * @param {String} data
      */
     async writeLog(data) {
-        return await fileSystem.promises.appendFile(this.#filePath, data);
+        try {
+            return await fileSystem.promises.appendFile(this.#filePath, data);
+        } catch (error) {
+            console.error("Error writing log file: " + error);
+        }
     }
 
     /**

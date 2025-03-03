@@ -397,4 +397,45 @@ export default class Utils {
             throw error;
         }
     }
+
+    /**
+     * Runs a script with arguments and optional output callbacks.
+     * @param {string} command - The command to run (e.g., "python").
+     * @param {string[]} args - Arguments to pass (e.g., ["script.py", "arg1", "arg2"]).
+     ** @param {string} cwd - Optional working directory. Defaults to current directory.
+     * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
+     * @param {(value: string) => void?} stderrCallback - Callback for stderr.
+     * @returns {Promise<void>}
+     */
+    static async runScript(
+        command,
+        args = [],
+        cwd = null,
+        stdoutCallback = null,
+        stderrCallback = null
+    ) {
+        return new Promise((resolve, reject) => {
+            const pythonProcess = spawn(command, args, cwd ? { cwd } : {});
+
+            if (stdoutCallback) {
+                pythonProcess.stdout.on("data", (data) => {
+                    stdoutCallback(data.toString());
+                });
+            }
+
+            if (stderrCallback) {
+                pythonProcess.stderr.on("data", (data) => {
+                    stderrCallback(data.toString());
+                });
+            }
+
+            pythonProcess.on("close", (code) => {
+                if (code === 0) {
+                    resolve();
+                } else {
+                    reject(new Error(`Subprocess exited with code ${code}`));
+                }
+            });
+        });
+    }
 }

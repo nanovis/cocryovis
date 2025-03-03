@@ -2,9 +2,6 @@
 
 import path from "path";
 import fileSystem from "fs";
-import { promisify } from "node:util";
-import { exec } from "child_process";
-const execPromise = promisify(exec);
 import TaskQueue from "./task-queue.mjs";
 import Utils from "./utils.mjs";
 import fsPromises from "node:fs/promises";
@@ -176,24 +173,28 @@ export default class GPUTaskHandler {
                 "./" + this.config.nanoOetzi.inference.command,
                 inferenceDataAbsolutePath,
                 outputAbsolutePath,
-                "-m " + checkpointAbsolutePath,
+                "-m",
+                checkpointAbsolutePath,
             ];
             if (this.config.nanoOetzi.inference.cleanTemporaryFiles) {
-                params.push("-c True");
+                params.push("-c", "True");
             }
-            const command =
-                this.config.nanoOetzi.python + " " + params.join(" ");
 
-            const { stdout, stderr } = await execPromise(command, {
-                cwd: path.resolve(
+            await Utils.runScript(
+                this.config.nanoOetzi.python,
+                params,
+                path.resolve(
                     path.join(
                         this.config.nanoOetzi.path,
                         this.config.nanoOetzi.scripts
                     )
                 ),
-            });
+                (value) => logFile.writeLog(value),
+                (value) => logFile.writeLog(value)
+            );
+
             await logFile.writeLog(
-                `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
+                `\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
             );
 
             const outputFile = await fsPromises.readFile(
@@ -233,7 +234,7 @@ export default class GPUTaskHandler {
 
             return result;
         } catch (error) {
-            await logFile.writeLog(`ERROR: \n${error}`);
+            await logFile.writeLog(`--------------\n${error}`);
             console.error(`NanoOetzi inference error: ${error}`);
             try {
                 await fsPromises.rm(outputPath, {
@@ -448,34 +449,50 @@ export default class GPUTaskHandler {
             const configAbsolutePath = path.resolve(configPath);
             const outputAbsolutePath = path.resolve(workFolder);
 
-            let command = `${this.config.nanoOetzi.python} \"${path.join(
-                "./python-scripts",
-                "raws-to-train-sets.py"
-            )}\" -i \"${configAbsolutePath}\" -o \"${outputAbsolutePath}\"`;
-
             await logFile.writeLog(
                 "Converting raw data into pytorch tensors...\n"
             );
 
-            let execResult = await execPromise(command);
-
-            await logFile.writeLog(
-                `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nLauching training script...\n`
+            await Utils.runScript(
+                this.config.nanoOetzi.python,
+                [
+                    path.join("./python-scripts", "raws-to-train-sets.py"),
+                    "-i",
+                    configAbsolutePath,
+                    "-o",
+                    outputAbsolutePath,
+                ],
+                null,
+                (value) => logFile.writeLog(value),
+                (value) => logFile.writeLog(value)
             );
 
-            command = `${this.config.nanoOetzi.python} \"${this.config.nanoOetzi.training.command}\" \"${outputAbsolutePath}\" --min_epochs ${this.config.nanoOetzi.training.min_epochs} --max_epochs ${this.config.nanoOetzi.training.max_epochs}`;
+            await logFile.writeLog(
+                `\n--------------\nSuccess.\n\nLauching training script...\n`
+            );
 
-            execResult = await execPromise(command, {
-                cwd: path.resolve(
+            await Utils.runScript(
+                this.config.nanoOetzi.python,
+                [
+                    this.config.nanoOetzi.training.command,
+                    outputAbsolutePath,
+                    "--min_epochs",
+                    this.config.nanoOetzi.training.min_epochs,
+                    "--max_epochs",
+                    this.config.nanoOetzi.training.max_epochs,
+                ],
+                path.resolve(
                     path.join(
                         this.config.nanoOetzi.path,
                         this.config.nanoOetzi.scripts
                     )
                 ),
-            });
+                (value) => logFile.writeLog(value),
+                (value) => logFile.writeLog(value)
+            );
 
             await logFile.writeLog(
-                `Success.\nstdout: \n${execResult.stdout}\nstderr: \n${execResult.stderr}\n\nSearching for training results file...\n`
+                `\n--------------\nSuccess.\n\nSearching for training results file...\n`
             );
 
             const trainingResultsPath = path.join(
@@ -852,9 +869,9 @@ export default class GPUTaskHandler {
 
             const params = [
                 "filename",
-                `\"${inputFileAbsolutePath}\"`,
+                inputFileAbsolutePath,
                 "result_filename",
-                `\"${outputAbsolutePath}\"`,
+                outputAbsolutePath,
             ];
 
             if (options) {
@@ -864,18 +881,30 @@ export default class GPUTaskHandler {
                 }
             }
 
-            const command =
-                "./" +
-                this.config.Proximal_CryoET.executable +
-                " " +
-                params.join(" ");
+            // const command =
+            //     "./" +
+            //     this.config.Proximal_CryoET.executable +
+            //     " " +
+            //     params.join(" ");
 
-            const { stdout, stderr } = await execPromise(command, {
-                cwd: path.resolve(this.config.Proximal_CryoET.path),
-            });
+            // const { stdout, stderr } = await execPromise(command, {
+            //     cwd: path.resolve(this.config.Proximal_CryoET.path),
+            // });
+
+            // await logFile.writeLog(
+            //     `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nTilt series reconstruction finished\n\nConverting output to raw...\n`
+            // );
+
+            await Utils.runScript(
+                "./" + this.config.Proximal_CryoET.executable,
+                params,
+                path.resolve(this.config.Proximal_CryoET.path),
+                (value) => logFile.writeLog(value),
+                (value) => logFile.writeLog(value)
+            );
 
             await logFile.writeLog(
-                `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nTilt series reconstruction finished\n\nConverting output to raw...\n`
+                `\n--------------\nTilt series reconstruction finished\n\nConverting output to raw...\n`
             );
 
             const { rawFileName, settings } = await Utils.analyzeToRaw(
