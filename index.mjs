@@ -44,13 +44,7 @@ const startServer = async () => {
     ];
 
     const corsOptions = {
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
+        origin: allowedOrigins,
         credentials: true,
         allowedHeaders: [
             "Content-Type",
@@ -58,7 +52,6 @@ const startServer = async () => {
             "Content-Disposition",
             "Origin",
             "X-Requested-With",
-            "application/json",
         ],
         exposedHeaders: ["Content-Disposition"],
         methods: ["GET", "POST", "PUT", "DELETE"],
