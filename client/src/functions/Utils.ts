@@ -122,8 +122,6 @@ export default class Utils {
     let filename = filenameOverwrite;
     if (filename === null) {
       const disposition = response.headers.get("Content-Disposition");
-      console.log(response)
-      console.log(response.headers);
       if (disposition && disposition.indexOf("attachment") !== -1) {
         const matches = disposition.match(/filename="?([^";]+)"?/);
         if (matches && matches[1]) {
