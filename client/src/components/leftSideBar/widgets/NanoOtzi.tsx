@@ -254,16 +254,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       setInferenceInProgress(false);
     } catch (error) {
-      if (toastId !== null) {
-        const errMsg = Utils.getErrorMessage(error);
-        toast.update(toastId, {
-          render: errMsg,
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
-      }
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Local Inference Error:", error);
     }
   };
