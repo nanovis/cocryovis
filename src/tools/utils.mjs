@@ -433,7 +433,12 @@ export default class Utils {
                 if (code === 0) {
                     resolve();
                 } else {
-                    reject(new Error(`Subprocess exited with code ${code}`));
+                    reject(
+                        new Error(
+                            `Subprocess exited with code ${code}: 
+                            ${command} ${args.join(" ")}`
+                        )
+                    );
                 }
             });
         });

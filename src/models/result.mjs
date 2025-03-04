@@ -179,23 +179,37 @@ export default class Result extends DatabaseModel {
                     let rawVolumeChannel = null;
 
                     for (const fileDescriptor of config) {
+                        const rawFilePath = path.join(
+                            resultPath,
+                            fileDescriptor.rawFileName
+                        );
+                        const settingsFilePath = path.join(
+                            resultPath,
+                            fileDescriptor.settingsFileName
+                        );
                         if (
-                            !fileSystem.existsSync(
-                                path.join(
-                                    resultPath,
-                                    fileDescriptor.rawFileName
-                                )
-                            ) ||
-                            !fileSystem.existsSync(
-                                path.join(
-                                    resultPath,
-                                    fileDescriptor.settingsFileName
-                                )
-                            )
+                            !fileSystem.existsSync(rawFilePath) ||
+                            !fileSystem.existsSync(settingsFilePath)
                         ) {
                             throw new ApiError(
                                 500,
                                 "Failed result creation: One of the volume files is missing."
+                            );
+                        }
+                        const settingFile = await fsPromises.readFile(
+                            settingsFilePath
+                        );
+                        const settings = JSON.parse(
+                            settingFile.toString("utf8")
+                        );
+                        if (!settings.transferFunction) {
+                            settings.transferFunction = Result.#getTFName(
+                                fileDescriptor.name
+                            );
+                            await fsPromises.writeFile(
+                                settingsFilePath,
+                                JSON.stringify(settings, null, 2),
+                                "utf8"
                             );
                         }
                         await ResultFile.create(

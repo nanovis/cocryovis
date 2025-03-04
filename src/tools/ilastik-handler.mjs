@@ -221,7 +221,6 @@ export default class IlastikHandler {
             IlastikHandler.#checkVolumeProperties(volume);
 
             const settings = JSON.parse(volume.rawData.settings);
-            const dimensions = settings.size;
 
             const rawH5FileName =
                 Utils.stripExtension(volume.rawData.rawFilePath) + ".h5";
@@ -235,7 +234,7 @@ export default class IlastikHandler {
             await this.#convertDataToH5(
                 volume.rawData,
                 volume.sparseVolumes,
-                dimensions,
+                settings,
                 rawH5Path,
                 labelsH5Path,
                 logFile
@@ -317,7 +316,7 @@ export default class IlastikHandler {
     /**
      * @param {RawVolumeDataDB} rawData
      * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
-     * @param {{x: Number, y: Number, z: Number}} dimensions
+     * @param {import("../models/volume-data.mjs").VolumeDataSettings} settings
      * @param {String} rawOutputPath
      * @param {String} labelsOutputPath
      * @param {LogFile} logFile
@@ -325,7 +324,7 @@ export default class IlastikHandler {
     async #convertDataToH5(
         rawData,
         sparseLabelsStack,
-        dimensions,
+        settings,
         rawOutputPath,
         labelsOutputPath,
         logFile = null
@@ -343,14 +342,17 @@ export default class IlastikHandler {
 
         await rawToH5(
             rawData.rawFilePath,
-            dimensions,
+            settings.size,
+            settings.usedBits,
+            settings.isSigned,
+            settings.isLittleEndian,
             rawOutputPath,
             IlastikHandler.rawDataset,
             logFile
         );
         await labelsToH5(
             sparseLabelsStack.map((l) => l.rawFilePath),
-            dimensions,
+            settings.size,
             labelsOutputPath,
             IlastikHandler.labelsDataset,
             logFile
@@ -409,15 +411,6 @@ export default class IlastikHandler {
         }
 
         const settings = JSON.parse(volume.rawData.settings);
-        if (
-            !Object.hasOwn(settings, "bytesPerVoxel") ||
-            settings.bytesPerVoxel != 1
-        ) {
-            throw new ApiError(
-                400,
-                "Pseudo Labels Generation error: The generation only supports uint8 data format."
-            );
-        }
         if (!Object.hasOwn(settings, "size")) {
             throw new ApiError(
                 400,
@@ -433,7 +426,7 @@ export default class IlastikHandler {
             ) {
                 throw new ApiError(
                     400,
-                    "Pseudo Labels Generation error: The generation only supports uint8 data format."
+                    "Pseudo Labels Generation error: Labels must be in uint8 data format."
                 );
             }
             if (!Object.hasOwn(settings, "size")) {

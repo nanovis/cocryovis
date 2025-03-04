@@ -5,6 +5,7 @@ import appConfig from "./config.mjs";
 import path from "path";
 import { promisify } from "util";
 import LogFile from "./log-manager.mjs";
+import Utils from "./utils.mjs";
 const execPromise = promisify(exec);
 
 /**
@@ -15,6 +16,9 @@ const execPromise = promisify(exec);
 /**
  * @param {String} rawVolumePath
  * @param {{x: Number, y: Number, z: Number}} dimensions
+ * @param {Number} usedBits
+ * @param {Boolean} isSigned
+ * @param {Boolean} littleEndian
  * @param {String} outputPath
  * @param {String} datasetName
  * @param {LogFile} logFile
@@ -22,27 +26,32 @@ const execPromise = promisify(exec);
 export async function rawToH5(
     rawVolumePath,
     dimensions,
+    usedBits,
+    isSigned,
+    littleEndian,
     outputPath,
     datasetName,
-    logFile=null
+    logFile = null
 ) {
-    let params = [
-        `-r \"${rawVolumePath}\"`,
-        `-d \"${dimensions.x}x${dimensions.y}x${dimensions.z}\"`,
-        `-s \"${datasetName}\"`,
-        `-o \"${outputPath}\"`,
-        "-log False",
-    ];
-    const command = `${appConfig.ilastik.python} \"${path.join(
-        "./python-scripts",
-        "raw-to-h5.py"
-    )}\" ${params.join(" ")}`;
+    // prettier-ignore
+    const params = [
+        path.join("./python-scripts", "raw-to-h5.py"),
+        "-r", rawVolumePath,
+        "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
+        "-b", usedBits.toString(),
+        "-sg", isSigned.toString(),
+        "-le", littleEndian.toString(),
+        "-s", datasetName,
+        "-o", outputPath
+    ]
 
-    const { stdout, stderr } = await execPromise(command);
-    if (logFile) {
-        await logFile.writeLog(stdout);
-        await logFile.writeLog(stderr);
-    }
+    await Utils.runScript(
+        appConfig.ilastik.python,
+        params,
+        null,
+        (value) => logFile.writeLog(value),
+        (value) => logFile.writeLog(value)
+    );
 
     return outputPath;
 }
@@ -59,25 +68,25 @@ export async function labelsToH5(
     dimensions,
     outputPath,
     datasetName,
-    logFile=null
+    logFile = null
 ) {
-    let params = [
-        `-l \"${labelPaths.join('" "')}\"`,
-        `-d \"${dimensions.x}x${dimensions.y}x${dimensions.z}\"`,
-        `-s \"${datasetName}\"`,
-        `-o \"${outputPath}\"`,
-        "-log False",
+    // prettier-ignore
+    const params = [
+        path.join("./python-scripts", "labels-to-h5.py"),
+        "-l", ...labelPaths,
+        "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
+        "-s", datasetName,
+        "-o", outputPath,
+        "-log", "True"
     ];
-    const command = `${appConfig.ilastik.python} \"${path.join(
-        "./python-scripts",
-        "labels-to-h5.py"
-    )}\" ${params.join(" ")}`;
 
-    const { stdout, stderr } = await execPromise(command);
-    if (logFile) {
-        await logFile.writeLog(stdout);
-        await logFile.writeLog(stderr);
-    }
+    await Utils.runScript(
+        appConfig.ilastik.python,
+        params,
+        null,
+        (value) => logFile.writeLog(value),
+        (value) => logFile.writeLog(value)
+    );
 
     return outputPath;
 }
@@ -88,22 +97,27 @@ export async function labelsToH5(
  * @param {String} outputPath
  * @param {LogFile} logFile
  */
-export async function H5ToLabels(labelPath, datasetName, outputPath, logFile=null) {
-    let params = [
-        `-l \"${labelPath}\"`,
-        `-s \"${datasetName}\"`,
-        `-o \"${outputPath}\"`,
+export async function H5ToLabels(
+    labelPath,
+    datasetName,
+    outputPath,
+    logFile = null
+) {
+    // prettier-ignore
+    const params = [
+        path.join("./python-scripts", "h5-to-labels.py"),
+        "-l", labelPath,
+        "-s", datasetName,
+        "-o", outputPath
     ];
-    const command = `${appConfig.ilastik.python} \"${path.join(
-        "./python-scripts",
-        "h5-to-labels.py"
-    )}\" ${params.join(" ")}`;
 
-    const { stdout, stderr } = await execPromise(command);
-    if (logFile) {
-        await logFile.writeLog(stdout);
-        await logFile.writeLog(stderr);
-    }
+    await Utils.runScript(
+        appConfig.ilastik.python,
+        params,
+        null,
+        (value) => logFile.writeLog(value),
+        (value) => logFile.writeLog(value)
+    );
 
     return outputPath;
 }
