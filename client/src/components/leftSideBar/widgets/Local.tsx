@@ -107,16 +107,7 @@ const Local = ({ open, close }: Props) => {
         closeOnClick: true,
       });
     } catch (error) {
-      if (toastId !== null) {
-        const errMsg = Utils.getErrorMessage(error);
-        toast.update(toastId, {
-          render: errMsg,
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
-      }
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
       throw error;
     } finally {
@@ -316,16 +307,7 @@ const Local = ({ open, close }: Props) => {
         closeOnClick: true,
       });
     } catch (error) {
-      if (toastId !== null) {
-        const errMsg = Utils.getErrorMessage(error);
-        toast.update(toastId, {
-          render: errMsg,
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
-      }
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Local Inference Error:", error);
     } finally {
       setIsInferenceOngoing(false);

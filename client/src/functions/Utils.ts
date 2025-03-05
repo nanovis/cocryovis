@@ -1,4 +1,4 @@
-import { toast, ToastPromiseParams } from "react-toastify";
+import { Id, toast, ToastPromiseParams } from "react-toastify";
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../DefaultTransferFunctions";
 import { apiUrl } from "../urls";
@@ -78,6 +78,19 @@ export default class Utils {
     ) as Promise<Response>;
   }
 
+  static updateToastWithErrorMsg(toastId: Id | null, error: unknown) {
+    if (toastId !== null) {
+      const errMsg = Utils.getErrorMessage(error);
+      toast.update(toastId, {
+        render: errMsg,
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+        closeOnClick: true,
+      });
+    }
+  }
+
   static getFileNameFromPath(path: string | null | undefined) {
     return path?.replace(/^.*[\\/]/, "");
   }
@@ -110,6 +123,37 @@ export default class Utils {
   static isFloatBetween(string: string, min: number, max: number) {
     const num = Number(string);
     return !Number.isNaN(num) && num >= min && num <= max;
+  }
+
+  /**
+   * @param {string?} filenameOverwrite
+   */
+  static async downloadFileFromServer(
+    url: string,
+    filenameOverwrite: string | null = null
+  ) {
+    let toastId = null;
+    try {
+      toastId = toast.loading("Downloading...");
+      const response = await Utils.sendReq(
+        url,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+        false
+      );
+      await Utils.downloadFile(response, filenameOverwrite);
+      toast.update(toastId, {
+        render: "Download Successful!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+        closeOnClick: true,
+      });
+    } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
+    }
   }
 
   /**

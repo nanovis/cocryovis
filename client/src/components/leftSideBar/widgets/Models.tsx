@@ -174,36 +174,9 @@ const Models = observer(({ open, close }: Props) => {
         return;
       }
 
-      const response = await Utils.sendRequestWithToast(
-        `checkpoint/${selectedCheckpointId}/download`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      await Utils.downloadFileFromServer(
+        `checkpoint/${selectedCheckpointId}/download`
       );
-      let filename = null;
-      const disposition = response.headers.get("Content-Disposition");
-      if (disposition && disposition.indexOf("attachment") !== -1) {
-        const matches = disposition.match(/filename="?([^";]+)"?/);
-        if (matches && matches[1]) {
-          filename = matches[1];
-        }
-      }
-      if (filename === null) {
-        throw new Error("Missing filename");
-      }
-
-      const blob = await response.blob();
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error:", error);
     }

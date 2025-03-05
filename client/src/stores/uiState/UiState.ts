@@ -19,11 +19,25 @@ import { RenderSettings } from "./RenderSettings";
 
 export const UiState = types
   .model({
+    openLeftWidget: types.optional(types.number, -1),
+    openRightWidget: types.optional(types.number, -1),
     kernelSize: types.optional(types.integer, 25),
     visualizedVolume: types.maybe(VisualizedVolume),
     renderSettings: types.optional(RenderSettings, {}),
   })
   .actions((self) => ({
+    setOpenLeftWidget(id: number) {
+      self.openLeftWidget = self.openLeftWidget !== id ? id : -1;
+    },
+    closeLeftHandWidgets() {
+      self.openLeftWidget = -1;
+    },
+    setOpenRightWidget(id: number) {
+      self.openRightWidget = self.openRightWidget !== id ? id : -1;
+    },
+    closeRightHandWidgets() {
+      self.openRightWidget = -1;
+    },
     setKernelSize(kernalSize: number) {
       self.kernelSize = kernalSize;
       window.WasmModule?.setAnnotationKernelSize(kernalSize);

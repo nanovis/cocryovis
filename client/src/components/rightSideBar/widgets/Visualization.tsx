@@ -245,15 +245,7 @@ const Visualization = observer(({ open, close }: Props) => {
       }
     );
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `transferFunction_${volVisSettings.index}.json`;
-    document.body.appendChild(a);
-    a.click();
-
-    a.remove();
-    window.URL.revokeObjectURL(url);
+    Utils.downloadBlob(blob, `transferFunction_${volVisSettings.index}.json`);
   };
 
   const handleTFUpload = async (

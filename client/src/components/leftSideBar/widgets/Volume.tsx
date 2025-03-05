@@ -253,16 +253,7 @@ const Volume = observer(({ open, close }: Props) => {
         });
       }
     } catch (error) {
-      if (toastId !== null) {
-        const errMsg = Utils.getErrorMessage(error);
-        toast.update(toastId, {
-          render: errMsg,
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
-      }
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
       throw error;
     } finally {
@@ -304,16 +295,7 @@ const Volume = observer(({ open, close }: Props) => {
 
       toast.dismiss(toastId);
     } catch (error) {
-      if (toastId !== null) {
-        const errMsg = Utils.getErrorMessage(error);
-        toast.update(toastId, {
-          render: errMsg,
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
-      }
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
     }
   };
@@ -343,17 +325,7 @@ const Volume = observer(({ open, close }: Props) => {
 
       toast.dismiss(toastId);
     } catch (error) {
-      if (toastId !== null) {
-        const errMsg = Utils.getErrorMessage(error);
-
-        toast.update(toastId, {
-          render: errMsg,
-          type: "error",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
-      }
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
     }
   };
@@ -447,16 +419,9 @@ const Volume = observer(({ open, close }: Props) => {
         return;
       }
 
-      const response = await Utils.sendRequestWithToast(
-        `volumeData/${dataType}/${id}/download-full`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-        { successText: "Download Successful" }
+      await Utils.downloadFileFromServer(
+        `volumeData/${dataType}/${id}/download-full`
       );
-
-      await Utils.downloadFile(response);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -482,16 +447,7 @@ const Volume = observer(({ open, close }: Props) => {
         return;
       }
 
-      const response = await Utils.sendRequestWithToast(
-        `result/${selectedResultId}/data`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-        { successText: "Download Successful" }
-      );
-
-      await Utils.downloadFile(response);
+      await Utils.downloadFileFromServer(`result/${selectedResultId}/data`);
     } catch (error) {
       console.error("Error:", error);
     }
