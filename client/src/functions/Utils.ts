@@ -105,6 +105,14 @@ export default class Utils {
     return path.replace(/\.[^/.]+$/, "");
   }
 
+  static isRawFile(fileName: string) {
+    return fileName.toLowerCase().endsWith(".raw");
+  }
+
+  static isMrcFile(fileName: string) {
+    return fileName.toLowerCase().endsWith(".mrc");
+  }
+
   static isInteger(string: string) {
     const num = Number(string);
     return Number.isInteger(num);

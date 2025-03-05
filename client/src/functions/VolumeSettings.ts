@@ -1,4 +1,3 @@
-import path from "path";
 import Utils from "./Utils";
 
 type Vector3 = { x: number; y: number; z: number };
@@ -23,7 +22,7 @@ export class VolumeSettings {
   }
 
   toJSON(): string {
-    return JSON.stringify(this);
+    return JSON.stringify({ ...this });
   }
 
   toFile(): File {

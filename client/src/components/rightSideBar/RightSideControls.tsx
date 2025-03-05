@@ -15,9 +15,7 @@ import { useRef, useState } from "react";
 import Utils from "../../functions/Utils";
 import { convertMRCToRaw } from "../../functions/MrcParser";
 import About from "./widgets/About";
-import VolumeUploadDialog, {
-  VolumeDescriptor,
-} from "../shared/VolumeUploadDialog";
+import VolumeUploadDialog from "../shared/VolumeUploadDialog";
 import { toast } from "react-toastify";
 import { VolumeSettings } from "../../functions/VolumeSettings";
 
@@ -48,95 +46,60 @@ const SideControls = observer(() => {
 
   const [isVisDialogOpen, setIsVisDialogOpen] = useState(false);
 
-  const visFilesRef = useRef<HTMLInputElement | null>(null);
-
   const visualizeFiles = async (
-    filesArray: File[],
-    parameterOverrides?: VolumeSettings
+    pendingFile: File,
+    volumeSettings?: VolumeSettings
   ) => {
-    if (filesArray.length === 0) {
-      return;
-    }
-
     let toastId = null;
 
     try {
       toastId = toast.loading("Parsing volume files...");
 
-      const mrcFile = filesArray.find((file) =>
-        file.name.toLowerCase().endsWith(".mrc")
-      );
-
-      if (mrcFile) {
+      if (Utils.isMrcFile(pendingFile.name)) {
         try {
-          const { rawFile, jsonFile } = await convertMRCToRaw(mrcFile);
-          // Remove the original .mrc file from the list
-          filesArray = filesArray.filter(
-            (file) => !file.name.toLowerCase().endsWith(".mrc")
-          );
-          // Add the generated .raw and .json files
-          filesArray = [rawFile, jsonFile];
+          const { rawFile, settings } = await convertMRCToRaw(pendingFile);
+          pendingFile = rawFile;
+          volumeSettings = settings;
         } catch (error) {
           console.error("Error converting MRC file:", error);
           return;
         }
       }
-      //.raw or .zip files, if no JSON metadata file, generate a default one
-      const rawFile = filesArray.find((file) =>
-        file.name.toLowerCase().endsWith(".raw")
-      );
 
-      if (!rawFile) {
+      if (!Utils.isRawFile(pendingFile.name)) {
         throw new Error("No .raw file found in the uploaded files");
       }
 
-      let volumeSettings = new VolumeSettings({
-        ratio: {
-          x: 1,
-          y: 1,
-          z: 1,
-        },
-        addValue: 0,
-        skipBytes: 0,
-      });
-
-      const descriptorFileIndex = filesArray.findIndex((file) =>
-        file.name.toLowerCase().endsWith(".json")
-      );
-
-      if (descriptorFileIndex >= 0) {
-        const descriptor = await filesArray[descriptorFileIndex].text();
-        const fileSettings = VolumeSettings.fromJSON(descriptor);
-
-        volumeSettings.applyOverrides(fileSettings);
+      if (!volumeSettings) {
+        throw new Error("Missing volume settings");
       }
-
-      if (parameterOverrides) {
-        volumeSettings.applyOverrides(parameterOverrides);
-      }
-
-      volumeSettings.file = rawFile.name;
 
       volumeSettings.checkValidity();
 
       const volumeSettingsFile = volumeSettings.toFile();
 
-      if (descriptorFileIndex >= 0) {
-        filesArray[descriptorFileIndex] = volumeSettingsFile;
-      } else {
-        filesArray.push(volumeSettingsFile);
-      }
+      const fileMap = await Utils.unpackAndcreateFileMap([
+        pendingFile,
+        volumeSettingsFile,
+      ]);
 
-      const fileMap = await Utils.unpackAndcreateFileMap(filesArray);
+      toast.update(toastId, {
+        render: "Visualizing the volume...",
+        isLoading: true,
+        autoClose: false,
+      });
+
       await uiState.visualizeVolume(fileMap, undefined);
 
-      const visFilesRef = document.getElementById(
-        "fileInput"
-      ) as HTMLInputElement;
-      if (visFilesRef) {
-        visFilesRef.value = "";
-      }
+      toast.update(toastId, {
+        render: "Visualization Ready!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+        closeOnClick: true,
+      });
     } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
       throw error;
     }
   };

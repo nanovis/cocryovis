@@ -14,14 +14,14 @@ import {
   Dropdown,
   Option,
   List,
-  ListItem,
   Text,
   Tooltip,
 } from "@fluentui/react-components";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Utils from "../../functions/Utils";
 import { ArrowResetFilled } from "@fluentui/react-icons";
 import { VolumeSettings } from "../../functions/VolumeSettings";
+import React from "react";
 
 const useStyles = makeStyles({
   dnd: {
@@ -29,6 +29,11 @@ const useStyles = makeStyles({
     padding: "20px",
     textAlign: "center",
     cursor: "pointer",
+    minHeight: "25px",
+    height: "25px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   dndOver: {
     border: `2px dashed ${tokens.colorBrandStroke1}`,
@@ -47,33 +52,10 @@ const useStyles = makeStyles({
   },
 });
 
-export interface VolumeDescriptor {
-  file?: string;
-  size?: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  ratio?: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  bytesPerVoxel?: number;
-  usedBits?: number;
-  skipBytes?: number;
-  isLittleEndian?: boolean;
-  isSigned?: boolean;
-  addValue?: number;
-}
-
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: (
-    files: File[],
-    parameterOverrides?: VolumeSettings
-  ) => Promise<void>;
+  onConfirm: (files: File, volumeSettings?: VolumeSettings) => Promise<void>;
   titleText: string;
   confirmText: string;
 }
@@ -101,7 +83,9 @@ const VolumeUploadDialog = ({
 
   const [isBusy, setIsBusy] = useState(false);
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const volumeSettings = useRef<VolumeSettings | null>(null);
+
   const [isFileOver, setIsFileOver] = useState(false);
   const [width, setWidth] = useState<string>("");
   const [height, setHeight] = useState<string>("");
@@ -109,49 +93,62 @@ const VolumeUploadDialog = ({
   const [format, setFormat] = useState<string>("");
   const [endian, setEndian] = useState<string>("");
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files) {
-      const fileMap = await Utils.unpackAndcreateFileMap(event.target.files);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onFilesUploaded(event.target.files);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    onFilesUploaded(event.dataTransfer.files);
+  };
+
+  const onFilesUploaded = async (files: FileList | null) => {
+    try {
+      if (files) {
+        const fileMap = await Utils.unpackAndcreateFileMap(files);
+        resetForm();
+        if (fileMap.size === 0) {
+          return;
+        }
+        const unpackedFiles = [...fileMap.values()];
+        const rawFile = unpackedFiles.find((file) =>
+          file.name.toLowerCase().endsWith(".raw")
+        );
+
+        if (rawFile) {
+          await parseRawFile(rawFile, unpackedFiles);
+          return;
+        }
+
+        const mrcFile = unpackedFiles.find((file) =>
+          file.name.toLowerCase().endsWith(".mrc")
+        );
+        if (mrcFile) {
+          parseMrcFile(mrcFile);
+          return;
+        }
+      }
+    } catch (error) {
       resetForm();
-      if (fileMap.size === 0) {
-        return;
-      }
-      const files = [...fileMap.values()];
-      const rawFile = files.find((file) =>
-        file.name.toLowerCase().endsWith(".raw")
-      );
-
-      if (rawFile) {
-        parseRawFile(rawFile, files);
-        return;
-      }
-
-      const mrcFile = files.find((file) =>
-        file.name.toLowerCase().endsWith(".mrc")
-      );
-      if (mrcFile) {
-        parseMrcFile(mrcFile);
-        return;
-      }
     }
   };
 
   const parseRawFile = async (rawFile: File, files: File[]) => {
-    const outputFiles = [rawFile];
-    const descriptorFile = files.find((file) =>
-      file.name.toLowerCase().endsWith(".json")
-    );
-    if (descriptorFile) {
-      try {
+    setPendingFile(rawFile);
+    try {
+      const descriptorFile = files.find((file) =>
+        file.name.toLowerCase().endsWith(".json")
+      );
+      if (descriptorFile) {
         const descriptor = await descriptorFile.text();
-        const settings = JSON.parse(descriptor);
+        volumeSettings.current = VolumeSettings.fromJSON(descriptor);
+        const settings = volumeSettings.current;
+
         if (settings.size) {
           const { x, y, z } = settings.size;
-          if (x) setNumericInput(x, setWidth);
-          if (y) setNumericInput(y, setHeight);
-          if (z) setNumericInput(z, setDepth);
+          if (x) setNumericInput(x.toString(), setWidth);
+          if (y) setNumericInput(y.toString(), setHeight);
+          if (z) setNumericInput(z.toString(), setDepth);
         }
         if ("isLittleEndian" in settings) {
           setDrodownInput(
@@ -160,7 +157,7 @@ const VolumeUploadDialog = ({
             setEndian
           );
         }
-        if ("bytesPerVoxel" in settings) {
+        if (settings.bytesPerVoxel !== undefined) {
           if (settings.bytesPerVoxel === 1) {
             setFormat("8-bit");
           } else {
@@ -173,7 +170,7 @@ const VolumeUploadDialog = ({
               setFormat
             );
           }
-        } else if ("usedBits" in settings) {
+        } else if (settings.usedBits !== undefined) {
           if (settings.usedBits === 8) {
             setFormat("8-bit");
           } else {
@@ -185,29 +182,19 @@ const VolumeUploadDialog = ({
             );
           }
         }
-        outputFiles.push(descriptorFile);
-      } catch (error) {
-        console.warn("Error parsing descriptor file:", error);
       }
+    } catch (error) {
+      console.warn("Error parsing descriptor file:", error);
     }
-
-    setFiles(outputFiles);
   };
 
   const parseMrcFile = (mrcFile: File) => {
-    setFiles([mrcFile]);
+    setPendingFile(mrcFile);
     setWidth("auto");
     setHeight("auto");
     setDepth("auto");
     setFormat("auto");
     setEndian("auto");
-  };
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    if (event.dataTransfer.files) {
-      setFiles([...files, ...Array.from(event.dataTransfer.files)]);
-    }
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -249,16 +236,17 @@ const VolumeUploadDialog = ({
   };
 
   const resetForm = () => {
-    setFiles([]);
+    setPendingFile(null);
     setWidth("");
     setHeight("");
     setDepth("");
     setFormat("");
     setEndian("");
+    volumeSettings.current = null;
   };
 
   const rawUpload = () => {
-    return files.some((file) => file.name.toLowerCase().endsWith(".raw"));
+    return pendingFile?.name.toLowerCase().endsWith(".raw");
   };
 
   const canSetParameters = () => {
@@ -275,36 +263,29 @@ const VolumeUploadDialog = ({
     );
   };
 
-  const canConfirm = () => {
-    return !isBusy && files.length > 0 && (!rawUpload() || validParameters());
-  };
+  const canConfirm =
+    pendingFile !== null && !isBusy && (!rawUpload() || validParameters());
 
   const confirmEffect = async () => {
-    if (!canConfirm()) {
+    if (!canConfirm) {
       return;
     }
     try {
       setIsBusy(true);
       if (rawUpload()) {
-        const usedBits = parseInt(format.split("-")[0]);
-        const bytesPerVoxel = Math.floor(usedBits / 8);
-        const isSigned = format.includes("Signed");
-        await onConfirm(
-          files,
-          new VolumeSettings({
-            size: {
-              x: parseInt(width),
-              y: parseInt(height),
-              z: parseInt(depth),
-            },
-            isLittleEndian: endian === "Little Endian",
-            bytesPerVoxel: bytesPerVoxel,
-            usedBits: usedBits,
-            isSigned: isSigned,
-          })
-        );
+        const settings = volumeSettings.current ?? new VolumeSettings();
+        settings.usedBits = parseInt(format.split("-")[0]);
+        settings.bytesPerVoxel = Math.floor(settings.usedBits / 8);
+        settings.isSigned = format.includes("Signed");
+        settings.isLittleEndian = endian === "Little Endian";
+        settings.size = {
+          x: parseInt(width),
+          y: parseInt(height),
+          z: parseInt(depth),
+        };
+        await onConfirm(pendingFile, settings);
       } else {
-        onConfirm(files);
+        onConfirm(pendingFile);
       }
     } finally {
       setIsBusy(false);
@@ -373,7 +354,7 @@ const VolumeUploadDialog = ({
                     color: tokens.colorNeutralForeground2,
                   }}
                 >
-                  {files.length > 0 ? (
+                  {pendingFile ? (
                     <List
                       style={{
                         display: "flex",
@@ -387,11 +368,7 @@ const VolumeUploadDialog = ({
                           alignItems: "flex-start",
                         }}
                       >
-                        {files.map((file, index) => (
-                          <ListItem key={index}>
-                            <Text>{file.name}</Text>
-                          </ListItem>
-                        ))}
+                        <Text>{pendingFile.name}</Text>
                       </div>
                     </List>
                   ) : (
@@ -464,7 +441,7 @@ const VolumeUploadDialog = ({
             <Button
               appearance="primary"
               onClick={confirmEffect}
-              disabled={!canConfirm()}
+              disabled={!canConfirm}
             >
               {confirmText}
             </Button>
