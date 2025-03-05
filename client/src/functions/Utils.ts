@@ -262,12 +262,10 @@ export default class Utils {
     });
   }
 
-  static async unpackAndcreateFileMap(fileList: FileList) {
-    const fileArray = Array.from(fileList);
-
+  static async unpackAndcreateFileMap(files: FileList | File[]) {
     const fullFileMap: FileMap = new Map<string, File>();
 
-    for (const file of fileArray) {
+    for (const file of files) {
       if (file.name.endsWith(".zip")) {
         const fileMap = await Utils.zipToFileMap(file);
         Utils.InplaceMapMerge(fullFileMap, fileMap, (key) => {

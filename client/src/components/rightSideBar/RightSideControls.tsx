@@ -11,10 +11,15 @@ import {
   InfoRegular,
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Utils from "../../functions/Utils";
 import { convertMRCToRaw } from "../../functions/MrcParser";
 import About from "./widgets/About";
+import VolumeUploadDialog, {
+  VolumeDescriptor,
+} from "../shared/VolumeUploadDialog";
+import { toast } from "react-toastify";
+import { VolumeSettings } from "../../functions/VolumeSettings";
 
 const widgets: Array<WidgetDefinition> = [
   {
@@ -41,80 +46,98 @@ const SideControls = observer(() => {
   const { uiState } = useMst();
   const globalClasses = globalStyles();
 
+  const [isVisDialogOpen, setIsVisDialogOpen] = useState(false);
+
   const visFilesRef = useRef<HTMLInputElement | null>(null);
 
-  const visualizeFileInput = async (
-    event: React.ChangeEvent<HTMLInputElement>
+  const visualizeFiles = async (
+    filesArray: File[],
+    parameterOverrides?: VolumeSettings
   ) => {
-    const inputElement = event.target as HTMLInputElement;
-    if (!inputElement.files || inputElement.files.length === 0) {
+    if (filesArray.length === 0) {
       return;
     }
 
-    // Convert FileList to array.
-    let filesArray = Array.from(inputElement.files);
+    let toastId = null;
 
-    const mrcFile = filesArray.find((file) =>
-      file.name.toLowerCase().endsWith(".mrc")
-    );
+    try {
+      toastId = toast.loading("Parsing volume files...");
 
-    if (mrcFile) {
-      try {
-        const { rawFile, jsonFile } = await convertMRCToRaw(mrcFile);
-        // Remove the original .mrc file from the list
-        filesArray = filesArray.filter(
-          (file) => !file.name.toLowerCase().endsWith(".mrc")
-        );
-        // Add the generated .raw and .json files
-        filesArray.push(rawFile, jsonFile);
-      } catch (error) {
-        console.error("Error converting MRC file:", error);
-        return;
-      }
-    }
-    //.raw or .zip files, if no JSON metadata file, generate a default one
-    const rawFile = filesArray.find((file) =>
-      file.name.toLowerCase().endsWith(".raw")
-    );
-    const hasJsonFile = filesArray.some((file) =>
-      file.name.toLowerCase().endsWith(".json")
-    );
-
-    if (rawFile && !hasJsonFile) {
-      const defaultJsonContent = {
-        file: rawFile.name,
-        size: { x: 512, y: 512, z: 512 },
-        ratio: { x: 1.0, y: 1.0, z: 1.0 },
-        bytesPerVoxel: 1,
-        usedBits: 8,
-        skipBytes: 0,
-        isLittleEndian: true,
-        isSigned: false,
-        addValue: 0,
-      };
-
-      const defaultJson = new File(
-        [JSON.stringify(defaultJsonContent, null, 2)],
-        rawFile.name.replace(/\.raw$/i, ".json"),
-        { type: "application/json" }
+      const mrcFile = filesArray.find((file) =>
+        file.name.toLowerCase().endsWith(".mrc")
       );
 
-      filesArray.push(defaultJson);
-    }
+      if (mrcFile) {
+        try {
+          const { rawFile, jsonFile } = await convertMRCToRaw(mrcFile);
+          // Remove the original .mrc file from the list
+          filesArray = filesArray.filter(
+            (file) => !file.name.toLowerCase().endsWith(".mrc")
+          );
+          // Add the generated .raw and .json files
+          filesArray = [rawFile, jsonFile];
+        } catch (error) {
+          console.error("Error converting MRC file:", error);
+          return;
+        }
+      }
+      //.raw or .zip files, if no JSON metadata file, generate a default one
+      const rawFile = filesArray.find((file) =>
+        file.name.toLowerCase().endsWith(".raw")
+      );
 
-    //downstream code requires a FileList, we use DataTransfer to create a new FileList
-    const dataTransfer = new DataTransfer();
-    filesArray.forEach((file) => dataTransfer.items.add(file));
-    const updatedFileList = dataTransfer.files;
+      if (!rawFile) {
+        throw new Error("No .raw file found in the uploaded files");
+      }
 
-    const fileMap = await Utils.unpackAndcreateFileMap(updatedFileList);
-    await uiState.visualizeVolume(fileMap, undefined);
+      let volumeSettings = new VolumeSettings({
+        ratio: {
+          x: 1,
+          y: 1,
+          z: 1,
+        },
+        addValue: 0,
+        skipBytes: 0,
+      });
 
-    const visFilesRef = document.getElementById(
-      "fileInput"
-    ) as HTMLInputElement;
-    if (visFilesRef) {
-      visFilesRef.value = "";
+      const descriptorFileIndex = filesArray.findIndex((file) =>
+        file.name.toLowerCase().endsWith(".json")
+      );
+
+      if (descriptorFileIndex >= 0) {
+        const descriptor = await filesArray[descriptorFileIndex].text();
+        const fileSettings = VolumeSettings.fromJSON(descriptor);
+
+        volumeSettings.applyOverrides(fileSettings);
+      }
+
+      if (parameterOverrides) {
+        volumeSettings.applyOverrides(parameterOverrides);
+      }
+
+      volumeSettings.file = rawFile.name;
+
+      volumeSettings.checkValidity();
+
+      const volumeSettingsFile = volumeSettings.toFile();
+
+      if (descriptorFileIndex >= 0) {
+        filesArray[descriptorFileIndex] = volumeSettingsFile;
+      } else {
+        filesArray.push(volumeSettingsFile);
+      }
+
+      const fileMap = await Utils.unpackAndcreateFileMap(filesArray);
+      await uiState.visualizeVolume(fileMap, undefined);
+
+      const visFilesRef = document.getElementById(
+        "fileInput"
+      ) as HTMLInputElement;
+      if (visFilesRef) {
+        visFilesRef.value = "";
+      }
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -141,18 +164,9 @@ const SideControls = observer(() => {
               size="large"
               className={globalClasses.widgetButton}
               icon={<ArrowUpload24Regular />}
-              onClick={() => visFilesRef.current?.click()}
+              onClick={() => setIsVisDialogOpen(true)}
             />
           </Tooltip>
-
-          <input
-            type="file"
-            onChange={visualizeFileInput}
-            accept=".raw, .json, .zip, .mrc"
-            multiple
-            ref={visFilesRef}
-            className={globalClasses.hiddenInput}
-          />
 
           {widgets.map((widget, index) => (
             <WidgetToggleButton
@@ -174,6 +188,14 @@ const SideControls = observer(() => {
           close={uiState.closeRightHandWidgets}
         />
       ))}
+
+      <VolumeUploadDialog
+        open={isVisDialogOpen}
+        onClose={() => setIsVisDialogOpen(false)}
+        onConfirm={visualizeFiles}
+        titleText={"Visualize Volume"}
+        confirmText="Visualize"
+      />
     </>
   );
 });
