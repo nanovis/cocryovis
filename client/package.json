@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@fluentui/react-components": "^9.40.0",
+    "@fluentui/react-components": "^9.60.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",

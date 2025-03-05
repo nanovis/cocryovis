@@ -98,7 +98,7 @@ const SideControls = observer(() => {
               title={widget.title}
               labelPositioning={widget.labelPositioning}
               LabelIcon={widget.LabelIcon}
-              isOpen={uiState.openRightWidget === index}
+              isOpen={uiState.openLeftWidget === index}
               onClick={() => uiState.setOpenLeftWidget(index)}
               disabled={buttonDisabled(index)}
             />
@@ -129,7 +129,7 @@ const SideControls = observer(() => {
         <widget.widget
           key={index}
           open={uiState.openLeftWidget === index}
-          close={uiState.closeRightHandWidgets}
+          close={uiState.closeLeftHandWidgets}
         />
       ))}
 
