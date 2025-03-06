@@ -16,6 +16,9 @@ import {
   List,
   Text,
   Tooltip,
+  TabValue,
+  TabList,
+  Tab,
 } from "@fluentui/react-components";
 import { useRef, useState } from "react";
 import Utils from "../../functions/Utils";
@@ -55,7 +58,8 @@ const useStyles = makeStyles({
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: (files: File, volumeSettings?: VolumeSettings) => Promise<void>;
+  onFileConfirm: (file: File, volumeSettings?: VolumeSettings) => Promise<void>;
+  onUrlConfirm: (url: string, volumeSettings?: VolumeSettings) => Promise<void>;
   titleText: string;
   confirmText: string;
 }
@@ -75,13 +79,15 @@ const endianOptions = ["Little Endian", "Big Endian"];
 const VolumeUploadDialog = ({
   open,
   onClose,
-  onConfirm,
+  onFileConfirm,
+  onUrlConfirm,
   titleText,
   confirmText,
 }: Props) => {
   const classes = useStyles();
 
   const [isBusy, setIsBusy] = useState(false);
+  const [tab, setTab] = React.useState<TabValue>("fromFile");
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const volumeSettings = useRef<VolumeSettings | null>(null);
@@ -92,6 +98,7 @@ const VolumeUploadDialog = ({
   const [depth, setDepth] = useState<string>("");
   const [format, setFormat] = useState<string>("");
   const [endian, setEndian] = useState<string>("");
+  const [url, setUrl] = useState<string>("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onFilesUploaded(event.target.files);
@@ -100,6 +107,10 @@ const VolumeUploadDialog = ({
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     onFilesUploaded(event.dataTransfer.files);
+  };
+
+  const rawUpload = () => {
+    return pendingFile?.name.toLowerCase().endsWith(".raw");
   };
 
   const onFilesUploaded = async (files: FileList | null) => {
@@ -117,6 +128,15 @@ const VolumeUploadDialog = ({
 
         if (rawFile) {
           await parseRawFile(rawFile, unpackedFiles);
+          return;
+        }
+
+        const descriptorFile = unpackedFiles.find((file) =>
+          file.name.toLowerCase().endsWith(".json")
+        );
+
+        if (descriptorFile && rawUpload()) {
+          parseVolumeSettings(descriptorFile);
           return;
         }
 
@@ -140,51 +160,56 @@ const VolumeUploadDialog = ({
         file.name.toLowerCase().endsWith(".json")
       );
       if (descriptorFile) {
-        const descriptor = await descriptorFile.text();
-        volumeSettings.current = VolumeSettings.fromJSON(descriptor);
-        const settings = volumeSettings.current;
-
-        if (settings.size) {
-          const { x, y, z } = settings.size;
-          if (x) setNumericInput(x.toString(), setWidth);
-          if (y) setNumericInput(y.toString(), setHeight);
-          if (z) setNumericInput(z.toString(), setDepth);
-        }
-        if ("isLittleEndian" in settings) {
-          setDrodownInput(
-            settings.isLittleEndian ? "Little Endian" : "Big Endian",
-            endianOptions,
-            setEndian
-          );
-        }
-        if (settings.bytesPerVoxel !== undefined) {
-          if (settings.bytesPerVoxel === 1) {
-            setFormat("8-bit");
-          } else {
-            const isSigned = "isSigned" in settings ? settings.isSigned : false;
-            setDrodownInput(
-              `${settings.bytesPerVoxel * 8}-bit ${
-                isSigned ? "Signed" : "Unsigned"
-              }`,
-              formatOptions,
-              setFormat
-            );
-          }
-        } else if (settings.usedBits !== undefined) {
-          if (settings.usedBits === 8) {
-            setFormat("8-bit");
-          } else {
-            const isSigned = "isSigned" in settings ? settings.isSigned : false;
-            setDrodownInput(
-              `${settings.usedBits}-bit ${isSigned ? "Signed" : "Unsigned"}`,
-              formatOptions,
-              setFormat
-            );
-          }
-        }
+        parseVolumeSettings(descriptorFile);
       }
     } catch (error) {
       console.warn("Error parsing descriptor file:", error);
+    }
+  };
+
+  const parseVolumeSettings = async (descriptorFile: File) => {
+    const descriptor = await descriptorFile.text();
+    volumeSettings.current = VolumeSettings.fromJSON(descriptor);
+
+    const settings = volumeSettings.current;
+
+    if (settings.size) {
+      const { x, y, z } = settings.size;
+      if (x) setNumericInput(x.toString(), setWidth);
+      if (y) setNumericInput(y.toString(), setHeight);
+      if (z) setNumericInput(z.toString(), setDepth);
+    }
+    if ("isLittleEndian" in settings) {
+      setDrodownInput(
+        settings.isLittleEndian ? "Little Endian" : "Big Endian",
+        endianOptions,
+        setEndian
+      );
+    }
+    if (settings.bytesPerVoxel !== undefined) {
+      if (settings.bytesPerVoxel === 1) {
+        setFormat("8-bit");
+      } else {
+        const isSigned = "isSigned" in settings ? settings.isSigned : false;
+        setDrodownInput(
+          `${settings.bytesPerVoxel * 8}-bit ${
+            isSigned ? "Signed" : "Unsigned"
+          }`,
+          formatOptions,
+          setFormat
+        );
+      }
+    } else if (settings.usedBits !== undefined) {
+      if (settings.usedBits === 8) {
+        setFormat("8-bit");
+      } else {
+        const isSigned = "isSigned" in settings ? settings.isSigned : false;
+        setDrodownInput(
+          `${settings.usedBits}-bit ${isSigned ? "Signed" : "Unsigned"}`,
+          formatOptions,
+          setFormat
+        );
+      }
     }
   };
 
@@ -236,17 +261,17 @@ const VolumeUploadDialog = ({
   };
 
   const resetForm = () => {
-    setPendingFile(null);
+    if (tab === "fromUrl") {
+      setUrl("");
+    } else if (volumeSettings.current) {
+      setPendingFile(null);
+      volumeSettings.current = null;
+    }
     setWidth("");
     setHeight("");
     setDepth("");
     setFormat("");
     setEndian("");
-    volumeSettings.current = null;
-  };
-
-  const rawUpload = () => {
-    return pendingFile?.name.toLowerCase().endsWith(".raw");
   };
 
   const canSetParameters = () => {
@@ -263,29 +288,25 @@ const VolumeUploadDialog = ({
     );
   };
 
-  const canConfirm =
-    pendingFile !== null && !isBusy && (!rawUpload() || validParameters());
+  const canConfirmUrl = tab == "fromUrl" && url.length > 0;
+  const canConfirmFile =
+    tab == "fromFile" &&
+    pendingFile !== null &&
+    (!rawUpload() || validParameters());
+
+  const canConfirm = !isBusy && (canConfirmUrl || canConfirmFile);
 
   const confirmEffect = async () => {
-    if (!canConfirm) {
+    if (isBusy) {
       return;
     }
     try {
       setIsBusy(true);
-      if (rawUpload()) {
-        const settings = volumeSettings.current ?? new VolumeSettings();
-        settings.usedBits = parseInt(format.split("-")[0]);
-        settings.bytesPerVoxel = Math.floor(settings.usedBits / 8);
-        settings.isSigned = format.includes("Signed");
-        settings.isLittleEndian = endian === "Little Endian";
-        settings.size = {
-          x: parseInt(width),
-          y: parseInt(height),
-          z: parseInt(depth),
-        };
-        await onConfirm(pendingFile, settings);
+      if (tab === "fromUrl") {
+        await confirmUrl();
+        return;
       } else {
-        onConfirm(pendingFile);
+        await confirmFile();
       }
     } finally {
       setIsBusy(false);
@@ -293,90 +314,156 @@ const VolumeUploadDialog = ({
     }
   };
 
+  const confirmFile = async () => {
+    if (!canConfirmFile) {
+      return;
+    }
+    if (rawUpload()) {
+      const settings = volumeSettings.current ?? new VolumeSettings();
+      settings.usedBits = parseInt(format.split("-")[0]);
+      settings.bytesPerVoxel = Math.floor(settings.usedBits / 8);
+      settings.isSigned = format.includes("Signed");
+      settings.isLittleEndian = endian === "Little Endian";
+      settings.size = {
+        x: parseInt(width),
+        y: parseInt(height),
+        z: parseInt(depth),
+      };
+      await onFileConfirm(pendingFile, settings);
+    } else {
+      await onFileConfirm(pendingFile);
+    }
+  };
+
+  const confirmUrl = async () => {
+    if (!canConfirmUrl) {
+      return;
+    }
+    await onUrlConfirm(url);
+  };
+
   return (
     <Dialog open={open}>
-      <DialogSurface>
-        <DialogBody>
+      <DialogSurface style={{ paddingTop: "0px" }}>
+        <DialogBody
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
           <DialogTitle
-            style={{ display: "flex", justifyContent: "space-between" }}
+            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
           >
-            {titleText}
-            <Button
-              appearance="subtle"
-              onClick={resetForm}
-              icon={
-                <ArrowResetFilled
-                  style={{ color: tokens.colorBrandForeground1 }}
-                />
-              }
-            />
+            <TabList
+              selectedValue={tab}
+              onTabSelect={(_, data) => setTab(data.value)}
+              disabled={isBusy}
+            >
+              <Tab style={{ width: "50%" }} id="fromFile" value="fromFile">
+                From File
+              </Tab>
+              <Tab style={{ width: "50%" }} id="fromUrl" value="fromUrl">
+                From URL
+              </Tab>
+            </TabList>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              {titleText}
+              <Button
+                appearance="subtle"
+                onClick={resetForm}
+                icon={
+                  <ArrowResetFilled
+                    style={{ color: tokens.colorBrandForeground1 }}
+                  />
+                }
+                disabled={isBusy}
+              />
+            </div>
           </DialogTitle>
+
           <DialogContent
             style={{
-              paddingTop: "15px",
-              paddingBottom: "15px",
+              minHeight: "250px",
+              padding: "15px",
               display: "flex",
               flexDirection: "column",
               gap: "15px",
             }}
           >
-            <Tooltip
-              content={
-                "Currently the importer supports two file formats: RAW and MRC. Raw files can optionally be uploaded alongside a descriptor file."
-              }
-              relationship={"description"}
-              positioning={"after"}
-              appearance={"inverted"}
-              hideDelay={0}
-            >
-              <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                className={mergeClasses(
-                  classes.dnd,
-                  isFileOver && classes.dndOver
-                )}
-                onClick={() => document.getElementById("fileInput")?.click()}
-              >
-                <input
-                  type="file"
-                  id="fileInput"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                  accept=".raw, .json, .zip, .mrc"
-                />
-                <div
-                  style={{
-                    pointerEvents: "none",
-                    color: tokens.colorNeutralForeground2,
-                  }}
+            <div style={{ minHeight: "68px" }}>
+              {tab === "fromFile" && (
+                <Tooltip
+                  content={
+                    "Currently the importer supports two file formats: RAW and MRC. Raw files can optionally be uploaded alongside a descriptor file."
+                  }
+                  relationship={"description"}
+                  positioning={"after"}
+                  appearance={"inverted"}
+                  hideDelay={0}
                 >
-                  {pendingFile ? (
-                    <List
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    className={mergeClasses(
+                      classes.dnd,
+                      isFileOver && classes.dndOver
+                    )}
+                    onClick={() =>
+                      document.getElementById("fileInput")?.click()
+                    }
+                  >
+                    <input
+                      type="file"
+                      id="fileInput"
+                      multiple
+                      style={{ display: "none" }}
+                      onChange={handleFileChange}
+                      accept=".raw, .json, .zip, .mrc"
+                    />
+                    <div
                       style={{
-                        display: "flex",
-                        justifyContent: "center",
+                        pointerEvents: "none",
+                        color: tokens.colorNeutralForeground2,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        <Text>{pendingFile.name}</Text>
-                      </div>
-                    </List>
-                  ) : (
-                    <p>Drag & Drop or Click to Select Files</p>
-                  )}
-                </div>
-              </div>
-            </Tooltip>
+                      {pendingFile ? (
+                        <List
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-start",
+                            }}
+                          >
+                            <Text>{pendingFile.name}</Text>
+                          </div>
+                        </List>
+                      ) : (
+                        <p>Drag & Drop or Click to Select Files</p>
+                      )}
+                    </div>
+                  </div>
+                </Tooltip>
+              )}
+              {tab === "fromUrl" && (
+                <Input
+                  appearance="underline"
+                  value={url}
+                  onChange={(_, data) => setUrl(data.value)}
+                  placeholder="https://www.example_url.com"
+                  disabled={isBusy}
+                  style={{ width: "100%" }}
+                />
+              )}
+            </div>
             <div className={classes.inputRow}>
               <Field label="Width" className={classes.dimensionsField}>
                 <Input
@@ -434,7 +521,7 @@ const VolumeUploadDialog = ({
               </Field>
             </div>
           </DialogContent>
-          <DialogActions>
+          <DialogActions style={{ marginLeft: "auto" }}>
             <Button appearance="secondary" onClick={onClose} disabled={isBusy}>
               Cancel
             </Button>

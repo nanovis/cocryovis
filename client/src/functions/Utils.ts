@@ -136,10 +136,7 @@ export default class Utils {
   /**
    * @param {string?} filenameOverwrite
    */
-  static async downloadFileFromServer(
-    url: string,
-    filenameOverwrite: string | null = null
-  ) {
+  static async downloadFileFromServer(url: string, filenameOverwrite?: string) {
     let toastId = null;
     try {
       toastId = toast.loading("Downloading...");
@@ -164,24 +161,23 @@ export default class Utils {
     }
   }
 
-  /**
-   * @param {string?} filenameOverwrite
-   */
-  static async downloadFile(
-    response: Response,
-    filenameOverwrite: string | null = null
-  ) {
-    let filename = filenameOverwrite;
-    if (filename === null) {
-      const disposition = response.headers.get("Content-Disposition");
-      if (disposition && disposition.indexOf("attachment") !== -1) {
-        const matches = disposition.match(/filename="?([^";]+)"?/);
-        if (matches && matches[1]) {
-          filename = matches[1];
-        }
+  static getFilenameFromHeader(response: Response) {
+    const disposition = response.headers.get("Content-Disposition");
+    if (disposition) {
+      const matches = disposition.match(/filename="?([^";]+)"?/);
+      if (matches && matches[1]) {
+        return matches[1];
       }
     }
-    if (filename === null) {
+
+    let fileName = response.url.split("/").pop()?.split("?")[0].split("#")[0];
+    if (fileName && fileName.includes(".")) return fileName;
+  }
+
+  static async downloadFile(response: Response, filenameOverwrite?: string) {
+    let filename = filenameOverwrite ?? Utils.getFilenameFromHeader(response);
+
+    if (!filename) {
       throw new Error("Missing filename");
     }
 
@@ -459,5 +455,9 @@ export default class Utils {
     }
 
     return url.protocol === "http:" || url.protocol === "https:";
+  }
+
+  static waitForNextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(resolve));
   }
 }
