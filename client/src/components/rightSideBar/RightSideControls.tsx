@@ -11,12 +11,12 @@ import {
   InfoRegular,
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Utils from "../../functions/Utils";
 import { convertMRCToRaw } from "../../functions/MrcParser";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import { Id, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { VolumeSettings } from "../../functions/VolumeSettings";
 
 const widgets: Array<WidgetDefinition> = [
@@ -55,10 +55,7 @@ const SideControls = observer(() => {
     try {
       toastId = toast.loading("Parsing volume files...");
 
-      const fileMap = await parseVisualizationFiles(
-        pendingFile,
-        volumeSettings
-      );
+      const fileMap = await parseVisualizationFile(pendingFile, volumeSettings);
 
       toast.update(toastId, {
         render: "Visualizing the volume...",
@@ -81,14 +78,22 @@ const SideControls = observer(() => {
     }
   };
 
-  const visualizeUrl = async (url: string, volumeSettings?: VolumeSettings) => {
+  const visualizeUrl = async (
+    url: string,
+    fileType: string,
+    volumeSettings?: VolumeSettings
+  ) => {
     let toastId = null;
 
     try {
       toastId = toast.loading("Downloading volume files...");
       const response = await fetch(url);
       const blob = await response.blob();
-      const filename = Utils.getFilenameFromHeader(response);
+      let filename = Utils.getFilenameFromHeader(response);
+      if (!filename) {
+        filename = new Date().toISOString();
+      }
+      filename = Utils.removeExtensionFromPath(filename) + "." + fileType;
 
       if (!filename) {
         throw new Error("No filename found in the response headers.");
@@ -105,14 +110,7 @@ const SideControls = observer(() => {
       });
       await Utils.waitForNextFrame();
 
-      console.log("BING")
-
-      const fileMap = await parseVisualizationFiles(
-        pendingFile,
-        volumeSettings
-      );
-
-      console.log("BONG")
+      const fileMap = await parseVisualizationFile(pendingFile, volumeSettings);
 
       toast.update(toastId, {
         render: "Visualizing the volume...",
@@ -123,8 +121,6 @@ const SideControls = observer(() => {
 
       await uiState.visualizeVolume(fileMap, undefined);
 
-      console.log("KONG")
-
       toast.update(toastId, {
         render: "Visualization Ready!",
         type: "success",
@@ -132,13 +128,12 @@ const SideControls = observer(() => {
         autoClose: 2000,
         closeOnClick: true,
       });
-      
     } catch (error) {
       Utils.updateToastWithErrorMsg(toastId, error);
     }
   };
 
-  const parseVisualizationFiles = async (
+  const parseVisualizationFile = async (
     pendingFile: File,
     volumeSettings?: VolumeSettings
   ) => {
@@ -164,6 +159,7 @@ const SideControls = observer(() => {
       throw new Error("Missing volume settings");
     }
 
+    volumeSettings.file = pendingFile.name;
     volumeSettings.checkValidity();
 
     const volumeSettingsFile = volumeSettings.toFile();

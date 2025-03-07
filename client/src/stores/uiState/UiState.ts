@@ -16,6 +16,7 @@ import Utils from "../../functions/Utils";
 import { Volume } from "../userState/VolumeModel";
 import { CONFIG } from "../../Constants";
 import { RenderSettings } from "./RenderSettings";
+import { UploadDialog } from "./UploadDialog";
 
 export const UiState = types
   .model({
@@ -24,6 +25,7 @@ export const UiState = types
     kernelSize: types.optional(types.integer, 25),
     visualizedVolume: types.maybe(VisualizedVolume),
     renderSettings: types.optional(RenderSettings, {}),
+    uploadDialog: types.optional(UploadDialog, {}),
   })
   .actions((self) => ({
     setOpenLeftWidget(id: number) {
