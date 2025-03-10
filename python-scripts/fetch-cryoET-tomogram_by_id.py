@@ -27,7 +27,12 @@ def fetch_cryoET_tomograms(id: int):
         print(f'Could not connect to cryoET API client.', file=sys.stderr)
         sys.exit(1)
 
-    tomogram = Tomogram.get_by_id(client, id)
+    try:
+        tomogram = Tomogram.get_by_id(client, id)
+    except Exception as e:
+        print(f'Could not fetch tomogram with id {id}.', file=sys.stderr)
+        sys.exit(1)
+
     if not tomogram:
         print(f'Tomogram with id {id} does not exist.', file=sys.stderr)
         sys.exit(1)
