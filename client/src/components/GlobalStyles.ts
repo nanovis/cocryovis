@@ -170,6 +170,10 @@ const globalStyles = makeStyles({
     color: tokens.colorBrandForeground1,
     verticalAlign: "middle",
   },
+  warningIcon: {
+    color: tokens.colorPaletteMarigoldForeground3,
+    verticalAlign: "middle",
+  },
   failIcon: {
     color: tokens.colorPaletteRedBackground3,
     verticalAlign: "middle",

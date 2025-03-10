@@ -402,7 +402,7 @@ export default class Utils {
      * Runs a script with arguments and optional output callbacks.
      * @param {string} command - The command to run (e.g., "python").
      * @param {string[]} args - Arguments to pass (e.g., ["script.py", "arg1", "arg2"]).
-     ** @param {string} cwd - Optional working directory. Defaults to current directory.
+     * @param {string} cwd - Optional working directory. Defaults to current directory.
      * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
      * @param {(value: string) => void?} stderrCallback - Callback for stderr.
      * @returns {Promise<void>}
@@ -415,21 +415,21 @@ export default class Utils {
         stderrCallback = null
     ) {
         return new Promise((resolve, reject) => {
-            const pythonProcess = spawn(command, args, cwd ? { cwd } : {});
+            const process = spawn(command, args, cwd ? { cwd } : {});
 
             if (stdoutCallback) {
-                pythonProcess.stdout.on("data", (data) => {
+                process.stdout.on("data", (data) => {
                     stdoutCallback(data.toString());
                 });
             }
 
             if (stderrCallback) {
-                pythonProcess.stderr.on("data", (data) => {
+                process.stderr.on("data", (data) => {
                     stderrCallback(data.toString());
                 });
             }
 
-            pythonProcess.on("close", (code) => {
+            process.on("close", (code) => {
                 if (code === 0) {
                     resolve();
                 } else {
@@ -441,6 +441,36 @@ export default class Utils {
                     );
                 }
             });
+
+            process.on("error", (err) => {
+                reject(new Error(`Failed to start script: ${err.message}`));
+            });
         });
+    }
+
+    /**
+     * Runs a Python script with arguments and optional output callbacks.
+     * @param {string} script - The Python script to run.
+     * @param {string[]} args - Arguments to pass to the script.
+     * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
+     * @param {(value: string) => void?} stderrCallback - Callback for stderr.
+     * @param {string} pythonPath - Optional path to the Python executable.
+     * @returns {Promise<void>}
+     */
+    static async runPythonScript(
+        script,
+        args,
+        stdoutCallback = null,
+        stderrCallback = null,
+        pythonPath = appConfig.python
+    ) {
+        const scriptPath = path.join("./python-scripts", script);
+        return Utils.runScript(
+            pythonPath,
+            [scriptPath, ...args],
+            null,
+            stdoutCallback,
+            stderrCallback
+        );
     }
 }

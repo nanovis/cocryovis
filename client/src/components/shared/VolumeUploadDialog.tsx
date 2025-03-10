@@ -20,9 +20,13 @@ import {
   Tab,
   Textarea,
 } from "@fluentui/react-components";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Utils from "../../functions/Utils";
-import { ArrowResetFilled } from "@fluentui/react-icons";
+import {
+  ArrowResetFilled,
+  Checkmark24Filled,
+  Info24Regular,
+} from "@fluentui/react-icons";
 import { VolumeSettings } from "../../functions/VolumeSettings";
 import React from "react";
 import { observer } from "mobx-react-lite";
@@ -31,7 +35,9 @@ import {
   endianOptions,
   fileTypeOptions,
   formatOptions,
+  Tabs,
 } from "../../stores/uiState/UploadDialog";
+import globalStyles from "../GlobalStyles";
 
 const useStyles = makeStyles({
   dnd: {
@@ -67,8 +73,10 @@ const useStyles = makeStyles({
     gap: "15px",
   },
   topInput: {
-    minHeight: "68px",
+    minHeight: "70px",
     display: "flex",
+    marginLeft: "5px",
+    marginRight: "5px",
   },
 });
 
@@ -95,15 +103,15 @@ const VolumeUploadDialog = observer(
     confirmText,
   }: Props) => {
     const classes = useStyles();
+    const globalClasses = globalStyles();
 
     const { uiState } = useMst();
     const uploadDialog = uiState.uploadDialog;
     const fileUploadInputs = uploadDialog.fileUploadInputs;
     const urlUploadInputs = uploadDialog.urlUploadInputs;
+    const cryoETUploadInputs = uploadDialog.cryoETUploadInputs;
 
     const [isBusy, setIsBusy] = useState(false);
-
-    const volumeSettings = useRef<VolumeSettings | null>(null);
 
     const [isFileOver, setIsFileOver] = useState(false);
 
@@ -172,9 +180,7 @@ const VolumeUploadDialog = observer(
 
     const parseVolumeSettings = async (descriptorFile: File) => {
       const descriptor = await descriptorFile.text();
-      volumeSettings.current = VolumeSettings.fromJSON(descriptor);
-
-      const settings = volumeSettings.current;
+      const settings = VolumeSettings.fromJSON(descriptor);
 
       if (settings.size) {
         const { x, y, z } = settings.size;
@@ -236,13 +242,22 @@ const VolumeUploadDialog = observer(
       return !isBusy && urlUploadInputs.fileType === "raw";
     };
 
+    const fetchCryoETMetadata = async () => {
+      setIsBusy(true);
+      cryoETUploadInputs.fetchCryoETMetadata();
+      setIsBusy(false);
+    };
+
     const confirmEffect = async () => {
       if (isBusy) {
         return;
       }
       try {
         setIsBusy(true);
-        if (uploadDialog.tab === "fromUrl") {
+        if (uploadDialog.tab === Tabs.fromCryoET) {
+          await confirmCryoET();
+          return;
+        } else if (uploadDialog.tab === Tabs.fromUrl) {
           await confirmUrl();
           return;
         } else {
@@ -283,6 +298,13 @@ const VolumeUploadDialog = observer(
       }
     };
 
+    const confirmCryoET = async () => {
+      if (!cryoETUploadInputs.isValid()) {
+        return;
+      }
+      await onUrlConfirm(cryoETUploadInputs.url, "mrc");
+    };
+
     return (
       <Dialog open={open}>
         <DialogSurface style={{ paddingTop: "0px" }}>
@@ -299,15 +321,18 @@ const VolumeUploadDialog = observer(
               <TabList
                 selectedValue={uploadDialog.tab}
                 onTabSelect={(_, data) =>
-                  uploadDialog.setTab(data.value as string)
+                  uploadDialog.setTab(data.value as Tabs)
                 }
                 disabled={isBusy}
               >
-                <Tab style={{ width: "50%" }} id="fromFile" value="fromFile">
+                <Tab style={{ width: "33%" }} value={Tabs.fromFile}>
                   From File
                 </Tab>
-                <Tab style={{ width: "50%" }} id="fromUrl" value="fromUrl">
+                <Tab style={{ width: "33%" }} value={Tabs.fromUrl}>
                   From URL
+                </Tab>
+                <Tab style={{ width: "33%" }} value={Tabs.fromCryoET}>
+                  From CryoET
                 </Tab>
               </TabList>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -327,11 +352,11 @@ const VolumeUploadDialog = observer(
 
             <DialogContent
               style={{
-                minHeight: "250px",
+                minHeight: "252px",
                 padding: "15px",
               }}
             >
-              {uploadDialog.tab === "fromFile" && (
+              {uploadDialog.tab === Tabs.fromFile && (
                 <div className={classes.tabContent}>
                   <div className={classes.topInput}>
                     <Tooltip
@@ -487,7 +512,7 @@ const VolumeUploadDialog = observer(
                   </div>
                 </div>
               )}
-              {uploadDialog.tab === "fromUrl" && (
+              {uploadDialog.tab === Tabs.fromUrl && (
                 <div className={classes.tabContent}>
                   <div className={classes.topInput}>
                     <Textarea
@@ -614,6 +639,94 @@ const VolumeUploadDialog = observer(
                           <Option key={option}>{option}</Option>
                         ))}
                       </Dropdown>
+                    </Field>
+                  </div>
+                </div>
+              )}
+              {uploadDialog.tab === Tabs.fromCryoET && (
+                <div className={classes.tabContent}>
+                  <div
+                    className={classes.topInput}
+                    style={{ flexDirection: "column", gap: "10px" }}
+                  >
+                    <div style={{ display: "flex" }}>
+                      <Field style={{ flex: 1 }}>
+                        <Input
+                          value={cryoETUploadInputs.cryoETId?.toString() ?? ""}
+                          onChange={(_, data) =>
+                            cryoETUploadInputs.setCryoETId(data.value)
+                          }
+                          disabled={isBusy}
+                          style={{ width: "100%" }}
+                          placeholder={"Enter CryoET Tomogram ID"}
+                        />
+                      </Field>
+                      <Button
+                        appearance="primary"
+                        style={{ marginLeft: "10px" }}
+                        onClick={fetchCryoETMetadata}
+                        disabled={
+                          isBusy || cryoETUploadInputs.cryoETId === undefined
+                        }
+                      >
+                        Fetch Metadata
+                      </Button>
+                    </div>
+
+                    {cryoETUploadInputs.hasSameId() && (
+                      <div>
+                        <Checkmark24Filled
+                          className={globalClasses.successIcon}
+                        />
+                        <Text style={{ marginLeft: "5px" }}>
+                          Successfully fetched metadata.
+                        </Text>
+                      </div>
+                    )}
+                    {cryoETUploadInputs.hasDifferentId() && (
+                      <div>
+                        <Info24Regular className={globalClasses.warningIcon} />
+                        <Text style={{ marginLeft: "5px" }}>
+                          Metadata does not match the current id.
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+                  <div className={classes.inputRow}>
+                    <Field label="Width" className={classes.dimensionsField}>
+                      <Input
+                        value={cryoETUploadInputs.width}
+                        className={classes.dimensionsInput}
+                        disabled={true}
+                      />
+                    </Field>
+                    <Field label="Height" className={classes.dimensionsField}>
+                      <Input
+                        value={cryoETUploadInputs.height}
+                        className={classes.dimensionsInput}
+                        disabled={true}
+                      />
+                    </Field>
+                    <Field label="Depth" className={classes.dimensionsField}>
+                      <Input
+                        value={cryoETUploadInputs.depth}
+                        className={classes.dimensionsInput}
+                        disabled={true}
+                      />
+                    </Field>
+                  </div>
+                  <div className={classes.inputRow}>
+                    <Field
+                      label="Name"
+                      className={classes.dimensionsField}
+                      style={{ flex: 1 }}
+                    >
+                      <Input
+                        value={cryoETUploadInputs.name}
+                        className={classes.dimensionsInput}
+                        disabled={true}
+                        appearance="underline"
+                      />
                     </Field>
                   </div>
                 </div>

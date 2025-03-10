@@ -1,6 +1,13 @@
-import { Instance, SnapshotIn, types } from "mobx-state-tree";
+import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { VolumeSettings } from "../../functions/VolumeSettings";
-import { set } from "mobx";
+import { toast } from "react-toastify";
+import Utils from "../../functions/Utils";
+
+export enum Tabs {
+  fromFile = "fromFile",
+  fromUrl = "fromUrl",
+  fromCryoET = "fromCryoET",
+}
 
 export const formatOptions = [
   "8-bit",
@@ -9,15 +16,23 @@ export const formatOptions = [
   "32-bit Signed",
   "32-bit Float",
   "64-bit Float",
-];
+] as readonly string[];
 
-export const endianOptions = ["Little Endian", "Big Endian"];
+export const endianOptions = [
+  "Little Endian",
+  "Big Endian",
+] as readonly string[];
 
-export const fileTypeOptions = ["raw", "mrc"];
+export const fileTypeOptions = ["raw", "mrc"] as readonly string[];
 
 function stringToPositiveInteger(value: string) {
   const parsedValue = parseInt(value);
   return isNaN(parsedValue) || parsedValue <= 0 ? undefined : parsedValue;
+}
+
+function stringToNonNegativeInteger(value: string) {
+  const parsedValue = parseInt(value);
+  return isNaN(parsedValue) || parsedValue < 0 ? undefined : parsedValue;
 }
 
 export const FileUploadInputs = types
@@ -31,17 +46,24 @@ export const FileUploadInputs = types
   })
   .views((self) => ({
     rawUpload() {
-      return self.pendingFile?.name.toLowerCase().endsWith(".raw");
+      return !!self.pendingFile?.name.toLowerCase().endsWith(".raw");
     },
     mrcUpload() {
-      return self.pendingFile?.name.toLowerCase().endsWith(".mrc");
+      return !!self.pendingFile?.name.toLowerCase().endsWith(".mrc");
     },
     isValid() {
-      return self.pendingFile && (!this.rawUpload() || this.validParameters());
+      return (
+        self.pendingFile !== null &&
+        (!this.rawUpload() || this.validParameters())
+      );
     },
     validParameters() {
       return (
-        self.width && self.height && self.depth && self.format && self.endian
+        self.width !== undefined &&
+        self.height !== undefined &&
+        self.depth !== undefined &&
+        self.format !== undefined &&
+        self.endian !== undefined
       );
     },
   }))
@@ -140,7 +162,11 @@ export const UrlUploadInputs = types
     },
     validParameters() {
       return (
-        self.width && self.height && self.depth && self.format && self.endian
+        self.width !== undefined &&
+        self.height !== undefined &&
+        self.depth !== undefined &&
+        self.format !== undefined &&
+        self.endian !== undefined
       );
     },
   }))
@@ -210,14 +236,125 @@ export interface UrlUploadInputsInstance
 export interface UrlUploadInputsSnapshotIn
   extends SnapshotIn<typeof UrlUploadInputs> {}
 
+export const CryoETUploadInputs = types
+  .model({
+    cryoETId: types.maybe(types.number),
+    lastId: types.maybe(types.number),
+    name: types.optional(types.string, ""),
+    url: types.optional(types.string, ""),
+    width: types.optional(types.string, ""),
+    height: types.optional(types.string, ""),
+    depth: types.optional(types.string, ""),
+  })
+  .views((self) => ({
+    isValid() {
+      return self.url.length > 0;
+    },
+    hasSameId() {
+      return self.lastId !== undefined && self.cryoETId === self.lastId;
+    },
+    hasDifferentId() {
+      return self.lastId !== undefined && self.cryoETId !== self.lastId;
+    },
+  }))
+  .actions((self) => ({
+    setCryoETId(value: string) {
+      const parsedValue = parseInt(value);
+      self.cryoETId =
+        isNaN(parsedValue) || parsedValue < 0 ? undefined : parsedValue;
+    },
+    setUrl(url: string) {
+      self.url = url;
+    },
+    setWidth(width: string) {
+      self.width = width;
+    },
+    setHeight(height: string) {
+      self.height = height;
+    },
+    setDepth(depth: string) {
+      self.depth = depth;
+    },
+    reset() {
+      self.cryoETId = undefined;
+      self.url = "";
+      self.width = "";
+      self.height = "";
+      self.depth = "";
+    },
+  }))
+  .actions((self) => ({
+    fetchCryoETMetadata: flow(function* fetchCryoETMetadata() {
+      if (!self.cryoETId) {
+        return;
+      }
+      let toastId = null;
+      try {
+        toastId = toast.loading("Fetching CryoET metadata...");
+        const response = yield Utils.sendReq(
+          `cryoet/${self.cryoETId}`,
+          {
+            method: "GET",
+            credentials: "include",
+          },
+          false
+        );
+        if (!isAlive(self)) {
+          return;
+        }
+        const metadata = yield response.json();
+        if (!isAlive(self)) {
+          return;
+        }
+
+        if (
+          !metadata ||
+          !metadata.https_mrc_file ||
+          !metadata.size_x ||
+          !metadata.size_y ||
+          !metadata.size_z
+        ) {
+          throw new Error(
+            "CryoET metadata does not contain all required fields"
+          );
+        }
+
+        self.setUrl(metadata.https_mrc_file);
+        self.setWidth(metadata.size_x.toString());
+        self.setHeight(metadata.size_y.toString());
+        self.setDepth(metadata.size_z.toString());
+        self.name = metadata.name;
+
+        self.lastId = self.cryoETId;
+
+        toast.update(toastId, {
+          render: "CryoET metadata fetched successfully",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+          closeOnClick: true,
+        });
+      } catch (error) {
+        Utils.updateToastWithErrorMsg(toastId, error);
+        console.error("Error fetching CryoET metadata:", error);
+      }
+    }),
+  }));
+
+export interface CryoETUploadInputsInstance
+  extends Instance<typeof CryoETUploadInputs> {}
+export interface CryoETUploadInputsSnapshotIn
+  extends SnapshotIn<typeof CryoETUploadInputs> {}
+
 export const UploadDialog = types
   .model({
-    tab: types.optional(types.enumeration(["fromFile", "fromUrl"]), "fromFile"),
+    tab: types.optional(types.enumeration(Object.values(Tabs)), Tabs.fromFile),
     fileUploadInputs: types.optional(FileUploadInputs, {}),
     urlUploadInputs: types.optional(UrlUploadInputs, {}),
+    cryoETUploadInputs: types.optional(CryoETUploadInputs, {}),
   })
   .actions((self) => ({
-    setTab(tab: string) {
+    setTab(tab: Tabs) {
       self.tab = tab;
     },
     resetCurrentTab() {
@@ -228,9 +365,13 @@ export const UploadDialog = types
       }
     },
     isValid() {
-      return self.tab === "fromFile"
-        ? self.fileUploadInputs.isValid()
-        : self.urlUploadInputs.isValid();
+      if (self.tab === "fromFile") {
+        return self.fileUploadInputs.isValid();
+      } else if (self.tab === "fromUrl") {
+        return self.urlUploadInputs.isValid();
+      } else {
+        return self.cryoETUploadInputs.isValid();
+      }
     },
   }));
 

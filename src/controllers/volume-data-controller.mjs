@@ -12,6 +12,7 @@ import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import { PendingLocalFile, unpackFiles } from "../tools/file-handler.mjs";
 import fsPromises from "node:fs/promises";
+import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 
 export default class VolumeDataController {
     /**
@@ -305,5 +306,17 @@ export default class VolumeDataController {
         );
 
         res.sendStatus(204);
+    }
+
+    /**
+     * @param {AuthenticatedRequest} req
+     * @param {import("express").Response} res
+     */
+    static async getTomographyMetadataFromCryoETId(req, res) {
+        const metadata = await fetchCtyoETTomogramMetadata(
+            Number(req.params.idTomogram)
+        );
+
+        res.status(200).json(metadata);
     }
 }

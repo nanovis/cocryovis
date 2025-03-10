@@ -153,6 +153,11 @@ projectsApi.get(`/volumeData/:type/:idVolumeData/download-mrc-file`, restrictApi
 projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi, 
     async (req, res) => VolumeDataController.removeFromVolume(VolumeDataType.mapName(req.params.type), req, res));
   
+// CryoET Tomogram Metadata
+projectsApi.get(`/cryoet/:idTomogram/`, 
+    async (req, res) => VolumeDataController.getTomographyMetadataFromCryoETId(req, res));
+    
+
 /////// MODELS
 
 // Get Models from Project
