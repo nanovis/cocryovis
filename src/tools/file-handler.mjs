@@ -266,6 +266,75 @@ export class PendingLocalFile extends PendingUpload {
 }
 
 /**
+ * @extends {PendingUpload}
+ */
+export class PendingData extends PendingUpload {
+    /**
+     * @param {Buffer} buffer
+     * @param {String} fileName
+     */
+    constructor(buffer, fileName) {
+        super();
+        /** @type {Buffer} */
+        this.buffer = buffer;
+        /** @type {String} */
+        this._fileName = fileName;
+        Object.preventExtensions(this);
+    }
+
+    /**
+     * @return {String}
+     */
+    get fileName() {
+        return path.basename(this._fileName);
+    }
+
+    /**
+     * @return {String}
+     */
+    get filteredFileName() {
+        return Utils.fileNameFilter(this._fileName);
+    }
+
+    /**
+     * @return {String}
+     */
+    get fileExtension() {
+        return path.extname(this._fileName);
+    }
+
+    /**
+     * @return {Promise<Buffer>}
+     */
+    async getData() {
+        return this.buffer;
+    }
+
+    /**
+     * @param {String} folderPath
+     * @return {Promise<String>}
+     */
+    async saveAs(folderPath, fileNameOverride = null) {
+        const filteredFileName =
+            fileNameOverride != null
+                ? fileNameOverride
+                : Utils.fileNameFilter(this.fileName);
+        const fullPath = path.join(folderPath, filteredFileName);
+        if (fileSystem.existsSync(fullPath)) {
+            if (appConfig.safeMode) {
+                throw new Error(
+                    `Error saving file: File with the same name already exists.`
+                );
+            } else {
+                await rm(fullPath, { recursive: true, force: true });
+            }
+        }
+        await fsPromises.writeFile(fullPath, await this.getData());
+        return fullPath;
+    }
+}
+
+/**
  * @param {fileUpload.UploadedFile[]} files
  * @param {String[]?} acceptedExtensions
  * @returns {Promise<PendingUpload[]>}

@@ -10,7 +10,11 @@ import { ApiError } from "../tools/error-handler.mjs";
 import fileSystem, { fstat } from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
-import { PendingLocalFile, unpackFiles } from "../tools/file-handler.mjs";
+import {
+    PendingData,
+    PendingLocalFile,
+    unpackFiles,
+} from "../tools/file-handler.mjs";
 import fsPromises from "node:fs/promises";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 
@@ -170,25 +174,51 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async createFromMrcUrl(type, req, res) {
+    static async createFromUrl(req, res) {
         if (!req.body.url || !Utils.isValidHttpUrl(req.body.url)) {
             throw new ApiError(400, "Invalid URL.");
         }
 
+        if (!req.body.fileType) {
+            throw new ApiError(400, "Missing file type.");
+        }
+
+        if (!["mrc", "raw"].includes(req.body.fileType)) {
+            throw new ApiError(400, "Invalid file type.");
+        }
+
+        if (req.body.fileType === "raw" && !req.body.volumeSettings) {
+            throw new ApiError(400, "Raw files require volume settings.");
+        }
+
         const filePath = await Utils.downloadAndSaveFile(req.body.url);
 
-        const file = new PendingLocalFile(filePath);
-
         try {
-            const volumeData = await RawVolumeData.createFromMrcFile(
-                req.session.user.id,
-                Number(req.params.idVolume),
-                file
-            );
+            const file = new PendingLocalFile(filePath);
+            let volumeData;
+
+            if (req.body.fileType === "mrc") {
+                volumeData = await RawVolumeData.createFromMrcFile(
+                    req.session.user.id,
+                    Number(req.params.idVolume),
+                    file
+                );
+            } else {
+                const settingsFile = new PendingData(
+                    Buffer.from(req.body.volumeSettings),
+                    "volume-settings.json"
+                );
+
+                volumeData = await RawVolumeData.createFromFiles(
+                    req.session.user.id,
+                    Number(req.params.idVolume),
+                    [file, settingsFile]
+                );
+            }
+
             res.status(201).json(volumeData);
         } catch (error) {
             await fsPromises.rm(filePath, {

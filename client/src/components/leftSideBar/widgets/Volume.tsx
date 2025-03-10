@@ -49,7 +49,8 @@ import {
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
 import { ResultInstance } from "../../../stores/userState/ResultModel";
-import UrlImportDialog from "./elements/UrlImportDialog";
+import { VolumeSettings } from "../../../functions/VolumeSettings";
+import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -91,15 +92,19 @@ const Volume = observer(({ open, close }: Props) => {
   const [isLoadingVolumes, setLoadingVolumes] = useState(false);
   const [isUploadingData, setIsUploadingData] = useState(false);
   const [isTiltSeriesDialogOpen, setIsTiltSeriesDialogOpen] = useState(false);
-  const [isUrlUploadDialogOpen, setIsUrlUploadDialogOpen] = useState(false);
+  const [isUploadVolumeDialogOpen, setIsUploadVolumeDialogOpen] =
+    useState(false);
 
-  const rawDataFileRef = useRef<HTMLInputElement | null>(null);
-  const mrcFileRef = useRef<HTMLInputElement | null>(null);
   const sparseLabelFileRef = useRef<HTMLInputElement | null>(null);
   const pseudoLabelFileRef = useRef<HTMLInputElement | null>(null);
 
   const isPageBusy = () => {
-    return isLoadingResults || isLoadingVolumes || isUploadingData;
+    return (
+      isLoadingResults ||
+      isLoadingVolumes ||
+      isUploadingData ||
+      uiState.uploadDialog.isBusy
+    );
   };
 
   const handleVolumeSelect = async (value: string | null) => {
@@ -156,39 +161,72 @@ const Volume = observer(({ open, close }: Props) => {
     }
   };
 
-  const handleRawDataFileChange = async (event: FileChangeEvent) => {
+  const uploadRawData = async (
+    pendingFile: File,
+    volumeSettings?: VolumeSettings
+  ) => {
+    let toastId = null;
     try {
-      if (!event.target.files) {
-        return;
+      toastId = toast.loading("Uploading files...");
+      if (Utils.isMrcFile(pendingFile.name)) {
+        try {
+          await selectedVolume?.uploadMrcVolume(pendingFile);
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error("Error converting MRC file:" + error.message);
+          } else {
+            throw new Error("Error converting MRC file");
+          }
+        }
+      } else {
+        if (!Utils.isRawFile(pendingFile.name)) {
+          throw new Error("No .raw file found in the uploaded files");
+        }
+
+        if (!volumeSettings) {
+          throw new Error("Missing volume settings");
+        }
+
+        volumeSettings.file = pendingFile.name;
+        volumeSettings.checkValidity();
+
+        const volumeSettingsFile = volumeSettings.toFile();
+        await Utils.waitForNextFrame();
+        await selectedVolume?.uploadRawVolume(pendingFile, volumeSettingsFile);
       }
 
-      setIsUploadingData(true);
-      await selectedVolume?.uploadRawVolume(event.target.files);
+      toast.update(toastId, {
+        render: "Data successfully uploaded!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+        closeOnClick: true,
+      });
     } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
-    } finally {
-      setIsUploadingData(false);
-      if (rawDataFileRef.current) {
-        rawDataFileRef.current.value = "";
-      }
     }
   };
 
-  const handleMrcFileChange = async (event: FileChangeEvent) => {
+  const uploadUrl = async (
+    url: string,
+    fileType: string,
+    volumeSettings?: VolumeSettings
+  ) => {
+    let toastId = null;
     try {
-      if (!event.target.files) {
-        return;
-      }
-
-      setIsUploadingData(true);
-      await selectedVolume?.uploadMrcVolume(event.target.files);
+      toastId = toast.loading("Uploading files...");
+      await selectedVolume?.uploadFromUrl(url, fileType, volumeSettings);
+      toast.update(toastId, {
+        render: "Data successfully uploaded!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+        closeOnClick: true,
+      });
     } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
-    } finally {
-      setIsUploadingData(false);
-      if (mrcFileRef.current) {
-        mrcFileRef.current.value = "";
-      }
     }
   };
 
@@ -649,21 +687,9 @@ const Volume = observer(({ open, close }: Props) => {
                   <MenuList>
                     <MenuItem
                       disabled={isPageBusy() || !activeProject?.hasWriteAccess}
-                      onClick={() => rawDataFileRef.current?.click()}
+                      onClick={() => setIsUploadVolumeDialogOpen(true)}
                     >
-                      Raw data file and descriptor
-                    </MenuItem>
-                    <MenuItem
-                      disabled={isPageBusy() || !activeProject?.hasWriteAccess}
-                      onClick={() => mrcFileRef.current?.click()}
-                    >
-                      MRC data file
-                    </MenuItem>
-                    <MenuItem
-                      disabled={isPageBusy() || !activeProject?.hasWriteAccess}
-                      onClick={() => setIsUrlUploadDialogOpen(true)}
-                    >
-                      MRC from URL
+                      Raw Data
                     </MenuItem>
                     <MenuItem
                       disabled={isPageBusy() || !activeProject?.hasWriteAccess}
@@ -754,22 +780,6 @@ const Volume = observer(({ open, close }: Props) => {
             </Tooltip>
           </div>
 
-          <input
-            type="file"
-            onChange={handleRawDataFileChange}
-            accept=".raw, .json, .zip"
-            multiple
-            ref={rawDataFileRef}
-            className={globalClasses.hiddenInput}
-          />
-          <input
-            type="file"
-            onChange={handleMrcFileChange}
-            accept=".mrc, .zip"
-            ref={mrcFileRef}
-            className={globalClasses.hiddenInput}
-          />
-
           <ProcessTiltSeriesDialog
             open={isTiltSeriesDialogOpen}
             onClose={() => setIsTiltSeriesDialogOpen(false)}
@@ -777,10 +787,14 @@ const Volume = observer(({ open, close }: Props) => {
             showServerVariant={true}
           />
 
-          <UrlImportDialog
-            open={isUrlUploadDialogOpen}
-            volume={selectedVolume}
-            onClose={() => setIsUrlUploadDialogOpen(false)}
+          <VolumeUploadDialog
+            open={isUploadVolumeDialogOpen}
+            onClose={() => setIsUploadVolumeDialogOpen(false)}
+            onFileConfirm={uploadRawData}
+            titleText={"Upload Raw Data"}
+            confirmText="Upload"
+            uploadDialogStore={uiState.uploadDialog}
+            onUrlConfirm={uploadUrl}
           />
 
           <div

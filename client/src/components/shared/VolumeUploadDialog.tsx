@@ -29,15 +29,15 @@ import {
 } from "@fluentui/react-icons";
 import { VolumeSettings } from "../../functions/VolumeSettings";
 import React from "react";
-import { observer } from "mobx-react-lite";
-import { useMst } from "../../stores/RootStore";
 import {
   endianOptions,
   fileTypeOptions,
   formatOptions,
   Tabs,
+  UploadDialogInstance,
 } from "../../stores/uiState/UploadDialog";
 import globalStyles from "../GlobalStyles";
+import { observer } from "mobx-react-lite";
 
 const useStyles = makeStyles({
   dnd: {
@@ -91,6 +91,7 @@ interface Props {
   ) => Promise<void>;
   titleText: string;
   confirmText: string;
+  uploadDialogStore: UploadDialogInstance;
 }
 
 const VolumeUploadDialog = observer(
@@ -101,17 +102,14 @@ const VolumeUploadDialog = observer(
     onUrlConfirm,
     titleText,
     confirmText,
+    uploadDialogStore,
   }: Props) => {
     const classes = useStyles();
     const globalClasses = globalStyles();
 
-    const { uiState } = useMst();
-    const uploadDialog = uiState.uploadDialog;
-    const fileUploadInputs = uploadDialog.fileUploadInputs;
-    const urlUploadInputs = uploadDialog.urlUploadInputs;
-    const cryoETUploadInputs = uploadDialog.cryoETUploadInputs;
-
-    const [isBusy, setIsBusy] = useState(false);
+    const fileUploadInputs = uploadDialogStore.fileUploadInputs;
+    const urlUploadInputs = uploadDialogStore.urlUploadInputs;
+    const cryoETUploadInputs = uploadDialogStore.cryoETUploadInputs;
 
     const [isFileOver, setIsFileOver] = useState(false);
 
@@ -234,30 +232,22 @@ const VolumeUploadDialog = observer(
       event.preventDefault();
     };
 
-    const canSetFileParameters = () => {
-      return !isBusy && fileUploadInputs.rawUpload();
-    };
-
-    const canSetUrlParameters = () => {
-      return !isBusy && urlUploadInputs.fileType === "raw";
-    };
-
     const fetchCryoETMetadata = async () => {
-      setIsBusy(true);
+      uploadDialogStore.setIsBusy(true);
       cryoETUploadInputs.fetchCryoETMetadata();
-      setIsBusy(false);
+      uploadDialogStore.setIsBusy(false);
     };
 
     const confirmEffect = async () => {
-      if (isBusy) {
+      if (uploadDialogStore.isBusy) {
         return;
       }
       try {
-        setIsBusy(true);
-        if (uploadDialog.tab === Tabs.fromCryoET) {
+        uploadDialogStore.setIsBusy(true);
+        if (uploadDialogStore.tab === Tabs.fromCryoET) {
           await confirmCryoET();
           return;
-        } else if (uploadDialog.tab === Tabs.fromUrl) {
+        } else if (uploadDialogStore.tab === Tabs.fromUrl) {
           await confirmUrl();
           return;
         } else {
@@ -265,7 +255,7 @@ const VolumeUploadDialog = observer(
         }
       } catch {
       } finally {
-        setIsBusy(false);
+        uploadDialogStore.setIsBusy(false);
         onClose();
       }
     };
@@ -319,11 +309,11 @@ const VolumeUploadDialog = observer(
               style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
               <TabList
-                selectedValue={uploadDialog.tab}
+                selectedValue={uploadDialogStore.tab}
                 onTabSelect={(_, data) =>
-                  uploadDialog.setTab(data.value as Tabs)
+                  uploadDialogStore.setTab(data.value as Tabs)
                 }
-                disabled={isBusy}
+                disabled={uploadDialogStore.isBusy}
               >
                 <Tab style={{ width: "33%" }} value={Tabs.fromFile}>
                   From File
@@ -337,16 +327,24 @@ const VolumeUploadDialog = observer(
               </TabList>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 {titleText}
-                <Button
-                  appearance="subtle"
-                  onClick={uploadDialog.resetCurrentTab}
-                  icon={
-                    <ArrowResetFilled
-                      style={{ color: tokens.colorBrandForeground1 }}
-                    />
-                  }
-                  disabled={isBusy}
-                />
+                <Tooltip
+                  content={"Clear"}
+                  relationship={"label"}
+                  appearance={"inverted"}
+                  positioning="after"
+                  hideDelay={0}
+                >
+                  <Button
+                    appearance="subtle"
+                    onClick={uploadDialogStore.resetCurrentTab}
+                    icon={
+                      <ArrowResetFilled
+                        style={{ color: tokens.colorBrandForeground1 }}
+                      />
+                    }
+                    disabled={uploadDialogStore.isBusy}
+                  />
+                </Tooltip>
               </div>
             </DialogTitle>
 
@@ -356,7 +354,7 @@ const VolumeUploadDialog = observer(
                 padding: "15px",
               }}
             >
-              {uploadDialog.tab === Tabs.fromFile && (
+              {uploadDialogStore.tab === Tabs.fromFile && (
                 <div className={classes.tabContent}>
                   <div className={classes.topInput}>
                     <Tooltip
@@ -431,7 +429,7 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           fileUploadInputs.setWidth(data.value)
                         }
-                        disabled={!canSetFileParameters()}
+                        disabled={!fileUploadInputs.canSetParameters()}
                       />
                     </Field>
                     <Field label="Height" className={classes.dimensionsField}>
@@ -445,7 +443,7 @@ const VolumeUploadDialog = observer(
                           fileUploadInputs.setHeight(data.value)
                         }
                         className={classes.dimensionsInput}
-                        disabled={!canSetFileParameters()}
+                        disabled={!fileUploadInputs.canSetParameters()}
                       />
                     </Field>
                     <Field label="Depth" className={classes.dimensionsField}>
@@ -459,7 +457,7 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           fileUploadInputs.setDepth(data.value)
                         }
-                        disabled={!canSetFileParameters()}
+                        disabled={!fileUploadInputs.canSetParameters()}
                       />
                     </Field>
                   </div>
@@ -481,7 +479,7 @@ const VolumeUploadDialog = observer(
                         placeholder={
                           fileUploadInputs.mrcUpload() ? "auto" : "Select"
                         }
-                        disabled={!canSetFileParameters()}
+                        disabled={!fileUploadInputs.canSetParameters()}
                       >
                         {formatOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -502,7 +500,7 @@ const VolumeUploadDialog = observer(
                         placeholder={
                           fileUploadInputs.mrcUpload() ? "auto" : "Select"
                         }
-                        disabled={!canSetFileParameters()}
+                        disabled={!fileUploadInputs.canSetParameters()}
                       >
                         {endianOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -512,14 +510,14 @@ const VolumeUploadDialog = observer(
                   </div>
                 </div>
               )}
-              {uploadDialog.tab === Tabs.fromUrl && (
+              {uploadDialogStore.tab === Tabs.fromUrl && (
                 <div className={classes.tabContent}>
                   <div className={classes.topInput}>
                     <Textarea
                       value={urlUploadInputs.url}
                       onChange={(_, data) => urlUploadInputs.setUrl(data.value)}
                       placeholder="https://www.example_url.com"
-                      disabled={isBusy}
+                      disabled={uploadDialogStore.isBusy}
                       style={{ width: "100%" }}
                     />
                     <Field
@@ -534,7 +532,7 @@ const VolumeUploadDialog = observer(
                         }
                         value={urlUploadInputs.fileType}
                         placeholder="Select"
-                        disabled={isBusy}
+                        disabled={uploadDialogStore.isBusy}
                         style={{
                           width: "100px",
                           minWidth: "100px",
@@ -564,7 +562,7 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           urlUploadInputs.setWidth(data.value)
                         }
-                        disabled={!canSetUrlParameters()}
+                        disabled={!urlUploadInputs.canSetParameters()}
                       />
                     </Field>
                     <Field label="Height" className={classes.dimensionsField}>
@@ -578,7 +576,7 @@ const VolumeUploadDialog = observer(
                           urlUploadInputs.setHeight(data.value)
                         }
                         className={classes.dimensionsInput}
-                        disabled={!canSetUrlParameters()}
+                        disabled={!urlUploadInputs.canSetParameters()}
                       />
                     </Field>
                     <Field label="Depth" className={classes.dimensionsField}>
@@ -592,7 +590,7 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           urlUploadInputs.setDepth(data.value)
                         }
-                        disabled={!canSetUrlParameters()}
+                        disabled={!urlUploadInputs.canSetParameters()}
                       />
                     </Field>
                   </div>
@@ -613,7 +611,7 @@ const VolumeUploadDialog = observer(
                         placeholder={
                           urlUploadInputs.mrcUpload() ? "auto" : "Select"
                         }
-                        disabled={!canSetUrlParameters()}
+                        disabled={!urlUploadInputs.canSetParameters()}
                       >
                         {formatOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -633,7 +631,7 @@ const VolumeUploadDialog = observer(
                         placeholder={
                           urlUploadInputs.mrcUpload() ? "auto" : "Select"
                         }
-                        disabled={!canSetUrlParameters()}
+                        disabled={!urlUploadInputs.canSetParameters()}
                       >
                         {endianOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -643,7 +641,7 @@ const VolumeUploadDialog = observer(
                   </div>
                 </div>
               )}
-              {uploadDialog.tab === Tabs.fromCryoET && (
+              {uploadDialogStore.tab === Tabs.fromCryoET && (
                 <div className={classes.tabContent}>
                   <div
                     className={classes.topInput}
@@ -656,7 +654,7 @@ const VolumeUploadDialog = observer(
                           onChange={(_, data) =>
                             cryoETUploadInputs.setCryoETId(data.value)
                           }
-                          disabled={isBusy}
+                          disabled={uploadDialogStore.isBusy}
                           style={{ width: "100%" }}
                           placeholder={"Enter CryoET Tomogram ID"}
                         />
@@ -666,7 +664,8 @@ const VolumeUploadDialog = observer(
                         style={{ marginLeft: "10px" }}
                         onClick={fetchCryoETMetadata}
                         disabled={
-                          isBusy || cryoETUploadInputs.cryoETId === undefined
+                          uploadDialogStore.isBusy ||
+                          cryoETUploadInputs.cryoETId === undefined
                         }
                       >
                         Fetch Metadata
@@ -736,14 +735,16 @@ const VolumeUploadDialog = observer(
               <Button
                 appearance="secondary"
                 onClick={onClose}
-                disabled={isBusy}
+                disabled={uploadDialogStore.isBusy}
               >
                 Cancel
               </Button>
               <Button
                 appearance="primary"
                 onClick={confirmEffect}
-                disabled={isBusy || !uploadDialog.isValid()}
+                disabled={
+                  uploadDialogStore.isBusy || !uploadDialogStore.isValid()
+                }
               >
                 {confirmText}
               </Button>

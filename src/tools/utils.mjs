@@ -369,6 +369,10 @@ export default class Utils {
 
             console.log("Download complete");
         } catch (error) {
+            fs.promises.rm(filePath, {
+                recursive: true,
+                force: true,
+            });
             throw error;
         }
     }

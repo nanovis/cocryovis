@@ -5,6 +5,7 @@ import { PseudoLabelVolume, PseudoVolumeSnapshotIn } from "./PseudoVolumeModel";
 import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
 import Utils, { FileMap } from "../../functions/Utils";
 import { toast } from "react-toastify";
+import { VolumeSettings } from "../../functions/VolumeSettings";
 
 export interface VolumeDB {
   id: number;
@@ -74,27 +75,22 @@ export const Volume = types
       self.pseudoVolumes.clear();
       self.addPseudoVolumes(volumes);
     },
-    uploadRawVolume: flow(function* uploadRawVolume(files: FileList) {
-      const fileMap = yield Utils.unpackAndcreateFileMap(files);
-      if (!isAlive(self)) {
-        return;
-      }
-
-      const validatedFiles = Utils.validateRawFileUpload(fileMap);
-
+    uploadRawVolume: flow(function* uploadRawVolume(
+      rawFile: File,
+      settingsFile: File
+    ) {
       const formData = new FormData();
-      validatedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
+      formData.append("files", rawFile);
+      formData.append("files", settingsFile);
 
-      const response = yield Utils.sendRequestWithToast(
+      const response = yield Utils.sendReq(
         `volume/${self.id}/volumeData/RawVolumeData/from-files`,
         {
           method: "POST",
           credentials: "include",
           body: formData,
         },
-        { successText: "Volume Successfully Uploaded" }
+        false
       );
       if (!isAlive(self)) {
         return;
@@ -106,21 +102,7 @@ export const Volume = types
 
       self.setRawVolume(rawData);
     }),
-    uploadMrcVolume: flow(function* uploadMrcVolume(files: FileList) {
-      if (!files || files.length == 0) {
-        toast.error(`No files silected`);
-        throw new Error("No files silected.");
-      }
-
-      const fileMap: FileMap = yield Utils.unpackAndcreateFileMap(files);
-
-      if (fileMap.size > 1) {
-        toast.error(`Too many files selected.`);
-        throw new Error("Too many files selected.");
-      }
-
-      const mrcFile = fileMap.values().next().value;
-
+    uploadMrcVolume: flow(function* uploadMrcVolume(mrcFile: File) {
       if (!mrcFile || !mrcFile.name.endsWith(".mrc")) {
         toast.error(`No MRC file selected.`);
         throw new Error("Too many files selected.");
@@ -128,14 +110,48 @@ export const Volume = types
 
       const formData = new FormData();
       formData.append("files", mrcFile);
-      const response = yield Utils.sendRequestWithToast(
+      const response = yield Utils.sendReq(
         `volume/${self.id}/volumeData/RawVolumeData/from-mrc-file`,
         {
           method: "POST",
           credentials: "include",
           body: formData,
         },
-        { successText: "Volume Successfully Uploaded" }
+        false
+      );
+      if (!isAlive(self)) {
+        return;
+      }
+      const rawData: RawVolumeSnapshotIn = yield response.json();
+      if (!isAlive(self)) {
+        return;
+      }
+
+      self.setRawVolume(rawData);
+    }),
+    uploadFromUrl: flow(function* uploadFromUrl(
+      url: string,
+      fileType: string,
+      volumeSettings?: VolumeSettings
+    ) {
+      if (!Utils.isValidHttpUrl(url)) {
+        toast.error(`Invalid URL.`);
+        throw new Error("Invalid URL.");
+      }
+
+      const response = yield Utils.sendReq(
+        `volume/${self.id}/volumeData/RawVolumeData/from-url`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: url,
+            fileType: fileType,
+            volumeSettings: volumeSettings,
+          }),
+        },
+        false
       );
       if (!isAlive(self)) {
         return;

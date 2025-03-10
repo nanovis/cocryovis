@@ -225,6 +225,7 @@ const SideControls = observer(() => {
         onUrlConfirm={visualizeUrl}
         titleText={"Visualize Volume"}
         confirmText="Visualize"
+        uploadDialogStore={uiState.uploadDialog}
       />
     </>
   );

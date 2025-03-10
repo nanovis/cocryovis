@@ -1,4 +1,12 @@
-import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
+import {
+  flow,
+  getParent,
+  getParentOfType,
+  Instance,
+  isAlive,
+  SnapshotIn,
+  types,
+} from "mobx-state-tree";
 import { VolumeSettings } from "../../functions/VolumeSettings";
 import { toast } from "react-toastify";
 import Utils from "../../functions/Utils";
@@ -30,11 +38,6 @@ function stringToPositiveInteger(value: string) {
   return isNaN(parsedValue) || parsedValue <= 0 ? undefined : parsedValue;
 }
 
-function stringToNonNegativeInteger(value: string) {
-  const parsedValue = parseInt(value);
-  return isNaN(parsedValue) || parsedValue < 0 ? undefined : parsedValue;
-}
-
 export const FileUploadInputs = types
   .model({
     pendingFile: types.frozen<File | null>(null),
@@ -45,6 +48,9 @@ export const FileUploadInputs = types
     endian: types.optional(types.enumeration(endianOptions), "Little Endian"),
   })
   .views((self) => ({
+    get dialog(): UploadDialogInstance {
+      return getParentOfType(self, UploadDialog);
+    },
     rawUpload() {
       return !!self.pendingFile?.name.toLowerCase().endsWith(".raw");
     },
@@ -65,6 +71,11 @@ export const FileUploadInputs = types
         self.format !== undefined &&
         self.endian !== undefined
       );
+    },
+  }))
+  .views((self) => ({
+    canSetParameters(): boolean {
+      return !self.dialog.isBusy && self.rawUpload();
     },
   }))
   .actions((self) => ({
@@ -149,6 +160,9 @@ export const UrlUploadInputs = types
     endian: types.optional(types.enumeration(endianOptions), "Little Endian"),
   })
   .views((self) => ({
+    get dialog(): UploadDialogInstance {
+      return getParentOfType(self, UploadDialog);
+    },
     rawUpload() {
       return self.fileType === "raw";
     },
@@ -168,6 +182,11 @@ export const UrlUploadInputs = types
         self.format !== undefined &&
         self.endian !== undefined
       );
+    },
+  }))
+  .views((self) => ({
+    canSetParameters(): boolean {
+      return !self.dialog.isBusy && self.rawUpload();
     },
   }))
   .actions((self) => ({
@@ -277,6 +296,8 @@ export const CryoETUploadInputs = types
     },
     reset() {
       self.cryoETId = undefined;
+      self.lastId = undefined;
+      self.name = "";
       self.url = "";
       self.width = "";
       self.height = "";
@@ -353,15 +374,23 @@ export const UploadDialog = types
     urlUploadInputs: types.optional(UrlUploadInputs, {}),
     cryoETUploadInputs: types.optional(CryoETUploadInputs, {}),
   })
+  .volatile(() => ({
+    isBusy: false,
+  }))
   .actions((self) => ({
     setTab(tab: Tabs) {
       self.tab = tab;
+    },
+    setIsBusy(isBusy: boolean) {
+      self.isBusy = isBusy;
     },
     resetCurrentTab() {
       if (self.tab === "fromFile") {
         self.fileUploadInputs.reset();
       } else if (self.tab === "fromUrl") {
         self.urlUploadInputs.reset();
+      } else {
+        self.cryoETUploadInputs.reset();
       }
     },
     isValid() {

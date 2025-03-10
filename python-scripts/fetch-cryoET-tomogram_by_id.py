@@ -1,7 +1,11 @@
 from argparse import ArgumentParser
 from datetime import datetime
 import json
+import sys
+import numpy as np
 from cryoet_data_portal import Client, Tomogram
+
+UINT32_MAX = np.iinfo(np.uint32).max
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -13,9 +17,25 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 def fetch_cryoET_tomograms(id: int):
-    client = Client()
-    tomograpm = Tomogram.get_by_id(client, id)
-    print(json.dumps(tomograpm.to_dict(), cls=DateTimeEncoder))
+    if id < 0 or id > UINT32_MAX:
+        print(f'Invalid tomogram ID {id}.', file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        client = Client()
+    except Exception as e:
+        print(f'Could not connect to cryoET API client.', file=sys.stderr)
+        sys.exit(1)
+
+    tomogram = Tomogram.get_by_id(client, id)
+    if not tomogram:
+        print(f'Tomogram with id {id} does not exist.', file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        print(json.dumps(tomogram.to_dict(), cls=DateTimeEncoder))
+    except Exception as e:
+        print(f'Could not serialize tomogram to JSON.', file=sys.stderr)
 
 
 if __name__ == '__main__':

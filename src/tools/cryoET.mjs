@@ -8,16 +8,20 @@ import Utils from "./utils.mjs";
  * @returns {Promise<Object>}
  */
 export async function fetchCtyoETTomogramMetadata(id) {
+    let errOutput = "";
+
     try {
         let output = "";
         await Utils.runPythonScript(
             "fetch-cryoET-tomogram_by_id.py",
             [id.toString()],
-            (value) => (output += value)
+            (value) => (output += value),
+            (value) => (errOutput += value)
         );
         return JSON.parse(output);
     } catch (error) {
-        console.error(error);
-        throw new Error("Failed to fetch cryoET tomogram metadata");
+        throw new Error(
+            "Failed to fetch cryoET tomogram metadata: " + errOutput
+        );
     }
 }
