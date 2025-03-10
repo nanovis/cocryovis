@@ -169,6 +169,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           position="top-center"
           autoClose={2000}
           transition={Slide}
+          style={{ zIndex: 9999999 }}
         />
         <MenuBar
           toggleSignClick={toggleSignClick}
