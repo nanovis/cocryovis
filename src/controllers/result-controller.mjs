@@ -7,10 +7,15 @@ import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class ResultController {
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getById(req, res) {
         const result = await Result.getById(Number(req.params.idResult));
@@ -19,8 +24,8 @@ export default class ResultController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getDetails(req, res) {
         const result = await Result.getByIdDeep(Number(req.params.idResult), {
@@ -32,8 +37,8 @@ export default class ResultController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getFromVolume(req, res) {
         const result = await Result.getFromVolume(Number(req.params.idVolume), {
@@ -44,8 +49,8 @@ export default class ResultController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async removeFromVolume(req, res) {
         const volumeId = Number(req.params.idVolume);
@@ -59,8 +64,8 @@ export default class ResultController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getResultData(req, res) {
         const result = await Result.getByIdDeep(Number(req.params.idResult), {
@@ -112,8 +117,8 @@ export default class ResultController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createFromFiles(req, res) {
         if (!req.files || !req.files.files) {

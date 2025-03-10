@@ -7,10 +7,15 @@ import path from "path";
 import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class CheckpointController {
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getCheckpoint(req, res) {
         const checkpoint = await Checkpoint.getById(
@@ -20,8 +25,8 @@ export default class CheckpointController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getCheckpointsFromModel(req, res) {
         const checkpoints = await Checkpoint.getFromModel(
@@ -31,8 +36,8 @@ export default class CheckpointController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async uploadCheckpoints(req, res) {
         if (!req.files || !req.files.files) {
@@ -49,8 +54,8 @@ export default class CheckpointController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async downloadCheckpoint(req, res) {
         const checkpoint = await Checkpoint.getById(
@@ -66,8 +71,8 @@ export default class CheckpointController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async removeFromModel(req, res) {
         const modelId = Number(req.params.idModel);
@@ -81,8 +86,8 @@ export default class CheckpointController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async checkpointToText(req, res) {
         const checkpoint = await Checkpoint.getById(
@@ -99,8 +104,8 @@ export default class CheckpointController {
     }
 
     /**
-     * @param {UnauthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async checkpointFileToText(req, res) {
         if (!req.files || !req.files.checkpoint) {

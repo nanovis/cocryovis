@@ -110,7 +110,7 @@ export class WebSocketInstance {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
+     * @param {import("express").Request} req
      * @param {import("stream").Duplex} socket
      * @param {Buffer} head
      */
@@ -141,7 +141,7 @@ export class WebSocketInstance {
 
     /**
      * @param {WebSocket} ws
-     * @param {AuthenticatedRequest} req
+     * @param {import("express").Request} req
      */
     #onConnection(ws, req) {
         if (!req.session || !req.session.user) {

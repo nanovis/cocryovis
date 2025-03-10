@@ -3,7 +3,7 @@
 import { ApiError } from "../tools/error-handler.mjs";
 
 /**
- * @param {AuthenticatedRequest} req
+ * @param {import("express").Request} req
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */

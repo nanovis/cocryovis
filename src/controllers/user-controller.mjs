@@ -4,10 +4,15 @@ import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class UserController {
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      * @param {import("express").NextFunction} next
      */
     static async register(req, res, next) {
@@ -28,8 +33,8 @@ export default class UserController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      * @param {import("express").NextFunction} next
      */
     static async login(req, res, next) {
@@ -71,8 +76,8 @@ export default class UserController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static logout(req, res) {
         req.session.destroy(function () {
@@ -81,8 +86,8 @@ export default class UserController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getLoggedUserData(req, res) {
         try {
@@ -97,8 +102,8 @@ export default class UserController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getAllUsers(req, res) {
         const users = await User.getAllUsers();
@@ -107,8 +112,8 @@ export default class UserController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getStatus(req, res) {
         const taskHistory = await TaskHistory.getFromUser(req.session.user.id);

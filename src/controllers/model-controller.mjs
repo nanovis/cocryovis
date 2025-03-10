@@ -2,10 +2,14 @@
 
 import Model from "../models/model.mjs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
 export default class ModelController {
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getModel(req, res) {
         const options = this.#parseOptionQuery(req);
@@ -15,8 +19,8 @@ export default class ModelController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getModelsFromProject(req, res) {
         const options = ModelController.#parseOptionQuery(req);
@@ -29,7 +33,7 @@ export default class ModelController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
+     * @param {Request} req
      * @returns {import("../models/model.mjs").Options}
      */
     static #parseOptionQuery(req) {
@@ -40,8 +44,8 @@ export default class ModelController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createModel(req, res) {
         const model = await Model.create(
@@ -55,8 +59,8 @@ export default class ModelController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async cloneModel(req, res) {
         const model = await Model.clone(
@@ -69,8 +73,8 @@ export default class ModelController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async removeFromProject(req, res) {
         const projectId = Number(req.params.idProject);

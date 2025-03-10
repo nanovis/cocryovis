@@ -43,7 +43,13 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/archiver": "^6.0.3",
+    "@types/express": "^5.0.0",
+    "@types/express-fileupload": "^1.5.1",
+    "@types/express-session": "^1.18.1",
     "@types/node": "^22.7.5",
+    "@types/ws": "^8.18.0",
     "nodemon": "^3.1.7",
     "prisma": "^5.18.0"
   }

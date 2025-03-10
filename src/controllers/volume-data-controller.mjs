@@ -14,11 +14,16 @@ import { PendingLocalFile, unpackFiles } from "../tools/file-handler.mjs";
 import fsPromises from "node:fs/promises";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class VolumeDataController {
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getById(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
@@ -30,8 +35,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getData(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
@@ -57,8 +62,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getVolumeVisualizationFiles(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
@@ -100,8 +105,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createFromFiles(type, req, res) {
         if (!req.files || !req.files.files) {
@@ -131,8 +136,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createFromMrcFile(type, req, res) {
         if (type != VolumeDataType.RawVolumeData) {
@@ -166,8 +171,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createFromMrcUrl(type, req, res) {
         if (!req.body.url || !Utils.isValidHttpUrl(req.body.url)) {
@@ -197,8 +202,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async downloadFullVolumeData(type, req, res) {
         const data = await VolumeDataFactory.getClass(
@@ -217,8 +222,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async downloadRawFile(type, req, res) {
         const data = await VolumeDataFactory.getClass(
@@ -242,8 +247,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async downloadSettingsFile(type, req, res) {
         const data = await VolumeDataFactory.getClass(
@@ -267,8 +272,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async downloadMrcFile(type, req, res) {
         if (type != VolumeDataType.RawVolumeData) {
@@ -296,8 +301,8 @@ export default class VolumeDataController {
 
     /**
      * @param {VolumeDataType} type
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async removeFromVolume(type, req, res) {
         await VolumeDataFactory.getClass(type).removeFromVolume(
@@ -309,8 +314,8 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getTomographyMetadataFromCryoETId(req, res) {
         const metadata = await fetchCtyoETTomogramMetadata(

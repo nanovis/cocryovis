@@ -4,10 +4,15 @@ import Volume from "../models/volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import fsPromises from "fs/promises";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class VolumeController {
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getVolume(req, res) {
         const options = VolumeController.#parseOptionQuery(req);
@@ -20,8 +25,8 @@ export default class VolumeController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getVolumesFromProject(req, res) {
         const options = VolumeController.#parseOptionQuery(req);
@@ -34,8 +39,8 @@ export default class VolumeController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getVolumesFromProjectDeep(req, res) {
         const volumes = await Volume.getVolumesFromProjectDeep(
@@ -61,8 +66,8 @@ export default class VolumeController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createVolume(req, res) {
         const volume = await Volume.create(
@@ -76,8 +81,8 @@ export default class VolumeController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async cloneVolume(req, res) {
         const volume = await Volume.clone(
@@ -89,8 +94,8 @@ export default class VolumeController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async removeFromProject(req, res) {
         await Volume.removeFromProject(
@@ -102,8 +107,8 @@ export default class VolumeController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async addAnnotations(req, res) {
         if (!req.files || !req.files.file) {

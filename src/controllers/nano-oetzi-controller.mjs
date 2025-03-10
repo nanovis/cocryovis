@@ -4,11 +4,16 @@ import { ApiError } from "../tools/error-handler.mjs";
 import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 import Utils from "../tools/utils.mjs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class NanoOetziController {
     /**
      * @param {GPUTaskHandler} gpuTaskHandler
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async queueInference(gpuTaskHandler, req, res) {
         const checkpointId = Number(req.body.checkpointId);
@@ -25,8 +30,8 @@ export default class NanoOetziController {
 
     /**
      * @param {GPUTaskHandler} gpuTaskHandler
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async queueTraining(gpuTaskHandler, req, res) {
         const trainingVolumesIds = Utils.parseStringArray(
@@ -52,8 +57,8 @@ export default class NanoOetziController {
 
     /**
      * @param {GPUTaskHandler} gpuTaskHandler
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async queueTiltSeriesReconstruction(gpuTaskHandler, req, res) {
         if (!req.files || !req.files.tiltSeries) {

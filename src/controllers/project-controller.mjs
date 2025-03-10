@@ -2,10 +2,14 @@
 
 import Project from "../models/project.mjs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
 export default class ProjectController {
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getAllUserProjects(req, res) {
         const options = ProjectController.#parseOptionQuery(req);
@@ -17,8 +21,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getAllUserProjectsDeep(req, res) {
         const projects = await Project.getUserProjectsDeep(req.session.user.id);
@@ -26,8 +30,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getProject(req, res) {
         const options = ProjectController.#parseOptionQuery(req);
@@ -40,7 +44,7 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
+     * @param {Request} req
      * @returns {import("../models/project.mjs").Options}
      */
     static #parseOptionQuery(req) {
@@ -79,8 +83,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async getAccessInfo(req, res) {
         const accessInfo = await Project.getAccessInfo(
@@ -91,8 +95,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async setAccess(req, res) {
         const accessInfo = await Project.setAccess(
@@ -104,8 +108,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async createProject(req, res) {
         const project = await Project.create(
@@ -118,8 +122,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async deepCloneProject(req, res) {
         const project = await Project.deepClone(
@@ -131,8 +135,8 @@ export default class ProjectController {
     }
 
     /**
-     * @param {AuthenticatedRequest} req
-     * @param {import("express").Response} res
+     * @param {Request} req
+     * @param {Response} res
      */
     static async deleteProject(req, res) {
         const project = await Project.del(Number(req.params.idProject));
