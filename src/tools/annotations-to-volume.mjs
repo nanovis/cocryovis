@@ -130,9 +130,9 @@ async function processAnnotationsEntry(entry, outputBuffer) {
                 z: Math.floor(position.z * dimensions.z),
             };
 
-            for (let x = 0; x < kernelSize.x; x++) {
-                for (let y = 0; y < kernelSize.y; y++) {
-                    for (let z = 0; z < kernelSize.z; z++) {
+            for (let x = 0; x < kernelSize.x * 2 + 1; x++) {
+                for (let y = 0; y < kernelSize.y * 2 + 1; y++) {
+                    for (let z = 0; z < kernelSize.z * 2 + 1; z++) {
                         const delta = [
                             kernelSize.x - x,
                             kernelSize.y - y,
