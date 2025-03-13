@@ -1,6 +1,5 @@
 import {
   flow,
-  getParent,
   getParentOfType,
   Instance,
   isAlive,

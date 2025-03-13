@@ -26,6 +26,8 @@ import { useMst } from "../../../stores/RootStore";
 import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeModel";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
+import { Volume, VolumeInstance } from "../../../stores/userState/VolumeModel";
+import { getType } from "mobx-state-tree";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -113,7 +115,7 @@ const Visualization = observer(({ open, close }: Props) => {
   const visualizedVolume = uiState.visualizedVolume;
   const volVisSettings = visualizedVolume?.volVisSettings;
   const volumeSettings = visualizedVolume?.volumeSettings;
-  const vizualizedObjectId = visualizedVolume?.visualizedObjectId;
+  const vizualizedObject = visualizedVolume?.visualizedObject;
   const vizualizedObjectType = visualizedVolume?.visualizedObjectType;
 
   const classes = useStyles();
@@ -134,13 +136,16 @@ const Visualization = observer(({ open, close }: Props) => {
   };
 
   const handleSaveAnnotations = async () => {
-    if (annotationsActionsDisabled() || vizualizedObjectId === undefined) {
+    if (annotationsActionsDisabled() || vizualizedObject === undefined) {
       return;
     }
 
     try {
       if (!window.WasmModule) {
         throw new Error("Wasm module not initialized!");
+      }
+      if (getType(vizualizedObject) !== Volume) {
+        throw new Error("Only raw volumes can be labeled.");
       }
 
       setProcessingSaveAnnotations(true);
@@ -153,7 +158,7 @@ const Visualization = observer(({ open, close }: Props) => {
       formData.append("file", annotationsFile);
 
       const response = await Utils.sendRequestWithToast(
-        `volume/${vizualizedObjectId}/add-annotations`,
+        `volume/${vizualizedObject.id}/add-annotations`,
         {
           method: "PUT",
           credentials: "include",
@@ -163,10 +168,8 @@ const Visualization = observer(({ open, close }: Props) => {
       );
       const sparseLabel: SparseVolumeSnapshotIn = await response.json();
 
-      user?.userProjects.projects.forEach((project) => {
-        const volume = project.projectVolumes.volumes.get(vizualizedObjectId);
-        volume?.addSparseVolume(sparseLabel);
-      });
+      const volume = vizualizedObject as VolumeInstance;
+      volume.addSparseVolume(sparseLabel);
 
       window.WasmModule?.reset_annotations();
     } catch (error) {

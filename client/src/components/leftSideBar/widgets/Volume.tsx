@@ -10,6 +10,7 @@ import {
   MenuPopover,
   MenuList,
   MenuItem,
+  Switch,
 } from "@fluentui/react-components";
 import {
   Add24Regular,
@@ -20,6 +21,7 @@ import {
   ArrowUpload20Regular,
   Checkmark16Filled,
   Delete20Regular,
+  Edit24Filled,
   ErrorCircle16Filled,
   ProjectionScreen20Regular,
   Stack24Regular,
@@ -82,6 +84,7 @@ const Volume = observer(({ open, close }: Props) => {
   const selectedResultId = volumeResults?.selectedResultId;
   const selectedResult = volumeResults?.selectedResult;
   const results = selectedVolume?.volumeResults.results;
+  const visualizedVolume = uiState.visualizedVolume;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
@@ -321,7 +324,7 @@ const Volume = observer(({ open, close }: Props) => {
       );
 
       toast.update(toastId, {
-        render: "Processing vizualization data...",
+        render: "Processing visualization data...",
         isLoading: true,
         autoClose: false,
       });
@@ -351,7 +354,7 @@ const Volume = observer(({ open, close }: Props) => {
       });
 
       toast.update(toastId, {
-        render: "Processing vizualization data...",
+        render: "Processing visualization data...",
         isLoading: true,
         autoClose: false,
       });
@@ -463,6 +466,60 @@ const Volume = observer(({ open, close }: Props) => {
     } catch (error) {
       console.error("Error:", error);
     }
+  };
+
+  const handleAnnotationEdit = async (index: number) => {
+    if (!visualizedVolume || !visualizedVolume.canEditLabels()) {
+      return;
+    }
+    visualizedVolume.setManualLabelIndex(index);
+    // let toastId = null;
+    // try {
+    //   toastId = toast.loading("Fetching data...");
+    //   const response = await Utils.sendReq(
+    //     `volumeData/${dataType}/${id}/download-raw-file`,
+    //     {
+    //       method: "GET",
+    //       credentials: "include",
+    //     },
+    //     false
+    //   );
+
+    //   toast.update(toastId, {
+    //     render: "Processing data...",
+    //     isLoading: true,
+    //     autoClose: false,
+    //   });
+    //   await Utils.waitForNextFrame();
+    //   const contents = await response.blob();
+    //   const fileMap = await Utils.zipToFileMap(contents);
+    //   const rawFile = fileMap.values().next().value;
+    //   if (!rawFile) {
+    //     throw new Error("No annotation volume found.");
+    //   }
+
+    //   const rawFileContent = await rawFile.arrayBuffer();
+    //   const data = new Uint8Array(rawFileContent);
+    //   const fileName = `${dataType}-${id}`;
+    //   await window.WasmModule?.FS.writeFile(fileName, data);
+    //   toast.update(toastId, {
+    //     render: "Loading data into volume...",
+    //     isLoading: true,
+    //     autoClose: false,
+    //   });
+    //   await Utils.waitForNextFrame();
+    //   window.WasmModule?.load_volume_into_annotation(fileName, 0);
+    //   toast.update(toastId, {
+    //     render: "Data loaded!",
+    //     type: "success",
+    //     isLoading: false,
+    //     autoClose: 2000,
+    //     closeOnClick: true,
+    //   });
+    // } catch (error) {
+    //   console.error(error);
+    //   Utils.updateToastWithErrorMsg(toastId, error);
+    // }
   };
 
   //Function to handle Result Checks
@@ -586,6 +643,15 @@ const Volume = observer(({ open, close }: Props) => {
       selectionList.push(resultSelectionProperties(result))
     );
     return selectionList;
+  };
+
+  const canActivateEditingMode = () => {
+    return (
+      activeProject?.hasWriteAccess &&
+      selectedVolume &&
+      visualizedVolume &&
+      visualizedVolume.canEditLabels()
+    );
   };
 
   return open ? (
@@ -803,11 +869,68 @@ const Volume = observer(({ open, close }: Props) => {
               justifyContent: "space-between",
             }}
           >
-            <h3 className={globalClasses.subSectionTitle}>Sparse Labels</h3>
+            <h3
+              className={globalClasses.subSectionTitle}
+              style={{ marginRight: "auto" }}
+            >
+              Sparse Labels
+            </h3>
+            <Tooltip
+              content={
+                <div>
+                  Label Editing Mode
+                  <br />
+                  <div>
+                    {!visualizedVolume || !visualizedVolume.canEditLabels() ? (
+                      <ErrorCircle16Filled className={globalClasses.failIcon} />
+                    ) : (
+                      <Checkmark16Filled
+                        className={globalClasses.successIcon}
+                      />
+                    )}
+                    <span
+                      style={{
+                        marginLeft: "3px",
+                        verticalAlign: "middle",
+                        color: tokens.colorNeutralForeground2,
+                      }}
+                    >
+                      Selected volume is currently visualized.
+                    </span>
+                  </div>
+                  <WriteAccessTooltipContent
+                    hasWriteAccess={activeProject?.hasWriteAccess}
+                  />
+                </div>
+              }
+              relationship="label"
+              hideDelay={0}
+            >
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Edit24Filled
+                  className={mergeClasses(
+                    globalClasses.successIcon,
+                    !canActivateEditingMode() && globalClasses.disabledIcon
+                  )}
+                />
+                <Switch
+                  checked={visualizedVolume?.labelEditingMode ?? false}
+                  onChange={(_, data) => {
+                    if (!visualizedVolume) {
+                      return;
+                    }
+                    visualizedVolume.setLabelEditingMode(
+                      data?.checked ?? false
+                    );
+                  }}
+                  disabled={!canActivateEditingMode()}
+                />
+              </div>
+            </Tooltip>
             <Tooltip
               content={
                 <WriteAccessTooltipContentWrapper
-                  content={"Add Sparse Label Volume"}
+                  content={"Add Manual Label Volume"}
                   hasWriteAccess={activeProject?.hasWriteAccess}
                 />
               }
@@ -847,28 +970,33 @@ const Volume = observer(({ open, close }: Props) => {
               index < selectedVolume?.sparseVolumeArray.length ? (
                 <ItemTitleDownloadDelete
                   title={Utils.getFileNameFromPath(
-                    selectedVolume?.sparseVolumeArray[index].rawFilePath
+                    selectedVolume.sparseVolumeArray[index].rawFilePath
                   )}
+                  highlighted={
+                    visualizedVolume?.labelEditingMode &&
+                    visualizedVolume?.manualLabelIndex === index
+                  }
                   onDownload={() =>
                     handleDownloadVolumeData(
                       "SparseLabeledVolumeData",
-                      selectedVolume?.sparseVolumeArray[index].id
+                      selectedVolume.sparseVolumeArray[index].id
                     )
                   }
                   onVisualize={() =>
                     handleVisualisationRequest(
                       "SparseLabeledVolumeData",
-                      selectedVolume?.sparseVolumeArray[index].id
+                      selectedVolume.sparseVolumeArray[index].id
                     )
                   }
                   onDelete={() =>
                     handleVolumeDataConfirmDelete(
                       "SparseLabeledVolumeData",
-                      selectedVolume?.sparseVolumeArray[index].id
+                      selectedVolume.sparseVolumeArray[index].id
                     )
                   }
+                  onEdit={() => handleAnnotationEdit(index)}
                   deleteQuestion={Utils.getFileNameFromPath(
-                    selectedVolume?.sparseVolumeArray[index].rawFilePath
+                    selectedVolume.sparseVolumeArray[index].rawFilePath
                   )}
                   deleteTitle={"Remove Sparse Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}

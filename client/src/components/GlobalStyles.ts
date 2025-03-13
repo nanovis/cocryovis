@@ -178,6 +178,10 @@ const globalStyles = makeStyles({
     color: tokens.colorPaletteRedBackground3,
     verticalAlign: "middle",
   },
+  disabledIcon: {
+    opacity: 0.5,
+    pointerEvents: "none",
+  },
   widgetButtonContainer: {
     display: "flex",
     flexDirection: "column",

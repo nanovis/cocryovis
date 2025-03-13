@@ -95,7 +95,7 @@ export const UiState = types
           : getType(visualizedObject) === Volume
           ? "Volume"
           : "Result",
-        visualizedObjectId: visualizedObject?.id,
+        visualizedObject: visualizedObject?.id,
         volVisSettings: volumeVisualizationSettings,
       };
 
