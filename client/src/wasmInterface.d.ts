@@ -298,6 +298,7 @@ interface EmbindModule {
   read_file(_0: EmbindString): string;
   load_volume_into_annotation(_0: VectorString): void;
   set_annotation_channel(_0: number): void;
+  set_annotation_color(_0: number, _1: number, _2: number): void;
   getAnnotationKernelSize(): number;
   setAnnotationKernelSize(_0: number): void;
   adjustTransferFunction(
@@ -337,10 +338,6 @@ interface EmbindModule {
 }
 
 export type MainModule = WasmModule & typeof RuntimeExports & EmbindModule;
-
-declare global {
-  interface Window {
-    createVolumeRenderer: (options: any) => Promise<MainModule>;
-    WasmModule: MainModule | null;
-  }
-}
+export default function MainModuleFactory(
+  options?: unknown
+): Promise<MainModule>;

@@ -83,100 +83,108 @@ const ItemTitleDownloadDelete = ({
       className={mergeClasses(
         classes.container,
         inactive && classes.inactive,
-        !inactive && highlighted && classes.highlighted
+        highlighted && classes.highlighted
       )}
     >
       <Label style={{ marginLeft: "20px" }}>{title?.substring(0, 50)}</Label>
+      <div style={{ marginLeft: "auto" }}>
+        {onEdit != undefined && (
+          <Tooltip content="Edit" relationship="label" appearance="inverted">
+            <Button
+              size="large"
+              appearance="subtle"
+              className={classes.actionButton}
+              disabled={inactive}
+              onClick={onEdit}
+              icon={
+                <Edit24Regular
+                  className={mergeClasses(
+                    classes.icon,
+                    inactive && globalClasses.disabledIcon
+                  )}
+                />
+              }
+            ></Button>
+          </Tooltip>
+        )}
 
-      {(inactive || onEdit != undefined) && (
-        <Tooltip content="Edit" relationship="label" appearance="inverted">
-          <Button
-            size="large"
-            appearance="subtle"
-            className={classes.actionButton}
-            style={{ marginLeft: "auto" }}
-            disabled={inactive}
-            onClick={onEdit}
-            icon={
-              <Edit24Regular
-                className={mergeClasses(
-                  classes.icon,
-                  inactive && globalClasses.disabledIcon
-                )}
+        {(inactive || onDownload != undefined) && (
+          <Tooltip
+            content="Download"
+            relationship="label"
+            appearance="inverted"
+          >
+            <Button
+              size="large"
+              appearance="subtle"
+              className={classes.actionButton}
+              disabled={inactive}
+              onClick={onDownload}
+              icon={
+                <ArrowDownload24Regular
+                  className={mergeClasses(
+                    classes.icon,
+                    inactive && globalClasses.disabledIcon
+                  )}
+                />
+              }
+            ></Button>
+          </Tooltip>
+        )}
+
+        {(inactive || onVisualize != undefined) && (
+          <Tooltip
+            content="Visualize"
+            relationship="label"
+            appearance="inverted"
+          >
+            <Button
+              size="large"
+              appearance="subtle"
+              className={classes.actionButton}
+              disabled={inactive}
+              onClick={onVisualize}
+              icon={
+                <ProjectionScreen24Regular
+                  className={mergeClasses(
+                    classes.icon,
+                    inactive && globalClasses.disabledIcon
+                  )}
+                />
+              }
+            ></Button>
+          </Tooltip>
+        )}
+
+        {(inactive || onDelete != undefined) && (
+          <Tooltip
+            content={
+              <WriteAccessTooltipContentWrapper
+                content={"Delete"}
+                hasWriteAccess={!preventChanges}
               />
             }
-          ></Button>
-        </Tooltip>
-      )}
-
-      {(inactive || onDownload != undefined) && (
-        <Tooltip content="Download" relationship="label" appearance="inverted">
-          <Button
-            size="large"
-            appearance="subtle"
-            className={classes.actionButton}
-            disabled={inactive}
-            onClick={onDownload}
-            icon={
-              <ArrowDownload24Regular
-                className={mergeClasses(
-                  classes.icon,
-                  inactive && globalClasses.disabledIcon
-                )}
-              />
-            }
-          ></Button>
-        </Tooltip>
-      )}
-
-      {(inactive || onVisualize != undefined) && (
-        <Tooltip content="Visualize" relationship="label" appearance="inverted">
-          <Button
-            size="large"
-            appearance="subtle"
-            className={classes.actionButton}
-            disabled={inactive}
-            onClick={onVisualize}
-            icon={
-              <ProjectionScreen24Regular
-                className={mergeClasses(
-                  classes.icon,
-                  inactive && globalClasses.disabledIcon
-                )}
-              />
-            }
-          ></Button>
-        </Tooltip>
-      )}
-
-      {(inactive || onDelete != undefined) && (
-        <Tooltip
-          content={
-            <WriteAccessTooltipContentWrapper
-              content={"Delete"}
-              hasWriteAccess={!preventChanges}
-            />
-          }
-          relationship="label"
-          appearance="inverted"
-        >
-          <Button
-            size="large"
-            appearance="subtle"
-            className={classes.actionButton}
-            disabled={inactive || preventChanges}
-            onClick={() => setIsDialogOpen(true)}
-            icon={
-              <Delete24Regular
-                className={mergeClasses(
-                  classes.icon,
-                  (inactive || preventChanges) && globalClasses.disabledIcon
-                )}
-              />
-            }
-          ></Button>
-        </Tooltip>
-      )}
+            relationship="label"
+            appearance="inverted"
+          >
+            <Button
+              size="large"
+              appearance="subtle"
+              className={classes.actionButton}
+              disabled={inactive || preventChanges}
+              onClick={() => setIsDialogOpen(true)}
+              icon={
+                <Delete24Regular
+                  className={mergeClasses(
+                    classes.icon,
+                    (inactive || preventChanges) && globalClasses.disabledIcon
+                  )}
+                />
+              }
+            ></Button>
+          </Tooltip>
+        )}
+      </div>
 
       {/* Render the DeleteDialog */}
       <DeleteDialog

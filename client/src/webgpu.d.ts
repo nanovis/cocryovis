@@ -1,15 +1,24 @@
-interface Navigator {
-  gpu: GPU | undefined;
-}
+import { MainModule } from "./wasmInterface";
 
-interface GPU {
-  requestAdapter(
-    options?: GPURequestAdapterOptions
-  ): Promise<GPUAdapter | null>;
-}
+declare global {
+  interface Navigator {
+    gpu: GPU | undefined;
+  }
 
-interface GPUAdapter {
-  requestDevice(descriptor?: GPUDeviceDescriptor): Promise<GPUDevice>;
-}
+  interface GPU {
+    requestAdapter(
+      options?: GPURequestAdapterOptions
+    ): Promise<GPUAdapter | null>;
+  }
 
-interface GPUDevice {}
+  interface GPUAdapter {
+    requestDevice(descriptor?: GPUDeviceDescriptor): Promise<GPUDevice>;
+  }
+
+  interface GPUDevice {}
+
+  interface Window {
+    createVolumeRenderer: (options: any) => Promise<MainModule>;
+    WasmModule: MainModule | null;
+  }
+}

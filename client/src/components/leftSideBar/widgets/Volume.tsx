@@ -473,53 +473,6 @@ const Volume = observer(({ open, close }: Props) => {
       return;
     }
     visualizedVolume.setManualLabelIndex(index);
-    // let toastId = null;
-    // try {
-    //   toastId = toast.loading("Fetching data...");
-    //   const response = await Utils.sendReq(
-    //     `volumeData/${dataType}/${id}/download-raw-file`,
-    //     {
-    //       method: "GET",
-    //       credentials: "include",
-    //     },
-    //     false
-    //   );
-
-    //   toast.update(toastId, {
-    //     render: "Processing data...",
-    //     isLoading: true,
-    //     autoClose: false,
-    //   });
-    //   await Utils.waitForNextFrame();
-    //   const contents = await response.blob();
-    //   const fileMap = await Utils.zipToFileMap(contents);
-    //   const rawFile = fileMap.values().next().value;
-    //   if (!rawFile) {
-    //     throw new Error("No annotation volume found.");
-    //   }
-
-    //   const rawFileContent = await rawFile.arrayBuffer();
-    //   const data = new Uint8Array(rawFileContent);
-    //   const fileName = `${dataType}-${id}`;
-    //   await window.WasmModule?.FS.writeFile(fileName, data);
-    //   toast.update(toastId, {
-    //     render: "Loading data into volume...",
-    //     isLoading: true,
-    //     autoClose: false,
-    //   });
-    //   await Utils.waitForNextFrame();
-    //   window.WasmModule?.load_volume_into_annotation(fileName, 0);
-    //   toast.update(toastId, {
-    //     render: "Data loaded!",
-    //     type: "success",
-    //     isLoading: false,
-    //     autoClose: 2000,
-    //     closeOnClick: true,
-    //   });
-    // } catch (error) {
-    //   console.error(error);
-    //   Utils.updateToastWithErrorMsg(toastId, error);
-    // }
   };
 
   //Function to handle Result Checks
@@ -873,7 +826,7 @@ const Volume = observer(({ open, close }: Props) => {
               className={globalClasses.subSectionTitle}
               style={{ marginRight: "auto" }}
             >
-              Sparse Labels
+              Manual Labels
             </h3>
             <Tooltip
               content={
@@ -1051,7 +1004,7 @@ const Volume = observer(({ open, close }: Props) => {
                         color: tokens.colorNeutralForeground2,
                       }}
                     >
-                      Requires at least 2 Sparse Labels.
+                      Requires at least 2 Manual Labels.
                     </span>
                   </div>
                   <WriteAccessTooltipContent

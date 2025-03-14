@@ -380,7 +380,7 @@ export default class IlastikHandler {
         if (volume.sparseVolumes.length < 2) {
             throw new ApiError(
                 400,
-                "Pseudo Labels Generation error: Volume requires at least two sparse labels."
+                "Pseudo Labels Generation error: Volume requires at least two manual labels."
             );
         }
 
@@ -405,7 +405,7 @@ export default class IlastikHandler {
             if (!sparseLabel || !sparseLabel.rawFilePath) {
                 throw new ApiError(
                     400,
-                    "Pseudo Labels Generation error: Sparse Label Data is missing."
+                    "Pseudo Labels Generation error: Manual Label Data is missing."
                 );
             }
         }

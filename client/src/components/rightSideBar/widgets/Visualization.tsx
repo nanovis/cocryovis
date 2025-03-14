@@ -366,7 +366,7 @@ const Visualization = observer(({ open, close }: Props) => {
             <Tooltip
               content={
                 <WriteAccessTooltipContentWrapper
-                  content={"Saves annotations as Sparse Label."}
+                  content={"Saves annotations as Manual Label."}
                   hasWriteAccess={
                     annotationsActionsDisabled() ||
                     activeProject?.hasWriteAccess

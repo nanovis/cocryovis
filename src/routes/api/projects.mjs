@@ -106,7 +106,7 @@ projectsApi.get(`/volume/:idVolume`, restrictApi, VolumeController.getVolume);
 // Remove Volume
 projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.removeFromProject);
 
-// Process Sparse Labels
+// Process Manual Labels
 projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, 
     async (req, res) => VolumeController.addAnnotations(req, res));
 

@@ -15,9 +15,7 @@ export default class VolumeController {
      * @param {Response} res
      */
     static async getVolume(req, res) {
-        console.log(req.query)
         const options = VolumeController.#parseOptionQuery(req);
-        console.log(options);
         const volume = await Volume.getById(
             Number(req.params.idVolume),
             options

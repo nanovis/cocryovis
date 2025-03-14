@@ -455,7 +455,7 @@ export default class Volume extends DatabaseModel {
                             ) {
                                 throw new ApiError(
                                     400,
-                                    "Volume already has maximum number of Sparse Labels"
+                                    "Volume already has maximum number of Manual Labels"
                                 );
                             }
 
@@ -523,7 +523,7 @@ export default class Volume extends DatabaseModel {
                 ) {
                     throw new ApiError(
                         400,
-                        "Volume does not have enough space to generate pseudo labels from sparse label set."
+                        "Volume does not have enough space to generate pseudo labels from manual label set."
                     );
                 }
 

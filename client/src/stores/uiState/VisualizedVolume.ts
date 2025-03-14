@@ -13,31 +13,6 @@ export type visualizedObjectInstances =
   | ResultInstance
   | undefined;
 
-// async function loadSparseLabelVolumeIntoAnnotation(
-//   sparseLabelVolumeId: number,
-//   index: number
-// ) {
-//   const response = await Utils.sendReq(
-//     `volumeData/SparseLabeledVolumeData/${sparseLabelVolumeId}/download-raw-file`,
-//     {
-//       method: "GET",
-//     },
-//     false
-//   );
-
-//   const contents = await response.blob();
-//   const fileMap = await Utils.zipToFileMap(contents);
-//   const rawFile = fileMap.values().next().value;
-//   if (!rawFile) {
-//     throw new Error("No annotation volume found.");
-//   }
-//   const rawFileContent = await rawFile.arrayBuffer();
-//   const data = new Uint8Array(rawFileContent);
-//   const fileName = `SparseLabeledVolumeData-${sparseLabelVolumeId}`;
-//   await window.WasmModule?.FS.writeFile(fileName, data);
-//   window.WasmModule?.load_volume_into_annotation(fileName, index);
-// }
-
 async function loadSparseLabelVolumesIntoAnnotations(
   volume: VolumeInstance,
   toastId: Id
@@ -47,11 +22,11 @@ async function loadSparseLabelVolumesIntoAnnotations(
   }
   const sparseVolumeArray = volume.sparseVolumeArray;
   const volumeNames = new window.WasmModule.VectorString();
-  for (let i = 0; i < volume.sparseVolumeArray.length; i++) {
-    const sparseLabelVolumeId = volume.sparseVolumeArray[i].id;
+  for (let i = 0; i < sparseVolumeArray.length; i++) {
+    const sparseLabelVolumeId = sparseVolumeArray[i].id;
     toast.update(toastId, {
       render: `Fetching manual label volume ${i + 1}/${
-        volume.sparseVolumeArray.length
+        sparseVolumeArray.length
       }`,
       isLoading: true,
       autoClose: false,
@@ -78,7 +53,6 @@ async function loadSparseLabelVolumesIntoAnnotations(
     window.WasmModule?.FS.writeFile(fileName, data);
     volumeNames.push_back(fileName);
   }
-  console.log(volumeNames);
   window.WasmModule?.load_volume_into_annotation(volumeNames);
 }
 
@@ -87,7 +61,6 @@ export const VisualizedVolume = types
     visualizedObjectType: types.maybe(
       types.enumeration("VisualizedObjectType", ["Volume", "Result"])
     ),
-    // visualizedObjectId: types.maybe(types.integer),
     visualizedObject: types.maybe(
       types.union(
         types.reference(Volume),
@@ -129,7 +102,6 @@ export const VisualizedVolume = types
   }))
   .actions((self) => ({
     setManualLabelIndex(index: number) {
-      console.log(index);
       self.manualLabelIndex = index;
       window.WasmModule?.set_annotation_channel(index);
     },
