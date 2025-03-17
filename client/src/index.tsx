@@ -184,11 +184,6 @@ const Main = () => {
   }
 
   useEffect(() => {
-    const disableRightClick = (event: MouseEvent) =>{
-      event.preventDefault();
-    };
-    document.addEventListener("contextmenu", disableRightClick);
-
     if (!window.WasmModule) {
       initModule().catch((e) =>
         console.error("Failed to initialize WebGPU module.", e)

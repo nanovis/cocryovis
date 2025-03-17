@@ -178,7 +178,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         />
         <div id="main-panel" className={classes.mainPanel}>
           {!showSignIn && !showSignUp && <SideControls />}
-          <div id="rendering">
+          <div id="rendering" onContextMenu={(e) => e.preventDefault()}>
             {showSignIn && <SignInPage onSignIn={handleSignIn} />}
             {showSignUp && <SignUpPage onSignUp={handleSignUp} />}
             <canvas
