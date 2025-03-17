@@ -58,9 +58,6 @@ async function loadSparseLabelVolumesIntoAnnotations(
 
 export const VisualizedVolume = types
   .model({
-    visualizedObjectType: types.maybe(
-      types.enumeration("VisualizedObjectType", ["Volume", "Result"])
-    ),
     visualizedObject: types.maybe(
       types.union(
         types.reference(Volume),

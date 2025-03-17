@@ -403,4 +403,63 @@ export default class VolumeData extends DatabaseModel {
             archive: archive,
         };
     }
+
+    /**
+     * @param {Number} id
+     * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
+     */
+    static async setRawDataFromAnnotation(id, annotations) {
+        
+    }
+
+    /**
+     * @param {Number} id
+     * @param {PendingUpload} file
+     */
+    static async setRawData(id, file) {
+        return prismaManager.db.$transaction(
+            async (tx) => {
+                /** @type {VolumeDataDB} */
+                const volumeData = await this.getById(id);
+
+                const rawFilePath = volumeData.rawFilePath;
+                let fileNameOverride = file.fileName;
+                if (fileNameOverride === path.basename(rawFilePath)) {
+                    const parsedName = path.parse(file.fileName);
+                    fileNameOverride =
+                        parsedName.name + "-new" + parsedName.ext;
+                }
+                try {
+                    const newRawFilePath = await file.saveAs(
+                        volumeData.path,
+                        fileNameOverride
+                    );
+                    const settings = await this.parseSettings(
+                        volumeData.settings,
+                        newRawFilePath
+                    );
+                    await tx[this.modelName].update({
+                        where: { id: volumeData.id },
+                        data: {
+                            rawFilePath: newRawFilePath,
+                            settings: settings,
+                        },
+                    });
+                } catch (error) {
+                    fsPromises.rm(
+                        path.join(volumeData.path, fileNameOverride),
+                        {
+                            recursive: true,
+                            force: true,
+                        }
+                    );
+                    throw error;
+                }
+                return volumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
+    }
 }

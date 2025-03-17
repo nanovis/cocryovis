@@ -90,11 +90,6 @@ export const UiState = types
       const volumeVisualizationSettings: Array<VolVisSettingsSnapshotIn> = [];
 
       const vizualizedVolume: VisualizedVolumeSnapshotIn = {
-        visualizedObjectType: !visualizedObject
-          ? undefined
-          : getType(visualizedObject) === Volume
-          ? "Volume"
-          : "Result",
         visualizedObject: visualizedObject?.id,
         volVisSettings: volumeVisualizationSettings,
       };

@@ -135,6 +135,10 @@ projectsApi.post(`/volume/:idVolume/volumeData/:type/from-mrc-file`, restrictApi
 // Create from URL
 projectsApi.post(`/volume/:idVolume/volumeData/:type/from-url`, restrictApi,
     async (req, res) => (VolumeDataController.createFromUrl(req, res)));
+
+// Set Raw Data
+projectsApi.post(`/volumeData/:type/set-raw-data`, restrictApi,
+    async (req, res) => (VolumeDataController.setRawData(VolumeDataType.mapName(req.params.type), req, res)));
     
 // Download Raw Volume Data
 projectsApi.get(`/volumeData/:type/:idVolumeData/download-full`, restrictApi, 

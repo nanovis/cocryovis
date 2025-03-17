@@ -11,6 +11,7 @@ import {
   MenuList,
   MenuItem,
   Switch,
+  Text,
 } from "@fluentui/react-components";
 import {
   Add24Regular,
@@ -21,7 +22,7 @@ import {
   ArrowUpload20Regular,
   Checkmark16Filled,
   Delete20Regular,
-  Edit24Filled,
+  EditSettings24Regular,
   ErrorCircle16Filled,
   ProjectionScreen20Regular,
   Stack24Regular,
@@ -829,38 +830,44 @@ const Volume = observer(({ open, close }: Props) => {
               Manual Labels
             </h3>
             <Tooltip
-              content={
-                <div>
-                  Label Editing Mode
-                  <br />
+              content={{
+                style: { maxWidth: "fit-content" },
+                children: (
                   <div>
-                    {!visualizedVolume || !visualizedVolume.canEditLabels() ? (
-                      <ErrorCircle16Filled className={globalClasses.failIcon} />
-                    ) : (
-                      <Checkmark16Filled
-                        className={globalClasses.successIcon}
-                      />
-                    )}
-                    <span
-                      style={{
-                        marginLeft: "3px",
-                        verticalAlign: "middle",
-                        color: tokens.colorNeutralForeground2,
-                      }}
-                    >
-                      Selected volume is currently visualized.
-                    </span>
+                    <Text>Label Editing Mode</Text>
+                    <br />
+                    <div>
+                      {!visualizedVolume ||
+                      !visualizedVolume.canEditLabels() ? (
+                        <ErrorCircle16Filled
+                          className={globalClasses.failIcon}
+                        />
+                      ) : (
+                        <Checkmark16Filled
+                          className={globalClasses.successIcon}
+                        />
+                      )}
+                      <Text
+                        style={{
+                          marginLeft: "3px",
+                          verticalAlign: "middle",
+                          color: tokens.colorNeutralForeground2,
+                        }}
+                      >
+                        Selected volume must be visualized.
+                      </Text>
+                    </div>
+                    <WriteAccessTooltipContent
+                      hasWriteAccess={activeProject?.hasWriteAccess}
+                    />
                   </div>
-                  <WriteAccessTooltipContent
-                    hasWriteAccess={activeProject?.hasWriteAccess}
-                  />
-                </div>
-              }
+                ),
+              }}
               relationship="label"
               hideDelay={0}
             >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Edit24Filled
+              <div style={{ display: "flex", alignItems: "center", marginRight: "8px" }}>
+                <EditSettings24Regular
                   className={mergeClasses(
                     globalClasses.successIcon,
                     !canActivateEditingMode() && globalClasses.disabledIcon
@@ -948,6 +955,7 @@ const Volume = observer(({ open, close }: Props) => {
                     )
                   }
                   onEdit={() => handleAnnotationEdit(index)}
+                  canEdit={visualizedVolume?.labelEditingMode}
                   deleteQuestion={Utils.getFileNameFromPath(
                     selectedVolume.sparseVolumeArray[index].rawFilePath
                   )}
@@ -955,7 +963,10 @@ const Volume = observer(({ open, close }: Props) => {
                   preventChanges={!activeProject?.hasWriteAccess}
                 />
               ) : (
-                <ItemTitleDownloadDelete inactive={true} />
+                <ItemTitleDownloadDelete
+                  inactive={true}
+                  onEdit={() => handleAnnotationEdit(index)}
+                />
               )}
             </div>
           ))}
@@ -983,35 +994,40 @@ const Volume = observer(({ open, close }: Props) => {
             </h3>
 
             <Tooltip
-              content={
-                <div>
-                  Create Pseudo Label Volumes (Ilastik)
-                  <br />
+              content={{
+                style: { maxWidth: "fit-content" },
+                children: (
                   <div>
-                    {!selectedVolume ||
-                    selectedVolume?.sparseVolumeArray.length < 2 ? (
-                      <ErrorCircle16Filled className={globalClasses.failIcon} />
-                    ) : (
-                      <Checkmark16Filled
-                        className={globalClasses.successIcon}
-                      />
-                    )}
+                    <Text>Create Pseudo Label Volumes (Ilastik)</Text>
+                    <br />
+                    <div>
+                      {!selectedVolume ||
+                      selectedVolume?.sparseVolumeArray.length < 2 ? (
+                        <ErrorCircle16Filled
+                          className={globalClasses.failIcon}
+                        />
+                      ) : (
+                        <Checkmark16Filled
+                          className={globalClasses.successIcon}
+                        />
+                      )}
 
-                    <span
-                      style={{
-                        marginLeft: "3px",
-                        verticalAlign: "middle",
-                        color: tokens.colorNeutralForeground2,
-                      }}
-                    >
-                      Requires at least 2 Manual Labels.
-                    </span>
+                      <Text
+                        style={{
+                          marginLeft: "3px",
+                          verticalAlign: "middle",
+                          color: tokens.colorNeutralForeground2,
+                        }}
+                      >
+                        Requires at least 2 Manual Labels.
+                      </Text>
+                    </div>
+                    <WriteAccessTooltipContent
+                      hasWriteAccess={activeProject?.hasWriteAccess}
+                    />
                   </div>
-                  <WriteAccessTooltipContent
-                    hasWriteAccess={activeProject?.hasWriteAccess}
-                  />
-                </div>
-              }
+                ),
+              }}
               relationship="label"
               hideDelay={0}
             >

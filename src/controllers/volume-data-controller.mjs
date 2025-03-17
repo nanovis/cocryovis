@@ -354,4 +354,36 @@ export default class VolumeDataController {
 
         res.status(200).json(metadata);
     }
+
+    /**
+     * @param {VolumeDataType} type
+     * @param {Request} req
+     * @param {Response} res
+     */
+    static async setRawData(type, req, res) {
+        if (!req.files || !req.files.file) {
+            throw new ApiError(400, "No annotations file found.");
+        }
+        if (Array.isArray(req.files.file)) {
+            throw new ApiError(400, "To many files uploaded.");
+        }
+
+        const VolumeDataClass = VolumeDataFactory.getClass(type);
+
+        const unpackedFiles = await unpackFiles(
+            [req.files.file],
+            VolumeDataClass.acceptedFileExtensions
+        );
+
+        if (unpackedFiles.length > 1) {
+            throw new ApiError(400, "To many files uploaded.");
+        }
+
+        const volumeData = await VolumeDataClass.setRawData(
+            Number(req.params.idVolumeData),
+            unpackedFiles[0]
+        );
+
+        res.status(200).json(volumeData);
+    }
 }

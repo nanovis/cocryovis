@@ -26,8 +26,7 @@ import { useMst } from "../../../stores/RootStore";
 import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeModel";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
-import { Volume, VolumeInstance } from "../../../stores/userState/VolumeModel";
-import { getType } from "mobx-state-tree";
+import { VolumeInstance } from "../../../stores/userState/VolumeModel";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -115,8 +114,7 @@ const Visualization = observer(({ open, close }: Props) => {
   const visualizedVolume = uiState.visualizedVolume;
   const volVisSettings = visualizedVolume?.volVisSettings;
   const volumeSettings = visualizedVolume?.volumeSettings;
-  const vizualizedObject = visualizedVolume?.visualizedObject;
-  const vizualizedObjectType = visualizedVolume?.visualizedObjectType;
+  const visualizedObject = visualizedVolume?.visualizedObject;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
@@ -136,7 +134,7 @@ const Visualization = observer(({ open, close }: Props) => {
   };
 
   const handleSaveAnnotations = async () => {
-    if (annotationsActionsDisabled() || vizualizedObject === undefined) {
+    if (annotationsActionsDisabled() || visualizedObject === undefined) {
       return;
     }
 
@@ -144,7 +142,7 @@ const Visualization = observer(({ open, close }: Props) => {
       if (!window.WasmModule) {
         throw new Error("Wasm module not initialized!");
       }
-      if (getType(vizualizedObject) !== Volume) {
+      if (!visualizedVolume?.canEditLabels()) {
         throw new Error("Only raw volumes can be labeled.");
       }
 
@@ -158,7 +156,7 @@ const Visualization = observer(({ open, close }: Props) => {
       formData.append("file", annotationsFile);
 
       const response = await Utils.sendRequestWithToast(
-        `volume/${vizualizedObject.id}/add-annotations`,
+        `volume/${visualizedObject.id}/add-annotations`,
         {
           method: "PUT",
           credentials: "include",
@@ -168,7 +166,7 @@ const Visualization = observer(({ open, close }: Props) => {
       );
       const sparseLabel: SparseVolumeSnapshotIn = await response.json();
 
-      const volume = vizualizedObject as VolumeInstance;
+      const volume = visualizedObject as VolumeInstance;
       volume.addSparseVolume(sparseLabel);
 
       window.WasmModule?.reset_annotations();
@@ -327,7 +325,8 @@ const Visualization = observer(({ open, close }: Props) => {
     return (
       actionsDisabled() ||
       processingSaveAnnotations ||
-      vizualizedObjectType !== "Volume"
+      visualizedVolume?.canEditLabels() ||
+      !visualizedVolume?.labelEditingMode
     );
   };
 
@@ -366,7 +365,11 @@ const Visualization = observer(({ open, close }: Props) => {
             <Tooltip
               content={
                 <WriteAccessTooltipContentWrapper
-                  content={"Saves annotations as Manual Label."}
+                  content={
+                    visualizedVolume?.manualLabelIndex
+                      ? `Saves annotations into Manual Label ${visualizedVolume?.manualLabelIndex}.`
+                      : "Saves annotations into selected manual label."
+                  }
                   hasWriteAccess={
                     annotationsActionsDisabled() ||
                     activeProject?.hasWriteAccess
@@ -382,7 +385,7 @@ const Visualization = observer(({ open, close }: Props) => {
                   annotationsActionsDisabled() || !activeProject?.hasWriteAccess
                 }
               >
-                Save Annotations
+                Save Annotation
               </Button>
             </Tooltip>
 

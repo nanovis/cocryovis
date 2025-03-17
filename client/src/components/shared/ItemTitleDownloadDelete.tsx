@@ -45,6 +45,7 @@ interface Props {
   onVisualize?: React.MouseEventHandler<HTMLButtonElement>;
   onDelete?: () => void;
   onEdit?: React.MouseEventHandler<HTMLButtonElement>;
+  canEdit?: boolean;
   deleteTitle?: string | undefined;
   deleteQuestion?: string | undefined;
   inactive?: boolean;
@@ -58,6 +59,7 @@ const ItemTitleDownloadDelete = ({
   onVisualize = undefined,
   onDelete = undefined,
   onEdit = undefined,
+  canEdit = false,
   deleteTitle = undefined,
   deleteQuestion = undefined,
   inactive = false,
@@ -89,18 +91,23 @@ const ItemTitleDownloadDelete = ({
       <Label style={{ marginLeft: "20px" }}>{title?.substring(0, 50)}</Label>
       <div style={{ marginLeft: "auto" }}>
         {onEdit != undefined && (
-          <Tooltip content="Edit" relationship="label" appearance="inverted">
+          <Tooltip
+            content="Edit"
+            relationship="label"
+            appearance="inverted"
+            positioning={"before"}
+          >
             <Button
               size="large"
               appearance="subtle"
               className={classes.actionButton}
-              disabled={inactive}
+              disabled={!canEdit}
               onClick={onEdit}
               icon={
                 <Edit24Regular
                   className={mergeClasses(
                     classes.icon,
-                    inactive && globalClasses.disabledIcon
+                    !canEdit && globalClasses.disabledIcon
                   )}
                 />
               }
