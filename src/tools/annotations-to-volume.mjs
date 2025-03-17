@@ -43,8 +43,13 @@ const annotationsEntrySchema = {
 /**
  * @param {AnnotationsEntry[]} entries
  * @param {String} outputFile
+ * @param {Buffer | undefined} currentData
  */
-export async function annotationsToVolume(entries, outputFile) {
+export async function annotationsToVolume(
+    entries,
+    outputFile,
+    currentData = undefined
+) {
     let dimensions = null;
 
     if (entries.length === 0) {
@@ -76,7 +81,18 @@ export async function annotationsToVolume(entries, outputFile) {
         }
     }
 
-    const buffer = Buffer.alloc(dimensions.x * dimensions.y * dimensions.z);
+    if (
+        currentData !== undefined &&
+        currentData.length !== dimensions.x * dimensions.y * dimensions.z
+    ) {
+        throw new ApiError(
+            400,
+            "Current data does not match the dimensions of the annotations."
+        );
+    }
+
+    const buffer =
+        currentData ?? Buffer.alloc(dimensions.x * dimensions.y * dimensions.z);
 
     for (const entry of entries) {
         await processAnnotationsEntry(entry, buffer);

@@ -145,6 +145,7 @@ const Visualization = observer(({ open, close }: Props) => {
       if (!visualizedVolume?.canEditLabels()) {
         throw new Error("Only raw volumes can be labeled.");
       }
+      const volume = visualizedObject as VolumeInstance;
 
       setProcessingSaveAnnotations(true);
       const annotations = window.WasmModule?.get_annotations();
@@ -155,21 +156,37 @@ const Visualization = observer(({ open, close }: Props) => {
       const formData = new FormData();
       formData.append("file", annotationsFile);
 
-      const response = await Utils.sendRequestWithToast(
-        `volume/${visualizedObject.id}/add-annotations`,
-        {
-          method: "PUT",
-          credentials: "include",
-          body: formData,
-        },
-        { successText: "Annotations saved successfuly." }
-      );
-      const sparseLabel: SparseVolumeSnapshotIn = await response.json();
+      let response = null;
 
-      const volume = visualizedObject as VolumeInstance;
-      volume.addSparseVolume(sparseLabel);
+      if (
+        visualizedVolume.manualLabelIndex === undefined ||
+        visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
+      ) {
+        response = await Utils.sendRequestWithToast(
+          `volume/${visualizedObject.id}/add-annotations`,
+          {
+            method: "PUT",
+            credentials: "include",
+            body: formData,
+          },
+          { successText: "Annotations saved successfuly." }
+        );
 
-      window.WasmModule?.reset_annotations();
+        const sparseLabel: SparseVolumeSnapshotIn = await response.json();
+        volume.addSparseVolume(sparseLabel);
+      } else {
+        const sparseLabelVolume =
+          volume.sparseVolumeArray[visualizedVolume.manualLabelIndex];
+        response = await Utils.sendRequestWithToast(
+          `volume/${visualizedObject.id}/volumeData/SparseLabeledVolumeData/${sparseLabelVolume.id}/update-annotations`,
+          {
+            method: "PUT",
+            credentials: "include",
+            body: formData,
+          },
+          { successText: "Annotations saved successfuly." }
+        );
+      }
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -325,7 +342,7 @@ const Visualization = observer(({ open, close }: Props) => {
     return (
       actionsDisabled() ||
       processingSaveAnnotations ||
-      visualizedVolume?.canEditLabels() ||
+      !visualizedVolume?.canEditLabels() ||
       !visualizedVolume?.labelEditingMode
     );
   };

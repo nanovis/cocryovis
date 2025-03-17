@@ -102,8 +102,6 @@ export const VisualizedVolume = types
       self.manualLabelIndex = index;
       window.WasmModule?.set_annotation_channel(index);
     },
-  }))
-  .actions((self) => ({
     clearVisualization() {
       // self.visualizedObject = undefined;
       self.volVisSettings.clear();
@@ -112,7 +110,16 @@ export const VisualizedVolume = types
       self.clippingPlane = clippingPlane;
       window.WasmModule?.chooseClippingPlane(parseInt(clippingPlane));
     },
+  }))
+  .actions((self) => ({
     setLabelEditingMode: flow(function* setLabelEditingMode(enable: boolean) {
+      if (!enable) {
+        self.labelEditingMode = false;
+        self.setClippingPlane("0");
+        window.WasmModule?.enable_annotation_mode(false);
+        window.WasmModule?.reset_annotations();
+        return;
+      }
       let toastId = null;
       try {
         toastId = toast.loading("Fething volume data...");

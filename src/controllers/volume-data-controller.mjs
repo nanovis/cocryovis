@@ -17,6 +17,8 @@ import {
 } from "../tools/file-handler.mjs";
 import fsPromises from "node:fs/promises";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
+import Volume from "../models/volume.mjs";
+import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -385,5 +387,43 @@ export default class VolumeDataController {
         );
 
         res.status(200).json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     * @param {Request} req
+     * @param {Response} res
+     */
+    static async updateAnnotations(type, req, res) {
+        if (type != VolumeDataType.SparseLabeledVolumeData) {
+            throw new ApiError(
+                400,
+                "This operation is only avaliable on Manual Label Volumes."
+            );
+        }
+
+        if (!req.files || !req.files.file) {
+            throw new ApiError(400, "No annotations file found.");
+        }
+        if (Array.isArray(req.files.file)) {
+            throw new ApiError(400, "To many files uploaded.");
+        }
+        const annotationsFile = await fsPromises.readFile(
+            req.files.file.tempFilePath
+        );
+
+        const annotations = JSON.parse(annotationsFile.toString("utf8"));
+
+        if (!Array.isArray(annotations)) {
+            throw new ApiError(400, "Unknown annotations format.");
+        }
+
+        const sparseLabel = await SparseLabeledVolumeData.updateAnnotations(
+            Number(req.params.idVolumeData),
+            Number(req.params.idVolume),
+            annotations
+        );
+
+        res.json(sparseLabel);
     }
 }

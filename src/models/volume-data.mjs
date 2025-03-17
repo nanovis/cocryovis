@@ -406,15 +406,8 @@ export default class VolumeData extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
-     */
-    static async setRawDataFromAnnotation(id, annotations) {
-        
-    }
-
-    /**
-     * @param {Number} id
      * @param {PendingUpload} file
+     * @returns {Promise<VolumeDataDB>}
      */
     static async setRawData(id, file) {
         return prismaManager.db.$transaction(
@@ -438,7 +431,7 @@ export default class VolumeData extends DatabaseModel {
                         volumeData.settings,
                         newRawFilePath
                     );
-                    await tx[this.modelName].update({
+                    return await tx[this.modelName].update({
                         where: { id: volumeData.id },
                         data: {
                             rawFilePath: newRawFilePath,
@@ -455,7 +448,6 @@ export default class VolumeData extends DatabaseModel {
                     );
                     throw error;
                 }
-                return volumeData;
             },
             {
                 timeout: 60000,

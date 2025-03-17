@@ -866,7 +866,13 @@ const Volume = observer(({ open, close }: Props) => {
               relationship="label"
               hideDelay={0}
             >
-              <div style={{ display: "flex", alignItems: "center", marginRight: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginRight: "8px",
+                }}
+              >
                 <EditSettings24Regular
                   className={mergeClasses(
                     globalClasses.successIcon,
@@ -965,7 +971,16 @@ const Volume = observer(({ open, close }: Props) => {
               ) : (
                 <ItemTitleDownloadDelete
                   inactive={true}
+                  highlighted={
+                    visualizedVolume?.labelEditingMode &&
+                    visualizedVolume?.manualLabelIndex === index
+                  }
                   onEdit={() => handleAnnotationEdit(index)}
+                  canEdit={
+                    selectedVolume !== undefined &&
+                    visualizedVolume?.labelEditingMode &&
+                    index === selectedVolume.sparseVolumeArray.length
+                  }
                 />
               )}
             </div>
