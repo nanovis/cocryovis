@@ -142,7 +142,7 @@ const Visualization = observer(({ open, close }: Props) => {
       if (!window.WasmModule) {
         throw new Error("Wasm module not initialized!");
       }
-      if (!visualizedVolume?.canEditLabels()) {
+      if (!visualizedVolume?.canEditLabels) {
         throw new Error("Only raw volumes can be labeled.");
       }
       const volume = visualizedObject as VolumeInstance;
@@ -342,7 +342,7 @@ const Visualization = observer(({ open, close }: Props) => {
     return (
       actionsDisabled() ||
       processingSaveAnnotations ||
-      !visualizedVolume?.canEditLabels() ||
+      !visualizedVolume?.canEditLabels ||
       !visualizedVolume?.labelEditingMode
     );
   };

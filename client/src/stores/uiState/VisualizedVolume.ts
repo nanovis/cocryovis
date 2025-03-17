@@ -90,7 +90,7 @@ export const VisualizedVolume = types
         (volVisSettings) => volVisSettings.type === "volume"
       );
     },
-    canEditLabels() {
+get canEditLabels() {
       return (
         self.visualizedObject !== undefined &&
         getType(self.visualizedObject) === Volume

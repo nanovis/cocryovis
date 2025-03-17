@@ -144,7 +144,7 @@ const VolumeUploadDialog = observer(
             file.name.toLowerCase().endsWith(".json")
           );
 
-          if (descriptorFile && fileUploadInputs.rawUpload()) {
+          if (descriptorFile && fileUploadInputs.isRawUpload) {
             parseVolumeSettings(descriptorFile);
             return;
           }
@@ -261,10 +261,10 @@ const VolumeUploadDialog = observer(
     };
 
     const confirmFile = async () => {
-      if (!fileUploadInputs.isValid()) {
+      if (!fileUploadInputs.isValid) {
         return;
       }
-      if (fileUploadInputs.rawUpload()) {
+      if (fileUploadInputs.isRawUpload) {
         const settings = fileUploadInputs.toVolumeSettings();
         await onFileConfirm(fileUploadInputs.getFile(), settings);
       } else {
@@ -273,10 +273,10 @@ const VolumeUploadDialog = observer(
     };
 
     const confirmUrl = async () => {
-      if (!urlUploadInputs.isValid()) {
+      if (!urlUploadInputs.isValid) {
         return;
       }
-      if (urlUploadInputs.rawUpload()) {
+      if (urlUploadInputs.isRawUpload) {
         const settings = urlUploadInputs.toVolumeSettings();
         await onUrlConfirm(
           urlUploadInputs.url,
@@ -289,7 +289,7 @@ const VolumeUploadDialog = observer(
     };
 
     const confirmCryoET = async () => {
-      if (!cryoETUploadInputs.isValid()) {
+      if (!cryoETUploadInputs.isValid) {
         return;
       }
       await onUrlConfirm(cryoETUploadInputs.url, "mrc");
@@ -421,7 +421,7 @@ const VolumeUploadDialog = observer(
                     <Field label="Width" className={classes.dimensionsField}>
                       <Input
                         value={
-                          fileUploadInputs.mrcUpload()
+                          fileUploadInputs.isMrcUpload
                             ? "auto"
                             : fileUploadInputs.width?.toString() ?? ""
                         }
@@ -429,13 +429,13 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           fileUploadInputs.setWidth(data.value)
                         }
-                        disabled={!fileUploadInputs.canSetParameters()}
+                        disabled={!fileUploadInputs.canSetParameters}
                       />
                     </Field>
                     <Field label="Height" className={classes.dimensionsField}>
                       <Input
                         value={
-                          fileUploadInputs.mrcUpload()
+                          fileUploadInputs.isMrcUpload
                             ? "auto"
                             : fileUploadInputs.height?.toString() ?? ""
                         }
@@ -443,13 +443,13 @@ const VolumeUploadDialog = observer(
                           fileUploadInputs.setHeight(data.value)
                         }
                         className={classes.dimensionsInput}
-                        disabled={!fileUploadInputs.canSetParameters()}
+                        disabled={!fileUploadInputs.canSetParameters}
                       />
                     </Field>
                     <Field label="Depth" className={classes.dimensionsField}>
                       <Input
                         value={
-                          fileUploadInputs.mrcUpload()
+                          fileUploadInputs.isMrcUpload
                             ? "auto"
                             : fileUploadInputs.depth?.toString() ?? ""
                         }
@@ -457,7 +457,7 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           fileUploadInputs.setDepth(data.value)
                         }
-                        disabled={!fileUploadInputs.canSetParameters()}
+                        disabled={!fileUploadInputs.canSetParameters}
                       />
                     </Field>
                   </div>
@@ -471,15 +471,15 @@ const VolumeUploadDialog = observer(
                           fileUploadInputs.setFormat(data.optionValue)
                         }
                         value={
-                          !fileUploadInputs.mrcUpload() &&
+                          !fileUploadInputs.isMrcUpload &&
                           fileUploadInputs.format
                             ? fileUploadInputs.format
                             : ""
                         }
                         placeholder={
-                          fileUploadInputs.mrcUpload() ? "auto" : "Select"
+                          fileUploadInputs.isMrcUpload ? "auto" : "Select"
                         }
-                        disabled={!fileUploadInputs.canSetParameters()}
+                        disabled={!fileUploadInputs.canSetParameters}
                       >
                         {formatOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -492,15 +492,15 @@ const VolumeUploadDialog = observer(
                           fileUploadInputs.setEndian(data.optionValue)
                         }
                         value={
-                          !fileUploadInputs.mrcUpload() &&
+                          !fileUploadInputs.isMrcUpload &&
                           fileUploadInputs.endian
                             ? fileUploadInputs.endian
                             : ""
                         }
                         placeholder={
-                          fileUploadInputs.mrcUpload() ? "auto" : "Select"
+                          fileUploadInputs.isMrcUpload ? "auto" : "Select"
                         }
-                        disabled={!fileUploadInputs.canSetParameters()}
+                        disabled={!fileUploadInputs.canSetParameters}
                       >
                         {endianOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -554,7 +554,7 @@ const VolumeUploadDialog = observer(
                     <Field label="Width" className={classes.dimensionsField}>
                       <Input
                         value={
-                          urlUploadInputs.mrcUpload()
+                          urlUploadInputs.isMrcUpload
                             ? "auto"
                             : urlUploadInputs.width?.toString() ?? ""
                         }
@@ -562,13 +562,13 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           urlUploadInputs.setWidth(data.value)
                         }
-                        disabled={!urlUploadInputs.canSetParameters()}
+                        disabled={!urlUploadInputs.canSetParameters}
                       />
                     </Field>
                     <Field label="Height" className={classes.dimensionsField}>
                       <Input
                         value={
-                          urlUploadInputs.mrcUpload()
+                          urlUploadInputs.isMrcUpload
                             ? "auto"
                             : urlUploadInputs.height?.toString() ?? ""
                         }
@@ -576,13 +576,13 @@ const VolumeUploadDialog = observer(
                           urlUploadInputs.setHeight(data.value)
                         }
                         className={classes.dimensionsInput}
-                        disabled={!urlUploadInputs.canSetParameters()}
+                        disabled={!urlUploadInputs.canSetParameters}
                       />
                     </Field>
                     <Field label="Depth" className={classes.dimensionsField}>
                       <Input
                         value={
-                          urlUploadInputs.mrcUpload()
+                          urlUploadInputs.isMrcUpload
                             ? "auto"
                             : urlUploadInputs.depth?.toString() ?? ""
                         }
@@ -590,7 +590,7 @@ const VolumeUploadDialog = observer(
                         onChange={(_, data) =>
                           urlUploadInputs.setDepth(data.value)
                         }
-                        disabled={!urlUploadInputs.canSetParameters()}
+                        disabled={!urlUploadInputs.canSetParameters}
                       />
                     </Field>
                   </div>
@@ -604,14 +604,14 @@ const VolumeUploadDialog = observer(
                           urlUploadInputs.setFormat(data.optionValue)
                         }
                         value={
-                          !urlUploadInputs.mrcUpload() && urlUploadInputs.format
+                          !urlUploadInputs.isMrcUpload && urlUploadInputs.format
                             ? urlUploadInputs.format
                             : ""
                         }
                         placeholder={
-                          urlUploadInputs.mrcUpload() ? "auto" : "Select"
+                          urlUploadInputs.isMrcUpload ? "auto" : "Select"
                         }
-                        disabled={!urlUploadInputs.canSetParameters()}
+                        disabled={!urlUploadInputs.canSetParameters}
                       >
                         {formatOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -624,14 +624,14 @@ const VolumeUploadDialog = observer(
                           urlUploadInputs.setEndian(data.optionValue ?? "")
                         }
                         value={
-                          !urlUploadInputs.mrcUpload() && urlUploadInputs.endian
+                          !urlUploadInputs.isMrcUpload && urlUploadInputs.endian
                             ? urlUploadInputs.endian
                             : ""
                         }
                         placeholder={
-                          urlUploadInputs.mrcUpload() ? "auto" : "Select"
+                          urlUploadInputs.isMrcUpload ? "auto" : "Select"
                         }
-                        disabled={!urlUploadInputs.canSetParameters()}
+                        disabled={!urlUploadInputs.canSetParameters}
                       >
                         {endianOptions.map((option) => (
                           <Option key={option}>{option}</Option>
@@ -672,7 +672,7 @@ const VolumeUploadDialog = observer(
                       </Button>
                     </div>
 
-                    {cryoETUploadInputs.hasSameId() && (
+                    {cryoETUploadInputs.hasSameId && (
                       <div>
                         <Checkmark24Filled
                           className={globalClasses.successIcon}
@@ -682,7 +682,7 @@ const VolumeUploadDialog = observer(
                         </Text>
                       </div>
                     )}
-                    {cryoETUploadInputs.hasDifferentId() && (
+                    {cryoETUploadInputs.hasDifferentId && (
                       <div>
                         <Info24Regular className={globalClasses.warningIcon} />
                         <Text style={{ marginLeft: "5px" }}>
@@ -743,7 +743,7 @@ const VolumeUploadDialog = observer(
                 appearance="primary"
                 onClick={confirmEffect}
                 disabled={
-                  uploadDialogStore.isBusy || !uploadDialogStore.isValid()
+                  uploadDialogStore.isBusy || !uploadDialogStore.isValid
                 }
               >
                 {confirmText}

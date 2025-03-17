@@ -470,7 +470,7 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const handleAnnotationEdit = async (index: number) => {
-    if (!visualizedVolume || !visualizedVolume.canEditLabels()) {
+    if (!visualizedVolume || !visualizedVolume.canEditLabels) {
       return;
     }
     visualizedVolume.setManualLabelIndex(index);
@@ -604,7 +604,7 @@ const Volume = observer(({ open, close }: Props) => {
       activeProject?.hasWriteAccess &&
       selectedVolume &&
       visualizedVolume &&
-      visualizedVolume.canEditLabels()
+      visualizedVolume.canEditLabels
     );
   };
 
@@ -838,7 +838,7 @@ const Volume = observer(({ open, close }: Props) => {
                     <br />
                     <div>
                       {!visualizedVolume ||
-                      !visualizedVolume.canEditLabels() ? (
+                      !visualizedVolume.canEditLabels ? (
                         <ErrorCircle16Filled
                           className={globalClasses.failIcon}
                         />

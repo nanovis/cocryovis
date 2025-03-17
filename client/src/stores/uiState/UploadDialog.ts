@@ -50,19 +50,13 @@ export const FileUploadInputs = types
     get dialog(): UploadDialogInstance {
       return getParentOfType(self, UploadDialog);
     },
-    rawUpload() {
+    get isRawUpload() {
       return !!self.pendingFile?.name.toLowerCase().endsWith(".raw");
     },
-    mrcUpload() {
+    get isMrcUpload() {
       return !!self.pendingFile?.name.toLowerCase().endsWith(".mrc");
     },
-    isValid() {
-      return (
-        self.pendingFile !== null &&
-        (!this.rawUpload() || this.validParameters())
-      );
-    },
-    validParameters() {
+    get hasValidParameters() {
       return (
         self.width !== undefined &&
         self.height !== undefined &&
@@ -73,8 +67,14 @@ export const FileUploadInputs = types
     },
   }))
   .views((self) => ({
-    canSetParameters(): boolean {
-      return !self.dialog.isBusy && self.rawUpload();
+    get isValid() {
+      return (
+        self.pendingFile !== null &&
+        (!self.isRawUpload || self.hasValidParameters)
+      );
+    },
+    get canSetParameters(): boolean {
+      return !self.dialog.isBusy && self.isRawUpload;
     },
   }))
   .actions((self) => ({
@@ -162,18 +162,13 @@ export const UrlUploadInputs = types
     get dialog(): UploadDialogInstance {
       return getParentOfType(self, UploadDialog);
     },
-    rawUpload() {
+    get isRawUpload() {
       return self.fileType === "raw";
     },
-    mrcUpload() {
+    get isMrcUpload() {
       return self.fileType === "mrc";
     },
-    isValid() {
-      return (
-        self.url.length > 0 && (!this.rawUpload() || this.validParameters())
-      );
-    },
-    validParameters() {
+    get hasValidParameters() {
       return (
         self.width !== undefined &&
         self.height !== undefined &&
@@ -184,8 +179,13 @@ export const UrlUploadInputs = types
     },
   }))
   .views((self) => ({
+    get isValid() {
+      return (
+        self.url.length > 0 && (!self.isRawUpload || self.hasValidParameters)
+      );
+    },
     canSetParameters(): boolean {
-      return !self.dialog.isBusy && self.rawUpload();
+      return !self.dialog.isBusy && self.isRawUpload;
     },
   }))
   .actions((self) => ({
@@ -265,13 +265,13 @@ export const CryoETUploadInputs = types
     depth: types.optional(types.string, ""),
   })
   .views((self) => ({
-    isValid() {
+    get isValid() {
       return self.url.length > 0;
     },
-    hasSameId() {
+    get hasSameId() {
       return self.lastId !== undefined && self.cryoETId === self.lastId;
     },
-    hasDifferentId() {
+    get hasDifferentId() {
       return self.lastId !== undefined && self.cryoETId !== self.lastId;
     },
   }))
@@ -376,6 +376,17 @@ export const UploadDialog = types
   .volatile(() => ({
     isBusy: false,
   }))
+  .views((self) => ({
+    get isValid() {
+      if (self.tab === "fromFile") {
+        return self.fileUploadInputs.isValid;
+      } else if (self.tab === "fromUrl") {
+        return self.urlUploadInputs.isValid;
+      } else {
+        return self.cryoETUploadInputs.isValid;
+      }
+    },
+  }))
   .actions((self) => ({
     setTab(tab: Tabs) {
       self.tab = tab;
@@ -390,15 +401,6 @@ export const UploadDialog = types
         self.urlUploadInputs.reset();
       } else {
         self.cryoETUploadInputs.reset();
-      }
-    },
-    isValid() {
-      if (self.tab === "fromFile") {
-        return self.fileUploadInputs.isValid();
-      } else if (self.tab === "fromUrl") {
-        return self.urlUploadInputs.isValid();
-      } else {
-        return self.cryoETUploadInputs.isValid();
       }
     },
   }));
