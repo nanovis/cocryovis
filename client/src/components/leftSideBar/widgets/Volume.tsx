@@ -453,6 +453,9 @@ const Volume = observer(({ open, close }: Props) => {
         return;
       }
       await selectedVolume?.deleteLabeledVolume(dataType, dataId);
+      if (dataType === "SparseLabeledVolumeData") {
+        visualizedVolume?.setLabelEditingMode(false);
+      }
     } catch (error) {
       console.error("Error:", error);
     }
