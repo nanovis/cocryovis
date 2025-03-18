@@ -17,6 +17,9 @@ import { Volume } from "../userState/VolumeModel";
 import { CONFIG } from "../../Constants";
 import { RenderSettings } from "./RenderSettings";
 import { UploadDialog } from "./UploadDialog";
+import { Result } from "../userState/ResultModel";
+import { SparseLabelVolume } from "../userState/SparseVolumeModel";
+import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
 
 export const UiState = types
   .model({
@@ -90,9 +93,20 @@ export const UiState = types
       const volumeVisualizationSettings: Array<VolVisSettingsSnapshotIn> = [];
 
       const vizualizedVolume: VisualizedVolumeSnapshotIn = {
-        visualizedObject: visualizedObject?.id,
         volVisSettings: volumeVisualizationSettings,
       };
+
+      if (visualizedObject !== undefined) {
+        if (getType(visualizedObject) === Volume) {
+          vizualizedVolume.volume = visualizedObject.id;
+        } else if (getType(visualizedObject) === Result) {
+          vizualizedVolume.result = visualizedObject.id;
+        } else if (getType(visualizedObject) === SparseLabelVolume) {
+          vizualizedVolume.sparseLabelVolume = visualizedObject.id;
+        } else if (getType(visualizedObject) === PseudoLabelVolume) {
+          vizualizedVolume.pseudoLabelVolume = visualizedObject.id;
+        }
+      }
 
       const transferFunctionDefinitions = new Map();
       let defaultTFIndex = 0;

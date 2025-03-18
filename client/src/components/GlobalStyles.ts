@@ -206,7 +206,7 @@ const globalStyles = makeStyles({
     flexDirection: "column",
     paddingTop: "16px",
     overflowY: "auto",
-  },
+  }
 });
 
 export default globalStyles;

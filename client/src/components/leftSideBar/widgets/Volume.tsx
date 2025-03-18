@@ -54,6 +54,8 @@ import {
 import { ResultInstance } from "../../../stores/userState/ResultModel";
 import { VolumeSettings } from "../../../functions/VolumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
+import { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
+import { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -305,13 +307,18 @@ const Volume = observer(({ open, close }: Props) => {
 
   const handleVisualisationRequest = async (
     dataType: RawDataTypes,
-    id: number | undefined
+    id: Number | undefined,
+    volumeInstance:
+      | VolumeInstance
+      | SparseVolumeInstance
+      | PseudoVolumeInstance
+      | undefined
   ) => {
-    let toastId = null;
-
-    if (!id) {
+    if (!volumeInstance || !id) {
       return;
     }
+
+    let toastId = null;
 
     try {
       toastId = toast.loading("Fetching visualization data...");
@@ -333,7 +340,7 @@ const Volume = observer(({ open, close }: Props) => {
       const contents = await response.blob();
       const fileMap = await Utils.zipToFileMap(contents);
 
-      await uiState.visualizeVolume(fileMap, selectedVolume);
+      await uiState.visualizeVolume(fileMap, volumeInstance);
 
       toast.dismiss(toastId);
     } catch (error) {
@@ -758,7 +765,8 @@ const Volume = observer(({ open, close }: Props) => {
                 onClick={() =>
                   handleVisualisationRequest(
                     "RawVolumeData",
-                    selectedVolume?.rawData?.id
+                    selectedVolume?.rawData?.id,
+                    selectedVolume
                   )
                 }
               >
@@ -837,8 +845,7 @@ const Volume = observer(({ open, close }: Props) => {
                     <Text>Label Editing Mode</Text>
                     <br />
                     <div>
-                      {!visualizedVolume ||
-                      !visualizedVolume.canEditLabels ? (
+                      {!visualizedVolume || !visualizedVolume.canEditLabels ? (
                         <ErrorCircle16Filled
                           className={globalClasses.failIcon}
                         />
@@ -951,7 +958,8 @@ const Volume = observer(({ open, close }: Props) => {
                   onVisualize={() =>
                     handleVisualisationRequest(
                       "SparseLabeledVolumeData",
-                      selectedVolume.sparseVolumeArray[index].id
+                      selectedVolume.sparseVolumeArray[index].id,
+                      selectedVolume.sparseVolumeArray[index]
                     )
                   }
                   onDelete={() =>
@@ -1118,7 +1126,8 @@ const Volume = observer(({ open, close }: Props) => {
                   onVisualize={() =>
                     handleVisualisationRequest(
                       "PseudoLabeledVolumeData",
-                      selectedVolume?.pseudoVolumeArray[index].id
+                      selectedVolume?.pseudoVolumeArray[index].id,
+                      selectedVolume?.pseudoVolumeArray[index]
                     )
                   }
                   onDelete={() =>

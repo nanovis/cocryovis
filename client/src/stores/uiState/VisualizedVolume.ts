@@ -4,12 +4,20 @@ import { Volume, VolumeInstance } from "../userState/VolumeModel";
 import { Result, ResultInstance } from "../userState/ResultModel";
 import { flow, isAlive } from "mobx-state-tree";
 import Utils from "../../functions/Utils";
-import { SparseLabelVolume } from "../userState/SparseVolumeModel";
-import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
+import {
+  SparseLabelVolume,
+  SparseVolumeInstance,
+} from "../userState/SparseVolumeModel";
+import {
+  PseudoLabelVolume,
+  PseudoVolumeInstance,
+} from "../userState/PseudoVolumeModel";
 import { Id, toast } from "react-toastify";
 
 export type visualizedObjectInstances =
   | VolumeInstance
+  | SparseVolumeInstance
+  | PseudoVolumeInstance
   | ResultInstance
   | undefined;
 
@@ -58,14 +66,10 @@ async function loadSparseLabelVolumesIntoAnnotations(
 
 export const VisualizedVolume = types
   .model({
-    visualizedObject: types.maybe(
-      types.union(
-        types.reference(Volume),
-        types.reference(SparseLabelVolume),
-        types.reference(PseudoLabelVolume),
-        types.reference(Result)
-      )
-    ),
+    volume: types.maybe(types.reference(Volume)),
+    sparseLabelVolume: types.maybe(types.reference(SparseLabelVolume)),
+    pseudoLabelVolume: types.maybe(types.reference(PseudoLabelVolume)),
+    result: types.maybe(types.reference(Result)),
     volVisSettings: types.array(VolVisSettings),
     clippingPlane: types.optional(
       types.enumeration("ClippingPlane", ["0", "1", "2", "3", "4"]),
@@ -73,6 +77,9 @@ export const VisualizedVolume = types
     ),
     labelEditingMode: types.optional(types.boolean, false),
     manualLabelIndex: types.maybe(types.integer),
+    fullscreen: types.optional(types.boolean, false),
+    showRawClippingPlane: types.optional(types.boolean, false),
+    eraseMode: types.optional(types.boolean, false),
   })
   .views((self) => ({
     get rawSettings() {
@@ -90,25 +97,70 @@ export const VisualizedVolume = types
         (volVisSettings) => volVisSettings.type === "volume"
       );
     },
-get canEditLabels() {
-      return (
-        self.visualizedObject !== undefined &&
-        getType(self.visualizedObject) === Volume
-      );
+    get canEditLabels() {
+      return self.volume !== undefined;
+    },
+  }))
+  .actions((self) => ({
+    afterAttach() {
+      if (!window.WasmModule) {
+        return;
+      }
+      window.WasmModule?.chooseClippingPlane(parseInt(self.clippingPlane));
+      window.WasmModule?.set_fullscreen_mode(self.fullscreen);
+      window.WasmModule?.show_raw_data_on_clipping(self.showRawClippingPlane);
+      window.WasmModule?.set_annotation_mode(self.eraseMode);
+      window.WasmModule?.enable_annotation_mode(false);
+    },
+    setFullscreen(enable: boolean) {
+      if (!window.WasmModule) {
+        return;
+      }
+      if (enable && self.clippingPlane === "0") {
+        return;
+      }
+      self.fullscreen = enable;
+      window.WasmModule?.set_fullscreen_mode(enable);
+    },
+    setShowRawClippingPlane(enable: boolean) {
+      if (!window.WasmModule) {
+        return;
+      }
+      if (enable && self.rawSettings === undefined) {
+        return;
+      }
+      self.showRawClippingPlane = enable;
+      window.WasmModule?.show_raw_data_on_clipping(enable);
+    },
+    setEraseMode(enable: boolean) {
+      if (!window.WasmModule) {
+        return;
+      }
+      if (!self.canEditLabels || !self.labelEditingMode) {
+        return;
+      }
+
+      self.eraseMode = enable;
+      window.WasmModule?.set_annotation_mode(!enable);
     },
   }))
   .actions((self) => ({
     setManualLabelIndex(index: number) {
+      if (!window.WasmModule) {
+        return;
+      }
       self.manualLabelIndex = index;
       window.WasmModule?.set_annotation_channel(index);
     },
-    clearVisualization() {
-      // self.visualizedObject = undefined;
-      self.volVisSettings.clear();
-    },
     setClippingPlane(clippingPlane: "0" | "1" | "2" | "3" | "4") {
+      if (!window.WasmModule) {
+        return;
+      }
       self.clippingPlane = clippingPlane;
       window.WasmModule?.chooseClippingPlane(parseInt(clippingPlane));
+      if (self.fullscreen) {
+        self.setFullscreen(false);
+      }
     },
   }))
   .actions((self) => ({
@@ -123,14 +175,14 @@ get canEditLabels() {
       let toastId = null;
       try {
         toastId = toast.loading("Fething volume data...");
-        if (!self.visualizedObject) {
-          throw new Error("No visualized object found.");
+        if (!window.WasmModule) {
+          throw new Error("WasmModule is not loaded.");
         }
-        if (getType(self.visualizedObject) !== Volume) {
+        if (self.volume === undefined) {
           throw new Error("Only raw volumes can be labeled.");
         }
         const response = yield Utils.sendReq(
-          `/volume/${self.visualizedObject?.id}?sparseVolumes=true`,
+          `/volume/${self.volume.id}?sparseVolumes=true`,
           {
             method: "GET",
           },
@@ -143,33 +195,14 @@ get canEditLabels() {
         if (!isAlive(self)) {
           return;
         }
-        const refVolume = self.visualizedObject as VolumeInstance;
-        refVolume.setSparseVolumes(volume.sparseVolumes);
-        // for (let i = 0; i < volume.sparseVolumes.length; i++) {
-        //   toast.update(toastId, {
-        //     render: `Fetching manual label volume ${i}/${volume.sparseVolumes.length}`,
-        //     isLoading: true,
-        //     autoClose: false,
-        //   });
-        //   yield Utils.waitForNextFrame();
-        //   if (!isAlive(self)) {
-        //     return;
-        //   }
-        //   yield loadSparseLabelVolumeIntoAnnotation(
-        //     volume.sparseVolumes[i].id,
-        //     i
-        //   );
-        //   if (!isAlive(self)) {
-        //     return;
-        //   }
-        // }
-        yield loadSparseLabelVolumesIntoAnnotations(refVolume, toastId);
+        self.volume.setSparseVolumes(volume.sparseVolumes);
+        yield loadSparseLabelVolumesIntoAnnotations(self.volume, toastId);
         if (!isAlive(self)) {
           return;
         }
 
         self.labelEditingMode = enable;
-        // window.WasmModule?.enable_annotation_mode(enable);
+        window.WasmModule?.enable_annotation_mode(true);
         if (volume.sparseVolumes.length > 0) {
           self.setManualLabelIndex(0);
         }
@@ -185,20 +218,6 @@ get canEditLabels() {
       }
     }),
   }));
-
-// VisualizedVolume.actions((self) => ({
-//   setVisualizedObject(
-//     visualizedObjectType: VisualizedVolumeInstance["visualizedObject"],
-//     volumeSettingsInstances: VolVisSettingsSnapshotIn[]
-//   ) {
-//     // self.visualizedObject = visualizedObject;
-
-//     self.volVisSettings.clear();
-//     volumeSettingsInstances.forEach((volumeSettingsInstance) => {
-//       self.volVisSettings.push(volumeSettingsInstance);
-//     });
-//   },
-// }));
 
 export interface VisualizedVolumeInstance
   extends Instance<typeof VisualizedVolume> {}

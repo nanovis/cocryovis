@@ -36,7 +36,9 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
   ({ toggleTheme }) => {
     const CookieName = "LoggedUser";
 
-    const { login, logout, user } = useMst();
+    const { login, logout, user, uiState } = useMst();
+
+    const mouseOverCanvas = useRef(false);
 
     const connectionStatus = useServerListener(`${websocketUrl}/ws`, user);
 
@@ -150,16 +152,54 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       }
     };
 
-    const canvasKeyDown = (event: any) => {
-      if (event.key === "Control") {
-        window.WasmModule?.enable_annotation_mode(true);
-        console.log("PING");
-      }
-    };
+    useEffect(() => {
+      window.addEventListener("keydown", globalKeyDown);
+      return () => {
+        window.removeEventListener("keydown", globalKeyDown);
+      };
+    }, []);
 
-    const canvasKeyUp = (event: any) => {
-      if (event.key === "Control") {
-        window.WasmModule?.enable_annotation_mode(false);
+    const globalKeyDown = (event: KeyboardEvent) => {
+      if (mouseOverCanvas.current) {
+        switch (event.key.toLowerCase()) {
+          case "f":
+            uiState.visualizedVolume?.setFullscreen(
+              !uiState.visualizedVolume.fullscreen
+            );
+            break;
+          case "r":
+            uiState.visualizedVolume?.setShowRawClippingPlane(
+              !uiState.visualizedVolume.showRawClippingPlane
+            );
+            break;
+          case "l":
+            uiState.visualizedVolume?.setEraseMode(
+              !uiState.visualizedVolume.eraseMode
+            );
+            break;
+          default:
+            break;
+        }
+        if (event.shiftKey) {
+          // Check for event codes since shift combos make other characters
+          switch (event.code) {
+            case "Digit1":
+              uiState.visualizedVolume?.setClippingPlane("0");
+              break;
+            case "Digit2":
+              uiState.visualizedVolume?.setClippingPlane("1");
+              break;
+            case "Digit3":
+              uiState.visualizedVolume?.setClippingPlane("2");
+              break;
+            case "Digit4":
+              uiState.visualizedVolume?.setClippingPlane("3");
+              break;
+            case "Digit5":
+              uiState.visualizedVolume?.setClippingPlane("4");
+              break;
+          }
+        }
       }
     };
 
@@ -178,15 +218,15 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         />
         <div id="main-panel" className={classes.mainPanel}>
           {!showSignIn && !showSignUp && <SideControls />}
-          <div id="rendering" onContextMenu={(e) => e.preventDefault()}>
+          <div
+            id="rendering"
+            onContextMenu={(e) => e.preventDefault()}
+            onMouseEnter={() => (mouseOverCanvas.current = true)}
+            onMouseLeave={() => (mouseOverCanvas.current = false)}
+          >
             {showSignIn && <SignInPage onSignIn={handleSignIn} />}
             {showSignUp && <SignUpPage onSignUp={handleSignUp} />}
-            <canvas
-              id="canvas"
-              tabIndex={0}
-              onKeyDown={canvasKeyDown}
-              onKeyUp={canvasKeyUp}
-            />
+            <canvas id="canvas" tabIndex={0} />
           </div>
           {!showSignIn && !showSignUp && <RightSideControls />}
         </div>

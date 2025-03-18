@@ -9,13 +9,15 @@ import {
   Slider,
   Tooltip,
   Switch,
-  RadioGroupOnChangeData,
-  SliderOnChangeData,
+  Text,
+  mergeClasses,
 } from "@fluentui/react-components";
 import {
   ArrowCircleRight28Regular,
   ArrowDownload16Regular,
   ArrowUpload16Regular,
+  EditFilled,
+  EraserFilled,
 } from "@fluentui/react-icons";
 import { useRef, useState } from "react";
 import Utils from "../../../functions/Utils";
@@ -26,7 +28,7 @@ import { useMst } from "../../../stores/RootStore";
 import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeModel";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
-import { VolumeInstance } from "../../../stores/userState/VolumeModel";
+import ShortcutKey from "../../shared/ShortcutKey";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -100,6 +102,12 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
   },
+  DrawEraseButton: {},
+  DrawEraseButtonToggled: {
+    backgroundColor: tokens.colorNeutralBackground1Pressed,
+    color: tokens.colorBrandForeground1,
+    pointerEvents: "none",
+  },
 });
 
 interface Props {
@@ -114,7 +122,7 @@ const Visualization = observer(({ open, close }: Props) => {
   const visualizedVolume = uiState.visualizedVolume;
   const volVisSettings = visualizedVolume?.volVisSettings;
   const volumeSettings = visualizedVolume?.volumeSettings;
-  const visualizedObject = visualizedVolume?.visualizedObject;
+  const volume = visualizedVolume?.volume;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
@@ -124,17 +132,8 @@ const Visualization = observer(({ open, close }: Props) => {
   const [processingSaveAnnotations, setProcessingSaveAnnotations] =
     useState(false);
 
-  const handleClippingPlaneSelection = (
-    event: React.FormEvent<HTMLDivElement>,
-    data: RadioGroupOnChangeData
-  ) => {
-    visualizedVolume?.setClippingPlane(
-      data.value as "0" | "1" | "2" | "3" | "4"
-    );
-  };
-
   const handleSaveAnnotations = async () => {
-    if (annotationsActionsDisabled() || visualizedObject === undefined) {
+    if (annotationsActionsDisabled() || volume === undefined) {
       return;
     }
 
@@ -145,7 +144,6 @@ const Visualization = observer(({ open, close }: Props) => {
       if (!visualizedVolume?.canEditLabels) {
         throw new Error("Only raw volumes can be labeled.");
       }
-      const volume = visualizedObject as VolumeInstance;
 
       setProcessingSaveAnnotations(true);
       const annotations = window.WasmModule?.get_annotations();
@@ -163,7 +161,7 @@ const Visualization = observer(({ open, close }: Props) => {
         visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
       ) {
         response = await Utils.sendRequestWithToast(
-          `volume/${visualizedObject.id}/add-annotations`,
+          `volume/${volume.id}/add-annotations`,
           {
             method: "PUT",
             credentials: "include",
@@ -178,7 +176,7 @@ const Visualization = observer(({ open, close }: Props) => {
         const sparseLabelVolume =
           volume.sparseVolumeArray[visualizedVolume.manualLabelIndex];
         response = await Utils.sendRequestWithToast(
-          `volume/${visualizedObject.id}/volumeData/SparseLabeledVolumeData/${sparseLabelVolume.id}/update-annotations`,
+          `volume/${volume.id}/volumeData/SparseLabeledVolumeData/${sparseLabelVolume.id}/update-annotations`,
           {
             method: "PUT",
             credentials: "include",
@@ -200,27 +198,6 @@ const Visualization = observer(({ open, close }: Props) => {
     }
 
     window.WasmModule?.reset_annotations();
-  };
-
-  const handleChangeKernelSize = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    data: SliderOnChangeData
-  ) => {
-    uiState.setKernelSize(Number(event.target.value));
-  };
-
-  const handleChangeTFLow = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    volVisSettings: VolVisSettingsInstance
-  ) => {
-    volVisSettings.transferFunction.setRampLow(Number(event.target.value));
-  };
-
-  const handleChangeTFHigh = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    volVisSettings: VolVisSettingsInstance
-  ) => {
-    volVisSettings.transferFunction.setRampHigh(Number(event.target.value));
   };
 
   const handleChangeTFColor = (
@@ -415,11 +392,100 @@ const Visualization = observer(({ open, close }: Props) => {
             </Button>
           </div>
 
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Field label="Annotation Mode">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  width: "80px",
+                  justifyContent: "space-between",
+                  marginTop: "5px",
+                  marginLeft: "14px",
+                }}
+              >
+                <Tooltip
+                  content={
+                    <Text>
+                      Draw Annorations <ShortcutKey content="L" />
+                    </Text>
+                  }
+                  relationship={"label"}
+                  positioning="before"
+                  appearance="inverted"
+                >
+                  <Button
+                    className={mergeClasses(
+                      classes.DrawEraseButton,
+                      visualizedVolume &&
+                        !visualizedVolume.eraseMode &&
+                        classes.DrawEraseButtonToggled
+                    )}
+                    disabled={annotationsActionsDisabled()}
+                    icon={<EditFilled />}
+                    appearance="outline"
+                    onClick={() => {
+                      visualizedVolume?.setEraseMode(false);
+                    }}
+                  />
+                </Tooltip>
+                <Tooltip
+                  content={
+                    <Text>
+                      Erase Annorations <ShortcutKey content="L" />
+                    </Text>
+                  }
+                  relationship="label"
+                  positioning="after"
+                  appearance="inverted"
+                >
+                  <Button
+                    disabled={annotationsActionsDisabled()}
+                    className={mergeClasses(
+                      classes.DrawEraseButton,
+                      visualizedVolume &&
+                        visualizedVolume.eraseMode &&
+                        classes.DrawEraseButtonToggled
+                    )}
+                    icon={<EraserFilled />}
+                    appearance="outline"
+                    onClick={() => {
+                      visualizedVolume?.setEraseMode(true);
+                    }}
+                    style={{ marginLeft: "5px" }}
+                  />
+                </Tooltip>
+              </div>
+            </Field>
+            <Field label={`Kernel Size [${uiState.kernelSize}]`}>
+              <Slider
+                style={{ width: "200px" }}
+                disabled={annotationsActionsDisabled()}
+                value={uiState.kernelSize}
+                min={1}
+                max={200}
+                onChange={(_, data) =>
+                  uiState.setKernelSize(Number(data.value))
+                }
+              />
+            </Field>
+          </div>
+
           {/* Set Clipping Plane */}
           <Field label="Clipping Plane">
             <RadioGroup
               value={visualizedVolume?.clippingPlane ?? "0"}
-              onChange={handleClippingPlaneSelection}
+              onChange={(_, data) => {
+                visualizedVolume?.setClippingPlane(
+                  data.value as "0" | "1" | "2" | "3" | "4"
+                );
+              }}
               className={classes.clippingPlane}
               disabled={actionsDisabled()}
             >
@@ -431,19 +497,66 @@ const Visualization = observer(({ open, close }: Props) => {
             </RadioGroup>
           </Field>
 
-          <div className={classes.sliderContainer}>
-            <Label style={{ alignContent: "center" }}>
-              Kernel Size [{uiState.kernelSize}]
+          <Tooltip
+            content={
+              <Text>
+                Shows raw volume when any clipping plane is enabled{" "}
+                <ShortcutKey content="R" />
+              </Text>
+            }
+            relationship="description"
+            appearance="inverted"
+            positioning="after"
+          >
+            <Label style={{ display: "flex", alignItems: "center" }}>
+              Show Raw Clipping Plane
+              <Switch
+                labelPosition="before"
+                style={{ marginLeft: 10 }}
+                disabled={
+                  actionsDisabled() ||
+                  visualizedVolume?.rawSettings === undefined
+                }
+                checked={
+                  visualizedVolume?.rawSettings !== undefined &&
+                  (visualizedVolume?.showRawClippingPlane ?? false)
+                }
+                min={1}
+                max={200}
+                onChange={(_, data) =>
+                  visualizedVolume?.setShowRawClippingPlane(data.checked)
+                }
+              />
             </Label>
-            <Slider
-              style={{ maxWidth: "200px" }}
-              disabled={annotationsActionsDisabled()}
-              value={uiState.kernelSize}
-              min={1}
-              max={200}
-              onChange={handleChangeKernelSize}
-            />
-          </div>
+          </Tooltip>
+
+          <Tooltip
+            content={
+              <Text>
+                Toggle fullscreen mode <ShortcutKey content="F" />
+              </Text>
+            }
+            relationship="description"
+            appearance="inverted"
+            positioning="after"
+          >
+            <Label style={{ display: "flex", alignItems: "center" }}>
+              Fullscreen
+              <Switch
+                labelPosition="before"
+                style={{ marginLeft: 105 }}
+                disabled={
+                  actionsDisabled() || visualizedVolume?.clippingPlane === "0"
+                }
+                checked={visualizedVolume?.fullscreen ?? false}
+                min={1}
+                max={200}
+                onChange={(_, data) =>
+                  visualizedVolume?.setFullscreen(data.checked)
+                }
+              />
+            </Label>
+          </Tooltip>
 
           <hr
             style={{
@@ -596,8 +709,10 @@ const Visualization = observer(({ open, close }: Props) => {
                         value={settingsInstance.transferFunction.rampLow * 100}
                         min={0}
                         max={100}
-                        onChange={(event) =>
-                          handleChangeTFLow(event, settingsInstance)
+                        onChange={(_, data) =>
+                          settingsInstance.transferFunction.setRampLow(
+                            Number(data.value)
+                          )
                         }
                       />
                     </div>
@@ -607,8 +722,10 @@ const Visualization = observer(({ open, close }: Props) => {
                         value={settingsInstance.transferFunction.rampHigh * 100}
                         min={0}
                         max={100}
-                        onChange={(event) =>
-                          handleChangeTFHigh(event, settingsInstance)
+                        onChange={(_, data) =>
+                          settingsInstance.transferFunction.setRampHigh(
+                            Number(data.value)
+                          )
                         }
                       />
                     </div>

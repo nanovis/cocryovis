@@ -299,6 +299,7 @@ interface EmbindModule {
   load_volume_into_annotation(_0: VectorString): void;
   set_annotation_channel(_0: number): void;
   set_annotation_color(_0: number, _1: number, _2: number): void;
+  set_annotation_mode(_0: boolean): void;
   getAnnotationKernelSize(): number;
   setAnnotationKernelSize(_0: number): void;
   adjustTransferFunction(
@@ -312,6 +313,8 @@ interface EmbindModule {
   open_volume(): void;
   clip_volume(_0: boolean, _1: number): void;
   chooseClippingPlane(_0: number): void;
+  show_raw_data_on_clipping(_0: boolean): void;
+  set_fullscreen_mode(_0: boolean): void;
   showImGui(_0: boolean): void;
   save_volume(_0: EmbindString): void;
   on_resize(_0: number, _1: number): void;
