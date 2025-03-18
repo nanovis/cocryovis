@@ -90,6 +90,19 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
     return selectionList;
   };
 
+  const getSelectedOption = () => {
+    if (userProjects?.activeProject) {
+      return projectSelectionProperties(userProjects.activeProject);
+    }
+    if (selectedProjectId !== undefined) {
+      const project = userProjects?.projects.get(selectedProjectId);
+      if (project) {
+        return projectSelectionProperties(project);
+      }
+    }
+    return undefined;
+  };
+
   return (
     <Dialog open={open}>
       <DialogSurface>
@@ -98,11 +111,7 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
           <DialogContent style={{ paddingTop: "15px", paddingBottom: "15px" }}>
             <ComboboxSearch
               selectionList={createSelectionList()}
-              selectedOption={
-                userProjects?.activeProject
-                  ? projectSelectionProperties(userProjects.activeProject)
-                  : undefined
-              }
+              selectedOption={getSelectedOption()}
               onOptionSelect={handleProjectOptionSelect}
               placeholder="Select a project"
               noOptionsMessage="No projects match your search."
