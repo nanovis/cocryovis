@@ -9,7 +9,6 @@ db.json
 *.sqlite
 *.sqlite-journal
 .env
-/prisma/migrations/
 .vscode/
 .venv/
 /temp/
