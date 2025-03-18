@@ -119,7 +119,11 @@ projectsApi.get(`/volumeData/:type/:idVolumeData`, restrictApi,
 // Get Raw Data Files
 projectsApi.get(`/volumeData/:type/:idVolumeData/data`, restrictApi,
     async (req, res) => VolumeDataController.getData(VolumeDataType.mapName(req.params.type), req, res));
-    
+
+// Update Raw Data
+projectsApi.put(`/volumeData/:type/:idVolumeData`, restrictApi, 
+    async (req, res) => VolumeDataController.update(VolumeDataType.mapName(req.params.type), req, res));
+
 // Visualize
 projectsApi.get(`/volumeData/:type/:idVolumeData/visualization-data`, restrictApi, 
     async (req, res) => VolumeDataController.getVolumeVisualizationFiles(VolumeDataType.mapName(req.params.type), req, res));

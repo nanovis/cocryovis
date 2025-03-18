@@ -91,6 +91,7 @@ model SparseLabelVolumeData {
   settings      String?
   volumes       Volume[]
   derivedLabels PseudoLabelVolumeData[]
+  color         String?
 }
 
 model PseudoLabelVolumeData {

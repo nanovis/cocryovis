@@ -34,6 +34,14 @@ export const Volume = types
     sparseVolumes: types.map(SparseLabelVolume),
     pseudoVolumes: types.map(PseudoLabelVolume),
     volumeResults: VolumeResults,
+    sparseLabelColors: types.optional(
+      types.array(types.string),
+      new Array(4).fill("#ffffff")
+    ),
+    shownAnnotations: types.optional(
+      types.array(types.boolean),
+      new Array(4).fill(false)
+    ),
   })
   .views((self) => ({
     get sparseVolumeArray() {
@@ -59,8 +67,31 @@ export const Volume = types
         self.pseudoVolumes.set(volume.id, volume);
       });
     },
+    setSparseLabelColor(index: number, color: string) {
+      self.sparseLabelColors[index] = color;
+
+      if (window.WasmModule) {
+        const parsedColor = Utils.fromHexColor(color);
+        window.WasmModule.set_annotation_color(
+          index,
+          parsedColor.r / 255,
+          parsedColor.g / 255,
+          parsedColor.b / 255
+        );
+      }
+    },
+    setShownAnnotation(index: number, show: boolean) {
+      self.shownAnnotations[index] = show;
+
+      if (window.WasmModule) {
+        window.WasmModule.show_annotation(index, self.shownAnnotations[index]);
+      }
+    },
   }))
   .actions((self) => ({
+    toggleShownAnnotation(index: number) {
+      self.setShownAnnotation(index, !self.shownAnnotations[index]);
+    },
     setSparseVolumes(volumes: SparseVolumeSnapshotIn[] | undefined) {
       if (!volumes) return;
 

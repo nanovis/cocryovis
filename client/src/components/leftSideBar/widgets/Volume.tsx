@@ -476,10 +476,18 @@ const Volume = observer(({ open, close }: Props) => {
     }
   };
 
+  const canEditAnnotations =
+    visualizedVolume !== undefined &&
+    visualizedVolume.canEditLabels &&
+    visualizedVolume.labelEditingMode &&
+    selectedVolume !== undefined &&
+    visualizedVolume.volume?.id === selectedVolume.id;
+
   const handleAnnotationEdit = async (index: number) => {
-    if (!visualizedVolume || !visualizedVolume.canEditLabels) {
+    if (!canEditAnnotations) {
       return;
     }
+    selectedVolume.setShownAnnotation(index, true);
     visualizedVolume.setManualLabelIndex(index);
   };
 
@@ -969,12 +977,26 @@ const Volume = observer(({ open, close }: Props) => {
                     )
                   }
                   onEdit={() => handleAnnotationEdit(index)}
-                  canEdit={visualizedVolume?.labelEditingMode}
+                  canEdit={canEditAnnotations}
                   deleteQuestion={Utils.getFileNameFromPath(
                     selectedVolume.sparseVolumeArray[index].rawFilePath
                   )}
                   deleteTitle={"Remove Sparse Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
+                  color={
+                    selectedVolume.sparseVolumeArray[index].color ?? "#ffffff"
+                  }
+                  onColorChange={(color) => {
+                    console.log(color);
+                    selectedVolume.sparseVolumeArray[index].setColor(
+                      color,
+                      index
+                    );
+                  }}
+                  isEnabled={selectedVolume.shownAnnotations[index]}
+                  onEnabled={() => {
+                    selectedVolume.toggleShownAnnotation(index);
+                  }}
                 />
               ) : (
                 <ItemTitleDownloadDelete
@@ -985,10 +1007,20 @@ const Volume = observer(({ open, close }: Props) => {
                   }
                   onEdit={() => handleAnnotationEdit(index)}
                   canEdit={
-                    selectedVolume !== undefined &&
-                    visualizedVolume?.labelEditingMode &&
+                    canEditAnnotations &&
                     index === selectedVolume.sparseVolumeArray.length
                   }
+                  color={selectedVolume?.sparseLabelColors[index] ?? "#000000"}
+                  onColorChange={(color) => {
+                    selectedVolume?.setSparseLabelColor(index, color);
+                  }}
+                  isEnabled={
+                    selectedVolume === undefined ||
+                    selectedVolume.shownAnnotations[index]
+                  }
+                  onEnabled={() => {
+                    selectedVolume?.toggleShownAnnotation(index);
+                  }}
                 />
               )}
             </div>

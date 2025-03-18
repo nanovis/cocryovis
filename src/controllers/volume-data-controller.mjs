@@ -44,6 +44,26 @@ export default class VolumeDataController {
      * @param {Request} req
      * @param {Response} res
      */
+    static async update(type, req, res) {
+        if (!req.body) {
+            throw new ApiError(400, "No data provided.");
+        }
+
+        delete req.body.path;
+        delete req.body.rawFilePath;
+
+        const volumeData = await VolumeDataFactory.getClass(type).update(
+            Number(req.params.idVolumeData),
+            req.body
+        );
+        res.status(200).json(volumeData);
+    }
+
+    /**
+     * @param {VolumeDataType} type
+     * @param {Request} req
+     * @param {Response} res
+     */
     static async getData(type, req, res) {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
             Number(req.params.idVolumeData)

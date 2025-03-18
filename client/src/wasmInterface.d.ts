@@ -298,7 +298,8 @@ interface EmbindModule {
   read_file(_0: EmbindString): string;
   load_volume_into_annotation(_0: VectorString): void;
   set_annotation_channel(_0: number): void;
-  set_annotation_color(_0: number, _1: number, _2: number): void;
+  show_annotation(_0: number, _1: boolean): void;
+  set_annotation_color(_0: number, _1: number, _2: number, _3: number): void;
   set_annotation_mode(_0: boolean): void;
   getAnnotationKernelSize(): number;
   setAnnotationKernelSize(_0: number): void;

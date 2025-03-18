@@ -137,7 +137,9 @@ const Visualization = observer(({ open, close }: Props) => {
       return;
     }
 
+    let toastId = null;
     try {
+      toastId = toast.loading("Saving annotations...");
       if (!window.WasmModule) {
         throw new Error("Wasm module not initialized!");
       }
@@ -154,38 +156,59 @@ const Visualization = observer(({ open, close }: Props) => {
       const formData = new FormData();
       formData.append("file", annotationsFile);
 
-      let response = null;
-
       if (
-        visualizedVolume.manualLabelIndex === undefined ||
         visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
       ) {
-        response = await Utils.sendRequestWithToast(
+        let response = await Utils.sendReq(
           `volume/${volume.id}/add-annotations`,
           {
             method: "PUT",
             credentials: "include",
             body: formData,
           },
-          { successText: "Annotations saved successfuly." }
+          false
         );
 
-        const sparseLabel: SparseVolumeSnapshotIn = await response.json();
+        let sparseLabel: SparseVolumeSnapshotIn = await response.json();
+
+        response = await Utils.sendReq(
+          `/volumeData/SparseLabeledVolumeData/${sparseLabel.id}`,
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              color:
+                volume.sparseLabelColors[visualizedVolume.manualLabelIndex],
+            }),
+          },
+          false
+        );
+
+        sparseLabel = await response.json();
+
         volume.addSparseVolume(sparseLabel);
       } else {
         const sparseLabelVolume =
           volume.sparseVolumeArray[visualizedVolume.manualLabelIndex];
-        response = await Utils.sendRequestWithToast(
+        await Utils.sendReq(
           `volume/${volume.id}/volumeData/SparseLabeledVolumeData/${sparseLabelVolume.id}/update-annotations`,
           {
             method: "PUT",
             credentials: "include",
             body: formData,
-          },
-          { successText: "Annotations saved successfuly." }
+          }
         );
       }
+
+      toast.update(toastId, {
+        render: "Annotations saved.",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
     } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
     } finally {
       setProcessingSaveAnnotations(false);
@@ -204,12 +227,8 @@ const Visualization = observer(({ open, close }: Props) => {
     event: React.ChangeEvent<HTMLInputElement>,
     volVisSettings: VolVisSettingsInstance
   ) => {
-    var hex_code = event.target.value.split("");
-    volVisSettings.transferFunction.setColor(
-      parseInt(hex_code[1] + hex_code[2], 16),
-      parseInt(hex_code[3] + hex_code[4], 16),
-      parseInt(hex_code[5] + hex_code[6], 16)
-    );
+    const color = Utils.fromHexColor(event.target.value);
+    volVisSettings.transferFunction.setColor(color.r, color.g, color.b);
   };
 
   const downloadTF = async (volVisSettings: VolVisSettingsInstance) => {
@@ -688,17 +707,11 @@ const Visualization = observer(({ open, close }: Props) => {
                     <input
                       className={classes.colorPicker}
                       type="color"
-                      value={
-                        `#${settingsInstance.transferFunction.red
-                          .toString(16)
-                          .padStart(2, "0")}` +
-                        `${settingsInstance.transferFunction.green
-                          .toString(16)
-                          .padStart(2, "0")}` +
-                        `${settingsInstance.transferFunction.blue
-                          .toString(16)
-                          .padStart(2, "0")}`
-                      }
+                      value={Utils.toHexColor(
+                        settingsInstance.transferFunction.red,
+                        settingsInstance.transferFunction.green,
+                        settingsInstance.transferFunction.blue
+                      )}
                       onChange={(event) =>
                         handleChangeTFColor(event, settingsInstance)
                       }

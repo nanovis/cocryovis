@@ -31,7 +31,7 @@ async function loadSparseLabelVolumesIntoAnnotations(
   const sparseVolumeArray = volume.sparseVolumeArray;
   const volumeNames = new window.WasmModule.VectorString();
   for (let i = 0; i < sparseVolumeArray.length; i++) {
-    const sparseLabelVolumeId = sparseVolumeArray[i].id;
+    const sparseVolume = sparseVolumeArray[i];
     toast.update(toastId, {
       render: `Fetching manual label volume ${i + 1}/${
         sparseVolumeArray.length
@@ -42,7 +42,7 @@ async function loadSparseLabelVolumesIntoAnnotations(
     await Utils.waitForNextFrame();
 
     const response = await Utils.sendReq(
-      `volumeData/SparseLabeledVolumeData/${sparseLabelVolumeId}/download-raw-file`,
+      `volumeData/SparseLabeledVolumeData/${sparseVolume.id}/download-raw-file`,
       {
         method: "GET",
       },
@@ -57,9 +57,32 @@ async function loadSparseLabelVolumesIntoAnnotations(
     }
     const rawFileContent = await rawFile.arrayBuffer();
     const data = new Uint8Array(rawFileContent);
-    const fileName = `SparseLabeledVolumeData-${sparseLabelVolumeId}`;
+    const fileName = `SparseLabeledVolumeData-${sparseVolume.id}`;
     window.WasmModule?.FS.writeFile(fileName, data);
     volumeNames.push_back(fileName);
+
+    let r = 1;
+    let g = 1;
+    let b = 1;
+
+    if (sparseVolume.color !== null) {
+      const color = Utils.fromHexColor(sparseVolume.color);
+      r = color.r / 255;
+      g = color.g / 255;
+      b = color.b / 255;
+    }
+    volume.setShownAnnotation(i, true);
+    window.WasmModule?.set_annotation_color(i, r, g, b);
+  }
+  for (let i = sparseVolumeArray.length; i < 4; i++) {
+    const color = Utils.fromHexColor(volume.sparseLabelColors[i]);
+    volume.setShownAnnotation(i, false);
+    window.WasmModule?.set_annotation_color(
+      i,
+      color.r / 255,
+      color.g / 255,
+      color.b / 255
+    );
   }
   window.WasmModule?.load_volume_into_annotation(volumeNames);
 }
@@ -76,7 +99,7 @@ export const VisualizedVolume = types
       "0"
     ),
     labelEditingMode: types.optional(types.boolean, false),
-    manualLabelIndex: types.maybe(types.integer),
+    manualLabelIndex: types.optional(types.integer, 0),
     fullscreen: types.optional(types.boolean, false),
     showRawClippingPlane: types.optional(types.boolean, false),
     eraseMode: types.optional(types.boolean, false),
@@ -109,7 +132,7 @@ export const VisualizedVolume = types
       window.WasmModule?.chooseClippingPlane(parseInt(self.clippingPlane));
       window.WasmModule?.set_fullscreen_mode(self.fullscreen);
       window.WasmModule?.show_raw_data_on_clipping(self.showRawClippingPlane);
-      window.WasmModule?.set_annotation_mode(self.eraseMode);
+      window.WasmModule?.set_annotation_mode(!self.eraseMode);
       window.WasmModule?.enable_annotation_mode(false);
     },
     setFullscreen(enable: boolean) {

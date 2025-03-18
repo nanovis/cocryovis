@@ -460,4 +460,18 @@ export default class Utils {
   static waitForNextFrame() {
     return new Promise((resolve) => requestAnimationFrame(resolve));
   }
+
+  static toHexColor(r: number, g: number, b: number) {
+    return `#${r.toString(16).padStart(2, "0")}${g
+      .toString(16)
+      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  }
+
+  static fromHexColor(color: string) {
+    return {
+      r: parseInt(color[1] + color[2], 16),
+      g: parseInt(color[3] + color[4], 16),
+      b: parseInt(color[5] + color[6], 16),
+    };
+  }
 }

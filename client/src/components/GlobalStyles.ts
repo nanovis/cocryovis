@@ -39,8 +39,6 @@ const globalStyles = makeStyles({
     flexDirection: "column",
     gap: "20px",
     justifyItems: "center",
-    width: "90%",
-    margin: "auto",
   },
   closeSidebarIconContainer: {
     display: "flex",
