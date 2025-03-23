@@ -490,7 +490,6 @@ const Volume = observer(({ open, close }: Props) => {
     if (!canEditAnnotations) {
       return;
     }
-    selectedVolume.setShownAnnotation(index, true);
     visualizedVolume.setManualLabelIndex(index);
   };
 

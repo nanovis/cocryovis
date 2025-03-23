@@ -174,6 +174,7 @@ export const VisualizedVolume = types
       }
       self.manualLabelIndex = index;
       window.WasmModule?.set_annotation_channel(index);
+      self.volume?.setShownAnnotation(index, true);
     },
     setClippingPlane(clippingPlane: "0" | "1" | "2" | "3" | "4") {
       if (!window.WasmModule) {
@@ -226,9 +227,8 @@ export const VisualizedVolume = types
 
         self.labelEditingMode = enable;
         window.WasmModule?.enable_annotation_mode(true);
-        if (volume.sparseVolumes.length > 0) {
-          self.setManualLabelIndex(0);
-        }
+        self.setManualLabelIndex(0);
+        
         toast.update(toastId, {
           render: "Labeling mode enabled.",
           type: "success",
