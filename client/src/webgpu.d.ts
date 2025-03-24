@@ -12,6 +12,7 @@ declare global {
   }
 
   interface GPUAdapter {
+    limits: any,
     requestDevice(descriptor?: GPUDeviceDescriptor): Promise<GPUDevice>;
   }
 

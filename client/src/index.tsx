@@ -101,6 +101,9 @@ const Main = () => {
       throw new Error("Failed to get WebGPU adapter.");
     }
 
+    console.log("WebGPU Adapter Limits:");
+    console.log(adapter.limits);
+
     const device = await adapter.requestDevice();
     return { adapter, device };
   }
