@@ -16,6 +16,7 @@ import IlastikController from '../../controllers/ilastik-controller.mjs';
 import NanoOetziController from '../../controllers/nano-oetzi-controller.mjs';
 import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'
+import PreProcessingController from '../../controllers/preprocessing-controller.mjs';
 
 // Config
 const config = appConfig;
@@ -225,3 +226,6 @@ projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultCont
 
 // Result vizualization data
 projectsApi.get(`/result/:idResult/data`, restrictApi, ResultController.getResultData);
+
+projectsApi.post(`/preprocessing/AreTomo3/:type/:idVolumeData/visualization-data`, restrictApi, 
+    async (req, res) => PreProcessingController.runAreTomo3(VolumeDataType.mapName(req.params.type), req, res));

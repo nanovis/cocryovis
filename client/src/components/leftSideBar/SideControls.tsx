@@ -21,9 +21,11 @@ import {
   DesktopTower24Regular,
   Molecule24Regular,
   Status24Regular,
+  Toolbox24Regular,
 } from "@fluentui/react-icons";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import DeleteDialog from "../shared/DeleteDialog";
+import CryoTools from "./widgets/CryoTools";
 
 const widgets: Array<WidgetDefinition> = [
   {
@@ -37,6 +39,12 @@ const widgets: Array<WidgetDefinition> = [
     labelPositioning: "after",
     LabelIcon: BrainCircuit24Regular,
     widget: Models,
+  },
+  {
+    title: "Pre-processing",
+    labelPositioning: "after",
+    LabelIcon: Toolbox24Regular,
+    widget: CryoTools,
   },
   {
     title: "Training and Inference",
