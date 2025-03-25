@@ -18,6 +18,11 @@ export const TransferFunction = types
     blue: types.integer,
     comment: types.string,
   })
+  .views((self) => ({
+    get color() {
+      return Utils.toHexColor(self.red, self.green, self.blue);
+    },
+  }))
   .actions((self) => ({
     setRampLow(value: number) {
       self.rampLow = Math.min(value / 100, self.rampHigh);
@@ -102,5 +107,7 @@ export const TransferFunction = types
     }),
   }));
 
-export interface TransferFunctionInstance extends Instance<typeof TransferFunction> {}
-export interface TransferFunctionSnapshotIn extends SnapshotIn<typeof TransferFunction> {}
+export interface TransferFunctionInstance
+  extends Instance<typeof TransferFunction> {}
+export interface TransferFunctionSnapshotIn
+  extends SnapshotIn<typeof TransferFunction> {}
