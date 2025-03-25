@@ -165,7 +165,7 @@ const SideControls = observer(() => {
       >
         <div className={globalClasses.widgetButtonContainer}>
           <Tooltip
-            content="Select Files from Disk"
+            content="Visualize Local Volume"
             relationship="label"
             appearance="inverted"
             positioning="before"

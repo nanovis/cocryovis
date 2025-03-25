@@ -1049,6 +1049,7 @@ const Volume = observer(({ open, close }: Props) => {
               }}
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
                 className={globalClasses.mainActionButton}
@@ -1102,6 +1103,7 @@ const Volume = observer(({ open, close }: Props) => {
               }}
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <div
                 style={{
@@ -1138,6 +1140,7 @@ const Volume = observer(({ open, close }: Props) => {
               }
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
                 className={globalClasses.sideActionButton}
@@ -1304,6 +1307,7 @@ const Volume = observer(({ open, close }: Props) => {
               }}
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
                 className={globalClasses.mainActionButton}
@@ -1351,6 +1355,7 @@ const Volume = observer(({ open, close }: Props) => {
               }}
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
                 className={globalClasses.mainActionButton}
@@ -1378,6 +1383,7 @@ const Volume = observer(({ open, close }: Props) => {
               }
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
                 className={globalClasses.mainActionButton}
