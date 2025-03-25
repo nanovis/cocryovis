@@ -8,7 +8,7 @@ import WidgetToggleButton from "../shared/WidgetToggleButton";
 import {
   ArrowUpload24Regular,
   BorderNone24Regular,
-  InfoRegular,
+  Info24Regular,
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
@@ -19,26 +19,11 @@ import VolumeUploadDialog from "../shared/VolumeUploadDialog";
 import { toast } from "react-toastify";
 import { VolumeSettings } from "../../functions/VolumeSettings";
 
-const widgets: Array<WidgetDefinition> = [
-  {
-    title: "Visualization",
-    labelPositioning: "before",
-    LabelIcon: BorderNone24Regular,
-    widget: Visualization,
-  },
-  {
-    title: "Render Settings",
-    labelPositioning: "before",
-    LabelIcon: SlideSettings24Regular,
-    widget: RenderSettings,
-  },
-  {
-    title: "About",
-    labelPositioning: "before",
-    LabelIcon: InfoRegular,
-    widget: About,
-  },
-];
+const enum WidgetIndices {
+  Visualization = 0,
+  RenderSettings = 1,
+  About = 2,
+}
 
 const SideControls = observer(() => {
   const { uiState } = useMst();
@@ -197,26 +182,51 @@ const SideControls = observer(() => {
             />
           </Tooltip>
 
-          {widgets.map((widget, index) => (
-            <WidgetToggleButton
-              key={index}
-              title={widget.title}
-              labelPositioning={widget.labelPositioning}
-              LabelIcon={widget.LabelIcon}
-              isOpen={uiState.openRightWidget === index}
-              onClick={() => uiState.setOpenRightWidget(index)}
-            />
-          ))}
+          <WidgetToggleButton
+            title={"Visualization"}
+            labelPositioning={"before"}
+            LabelIcon={BorderNone24Regular}
+            isOpen={uiState.openRightWidget === WidgetIndices.Visualization}
+            onClick={() =>
+              uiState.setOpenRightWidget(WidgetIndices.Visualization)
+            }
+            disabled={!uiState.visualizedVolume}
+          />
+
+          <WidgetToggleButton
+            title={"Render Settings"}
+            labelPositioning={"before"}
+            LabelIcon={SlideSettings24Regular}
+            isOpen={uiState.openRightWidget === WidgetIndices.RenderSettings}
+            onClick={() =>
+              uiState.setOpenRightWidget(WidgetIndices.RenderSettings)
+            }
+          />
+
+          <WidgetToggleButton
+            title={"About"}
+            labelPositioning={"before"}
+            LabelIcon={Info24Regular}
+            isOpen={uiState.openRightWidget === WidgetIndices.About}
+            onClick={() => uiState.setOpenRightWidget(WidgetIndices.About)}
+          />
         </div>
       </div>
 
-      {widgets.map((widget, index) => (
-        <widget.widget
-          key={index}
-          open={uiState.openRightWidget === index}
-          close={uiState.closeRightHandWidgets}
-        />
-      ))}
+      <Visualization
+        open={uiState.openRightWidget === WidgetIndices.Visualization}
+        close={uiState.closeRightHandWidgets}
+      />
+
+      <RenderSettings
+        open={uiState.openRightWidget === WidgetIndices.RenderSettings}
+        close={uiState.closeRightHandWidgets}
+      />
+
+      <About
+        open={uiState.openRightWidget === WidgetIndices.About}
+        close={uiState.closeRightHandWidgets}
+      />
 
       <VolumeUploadDialog
         open={isVisDialogOpen}
