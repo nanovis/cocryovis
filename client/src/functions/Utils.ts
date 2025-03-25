@@ -351,7 +351,7 @@ export default class Utils {
       throw new Error("No file found.");
     }
 
-    if (!file.name.endsWith(".ali")) {
+    if (!file.name.endsWith(".ali") && !file.name.endsWith(".mrc")) {
       throw new Error("Wrong file format.");
     }
 

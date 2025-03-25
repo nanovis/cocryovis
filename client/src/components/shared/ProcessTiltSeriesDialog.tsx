@@ -495,7 +495,7 @@ const ProcessTiltSeriesDialog = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".ali"
+              accept=".mrc, .ali"
               style={{ display: "none" }}
               onChange={handleFileChange}
               disabled={isBusy}
