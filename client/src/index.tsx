@@ -11,6 +11,9 @@ import {
 import { onPatch, onSnapshot } from "mobx-state-tree";
 import React from "react";
 
+// Import GPUFeatureName type
+type GPUFeatureName = "texture-compression-bc" | "timestamp-query";
+
 const customDarkTheme = {
   10: "#030402",
   20: "#191A0F",
@@ -86,6 +89,7 @@ const Main = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  
   async function initWebGPU(): Promise<{
     adapter: GPUAdapter;
     device: GPUDevice;
@@ -104,6 +108,36 @@ const Main = () => {
     const device = await adapter.requestDevice();
     return { adapter, device };
   }
+    // async function initWebGPU(): Promise<{
+    //   adapter: GPUAdapter;
+    //   device: GPUDevice;
+    // }> {
+    //   if (!navigator.gpu) {
+    //     throw new Error("WebGPU not supported.");
+    //   }
+    
+    //   const adapter = await navigator.gpu.requestAdapter({
+    //     powerPreference: "high-performance",
+    //   });
+    
+    //   if (!adapter) {
+    //     throw new Error("Failed to get WebGPU adapter.");
+    //   }
+    
+    //   const requiredFeatures: GPUFeatureName[] = [];
+
+    
+    //   const device = await adapter.requestDevice({
+    //     requiredFeatures,
+    //   });
+    
+    //   if (!device) {
+    //     throw new Error("Failed to acquire WebGPU device.");
+    //   }
+    
+    //   return { adapter, device };
+    // }
+    
 
   async function initModule() {
     const { adapter, device } = await initWebGPU();

@@ -227,5 +227,9 @@ projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultCont
 // Result vizualization data
 projectsApi.get(`/result/:idResult/data`, restrictApi, ResultController.getResultData);
 
-projectsApi.post(`/preprocessing/AreTomo3/:type/:idVolumeData/visualization-data`, restrictApi, 
-    async (req, res) => PreProcessingController.runAreTomo3(VolumeDataType.mapName(req.params.type), req, res));
+// Pre Processing
+projectsApi.post(`/preprocessing/:type/:idVolumeData/visualization-data`, restrictApi, 
+    async (req, res) => PreProcessingController.runCTF(VolumeDataType.mapName(req.params.type), req, res));
+
+projectsApi.post(`/preprocessing/:type/:idVolumeData/motion-correctness`, restrictApi, 
+    async (req, res) => PreProcessingController.runMotionCor3(VolumeDataType.mapName(req.params.type), req, res));

@@ -55,184 +55,148 @@ export default class PreProcessingController {
   }
 
   /**
-   * @param {VolumeDataType} type
-   * @param {AuthenticatedRequest} req
-   * @param {import("express").Response} res
+   * @param {string} mrcFilePath
+   * @returns {Promise<number>}
    */
-  static async runAreTomo3(type, req, res) {
-    const volumeData = await VolumeDataFactory.getClass(type).getById(
-      Number(req.params.idVolumeData)
-    );
+  static async getMrcZDimension(mrcFilePath) {
+    const header = await fsPromises.readFile(mrcFilePath, { encoding: null, length: 12 }); // read first 12 bytes
+    const buffer = Buffer.from(header);
 
-    console.log(volumeData);
+    const nx = buffer.readInt32LE(0); // X dimension (not used here, but could be useful)
+    const ny = buffer.readInt32LE(4); // Y dimension
+    const nz = buffer.readInt32LE(8); // Z dimension (what we want)
 
-    // Extract motion correction parameters from request body
-    const {
-      totalDose,
-      tiltAxis,
-      alignZ,
-      volZ,
-      binningFactor,
-      gainReferencePath,
-      darkReferencePath,
-      defectFile,
-      patchSize,
-      iterations,
-      tolerance,
-      amplitudeContrast,
-      ctfCorrection,
-      defocusHandling
-    } = req.body;
-    
-    console.log("🔧 AreTomo3 Parameters Received:", {
-      totalDose,
-      tiltAxis,
-      alignZ,
-      volZ,
-      binningFactor,
-      gainReferencePath,
-      darkReferencePath,
-      defectFile,
-      patchSize,
-      iterations,
-      tolerance,
-      amplitudeContrast,
-      ctfCorrection,
-      defocusHandling
-    });
-    if (!volumeData.rawFilePath) {
-      throw new ApiError(
-        400,
-        "Visualisation requires the volume data to contain a .raw file."
-      );
-    }
-
-    if (!volumeData.settings) {
-      throw new ApiError(
-        400,
-        "Visualisation requires the volume data to contain a settings file."
-      );
-    }
-
-    const volumePath = volumeData.path;
-    console.log("📂 Volume Path:", volumePath);
-
-    // Read directory contents
-    let files;
-    try {
-      files = await fsPromises.readdir(volumePath);
-    } catch (err) {
-      throw new ApiError(500, `Error accessing volume directory: ${err.message}`);
-    }
-
-    // Find full paths of .mrc and .raw files
-    const rawFile = files.find(file => file.endsWith(".raw"));
-    const mrcFile = files.find(file => file.endsWith(".mrc"));
-
-    const rawFilePath = rawFile ? path.resolve(volumePath, rawFile) : null;
-    const mrcFilePath = mrcFile ? path.resolve(volumePath, mrcFile) : null;
-
-    if (!rawFilePath && !mrcFilePath) {
-      throw new ApiError(
-        400,
-        "No .mrc or .raw files found in the volume directory."
-      );
-    }
-
-    console.log("✅ Found files:", { rawFilePath, mrcFilePath });
-
-    // Run `cat` to display contents of the first available file
-    let fileToRead = rawFilePath || mrcFilePath;
-    let fileContent = "";
-
-    if (fileToRead) {
-      console.log(`📜 Reading file: ${fileToRead}`);
-      try {
-        await Utils.runScript(
-          "pwd",
-          [],
-          volumePath,
-          (stdout) => console.log("📌 Actual Executing Directory:", stdout.trim()),
-          (stderr) => console.error("⚠️ Error checking PWD:", stderr)
-        );
-
-        // if (mrcFilePath) {
-        //   console.log(`🚀 Running MotionCor3 on: ${mrcFilePath}`);
-
-        //   try {
-        //     // Ensure MotionCor3 can write to the directory
-        //     try {
-        //       await fsPromises.access(volumePath, fsPromises.constants.W_OK);
-        //     } catch (err) {
-        //       throw new Error(`❌ Write permission denied for directory: ${volumePath}`);
-        //     }
-
-        //     // Generate an absolute temporary output file path
-        //     const tempFilePath = path.resolve(volumePath, "temp_corrected.mrc");
-
-        //     // If temp file exists, remove it to avoid conflicts
-        //     try {
-        //       await fsPromises.unlink(tempFilePath);
-        //       console.log("🗑️ Removed existing temp_corrected.mrc");
-        //     } catch (err) {
-        //       if (err.code !== "ENOENT") {
-        //         throw err; // Ignore if file doesn't exist, throw for other errors
-        //       }
-        //     }
-
-        //     const motionArgs = [
-        //       "-InMrc", mrcFilePath,
-        //       "-OutMrc", tempFilePath,
-        //       "-Patch", patchSizeX, patchSizeY,
-        //       "-FtBin", binningFactor
-        //     ];
-
-        //     if (enableDoseWeighting) {
-        //       motionArgs.push("-Kv", "300", "-PixSize", "1.0", "-FmDose", "2.0");
-        //     }
-
-        //     // Run MotionCor3 with input and temp output file
-        //     await Utils.runScript(
-        //       "MotionCor3",
-        //       // ["-InMrc", mrcFilePath, "-OutMrc", tempFilePath], // Use absolute temp file path
-        //       motionArgs,
-        //       volumePath,
-        //       (stdout) => console.log("📜 MotionCor3 Output:", stdout),
-        //       (stderr) => console.error("⚠️ MotionCor3 Error:", stderr)
-        //     );
-
-        //     // Replace the original file with the corrected file
-        //     await fsPromises.rename(tempFilePath, mrcFilePath);
-
-        //     console.log(`✅ MotionCor3 completed: Overwritten -> ${mrcFilePath}`);
-        //   } catch (error) {
-        //     console.error("❌ MotionCor3 Execution Failed:", error);
-        //   }
-        // }
-      } catch (error) {
-        console.error("❌ Failed to read file:", error);
-        fileContent = "Error reading file.";
-      }
-    }
-    const archive = archiver("zip", {
-      zlib: { level: 9 },
-    });
-
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="volume.zip"'
-    );
-    archive.pipe(res);
-
-    await Utils.packVisualizationArchive(
-      archive,
-      [JSON.parse(volumeData.settings)],
-      [volumeData.rawFilePath]
-    );
-
-    archive.finalize();
+    return nz;
   }
 
+  static async runMotionCor3(type, req, res, next) {
+    try {
+      // Run motion correction
+      const volumeData = await VolumeDataFactory.getClass(type).getById(Number(req.params.idVolumeData));
+  
+      const {
+        patchX = 5,
+        patchY = 5,
+        iterations = 1,
+        tolerance = 0.1,
+        pixelSize = volumeData.settings?.pixelSize || 1.19,
+        dosePerFrame = 1.5,
+        kV = 300,
+      } = req.body;
+  
+      const volumePath = volumeData.path;
+      const mrcFilePath = path.resolve(volumeData.mrcFilePath);
+  
+      // Dynamically pick a different output file if needed
+      const isTempInput = path.basename(mrcFilePath).includes("temp_corrected");
+      const tmpOutputPath = path.resolve(volumePath, isTempInput ? "motion_corrected.mrc" : "temp_corrected.mrc");
+  
+      // Prevent MotionCor3 crash when in == out
+      if (mrcFilePath === tmpOutputPath) {
+        throw new ApiError(400, "Input and output MRC filenames must be different.");
+      }
+  
+      const args = [
+        "-InMrc", mrcFilePath,
+        "-OutMrc", tmpOutputPath,
+        "-Patch", patchX.toString(), patchY.toString(),
+        "-Iter", iterations.toString(),
+        "-Tol", tolerance.toString(),
+        "-PixSize", pixelSize.toString(),
+        "-FmDose", dosePerFrame.toString(),
+        "-kV", kV.toString(),
+        "-Gpu", "0"
+      ];
+  
+      await Utils.runScript("MotionCor3", args, volumePath,
+        (stdout) => console.log("MotionCor3 Output:", stdout),
+        (stderr) => console.error("MotionCor3 Error:", stderr)
+      );
+  
+      // Replace original with corrected
+      await fsPromises.rename(tmpOutputPath, mrcFilePath);
+
+      const data = await RawVolumeData.prepareDataForDownload(
+        Number(req.params.idVolumeData),
+        false,
+        false,
+        true
+      );
+  
+      res.type("application/zip");
+      res.setHeader("Content-Disposition", `attachment; filename="${data.name}"`);
+      data.archive.pipe(res);
+      data.archive.finalize();
+  
+      // Do not call res.json() after piping the archive!
+    } catch (err) {
+      next(err);
+    }
+  }
+  
+ 
+  static async runCTF(type, req, res, next) {
+    try {
+      // Retrieve the volume data and extract parameters
+      const volumeData = await VolumeDataFactory.getClass(type).getById(Number(req.params.idVolumeData));
+      const {
+        pixelSize,
+        kv,
+        sphericalAberration,
+        ampContrast,
+        tileSize,
+        useLogSpectrum = false,
+      } = req.body;
+      
+      const volumePath = volumeData.path;
+      // Use the motion-corrected MRC file as input for GCtfFind
+      const correctedMrcPath = path.resolve(volumePath, path.basename(volumeData.mrcFilePath));
+  
+      if (!fileSystem.existsSync(correctedMrcPath)) {
+        throw new ApiError(404, "Corrected MRC file not found");
+      }
+  
+      // Define temporary output file paths for GCtfFind's results
+      // The spectrum file is the one to be downloaded
+      const outputSpectrumPath = correctedMrcPath.replace(".mrc", "_ctf_spectrum.mrc");
+      const outputCtfPath = correctedMrcPath.replace(".mrc", "_ctf.txt");
+  
+      // Build arguments array for GCtfFind following provided parameters
+      const args = [
+        "-InMrc", correctedMrcPath,
+        "-OutMrc", outputSpectrumPath,
+        "-OutCtf", outputCtfPath,
+        "-kV", kv,
+        "-Cs", sphericalAberration,
+        "-AmpContrast", ampContrast,
+        "-PixSize", pixelSize,
+        "-TileSize", tileSize,
+        "-Gpu", "0",
+      ];
+      if (useLogSpectrum) {
+        args.push("-LogSpect", "1");
+      }
+  
+      // Run GCtfFind with the specified arguments
+      await Utils.runScript("GCtfFind", args, volumePath,
+        (stdout) => console.log("GCtfFind Output:", stdout),
+        (stderr) => console.error("GCtfFind Error:", stderr)
+      );
+  
+      // Stream the spectrum file for download
+      res.setHeader("Content-Type", "application/octet-stream");
+      res.setHeader("Content-Disposition", `attachment; filename="${path.basename(outputSpectrumPath)}"`);
+      const fileStream = fileSystem.createReadStream(outputSpectrumPath);
+      fileStream.pipe(res);
+      fileStream.on("error", (err) => {
+        console.error("File streaming error:", err);
+        next(err);
+      });
+      
+    } catch (err) {
+      next(err);
+    }
+  }
+  
 
 }
