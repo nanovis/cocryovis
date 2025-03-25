@@ -248,7 +248,7 @@ const ItemTitleDownloadDelete = ({
         />
       </div>
       {onColorChange != undefined && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <input
             className={classes.colorPicker}
             type="color"
@@ -260,7 +260,7 @@ const ItemTitleDownloadDelete = ({
           <Button
             size="large"
             appearance="subtle"
-            className={classes.actionButton}
+            className={globalClasses.mainActionButton}
             disabled={!canEdit}
             onClick={onEnabled}
             icon={

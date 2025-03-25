@@ -922,9 +922,6 @@ const Volume = observer(({ open, close }: Props) => {
             >
               <Button
                 className={globalClasses.sideActionButton}
-                style={{
-                  marginRight: "10px",
-                }}
                 size="large"
                 appearance="subtle"
                 icon={<Add24Regular />}
@@ -1118,9 +1115,6 @@ const Volume = observer(({ open, close }: Props) => {
             >
               <Button
                 className={globalClasses.sideActionButton}
-                style={{
-                  marginRight: "10px",
-                }}
                 size="large"
                 appearance="subtle"
                 icon={<Add24Regular />}
