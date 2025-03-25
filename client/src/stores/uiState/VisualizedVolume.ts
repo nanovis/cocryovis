@@ -1,4 +1,4 @@
-import { getType, Instance, SnapshotIn, types } from "mobx-state-tree";
+import { Instance, SnapshotIn, types } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
 import { Volume, VolumeInstance } from "../userState/VolumeModel";
 import { Result, ResultInstance } from "../userState/ResultModel";
@@ -91,7 +91,13 @@ export const VisualizedVolume = types
   .model({
     volume: types.maybe(types.reference(Volume)),
     sparseLabelVolume: types.maybe(types.reference(SparseLabelVolume)),
+    sparseLabelVolumes: types.maybe(
+      types.array(types.reference(SparseLabelVolume))
+    ),
     pseudoLabelVolume: types.maybe(types.reference(PseudoLabelVolume)),
+    PseudoLabelVolumes: types.maybe(
+      types.array(types.reference(PseudoLabelVolume))
+    ),
     result: types.maybe(types.reference(Result)),
     volVisSettings: types.array(VolVisSettings),
     clippingPlane: types.optional(
@@ -228,7 +234,7 @@ export const VisualizedVolume = types
         self.labelEditingMode = enable;
         window.WasmModule?.enable_annotation_mode(true);
         self.setManualLabelIndex(0);
-        
+
         toast.update(toastId, {
           render: "Labeling mode enabled.",
           type: "success",

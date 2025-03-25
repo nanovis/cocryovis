@@ -278,13 +278,6 @@ const Visualization = observer(({ open, close }: Props) => {
     }
   };
 
-  const handleVisibilityChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    volVisSettings: VolVisSettingsInstance
-  ) => {
-    volVisSettings.setVisibility(event.target.checked);
-  };
-
   const handleClippingChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     volumeSettings: VolVisSettingsInstance
@@ -599,9 +592,9 @@ const Visualization = observer(({ open, close }: Props) => {
                       <span>{settingsInstance.name.substring(0, 40)}</span>
                       <Switch
                         checked={settingsInstance.visible}
-                        onChange={(event) =>
-                          handleVisibilityChange(event, settingsInstance)
-                        }
+                        onChange={(_, data) => {
+                          settingsInstance.setVisibility(data.checked);
+                        }}
                       />
                       <Switch
                         checked={settingsInstance.clipping}
@@ -707,14 +700,15 @@ const Visualization = observer(({ open, close }: Props) => {
                     <input
                       className={classes.colorPicker}
                       type="color"
-                      value={Utils.toHexColor(
-                        settingsInstance.transferFunction.red,
-                        settingsInstance.transferFunction.green,
-                        settingsInstance.transferFunction.blue
-                      )}
-                      onChange={(event) =>
-                        handleChangeTFColor(event, settingsInstance)
-                      }
+                      value={settingsInstance.transferFunction.color}
+                      onChange={async (event) => {
+                        const color = Utils.fromHexColor(event.target.value);
+                        settingsInstance.transferFunction.setColor(
+                          color.r,
+                          color.g,
+                          color.b
+                        );
+                      }}
                     />
                     <div className={classes.sliderContainer}>
                       <Label>Low bound</Label>

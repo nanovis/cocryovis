@@ -1,16 +1,6 @@
-import {
-  flow,
-  getParentOfType,
-  getRoot,
-  Instance,
-  isAlive,
-  SnapshotIn,
-  types,
-} from "mobx-state-tree";
+import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
 import { toast } from "react-toastify";
 import Utils from "../../functions/Utils";
-import { RootInstance } from "../RootStore";
-import { Volume } from "./VolumeModel";
 
 async function updateSparseVolume(
   id: number,
@@ -37,7 +27,7 @@ export const SparseLabelVolume = types
     creatorId: types.maybeNull(types.integer),
     rawFilePath: types.maybeNull(types.string),
     settings: types.maybeNull(types.string),
-    color: types.maybeNull(types.string),
+    color: types.optional(types.string, "#ffffff"),
   })
   .actions((self) => ({
     setColor: flow(function* setColor(
@@ -51,15 +41,6 @@ export const SparseLabelVolume = types
           color: color,
         });
 
-        const root = getRoot(self) as RootInstance;
-        const visualizedVolume = root.uiState.visualizedVolume;
-        if (!visualizedVolume || !visualizedVolume.volume) {
-          return;
-        }
-        const volume = getParentOfType(self, Volume);
-        if (!volume || volume.id !== visualizedVolume?.volume.id) {
-          return;
-        }
         self.settings = sparselabel.settings;
         self.color = sparselabel.color;
 
@@ -73,12 +54,7 @@ export const SparseLabelVolume = types
           );
         }
 
-        toast.update(toastId, {
-          render: "Label color updated.",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
+        toast.dismiss(toastId);
       } catch (e) {
         Utils.updateToastWithErrorMsg(toastId, e);
       }
