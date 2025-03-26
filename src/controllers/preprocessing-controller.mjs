@@ -5,6 +5,8 @@ import { ApiError } from "../tools/error-handler.mjs";
 import fileSystem from "fs";
 import Utils from "../tools/utils.mjs";
 import fsPromises from "node:fs/promises";
+import MotionCorHandler from "../tools/motioncor-handler.mjs";
+import GCTFFindHandler from "../tools/gctffind-handler.mjs";
 
 export default class PreProcessingController {
     static async runMotionCor3(type, req, res) {
@@ -56,12 +58,11 @@ export default class PreProcessingController {
                 "-Gpu", "0",
             ];
 
-            await Utils.runScript(
-                "MotionCor3",
-                args,
-                volumePath,
-                (stdout) => console.log("MotionCor3 Output:", stdout),
-                (stderr) => console.error("MotionCor3 Error:", stderr)
+            console.log("Running MotionCor3 with args:", args);
+
+            await MotionCorHandler.runMotionCor3(args,
+              (stdout) => console.log("GCtfFind Output:", stdout),
+              (stderr) => console.error("GCtfFind Error:", stderr)
             );
 
             // Replace original with corrected
@@ -101,6 +102,7 @@ export default class PreProcessingController {
                 tileSize,
                 useLogSpectrum = false,
             } = req.body;
+    
 
             const volumePath = volumeData.path;
             // Use the motion-corrected MRC file as input for GCtfFind
@@ -140,13 +142,9 @@ export default class PreProcessingController {
                 args.push("-LogSpect", "1");
             }
 
-            // Run GCtfFind with the specified arguments
-            await Utils.runScript(
-                "GCtfFind",
-                args,
-                volumePath,
-                (stdout) => console.log("GCtfFind Output:", stdout),
-                (stderr) => console.error("GCtfFind Error:", stderr)
+            await GCTFFindHandler.runCTF(args,
+              (stdout) => console.log("GCtfFind Output:", stdout),
+              (stderr) => console.error("GCtfFind Error:", stderr)
             );
 
             // Stream the spectrum file for download

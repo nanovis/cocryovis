@@ -40,5 +40,13 @@
     "Proximal_CryoET": {
         "path": "./modules/Proximal_CryoET/",
         "executable": "CUDA_PROXIMAL_SART"
+    },
+    "MotionCor3": {
+        "path": "./modules/motioncor3/",
+        "executable": "MotionCor3"
+    },
+    "GCtfFind": {
+        "path": "./modules/gctffind/",
+        "executable": "GCtfFind"
     }
 }
