@@ -19,7 +19,6 @@ import {
   Cube24Regular,
   Delete24Regular,
   DesktopTower24Regular,
-  Molecule24Regular,
   Status24Regular,
   Toolbox24Regular,
 } from "@fluentui/react-icons";
@@ -94,6 +93,17 @@ const SideControls = observer(() => {
           />
 
           <WidgetToggleButton
+            title={"PreProcessing"}
+            labelPositioning={"after"}
+            LabelIcon={Toolbox24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.PreProcessing}
+            onClick={() =>
+              uiState.setOpenLeftWidget(WidgetIndices.PreProcessing)
+            }
+            disabled={activeProjectId === undefined}
+          />
+
+          <WidgetToggleButton
             title={"Status"}
             labelPositioning={"after"}
             LabelIcon={Status24Regular}
@@ -108,14 +118,6 @@ const SideControls = observer(() => {
             LabelIcon={DesktopTower24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.Local}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Local)}
-          />
-
-          <WidgetToggleButton
-            title={"PreProcessing"}
-            labelPositioning={"after"}
-            LabelIcon={Toolbox24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.PreProcessing}
-            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.PreProcessing)}
           />
 
           <Tooltip

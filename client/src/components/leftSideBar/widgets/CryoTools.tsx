@@ -5,31 +5,19 @@ import {
   mergeClasses,
   Input,
   Slider,
-  Label
+  Label,
 } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
   ProjectionScreen20Regular,
 } from "@fluentui/react-icons";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Utils from "../../../functions/Utils";
 import { toast } from "react-toastify";
 import "../../../App.css";
 import globalStyles from "../../GlobalStyles";
-import ProcessTiltSeriesDialog, {
-  TiltSeriesOptions,
-} from "../../shared/ProcessTiltSeriesDialog";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
-import {
-  LabeledVolumeTypes,
-  VolumeInstance,
-} from "../../../stores/userState/VolumeModel";
-
-import { ResultInstance } from "../../../stores/userState/ResultModel";
-import { VolumeSettings } from "../../../functions/VolumeSettings";
-import { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
-import { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -43,8 +31,6 @@ const useStyles = makeStyles({
   },
 });
 
-type RawDataTypes = "RawVolumeData" | LabeledVolumeTypes;
-
 interface Props {
   open: boolean;
   close: () => void;
@@ -53,21 +39,12 @@ interface Props {
 const CryoTools = observer(({ open, close }: Props) => {
   const { user, uiState } = useMst();
 
-  const activeProject = user?.userProjects.activeProject;
-  const projectVolumes = activeProject?.projectVolumes;
-  const selectedVolumeId = projectVolumes?.selectedVolumeId;
-  const selectedVolume = projectVolumes?.selectedVolume;
-  const visualizedVolume = uiState.visualizedVolume;
+  const selectedVolume =
+    user?.userProjects.activeProject?.projectVolumes?.selectedVolume;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
 
-  const [isLoadingResults, setLoadingResults] = useState(false);
-  const [isLoadingVolumes, setLoadingVolumes] = useState(false);
-  const [isUploadingData, setIsUploadingData] = useState(false);
-  const [isTiltSeriesDialogOpen, setIsTiltSeriesDialogOpen] = useState(false);
-  const [isUploadVolumeDialogOpen, setIsUploadVolumeDialogOpen] =
-    useState(false);
   // MotionCor3 UI state
   const [patchSize, setPatchSize] = useState("5");
   const [iterations, setIterations] = useState("5");
@@ -76,51 +53,24 @@ const CryoTools = observer(({ open, close }: Props) => {
   const [ctfCorrection, setCtfCorrection] = useState("PhaseFlip");
   const [defocusHandling, setDefocusHandling] = useState("default");
   const [pixSize, setPixelSize] = useState("1.19");
-  const [dosePFrame, setDosePFrame] = useState("1.5");
   const [kv, setKv] = useState("300");
   const [sphericalAberration, setSphericalAberration] = useState("0.7");
   const [tileSize, setTileSize] = useState("512");
 
   const isPageBusy = () => {
-    return (
-      isLoadingResults ||
-      isLoadingVolumes ||
-      isUploadingData ||
-      uiState.uploadDialog.isBusy
-    );
+    return uiState.uploadDialog.isBusy;
   };
 
-  const handleVolumeSelect = async (value: string | null) => {
-    try {
-      if (!value) {
-        return;
-      }
-
-      projectVolumes?.setSelectedVolumeId(Number(value));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-
-  const handleVisualisationRequest = async (
-    dataType: RawDataTypes,
-    id: Number | undefined,
-    volumeInstance:
-      | VolumeInstance
-      | SparseVolumeInstance
-      | PseudoVolumeInstance
-      | undefined
-  ) => {
-    if (!volumeInstance || !id) {
+  const handleVisualisationRequest = async (id: Number | undefined) => {
+    if (!id) {
       return;
     }
-  
+
     let toastId = null;
-  
+
     try {
       toastId = toast.loading("Fetching visualization data...");
-  
+
       const areTomoSettings = {
         kv: Number(kv),
         sphericalAberration,
@@ -133,9 +83,9 @@ const CryoTools = observer(({ open, close }: Props) => {
         ctfCorrection,
         defocusHandling,
       };
-  
+
       const response = await Utils.sendReq(
-        `preprocessing/${dataType}/${id}/visualization-data`,
+        `preprocessing/RawVolumeData/${id}/visualization-data`,
         {
           method: "POST",
           credentials: "include",
@@ -145,10 +95,10 @@ const CryoTools = observer(({ open, close }: Props) => {
           body: JSON.stringify(areTomoSettings),
         }
       );
-  
+
       // Handle the response as a blob (ZIP file)
       const blob = await response.blob();
-  
+
       // Optionally extract a filename from the Content-Disposition header
       let filename = "visualization_data.zip";
       const disposition = response.headers.get("Content-Disposition");
@@ -158,7 +108,7 @@ const CryoTools = observer(({ open, close }: Props) => {
           filename = filenameMatch[1];
         }
       }
-  
+
       // Create a temporary link to trigger the download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -168,7 +118,7 @@ const CryoTools = observer(({ open, close }: Props) => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-  
+
       toast.update(toastId, {
         render: "Visualization data downloaded!",
         type: "success",
@@ -181,26 +131,17 @@ const CryoTools = observer(({ open, close }: Props) => {
       console.error("Error:", error);
     }
   };
-  
 
-  const handleMotionRequest = async (
-    dataType: RawDataTypes,
-    id: Number | undefined,
-    volumeInstance:
-      | VolumeInstance
-      | SparseVolumeInstance
-      | PseudoVolumeInstance
-      | undefined
-  ) => {
-    if (!volumeInstance || !id) {
+  const handleMotionRequest = async (id: Number | undefined) => {
+    if (!id) {
       return;
     }
-  
+
     let toastId = null;
-  
+
     try {
       toastId = toast.loading("Applying motion correctness...");
-  
+
       const areTomoSettings = {
         kv: Number(kv),
         sphericalAberration,
@@ -213,9 +154,9 @@ const CryoTools = observer(({ open, close }: Props) => {
         ctfCorrection,
         defocusHandling,
       };
-  
+
       const response = await Utils.sendReq(
-        `preprocessing/${dataType}/${id}/motion-correctness`,
+        `preprocessing/RawVolumeData/${id}/motion-correctness`,
         {
           method: "POST",
           credentials: "include",
@@ -225,10 +166,10 @@ const CryoTools = observer(({ open, close }: Props) => {
           body: JSON.stringify(areTomoSettings),
         }
       );
-  
+
       // Instead of parsing JSON, handle the response as a blob
       const blob = await response.blob();
-  
+
       // Optionally, get the filename from the Content-Disposition header
       let filename = "motion_corrected.zip";
       const disposition = response.headers.get("Content-Disposition");
@@ -238,7 +179,7 @@ const CryoTools = observer(({ open, close }: Props) => {
           filename = filenameMatch[1];
         }
       }
-  
+
       // Create a temporary link element to trigger the download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -248,7 +189,7 @@ const CryoTools = observer(({ open, close }: Props) => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-  
+
       toast.update(toastId, {
         render: "Motion correction completed and file downloaded!",
         type: "success",
@@ -261,71 +202,6 @@ const CryoTools = observer(({ open, close }: Props) => {
       console.error("Error:", error);
     }
   };
-  
-
-
-  const canEditAnnotations =
-    visualizedVolume !== undefined &&
-    visualizedVolume.canEditLabels &&
-    visualizedVolume.labelEditingMode &&
-    selectedVolume !== undefined &&
-    visualizedVolume.volume?.id === selectedVolume.id;
-
-  const handleAnnotationEdit = async (index: number) => {
-    if (!canEditAnnotations) {
-      return;
-    }
-    selectedVolume.setShownAnnotation(index, true);
-    visualizedVolume.setManualLabelIndex(index);
-  };
-
-  const hasRawData = () => {
-    return selectedVolume?.rawData;
-  };
-
-  const canUploadRawData = () => {
-    return selectedVolume && !hasRawData();
-  };
-
-  const isVolumeSelected = () => {
-    return selectedVolume;
-  };
-
-
-  const volumeSelectionProperties = (volume: VolumeInstance) => {
-    return {
-      children: volume.name,
-      value: volume.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {volume.id}
-          {volume.description.length > 0 && (
-            <>
-              <br />
-              <b>Description:</b> {volume?.description}
-            </>
-          )}
-        </div>
-      ),
-    };
-  };
-
-
-  const resultSelectionProperties = (result: ResultInstance) => {
-    return {
-      children: `Result ${result.id}`,
-      value: result.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {result.id}
-          <br />
-          <b>Checkpoint:</b>{" "}
-          {Utils.getFileNameFromPath(result?.checkpoint?.filePath)}
-        </div>
-      ),
-    };
-  };
-
 
   return open ? (
     <div className={globalClasses.leftSidebar}>
@@ -336,17 +212,19 @@ const CryoTools = observer(({ open, close }: Props) => {
             onClick={close}
             className={globalClasses.closeSidebarIconContainer}
           >
-            <ArrowCircleLeft28Regular className={globalClasses.closeSidebarIcon} />
+            <ArrowCircleLeft28Regular
+              className={globalClasses.closeSidebarIcon}
+            />
           </div>
         </div>
 
         <div className={globalClasses.siderbarBody}>
-
           {/* Motion Correction */}
           <h2>Motion Correction</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-
-            <Label htmlFor="patchSize">Patch Size: [{Number(patchSize)}] x [{Number(patchSize)}]</Label>
+            <Label htmlFor="patchSize">
+              Patch Size: [{Number(patchSize)}] x [{Number(patchSize)}]
+            </Label>
             <Slider
               id="patchSize"
               min={1}
@@ -357,7 +235,12 @@ const CryoTools = observer(({ open, close }: Props) => {
             />
 
             <Label htmlFor="iterations">Iterations</Label>
-            <Input id="iterations" type="number" value={iterations} onChange={(e) => setIterations(e.target.value)} />
+            <Input
+              id="iterations"
+              type="number"
+              value={iterations}
+              onChange={(e) => setIterations(e.target.value)}
+            />
 
             <Label htmlFor="tolerance">Tolerance</Label>
             <Input
@@ -369,13 +252,29 @@ const CryoTools = observer(({ open, close }: Props) => {
             />
 
             <Label htmlFor="pixSize">Pixel Size</Label>
-            <Input id="pixSize" type="number" value={pixSize} onChange={(e) => setPixelSize(e.target.value)} />
+            <Input
+              id="pixSize"
+              type="number"
+              value={pixSize}
+              onChange={(e) => setPixelSize(e.target.value)}
+            />
 
             <Label htmlFor="kV">kiloVatios (kV)</Label>
-            <Input id="kV" type="number" value={kv} onChange={(e) => setKv(e.target.value)} />
+            <Input
+              id="kV"
+              type="number"
+              value={kv}
+              onChange={(e) => setKv(e.target.value)}
+            />
 
             {/* Visualize Button */}
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "20px",
+              }}
+            >
               <Tooltip
                 content="Visualize Data"
                 relationship="label"
@@ -384,10 +283,15 @@ const CryoTools = observer(({ open, close }: Props) => {
               >
                 <Button
                   appearance="primary"
-                  className={mergeClasses(globalClasses.actionButton, classes.visualizeButton)}
-                  disabled={!hasRawData() || isPageBusy()}
+                  className={mergeClasses(
+                    globalClasses.actionButton,
+                    classes.visualizeButton
+                  )}
+                  disabled={
+                    selectedVolume?.rawData === undefined || isPageBusy()
+                  }
                   onClick={() =>
-                    handleMotionRequest("RawVolumeData", selectedVolume?.rawData?.id, selectedVolume)
+                    handleMotionRequest(selectedVolume?.rawData?.id)
                   }
                 >
                   <div className={globalClasses.actionButtonIconContainer}>
@@ -439,7 +343,13 @@ const CryoTools = observer(({ open, close }: Props) => {
           </div>
 
           {/* Visualize Button */}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "20px",
+            }}
+          >
             <Tooltip
               content="Visualize Data"
               relationship="label"
@@ -448,10 +358,13 @@ const CryoTools = observer(({ open, close }: Props) => {
             >
               <Button
                 appearance="primary"
-                className={mergeClasses(globalClasses.actionButton, classes.visualizeButton)}
-                disabled={!hasRawData() || isPageBusy()}
+                className={mergeClasses(
+                  globalClasses.actionButton,
+                  classes.visualizeButton
+                )}
+                disabled={selectedVolume?.rawData === undefined || isPageBusy()}
                 onClick={() =>
-                  handleVisualisationRequest("RawVolumeData", selectedVolume?.rawData?.id, selectedVolume)
+                  handleVisualisationRequest(selectedVolume?.rawData?.id)
                 }
               >
                 <div className={globalClasses.actionButtonIconContainer}>
