@@ -19,6 +19,7 @@ import {
   TabList,
   Tab,
   Textarea,
+  Image,
 } from "@fluentui/react-components";
 import { useState } from "react";
 import Utils from "../../functions/Utils";
@@ -38,6 +39,7 @@ import {
 } from "../../stores/uiState/UploadDialog";
 import globalStyles from "../GlobalStyles";
 import { observer } from "mobx-react-lite";
+import CZIIIcon from "./CZIIIcon";
 
 const useStyles = makeStyles({
   dnd: {
@@ -315,14 +317,29 @@ const VolumeUploadDialog = observer(
                 }
                 disabled={uploadDialogStore.isBusy}
               >
-                <Tab style={{ width: "33%" }} value={Tabs.fromFile}>
+                <Tab style={{ width: "30%" }} value={Tabs.fromFile}>
                   From File
                 </Tab>
-                <Tab style={{ width: "33%" }} value={Tabs.fromUrl}>
+                <Tab style={{ width: "30%" }} value={Tabs.fromUrl}>
                   From URL
                 </Tab>
-                <Tab style={{ width: "33%" }} value={Tabs.fromCryoET}>
-                  From CryoET
+                <Tab style={{ width: "40%" }} value={Tabs.fromCryoET}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    From CryoET Data Portal
+                    <Image
+                      alt="CZII Logo"
+                      src="czii_logo.svg"
+                      height={18}
+                      width={18}
+                    />
+                  </div>
                 </Tab>
               </TabList>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -731,23 +748,31 @@ const VolumeUploadDialog = observer(
                 </div>
               )}
             </DialogContent>
-            <DialogActions style={{ marginLeft: "auto" }}>
-              <Button
-                appearance="secondary"
-                onClick={onClose}
-                disabled={uploadDialogStore.isBusy}
-              >
-                Cancel
-              </Button>
-              <Button
-                appearance="primary"
-                onClick={confirmEffect}
-                disabled={
-                  uploadDialogStore.isBusy || !uploadDialogStore.isValid
-                }
-              >
-                {confirmText}
-              </Button>
+            <DialogActions style={{ height: "40px", alignItems: "flex-end" }}>
+              {uploadDialogStore.tab === Tabs.fromCryoET && (
+                <div>
+                  <CZIIIcon />
+                </div>
+              )}
+              <div style={{ marginLeft: "auto" }}>
+                <Button
+                  appearance="secondary"
+                  onClick={onClose}
+                  disabled={uploadDialogStore.isBusy}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  appearance="primary"
+                  onClick={confirmEffect}
+                  disabled={
+                    uploadDialogStore.isBusy || !uploadDialogStore.isValid
+                  }
+                  style={{ marginLeft: "8px" }}
+                >
+                  {confirmText}
+                </Button>
+              </div>
             </DialogActions>
           </DialogBody>
         </DialogSurface>
