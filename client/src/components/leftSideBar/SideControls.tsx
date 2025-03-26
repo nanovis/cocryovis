@@ -27,44 +27,14 @@ import WidgetToggleButton from "../shared/WidgetToggleButton";
 import DeleteDialog from "../shared/DeleteDialog";
 import CryoTools from "./widgets/CryoTools";
 
-const widgets: Array<WidgetDefinition> = [
-  {
-    title: "Data",
-    labelPositioning: "after",
-    LabelIcon: Cube24Regular,
-    widget: Volume,
-  },
-  {
-    title: "Neural Models",
-    labelPositioning: "after",
-    LabelIcon: BrainCircuit24Regular,
-    widget: Models,
-  },
-  {
-    title: "Pre-processing",
-    labelPositioning: "after",
-    LabelIcon: Toolbox24Regular,
-    widget: CryoTools,
-  },
-  {
-    title: "Training and Inference",
-    labelPositioning: "after",
-    LabelIcon: Molecule24Regular,
-    widget: NanoOtzi,
-  },
-  {
-    title: "Status",
-    labelPositioning: "after",
-    LabelIcon: Status24Regular,
-    widget: Status,
-  },
-  {
-    title: "Local Functions",
-    labelPositioning: "after",
-    LabelIcon: DesktopTower24Regular,
-    widget: Local,
-  },
-];
+const enum WidgetIndices {
+  Volume = 0,
+  Models = 1,
+  NanoOtzi = 2,
+  Status = 3,
+  Local = 4,
+  PreProcessing = 5,
+}
 
 const SideControls = observer(() => {
   const globalClasses = globalStyles();
@@ -73,10 +43,6 @@ const SideControls = observer(() => {
   const activeProjectId = user?.userProjects.activeProjectId;
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  const buttonDisabled = (id: number) => {
-    return !(id === 4 || activeProjectId || (user && id === 3));
-  };
 
   const handleConfirmDelete = async () => {
     try {
@@ -100,17 +66,57 @@ const SideControls = observer(() => {
         }}
       >
         <div className={globalClasses.widgetButtonContainer}>
-          {widgets.map((widget, index) => (
-            <WidgetToggleButton
-              key={index}
-              title={widget.title}
-              labelPositioning={widget.labelPositioning}
-              LabelIcon={widget.LabelIcon}
-              isOpen={uiState.openLeftWidget === index}
-              onClick={() => uiState.setOpenLeftWidget(index)}
-              disabled={buttonDisabled(index)}
-            />
-          ))}
+          <WidgetToggleButton
+            title={"Data"}
+            labelPositioning={"after"}
+            LabelIcon={Cube24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.Volume}
+            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Volume)}
+            disabled={activeProjectId === undefined}
+          />
+
+          <WidgetToggleButton
+            title={"Neural Models"}
+            labelPositioning={"after"}
+            LabelIcon={BrainCircuit24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.Models}
+            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Models)}
+            disabled={activeProjectId === undefined}
+          />
+
+          <WidgetToggleButton
+            title={"Training and Inference"}
+            labelPositioning={"after"}
+            LabelIcon={Cube24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.NanoOtzi}
+            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.NanoOtzi)}
+            disabled={activeProjectId === undefined}
+          />
+
+          <WidgetToggleButton
+            title={"Status"}
+            labelPositioning={"after"}
+            LabelIcon={Status24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.Status}
+            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Status)}
+            disabled={user === undefined}
+          />
+
+          <WidgetToggleButton
+            title={"Data"}
+            labelPositioning={"after"}
+            LabelIcon={DesktopTower24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.Local}
+            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Local)}
+          />
+
+          <WidgetToggleButton
+            title={"PreProcessing"}
+            labelPositioning={"after"}
+            LabelIcon={Toolbox24Regular}
+            isOpen={uiState.openLeftWidget === WidgetIndices.PreProcessing}
+            onClick={() => uiState.setOpenLeftWidget(WidgetIndices.PreProcessing)}
+          />
 
           <Tooltip
             content="Delete Project"
@@ -133,13 +139,31 @@ const SideControls = observer(() => {
           </Tooltip>
         </div>
       </div>
-      {widgets.map((widget, index) => (
-        <widget.widget
-          key={index}
-          open={uiState.openLeftWidget === index}
-          close={uiState.closeLeftHandWidgets}
-        />
-      ))}
+
+      <Volume
+        open={uiState.openLeftWidget === WidgetIndices.Volume}
+        close={uiState.closeLeftHandWidgets}
+      />
+      <Models
+        open={uiState.openLeftWidget === WidgetIndices.Models}
+        close={uiState.closeLeftHandWidgets}
+      />
+      <NanoOtzi
+        open={uiState.openLeftWidget === WidgetIndices.NanoOtzi}
+        close={uiState.closeLeftHandWidgets}
+      />
+      <Status
+        open={uiState.openLeftWidget === WidgetIndices.Status}
+        close={uiState.closeLeftHandWidgets}
+      />
+      <Local
+        open={uiState.openLeftWidget === WidgetIndices.Local}
+        close={uiState.closeLeftHandWidgets}
+      />
+      <CryoTools
+        open={uiState.openLeftWidget === WidgetIndices.PreProcessing}
+        close={uiState.closeLeftHandWidgets}
+      />
 
       {/* Render the DeleteDialog */}
       <DeleteDialog

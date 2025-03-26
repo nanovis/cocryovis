@@ -370,6 +370,20 @@ export const ProjectVolumes = types
         : undefined;
     },
   }))
+  .views((self) => ({
+    get canVisualizeSparseLabels() {
+      return (
+        self.selectedVolume !== undefined &&
+        self.selectedVolume.sparseVolumes.size > 0
+      );
+    },
+    get canVisualizePseudoLabels() {
+      return (
+        self.selectedVolume !== undefined &&
+        self.selectedVolume.pseudoVolumes.size > 0
+      );
+    },
+  }))
   .actions((self) => ({
     setSelectedVolumeId(volumeId: number | undefined) {
       if (volumeId && !self.volumes.has(volumeId)) {

@@ -80,6 +80,18 @@ const globalStyles = makeStyles({
   },
 
   //Buttons
+  mainActionButton: {
+    "&:hover:enabled": {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+    "& svg": {
+      color: tokens.colorBrandForeground1,
+    },
+    "&:disabled svg": {
+      opacity: 0.5,
+      pointerEvents: "none",
+    },
+  },
   sideActionButton: {
     marginLeft: "10px",
     "&:hover:enabled": {
@@ -204,7 +216,7 @@ const globalStyles = makeStyles({
     flexDirection: "column",
     paddingTop: "16px",
     overflowY: "auto",
-  }
+  },
 });
 
 export default globalStyles;

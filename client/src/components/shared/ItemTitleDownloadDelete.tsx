@@ -8,7 +8,6 @@ import {
   Edit24Regular,
   Eye24Regular,
   EyeOff24Regular,
-  bundleIcon,
 } from "@fluentui/react-icons";
 
 import { makeStyles, tokens, Tooltip } from "@fluentui/react-components";
@@ -78,6 +77,7 @@ interface Props {
   onEnabled?: React.MouseEventHandler<HTMLButtonElement>;
   color?: string;
   isEnabled?: boolean;
+  canChangeColor?: boolean;
   canEdit?: boolean;
   deleteTitle?: string | undefined;
   deleteQuestion?: string | undefined;
@@ -96,6 +96,7 @@ const ItemTitleDownloadDelete = ({
   onEnabled = undefined,
   color = undefined,
   isEnabled = true,
+  canChangeColor = false,
   canEdit = false,
   deleteTitle = undefined,
   deleteQuestion = undefined,
@@ -248,11 +249,11 @@ const ItemTitleDownloadDelete = ({
         />
       </div>
       {onColorChange != undefined && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <input
             className={classes.colorPicker}
             type="color"
-            disabled={!canEdit}
+            disabled={!canChangeColor}
             value={color}
             onChange={(event) => setColorValue(event.target.value)}
             onBlur={() => onColorChange(colorValue)}
@@ -260,8 +261,8 @@ const ItemTitleDownloadDelete = ({
           <Button
             size="large"
             appearance="subtle"
-            className={classes.actionButton}
-            disabled={!canEdit}
+            className={globalClasses.mainActionButton}
+            disabled={!canChangeColor}
             onClick={onEnabled}
             icon={
               isEnabled ? (

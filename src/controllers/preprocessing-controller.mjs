@@ -38,8 +38,6 @@ export default class PreProcessingController {
       throw new ApiError(400, "Volume Data is missing a raw file.");
     }
 
-    console.log(volumeData);
-
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader(
       "Content-Disposition",
@@ -49,7 +47,6 @@ export default class PreProcessingController {
     fileStream.pipe(res);
 
     fileStream.on("error", (err) => {
-      console.error("File streaming error:", err);
       throw new ApiError(500, "Error reading file.");
     });
   }
@@ -62,14 +59,14 @@ export default class PreProcessingController {
     const header = await fsPromises.readFile(mrcFilePath, { encoding: null, length: 12 }); // read first 12 bytes
     const buffer = Buffer.from(header);
 
-    const nx = buffer.readInt32LE(0); // X dimension (not used here, but could be useful)
+    const nx = buffer.readInt32LE(0); // X dimension
     const ny = buffer.readInt32LE(4); // Y dimension
-    const nz = buffer.readInt32LE(8); // Z dimension (what we want)
+    const nz = buffer.readInt32LE(8); // Z dimension
 
     return nz;
   }
 
-  static async runMotionCor3(type, req, res, next) {
+  static async runMotionCor3(type, req, res) {
     try {
       // Run motion correction
       const volumeData = await VolumeDataFactory.getClass(type).getById(Number(req.params.idVolumeData));
@@ -87,7 +84,6 @@ export default class PreProcessingController {
       const volumePath = volumeData.path;
       const mrcFilePath = path.resolve(volumeData.mrcFilePath);
   
-      // Dynamically pick a different output file if needed
       const isTempInput = path.basename(mrcFilePath).includes("temp_corrected");
       const tmpOutputPath = path.resolve(volumePath, isTempInput ? "motion_corrected.mrc" : "temp_corrected.mrc");
   
@@ -128,16 +124,14 @@ export default class PreProcessingController {
       data.archive.pipe(res);
       data.archive.finalize();
   
-      // Do not call res.json() after piping the archive!
     } catch (err) {
-      next(err);
+      return res.status(err.status || 500).json({ error: err.message || "Internal Server Error" });
     }
   }
   
- 
-  static async runCTF(type, req, res, next) {
+
+  static async runCTF(type, req, res) {
     try {
-      // Retrieve the volume data and extract parameters
       const volumeData = await VolumeDataFactory.getClass(type).getById(Number(req.params.idVolumeData));
       const {
         pixelSize,
@@ -153,7 +147,7 @@ export default class PreProcessingController {
       const correctedMrcPath = path.resolve(volumePath, path.basename(volumeData.mrcFilePath));
   
       if (!fileSystem.existsSync(correctedMrcPath)) {
-        throw new ApiError(404, "Corrected MRC file not found");
+        return res.status(404).json({ error: "Corrected MRC file not found" });
       }
   
       // Define temporary output file paths for GCtfFind's results
@@ -189,14 +183,12 @@ export default class PreProcessingController {
       const fileStream = fileSystem.createReadStream(outputSpectrumPath);
       fileStream.pipe(res);
       fileStream.on("error", (err) => {
-        console.error("File streaming error:", err);
-        next(err);
+        return res.status(500).json({ error: "File streaming error" });
       });
       
     } catch (err) {
-      next(err);
+      return res.status(err.status || 500).json({ error: err.message || "Internal Server Error" });
     }
   }
-  
 
 }

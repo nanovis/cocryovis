@@ -25,6 +25,7 @@ import {
   EditSettings24Regular,
   ErrorCircle16Filled,
   ProjectionScreen20Regular,
+  ProjectionScreenText24Regular,
   Stack24Regular,
 } from "@fluentui/react-icons";
 import { useState, useRef } from "react";
@@ -56,6 +57,9 @@ import { VolumeSettings } from "../../../functions/VolumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
 import { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
 import { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
+import { VolVisSettingsSnapshotIn } from "../../../stores/uiState/VolVisSettings";
+import { VisualizedVolumeSnapshotIn } from "../../../stores/uiState/VisualizedVolume";
+import { DEFAULT_TF } from "../../../DefaultTransferFunctions";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -343,6 +347,175 @@ const Volume = observer(({ open, close }: Props) => {
       await uiState.visualizeVolume(fileMap, volumeInstance);
 
       toast.dismiss(toastId);
+    } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
+      console.error("Error:", error);
+    }
+  };
+
+  const visualizeLabelVolumes = async (
+    volume: VolumeInstance | undefined,
+    dataType: "SparseLabeledVolumeData" | "PseudoLabeledVolumeData"
+  ) => {
+    let toastId = null;
+
+    try {
+      if (!volume) {
+        throw new Error("No volume selected.");
+      }
+
+      toastId = toast.loading(
+        `Fetching manual label volume 0/${volume.sparseVolumeArray.length}`
+      );
+
+      if (!window.WasmModule) {
+        throw new Error("WasmModule is not loaded.");
+      }
+
+      const volumeVisualizationSettingsArray: Array<VolVisSettingsSnapshotIn> =
+        [];
+
+      const vizualizedVolume: VisualizedVolumeSnapshotIn = {
+        volVisSettings: volumeVisualizationSettingsArray,
+      };
+
+      const config = {
+        files: [] as string[],
+      };
+
+      let volumeArray;
+      if (dataType === "SparseLabeledVolumeData") {
+        volumeArray = volume.sparseVolumeArray;
+        vizualizedVolume.sparseLabelVolumes = volumeArray.map(
+          (sparseVolume) => sparseVolume.id
+        );
+      }
+      if (dataType === "PseudoLabeledVolumeData") {
+        volumeArray = volume.pseudoVolumeArray;
+        vizualizedVolume.PseudoLabelVolumes = volumeArray.map(
+          (pseudoVolume) => pseudoVolume.id
+        );
+      }
+
+      if (!volumeArray || volumeArray.length === 0) {
+        throw new Error("No manual label volumes found.");
+      }
+
+      const type = dataType === "SparseLabeledVolumeData" ? "Manual" : "Pseudo";
+
+      for (let i = 0; i < volumeArray.length; i++) {
+        const labelVolume = volumeArray[i];
+        toast.update(toastId, {
+          render: `Fetching ${type} label volume ${i + 1}/${
+            volumeArray.length
+          }`,
+          isLoading: true,
+          autoClose: false,
+        });
+        await Utils.waitForNextFrame();
+
+        const response = await Utils.sendReq(
+          `volumeData/${dataType}/${labelVolume.id}/download-full`,
+          {
+            method: "GET",
+          },
+          false
+        );
+
+        const contents = await response.blob();
+        const fileMap = await Utils.zipToFileMap(contents);
+        let settingsFile;
+        let rawFile;
+        for (const [key, value] of fileMap) {
+          if (key.endsWith(".json")) {
+            settingsFile = value;
+          } else if (key.endsWith(".raw")) {
+            rawFile = value;
+          }
+        }
+        if (!settingsFile || !rawFile) {
+          throw new Error("No annotation volume found.");
+        }
+        const settingsData = await settingsFile.text();
+        const settings = JSON.parse(settingsData);
+        const settingsFileName = `settings_${i}.json`;
+        const rawFileName = `raw_${i}.raw`;
+        settings.file = rawFileName;
+
+        const rawFileContent = await rawFile.arrayBuffer();
+        const data = new Uint8Array(rawFileContent);
+
+        let color;
+
+        if ("color" in labelVolume) {
+          color = Utils.fromHexColor(labelVolume.color as string);
+        } else {
+          const colorTF = DEFAULT_TF.tfArray[i].color;
+          color = {
+            r: colorTF.x,
+            g: colorTF.y,
+            b: colorTF.z,
+          };
+        }
+
+        const tfName = `transferFunction_${i}`;
+
+        const volumeVisualizationSettings: VolVisSettingsSnapshotIn = {
+          index: i,
+          name: `Annotation ${i}`,
+          type: "volume",
+          transferFunction: {
+            rampLow: 0.01,
+            rampHigh: 0.99,
+            red: color.r,
+            green: color.g,
+            blue: color.b,
+            comment: tfName,
+          },
+        };
+
+        settings.transferFunction = tfName;
+
+        window.WasmModule?.FS.writeFile(rawFileName, data);
+        window.WasmModule?.FS.writeFile(
+          settingsFileName,
+          JSON.stringify(settings)
+        );
+        window.WasmModule?.FS.writeFile(
+          tfName,
+          JSON.stringify({
+            rampLow: volumeVisualizationSettings.transferFunction.rampLow,
+            rampHigh: volumeVisualizationSettings.transferFunction.rampHigh,
+            color: {
+              x: volumeVisualizationSettings.transferFunction.red,
+              y: volumeVisualizationSettings.transferFunction.green,
+              z: volumeVisualizationSettings.transferFunction.blue,
+            },
+          })
+        );
+
+        config.files.push(settingsFileName);
+        volumeVisualizationSettingsArray.push(volumeVisualizationSettings);
+      }
+
+      toast.update(toastId, {
+        render: "Processing rendering data...",
+        isLoading: true,
+        autoClose: false,
+      });
+      await Utils.waitForNextFrame();
+
+      window.WasmModule?.FS.writeFile("config.json", JSON.stringify(config));
+      window.WasmModule?.open_volume();
+      uiState.setVizualizedVolume(vizualizedVolume);
+
+      toast.update(toastId, {
+        render: `${type} label volumes visualized.`,
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+        closeOnClick: true,
+      });
     } catch (error) {
       Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
@@ -851,6 +1024,54 @@ const Volume = observer(({ open, close }: Props) => {
               content={{
                 style: { maxWidth: "fit-content" },
                 children: (
+                  <>
+                    <Text>Visualize All Sparse Label Volumes</Text>
+                    <br />
+                    {!projectVolumes?.canVisualizeSparseLabels ? (
+                      <ErrorCircle16Filled className={globalClasses.failIcon} />
+                    ) : (
+                      <Checkmark16Filled
+                        className={globalClasses.successIcon}
+                      />
+                    )}
+
+                    <Text
+                      style={{
+                        marginLeft: "3px",
+                        verticalAlign: "middle",
+                        color: tokens.colorNeutralForeground2,
+                      }}
+                    >
+                      Requires at least 1 Sparse Labeled Volume.
+                    </Text>
+                  </>
+                ),
+              }}
+              relationship="label"
+              hideDelay={0}
+              appearance="inverted"
+            >
+              <Button
+                className={globalClasses.mainActionButton}
+                style={{
+                  marginRight: "7px",
+                }}
+                size="large"
+                appearance="subtle"
+                icon={<ProjectionScreenText24Regular />}
+                disabled={!projectVolumes?.canVisualizeSparseLabels}
+                onClick={() =>
+                  visualizeLabelVolumes(
+                    selectedVolume,
+                    "SparseLabeledVolumeData"
+                  )
+                }
+              />
+            </Tooltip>
+            <Tooltip
+              content={{
+                style: { maxWidth: "fit-content" },
+                children: (
                   <div>
                     <Text>Label Editing Mode</Text>
                     <br />
@@ -882,12 +1103,12 @@ const Volume = observer(({ open, close }: Props) => {
               }}
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  marginRight: "8px",
                 }}
               >
                 <EditSettings24Regular
@@ -919,12 +1140,10 @@ const Volume = observer(({ open, close }: Props) => {
               }
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
                 className={globalClasses.sideActionButton}
-                style={{
-                  marginRight: "10px",
-                }}
                 size="large"
                 appearance="subtle"
                 icon={<Add24Regular />}
@@ -980,17 +1199,15 @@ const Volume = observer(({ open, close }: Props) => {
                   }
                   onEdit={() => handleAnnotationEdit(index)}
                   canEdit={canEditAnnotations}
+                  canChangeColor={canEditAnnotations}
                   deleteQuestion={Utils.getFileNameFromPath(
                     selectedVolume.sparseVolumeArray[index].rawFilePath
                   )}
                   deleteTitle={"Remove Sparse Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
-                  color={
-                    selectedVolume.sparseVolumeArray[index].color ?? "#ffffff"
-                  }
-                  onColorChange={(color) => {
-                    console.log(color);
-                    selectedVolume.sparseVolumeArray[index].setColor(
+                  color={selectedVolume.sparseVolumeArray[index].color}
+                  onColorChange={async (color) => {
+                    await selectedVolume.sparseVolumeArray[index].setColor(
                       color,
                       index
                     );
@@ -1009,6 +1226,10 @@ const Volume = observer(({ open, close }: Props) => {
                   }
                   onEdit={() => handleAnnotationEdit(index)}
                   canEdit={
+                    canEditAnnotations &&
+                    index === selectedVolume.sparseVolumeArray.length
+                  }
+                  canChangeColor={
                     canEditAnnotations &&
                     index === selectedVolume.sparseVolumeArray.length
                   }
@@ -1049,7 +1270,6 @@ const Volume = observer(({ open, close }: Props) => {
             >
               Pseudo Labels
             </h3>
-
             <Tooltip
               content={{
                 style: { maxWidth: "fit-content" },
@@ -1087,9 +1307,10 @@ const Volume = observer(({ open, close }: Props) => {
               }}
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
-                className={globalClasses.sideActionButton}
+                className={globalClasses.mainActionButton}
                 style={{}}
                 size="large"
                 appearance="subtle"
@@ -1105,7 +1326,54 @@ const Volume = observer(({ open, close }: Props) => {
                 onClick={queuePseudoLabelGeneration}
               />
             </Tooltip>
+            <Tooltip
+              content={{
+                style: { maxWidth: "fit-content" },
+                children: (
+                  <>
+                    <Text>Visualize All Pseudo Label Volumes</Text>
+                    <br />
+                    {!projectVolumes?.canVisualizePseudoLabels ? (
+                      <ErrorCircle16Filled className={globalClasses.failIcon} />
+                    ) : (
+                      <Checkmark16Filled
+                        className={globalClasses.successIcon}
+                      />
+                    )}
 
+                    <Text
+                      style={{
+                        marginLeft: "3px",
+                        verticalAlign: "middle",
+                        color: tokens.colorNeutralForeground2,
+                      }}
+                    >
+                      Requires at least 1 Pseudo Labeled Volume.
+                    </Text>
+                  </>
+                ),
+              }}
+              relationship="label"
+              hideDelay={0}
+              appearance="inverted"
+            >
+              <Button
+                className={globalClasses.mainActionButton}
+                style={{
+                  marginRight: "1px",
+                }}
+                size="large"
+                appearance="subtle"
+                icon={<ProjectionScreenText24Regular />}
+                disabled={!projectVolumes?.canVisualizePseudoLabels}
+                onClick={() =>
+                  visualizeLabelVolumes(
+                    selectedVolume,
+                    "PseudoLabeledVolumeData"
+                  )
+                }
+              />
+            </Tooltip>
             <Tooltip
               content={
                 <WriteAccessTooltipContentWrapper
@@ -1115,12 +1383,10 @@ const Volume = observer(({ open, close }: Props) => {
               }
               relationship="label"
               hideDelay={0}
+              appearance="inverted"
             >
               <Button
-                className={globalClasses.sideActionButton}
-                style={{
-                  marginRight: "10px",
-                }}
+                className={globalClasses.mainActionButton}
                 size="large"
                 appearance="subtle"
                 icon={<Add24Regular />}
