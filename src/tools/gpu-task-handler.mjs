@@ -84,7 +84,6 @@ export default class GPUTaskHandler {
             Volume.lockManager.generateLockInstance(volumeId, [
                 RawVolumeData.modelName,
             ]),
-            User.lockManager.generateLockInstance(userId),
         ]);
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
@@ -317,7 +316,6 @@ export default class GPUTaskHandler {
         const modelLock = Model.lockManager.generateLockInstance(modelId, [
             Checkpoint.modelName,
         ]);
-        const userLock = User.lockManager.generateLockInstance(userId);
 
         const volumeLocks = [];
         trainingVolumesIds.forEach((v) => {
@@ -347,11 +345,7 @@ export default class GPUTaskHandler {
             );
         });
 
-        const multiLock = new WriteMultiLock([
-            modelLock,
-            userLock,
-            ...volumeLocks,
-        ]);
+        const multiLock = new WriteMultiLock([modelLock, ...volumeLocks]);
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
             try {
@@ -797,7 +791,6 @@ export default class GPUTaskHandler {
             Volume.lockManager.generateLockInstance(volumeId, [
                 RawVolumeData.modelName,
             ]),
-            User.lockManager.generateLockInstance(userId),
         ]);
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {

@@ -75,7 +75,6 @@ export default class IlastikHandler {
                 SparseLabeledVolumeData.modelName,
                 PseudoLabeledVolumeData.modelName,
             ]),
-            User.lockManager.generateLockInstance(userId),
         ]);
 
         WriteMultiLock.withWriteMultiLock(multiLock, async () => {
