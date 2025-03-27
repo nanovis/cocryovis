@@ -13,6 +13,8 @@ Make sure submodules are installed by running ```git pull --recurse-submodules``
 
 Download Ilastik by running ```./install_ilastik.sh```
 
+Build submodules by running ```./install_submodules.sh```
+
 Install python packages via ```pip install -r requirements.txt```
 
 In the root folder create a ```.env``` file with the following entries or add them to the local environment:

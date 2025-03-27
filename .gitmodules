@@ -2,3 +2,6 @@
 	path = modules/nano-oetzi
 	url = ../nano-oetzi
 	branch = web-server
+[submodule "modules/Proximal_CryoET"]
+	path = modules/Proximal_CryoET
+	url = ../../Scurek/Proximal_CryoET

@@ -38,7 +38,7 @@
         }
     },
     "Proximal_CryoET": {
-        "path": "./modules/Proximal_CryoET/",
+        "path": "./modules/Proximal_CryoET/CUDA_PROXIMAL_SART/build",
         "executable": "CUDA_PROXIMAL_SART"
     },
     "MotionCor3": {
