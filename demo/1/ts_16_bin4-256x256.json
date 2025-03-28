@@ -1,0 +1,19 @@
+{
+    "file": "ts_16_bin4-256x256.raw",
+    "size": {
+        "x": 256,
+        "y": 256,
+        "z": 448
+    },
+    "ratio": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+    },
+    "bytesPerVoxel": 1,
+    "usedBits": 8,
+    "skipBytes": 0,
+    "isLittleEndian": true,
+    "isSigned": false,
+    "addValue": 0
+}

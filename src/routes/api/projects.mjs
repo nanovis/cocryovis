@@ -17,6 +17,7 @@ import NanoOetziController from '../../controllers/nano-oetzi-controller.mjs';
 import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'
 import PreProcessingController from '../../controllers/preprocessing-controller.mjs';
+import DemoController from '../../controllers/demo-controller.mjs';
 
 // Config
 const config = appConfig;
@@ -233,3 +234,7 @@ projectsApi.post(`/preprocessing/:type/:idVolumeData/visualization-data`, restri
 
 projectsApi.post(`/preprocessing/:type/:idVolumeData/motion-correctness`, restrictApi, 
     async (req, res) => PreProcessingController.runMotionCor3(VolumeDataType.mapName(req.params.type), req, res));
+
+/////// DEMO
+// Get Result
+projectsApi.get(`/demo/:idDemo`, DemoController.getDemo);

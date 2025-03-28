@@ -7,7 +7,7 @@ import {
 } from "../models/volume-data-factory.mjs";
 import path from "path";
 import { ApiError } from "../tools/error-handler.mjs";
-import fileSystem, { fstat } from "fs";
+import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import {

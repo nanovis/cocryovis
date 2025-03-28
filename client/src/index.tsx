@@ -10,6 +10,8 @@ import {
 } from "@fluentui/react-components";
 import { onPatch, onSnapshot } from "mobx-state-tree";
 import React from "react";
+import { toast } from "react-toastify";
+import Utils from "./functions/Utils";
 
 // Import GPUFeatureName type
 type GPUFeatureName = "texture-compression-bc" | "timestamp-query";
@@ -89,7 +91,6 @@ const Main = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  
   async function initWebGPU(): Promise<{
     adapter: GPUAdapter;
     device: GPUDevice;
@@ -111,36 +112,6 @@ const Main = () => {
     const device = await adapter.requestDevice();
     return { adapter, device };
   }
-    // async function initWebGPU(): Promise<{
-    //   adapter: GPUAdapter;
-    //   device: GPUDevice;
-    // }> {
-    //   if (!navigator.gpu) {
-    //     throw new Error("WebGPU not supported.");
-    //   }
-    
-    //   const adapter = await navigator.gpu.requestAdapter({
-    //     powerPreference: "high-performance",
-    //   });
-    
-    //   if (!adapter) {
-    //     throw new Error("Failed to get WebGPU adapter.");
-    //   }
-    
-    //   const requiredFeatures: GPUFeatureName[] = [];
-
-    
-    //   const device = await adapter.requestDevice({
-    //     requiredFeatures,
-    //   });
-    
-    //   if (!device) {
-    //     throw new Error("Failed to acquire WebGPU device.");
-    //   }
-    
-    //   return { adapter, device };
-    // }
-    
 
   async function initModule() {
     const { adapter, device } = await initWebGPU();
@@ -154,6 +125,16 @@ const Main = () => {
     window.WasmModule = await window.createVolumeRenderer({
       preinitializedWebGPUDevice: device,
       canvas: document.getElementById("canvas"),
+
+      locateFile: function (path: string) {
+        if (path.endsWith(".data")) {
+          return "/index.data";
+        }
+        if (path.endsWith(".wasm")) {
+          return "/index.wasm";
+        }
+        return path;
+      },
 
       preRun: [],
       postRun: [],
@@ -189,6 +170,8 @@ const Main = () => {
         spinner.style.visibility = "hidden";
         setTimeout(() => spinner.remove(), 250);
       }
+
+      parseDemoUrl();
     }, 250);
   }
 
@@ -226,6 +209,45 @@ const Main = () => {
         console.error("Failed to initialize WebGPU module.", e)
       );
     }
+  }, []);
+
+  const parseDemoUrl = async () => {
+    const match = window.location.pathname.match(/^\/demo\/(\w+)$/);
+    if (match && window.WasmModule) {
+      const id = match[1];
+      await openDemo(id);
+      window.history.replaceState(null, "", "/");
+    }
+  };
+
+  const openDemo = async (id: string) => {
+    let toastId = null;
+    try {
+      toastId = toast.loading("Loading Demo...");
+      const response = await Utils.sendReq(
+        `demo/${id}`,
+        {
+          method: "GET",
+        },
+        false
+      );
+      const contents = await response.blob();
+      const fileMap = await Utils.zipToFileMap(contents);
+      await rootStore.uiState.visualizeVolume(fileMap, undefined);
+      toast.update(toastId, {
+        render: "Demo loaded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    parseDemoUrl();
   }, []);
 
   return (
