@@ -448,7 +448,9 @@ const Volume = observer(({ open, close }: Props) => {
         let color;
 
         if ("color" in labelVolume) {
-          color = Utils.fromHexColor(labelVolume.color as string);
+          color = labelVolume.color
+            ? Utils.fromHexColor(labelVolume.color as string)
+            : { r: 255, g: 255, b: 255 };
         } else {
           const colorTF = DEFAULT_TF.tfArray[i].color;
           color = {

@@ -254,7 +254,7 @@ const ItemTitleDownloadDelete = ({
             className={classes.colorPicker}
             type="color"
             disabled={!canChangeColor}
-            value={color}
+            value={color ?? "#ffffff"}
             onChange={(event) => setColorValue(event.target.value)}
             onBlur={() => onColorChange(colorValue)}
           />
