@@ -182,7 +182,7 @@ const Main = () => {
   }, []);
 
   const parseDemoUrl = async () => {
-    const match = window.location.pathname.match(/^\/demo\/(\w+)$/);
+    const match = window.location.pathname.match(/^\/demo\/(\w+)\/?$/);
     if (match && window.WasmModule) {
       const id = match[1];
       await openDemo(id);
