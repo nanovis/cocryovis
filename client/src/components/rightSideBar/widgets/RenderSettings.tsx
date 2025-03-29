@@ -196,7 +196,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
             <Field
               className={classes.switchField}
               orientation="horizontal"
-              label="Enable Jitterig"
+              label="Enable Jittering"
             >
               <Switch
                 checked={renderSettings.enableJittering}

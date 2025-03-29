@@ -375,7 +375,10 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
                 {...columnSizing_unstable.getTableCellProps("endTime")}
               >
                 <TableCellLayout truncate>
-                  <Link target="_" href={`${apiUrl}/logs/${item.log.path}`}>
+                  <Link
+                    target="_blank"
+                    href={`${apiUrl}/logs/${item.log.path}`}
+                  >
                     <Tooltip
                       content="Open Log"
                       relationship="label"
