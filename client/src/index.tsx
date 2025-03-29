@@ -91,39 +91,9 @@ const Main = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  async function initWebGPU(): Promise<{
-    adapter: GPUAdapter;
-    device: GPUDevice;
-  }> {
-    if (!navigator.gpu) {
-      throw new Error(
-        "WebGPU is not supported. Ensure you are using a secure context or a localhost."
-      );
-    }
-
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) {
-      throw new Error("Failed to get WebGPU adapter.");
-    }
-
-    console.log("WebGPU Adapter Limits:");
-    console.log(adapter.limits);
-
-    const device = await adapter.requestDevice();
-    return { adapter, device };
-  }
-
   async function initModule() {
-    const { adapter, device } = await initWebGPU();
-
-    if (!device) {
-      console.error("Could not initialize WebGPU device.");
-      return;
-    }
-
     window.WasmModule = null;
     window.WasmModule = await window.createVolumeRenderer({
-      preinitializedWebGPUDevice: device,
       canvas: document.getElementById("canvas"),
 
       locateFile: function (path: string) {
