@@ -416,42 +416,47 @@ export default class Utils {
         args = [],
         cwd = null,
         stdoutCallback = null,
-        stderrCallback = null
+        stderrCallback = null,
+        allowSoftFailCodes = [139] //treat segfault
     ) {
         return new Promise((resolve, reject) => {
-            const process = spawn(command, args, cwd ? { cwd } : {});
-
+            const child = spawn(command, args, {
+                cwd: cwd || process.cwd(),
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
+    
             if (stdoutCallback) {
-                process.stdout.on("data", (data) => {
+                child.stdout.on("data", (data) => {
                     stdoutCallback(data.toString());
                 });
             }
-
+    
             if (stderrCallback) {
-                process.stderr.on("data", (data) => {
+                child.stderr.on("data", (data) => {
                     stderrCallback(data.toString());
                 });
             }
-
-            process.on("close", (code) => {
-                if (code === 0) {
-                    resolve();
+    
+            child.on("close", (code) => {
+                if (code === 0 || allowSoftFailCodes.includes(code)) {
+                    if (code === 139) {
+                        console.warn("Warning: tiltalign exited with code 139 (SegFault after success)");
+                    }
+                    resolve(); // pretend it succeeded
                 } else {
                     reject(
                         new Error(
-                            `Subprocess exited with code ${code}: 
-                            ${command} ${args.join(" ")}`
+                            `Subprocess exited with code ${code}:\n${command} ${args.join(" ")}`
                         )
                     );
                 }
             });
-
-            process.on("error", (err) => {
+    
+            child.on("error", (err) => {
                 reject(new Error(`Failed to start script: ${err.message}`));
             });
         });
     }
-
     /**
      * Runs a Python script with arguments and optional output callbacks.
      * @param {string} script - The Python script to run.

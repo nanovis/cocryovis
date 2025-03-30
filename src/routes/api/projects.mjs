@@ -235,6 +235,9 @@ projectsApi.post(`/preprocessing/:type/:idVolumeData/visualization-data`, restri
 projectsApi.post(`/preprocessing/:type/:idVolumeData/motion-correctness`, restrictApi, 
     async (req, res) => PreProcessingController.runMotionCor3(VolumeDataType.mapName(req.params.type), req, res));
 
+projectsApi.post(`/preprocessing/:type/:idVolumeData/tilt-series-alignment`, restrictApi, 
+    async (req, res) => PreProcessingController.runImodAlignmentPipeline(VolumeDataType.mapName(req.params.type), req, res));
+
 /////// DEMO
 // Get Result
 projectsApi.get(`/demo/:idDemo`, DemoController.getDemo);
