@@ -15,7 +15,7 @@ import Utils from "./functions/Utils";
 import { useServerListener } from "./hooks/useServerListener";
 import { observer } from "mobx-react-lite";
 import { useMst } from "./stores/RootStore";
-import { UserSnapshotIn } from "./stores/userState/UserModel";
+import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
 
 const useStyles = makeStyles({
@@ -36,7 +36,9 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
   ({ toggleTheme }) => {
     const CookieName = "LoggedUser";
 
-    const { login, logout, user, uiState } = useMst();
+    const rootStore = useMst();
+    const user = rootStore.user;
+    const uiState = rootStore.uiState;
 
     const mouseOverCanvas = useRef(false);
 
@@ -57,33 +59,48 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       return await response.json();
     };
 
-    const setupUser = async (user: UserSnapshotIn) => {
+    const setupUser = async (user: UserDB) => {
       setShowSignUp(false);
       setShowSignIn(false);
-      login(user);
+      return await rootStore.login(user);
     };
 
-    const [LoginInit, setLoginInit] = useState(false);
+    const [LoginInit, setLoginInit] = useState(true);
 
     const getIsUserAuth = async () => {
-      if (LoginInit) return !!user;
+      if (!LoginInit) return;
 
-      setLoginInit(true);
+      setLoginInit(false);
       const cookieData = fetchAuthCookieData();
-      if (!cookieData) {
-        return false;
+      if (cookieData) {
+        try {
+          const userData = await getLoggedUserData();
+          await setupUser(userData);
+        } catch {
+          Cookies.remove(CookieName);
+          await rootStore.logout();
+          setShowSignIn(true);
+        }
       }
-      try {
-        const userData = await getLoggedUserData();
-        setupUser(userData);
-      } catch {
-        Cookies.remove(CookieName);
-        logout();
-        setShowSignIn(true);
+
+      await resolveProjectUrl();
+    };
+
+    const resolveProjectUrl = async () => {
+      console.log("Resolving project URL");
+      const match = window.location.pathname.match(/^\/project\/(\w+)\/?$/);
+      if (match) {
+        window.history.replaceState(null, "", "/");
+
+        const projectId = parseInt(match[1]);
+        if (isNaN(projectId)) {
+          return;
+        }
+        await rootStore.user.userProjects.setActiveProject(Number(projectId));
       }
     };
 
-    const [showSignIn, setShowSignIn] = useState(!getIsUserAuth());
+    const [showSignIn, setShowSignIn] = useState(false);
     const [showSignUp, setShowSignUp] = useState(false);
     const classes = useStyles();
 
@@ -103,7 +120,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           { successText: "Sign-In successful!" }
         );
         const userData = await response.json();
-        setupUser(userData);
+        await setupUser(userData);
       } catch (error) {
         console.error(error);
       }
@@ -133,7 +150,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         );
         const contents = await response.json();
 
-        setupUser(contents);
+        await setupUser(contents);
       } catch (error) {
         console.error("Error:", error);
       }
@@ -141,10 +158,10 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const toggleSignClick = (id: number) => {
       if (id === 0) {
-        setShowSignIn(!showSignIn || !user); // Use camelCase here
+        setShowSignIn(!showSignIn || user.isGuest); // Use camelCase here
         setShowSignUp(false); // Use camelCase here
       } else if (id === 1) {
-        setShowSignUp(!showSignUp || !user); // Use camelCase here
+        setShowSignUp(!showSignUp || user.isGuest); // Use camelCase here
         setShowSignIn(false); // Use camelCase here
       } else {
         setShowSignUp(false); // Use camelCase here
@@ -153,6 +170,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
     };
 
     useEffect(() => {
+      getIsUserAuth();
       window.addEventListener("keydown", globalKeyDown);
       return () => {
         window.removeEventListener("keydown", globalKeyDown);

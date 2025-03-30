@@ -27,6 +27,61 @@ export default class Project extends DatabaseModel {
     }
 
     /**
+     * @param {Number} projectId
+     * @param {Number} userId
+     */
+    static async getByIdDeep(projectId, userId = -1) {
+        const project = await this.db.findUnique({
+            where: {
+                id: projectId,
+            },
+            include: {
+                volumes: {
+                    include: {
+                        rawData: true,
+                        sparseVolumes: true,
+                        pseudoVolumes: true,
+                        results: {
+                            include: {
+                                checkpoint: true,
+                            },
+                        },
+                    },
+                },
+                models: {
+                    include: {
+                        checkpoints: true,
+                    },
+                },
+                projectAccess: {
+                    where: {
+                        userId: userId,
+                    },
+                },
+            },
+        });
+
+        if (!project) {
+            throw ApiError.fromId(projectId, this.modelName);
+        }
+
+        let projectWithAccessLevel = { ...project, accessLevel: -1 };
+
+        if (project.ownerId === userId) {
+            projectWithAccessLevel.accessLevel = 2;
+        } else if (project.projectAccess.length > 0) {
+            projectWithAccessLevel.accessLevel =
+                project.projectAccess[0].accessLevel;
+        } else if (project.publicAccess === 1) {
+            projectWithAccessLevel.accessLevel = 0;
+        } else {
+            throw new ApiError(403, "Access denied");
+        }
+
+        return projectWithAccessLevel;
+    }
+
+    /**
      * @param {Number} userId
      * @param {Options} options
      */
@@ -133,11 +188,28 @@ export default class Project extends DatabaseModel {
     }
 
     /**
+     * @param {Number} projectId
+     * @param {Number} userId
+     * @returns {Promise<Number>}
+     */
+    static async getUserAccessInfo(projectId, userId) {
+        const projectAccess = await prismaManager.db.projectAccess.findUnique({
+            where: {
+                userId_projectId: {
+                    userId: userId,
+                    projectId: projectId,
+                },
+            },
+        });
+        return projectAccess?.accessLevel ?? -1;
+    }
+
+    /**
      * @param {Number} id
-     * @returns {Promise<{projectAccess: {ownerId: number, publicAccess:number}, userAccess: UserAccessInfo[]}>}
+     * @returns {Promise<{projectAccess: {ownerId: number, publicAccess: number}, userAccess: UserAccessInfo[]}>}
      */
     static async getAccessInfo(id) {
-        const userAccess = await this.getUserAccessInfo(id);
+        const userAccess = await this.getProjectUsersAccessInfo(id);
         const projectAccess = await prismaManager.db.project.findUnique({
             where: { id: id },
             select: {
@@ -152,7 +224,7 @@ export default class Project extends DatabaseModel {
      * @param {Number} id
      * @returns {Promise<UserAccessInfo[]>}
      */
-    static async getUserAccessInfo(id) {
+    static async getProjectUsersAccessInfo(id) {
         const userAccess = await prismaManager.db.projectAccess.findMany({
             where: {
                 projectId: id,

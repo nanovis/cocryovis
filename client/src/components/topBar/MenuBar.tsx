@@ -50,7 +50,7 @@ interface Props {
 
 const MenuBar = observer(
   ({ toggleSignClick, toggleTheme, connectionStatus }: Props) => {
-    const { logout, user } = useMst();
+    const { user, logout } = useMst();
 
     const classes = useStyles();
     const [isShareProjectOpen, setIsShareProjectOpen] = useState(false);
@@ -83,7 +83,11 @@ const MenuBar = observer(
           return;
         }
 
-        await user?.userProjects.createProject(projectName, projectDescription);
+        if (user.isGuest) {
+          return;
+        }
+
+        await user.userProjects.createProject(projectName, projectDescription);
 
         handleCloseCreateDialog();
       } catch (error) {
@@ -95,7 +99,7 @@ const MenuBar = observer(
       <div className={classes.menubar}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <Image src={KaustLogo} className={classes.logoIcon} />
-          {user && (
+          {!user.isGuest && (
             <MenuBarItem
               label="Project"
               children={[
@@ -108,7 +112,7 @@ const MenuBar = observer(
               ]}
             />
           )}
-          {user && user.userProjects.activeProjectId && (
+          {!user.isGuest && user.userProjects.activeProjectId && (
             <div style={{ display: "flex", alignItems: "center" }}>
               <Label style={{ marginLeft: "10px" }}>
                 {"Active Project: "} {user.userProjects.activeProject?.name}
@@ -130,7 +134,7 @@ const MenuBar = observer(
           )}
         </div>
         <div style={{ display: "flex" }}>
-          {user ? (
+          {!user.isGuest ? (
             <div style={{ display: "flex", minHeight: "34px" }}>
               <div className={classes.userStatus} style={{ minHeight: "20px" }}>
                 <Text weight="bold">{user.name}</Text>

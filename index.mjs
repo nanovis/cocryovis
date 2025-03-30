@@ -135,8 +135,7 @@ const startServer = async () => {
     console.log("Client path: ", clientPath);
 
     if (fileSystem.existsSync(clientPath)) {
-        app.use(express.static(clientPath));
-        app.use("/demo/:id", express.static(clientPath));
+        app.use(["/", "/demo/*", "/project/*"], express.static(clientPath));
     } else {
         console.warn("No client build found, serving api only!");
     }

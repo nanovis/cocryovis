@@ -32,14 +32,14 @@ model User {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  owner       User     @relation(fields: [ownerId], references: [id])
-  ownerId     Int
-  publicAccess  Int    @default(0) // 0 - private, 1 - public
-  volumes     Volume[]
-  models      Model[]
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String
+  owner        User     @relation(fields: [ownerId], references: [id])
+  ownerId      Int
+  publicAccess Int      @default(0) // 0 - private, 1 - public
+  volumes      Volume[]
+  models       Model[]
 
   projectAccess ProjectAccess[]
 
@@ -51,7 +51,7 @@ model ProjectAccess {
   userId      Int
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   Int
-  accessLevel Int
+  accessLevel Int // 0 - read, 1 - write
 
   @@id([userId, projectId])
 }

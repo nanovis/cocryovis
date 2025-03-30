@@ -35,6 +35,7 @@ import { useState, useEffect, useRef, SyntheticEvent } from "react";
 import Utils from "../../functions/Utils";
 import {
   bundleIcon,
+  LinkRegular,
   PeopleSubtractFilled,
   PeopleSubtractRegular,
 } from "@fluentui/react-icons";
@@ -278,10 +279,6 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   };
 
   const onConfirmChanges = async () => {
-    await onAccessChanged();
-  };
-
-  const onAccessChanged = async () => {
     let toastId = null;
     try {
       if (pageBusy() || !activeProject) {
@@ -687,7 +684,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
             />
           </div>
           <DialogActions style={{ marginTop: "15px", alignItems: "center" }}>
-            {pendingChanges.size > 0 && (
+            {pendingChanges.size > 0 ? (
               <Text
                 align="center"
                 italic={true}
@@ -696,6 +693,26 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
               >
                 Changes Pending
               </Text>
+            ) : (
+              <Button
+                disabled={pageBusy()}
+                onClick={async () => {
+                  if (!activeProject) {
+                    return;
+                  }
+                  try {
+                    await navigator.clipboard.writeText(
+                      activeProject.getProjectUrl()
+                    );
+                  } catch (error) {
+                    console.error("Failed to copy link: ", error);
+                  }
+                }}
+                appearance="secondary"
+                icon={<LinkRegular />}
+              >
+                Copy Link
+              </Button>
             )}
             <div style={{ marginLeft: "auto" }}>
               {pendingChanges.size > 0 ||
