@@ -9,7 +9,7 @@ import { makeStyles } from "@fluentui/react-components";
 import SignInPage, { SignInCredentials } from "./components/topBar/SignInPage";
 import SignUpPage, { SignUpCredentials } from "./components/topBar/SignUpPage";
 import Cookies from "js-cookie";
-import { Slide, ToastContainer } from "react-toastify";
+import { Slide, toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Utils from "./functions/Utils";
 import { useServerListener } from "./hooks/useServerListener";
@@ -91,12 +91,24 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       const match = window.location.pathname.match(/^\/project\/(\w+)\/?$/);
       if (match) {
         window.history.replaceState(null, "", "/");
-
-        const projectId = parseInt(match[1]);
-        if (isNaN(projectId)) {
-          return;
+        let toastId = null;
+        try {
+          toastId = toast.loading("Loading Project...");
+          const projectId = parseInt(match[1]);
+          if (isNaN(projectId)) {
+            throw new Error("Invalid project ID");
+          }
+          await rootStore.user.userProjects.setActiveProject(Number(projectId));
+          toast.update(toastId, {
+            render: "Project loaded successfully!",
+            type: "success",
+            isLoading: false,
+            autoClose: 2000,
+          });
+        } catch (error) {
+          Utils.updateToastWithErrorMsg(toastId, error);
+          console.error(error);
         }
-        await rootStore.user.userProjects.setActiveProject(Number(projectId));
       }
     };
 
