@@ -241,6 +241,17 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
+     * @param {Number} id
+     * @param {PendingUpload} file
+     * @returns {Promise<SparseLabelVolumeDataDB>}
+     */
+    static async setRawData(id, file) {
+         /** @type any */
+        const rawData = await super.setRawData(id, file);
+        return rawData;
+    }
+
+    /**
      * @param {Number} labelId
      * @param {Number} volumeId,
      * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
