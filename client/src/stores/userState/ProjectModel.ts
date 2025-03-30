@@ -8,6 +8,7 @@ interface ProjectDB {
   name: string;
   description: string;
   ownerId: number;
+  publicAccess: number;
   accessLevel: number;
   volumes: VolumeDB[];
   models: ModelDB[];
@@ -20,6 +21,7 @@ export const Project = types
     description: types.string,
     ownerId: types.integer,
     accessLevel: types.integer,
+    publicAccess: types.integer,
     projectVolumes: ProjectVolumes,
     projectModels: ProjectModels,
   })
@@ -29,6 +31,11 @@ export const Project = types
     },
     get hasWriteAccess() {
       return self.accessLevel >= 1;
+    },
+  }))
+  .actions((self) => ({
+    setPublicAccess(accessLevel: number) {
+      self.publicAccess = accessLevel;
     },
   }));
 

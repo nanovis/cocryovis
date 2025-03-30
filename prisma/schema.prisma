@@ -37,6 +37,7 @@ model Project {
   description String
   owner       User     @relation(fields: [ownerId], references: [id])
   ownerId     Int
+  publicAccess  Int    @default(0) // 0 - private, 1 - public
   volumes     Volume[]
   models      Model[]
 

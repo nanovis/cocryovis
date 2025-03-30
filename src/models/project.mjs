@@ -10,13 +10,13 @@ import RawVolumeData from "./raw-volume-data.mjs";
 import Checkpoint from "./checkpoint.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
-import { MissingResourceError } from "../tools/error-handler.mjs";
+import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
  * @typedef { import("@prisma/client").ProjectAccess } ProjectAccess
  * @typedef { { volumes?: boolean | { include: import("./volume.mjs").Options }, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options
- * @typedef { {userId: Number, accessLevel: Number} } AccessInfo
+ * @typedef { {userId: Number, accessLevel: Number} } UserAccessInfo
  */
 
 export default class Project extends DatabaseModel {
@@ -134,10 +134,26 @@ export default class Project extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @returns {Promise<AccessInfo[]>}
+     * @returns {Promise<{projectAccess: {ownerId: number, publicAccess:number}, userAccess: UserAccessInfo[]}>}
      */
     static async getAccessInfo(id) {
-        const projectAccess = await prismaManager.db.projectAccess.findMany({
+        const userAccess = await this.getUserAccessInfo(id);
+        const projectAccess = await prismaManager.db.project.findUnique({
+            where: { id: id },
+            select: {
+                ownerId: true,
+                publicAccess: true,
+            },
+        });
+        return { projectAccess: projectAccess, userAccess: userAccess };
+    }
+
+    /**
+     * @param {Number} id
+     * @returns {Promise<UserAccessInfo[]>}
+     */
+    static async getUserAccessInfo(id) {
+        const userAccess = await prismaManager.db.projectAccess.findMany({
             where: {
                 projectId: id,
             },
@@ -146,75 +162,92 @@ export default class Project extends DatabaseModel {
                 accessLevel: true,
             },
         });
-        return projectAccess;
+        return userAccess;
     }
 
     /**
      * @param {Number} id
-     * @param {AccessInfo[]} accessInfo
-     * @returns {Promise<{updated: AccessInfo[], deleted: AccessInfo[]}>}
+     * @param {{publicAccess: number, userAccess: Array<UserAccessInfo>}} accessInfo
+     * @returns {Promise<{publicAccess: number, userAccess: UserAccessInfo[]}>}
      */
     static async setAccess(id, accessInfo) {
         return await prismaManager.db.$transaction(
             async (tx) => {
-                const project = await tx.project.findUnique({
+                let project = await tx.project.findUnique({
                     where: { id: id },
                 });
 
-                accessInfo = accessInfo.filter(
+                if (!project) {
+                    throw ApiError.fromId(id, this.modelName);
+                }
+
+                accessInfo.userAccess = accessInfo.userAccess.filter(
                     (info) => info.userId !== project.ownerId
                 );
 
-                if (accessInfo.length === 0) {
-                    return;
+                if (
+                    accessInfo.publicAccess !== undefined &&
+                    accessInfo.publicAccess !== project.publicAccess
+                ) {
+                    project = await tx.project.update({
+                        where: { id: id },
+                        data: {
+                            publicAccess: accessInfo.publicAccess,
+                        },
+                    });
                 }
 
-                const updatedAccessInstances = [];
-                const deletedAccessInstances = [];
-                for (const accessInstance of accessInfo) {
+                for (const accessInstance of accessInfo.userAccess) {
                     if (accessInstance.accessLevel < 0) {
-                        const deletedAccessInstance =
-                            await tx.projectAccess.delete({
-                                where: {
-                                    userId_projectId: {
-                                        userId: accessInstance.userId,
-                                        projectId: project.id,
-                                    },
-                                },
-                                select: {
-                                    userId: true,
-                                    accessLevel: true,
-                                },
-                            });
-                        deletedAccessInstances.push(deletedAccessInstance);
-                    } else {
-                        const updatedAccessInstance =
-                            await tx.projectAccess.upsert({
-                                where: {
-                                    userId_projectId: {
-                                        userId: accessInstance.userId,
-                                        projectId: project.id,
-                                    },
-                                },
-                                update: {
-                                    accessLevel: accessInstance.accessLevel,
-                                },
-                                create: {
-                                    projectId: project.id,
+                        await tx.projectAccess.delete({
+                            where: {
+                                userId_projectId: {
                                     userId: accessInstance.userId,
-                                    accessLevel: accessInstance.accessLevel,
+                                    projectId: project.id,
                                 },
-                                select: {
-                                    userId: true,
-                                    accessLevel: true,
+                            },
+                            select: {
+                                userId: true,
+                                accessLevel: true,
+                            },
+                        });
+                    } else {
+                        await tx.projectAccess.upsert({
+                            where: {
+                                userId_projectId: {
+                                    userId: accessInstance.userId,
+                                    projectId: project.id,
                                 },
-                            });
-                        updatedAccessInstances.push(updatedAccessInstance);
+                            },
+                            update: {
+                                accessLevel: accessInstance.accessLevel,
+                            },
+                            create: {
+                                projectId: project.id,
+                                userId: accessInstance.userId,
+                                accessLevel: accessInstance.accessLevel,
+                            },
+                            select: {
+                                userId: true,
+                                accessLevel: true,
+                            },
+                        });
                     }
                 }
+
+                const userAccess = await tx.projectAccess.findMany({
+                    where: {
+                        projectId: id,
+                    },
+                    select: {
+                        userId: true,
+                        accessLevel: true,
+                    },
+                });
+
                 return {
-                    updated: updatedAccessInstances,
-                    deleted: deletedAccessInstances,
+                    publicAccess: project.publicAccess,
+                    userAccess: userAccess,
                 };
             },
             {
