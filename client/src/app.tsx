@@ -95,7 +95,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           toastId = toast.loading("Loading Project...");
 
           // Wait until renderer is ready
-          while (!window.WasmModule) {
+          while (!rootStore.wasmLoaded) {
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
           const projectId = parseInt(match[1]);
