@@ -340,6 +340,45 @@ const Visualization = observer(({ open, close }: Props) => {
     );
   };
 
+  const TFUploadElement = ({
+    settingsInstance,
+  }: {
+    settingsInstance: VolVisSettingsInstance;
+  }) => {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    return (
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        className={classes.actionButton}
+      >
+        <Tooltip
+          content="Upload Transfer Function"
+          relationship="label"
+          appearance="inverted"
+          positioning="after-top"
+        >
+          <ArrowUpload16Regular
+            className={classes.tfIcon}
+            style={{
+              marginTop: "3px",
+              border: "1px solid",
+              borderRadius: "5px",
+              padding: 8,
+            }}
+          />
+        </Tooltip>
+        <input
+          type="file"
+          onChange={(event) => handleTFUpload(event, settingsInstance)}
+          accept=".json"
+          ref={fileInputRef}
+          className={globalClasses.hiddenInput}
+        />
+      </div>
+    );
+  };
+
   return open ? (
     <div className={globalClasses.rightSidebar}>
       <div className={globalClasses.sidebarContents}>
@@ -762,36 +801,10 @@ const Visualization = observer(({ open, close }: Props) => {
                         />
                       </Tooltip>
                     </div>
-                    <div
-                      onClick={() => TFFileRef.current?.click()}
-                      className={classes.actionButton}
-                    >
-                      <Tooltip
-                        content="Upload Transfer Function"
-                        relationship="label"
-                        appearance="inverted"
-                        positioning="after-top"
-                      >
-                        <ArrowUpload16Regular
-                          className={classes.tfIcon}
-                          style={{
-                            marginTop: "3px",
-                            border: "1px solid",
-                            borderRadius: "5px",
-                            padding: 8,
-                          }}
-                        />
-                      </Tooltip>
-                      <input
-                        type="file"
-                        onChange={(event) =>
-                          handleTFUpload(event, settingsInstance)
-                        }
-                        accept=".json"
-                        ref={TFFileRef}
-                        className={globalClasses.hiddenInput}
-                      />
-                    </div>
+                    <TFUploadElement
+                      key={index}
+                      settingsInstance={settingsInstance}
+                    />
                   </div>
                 )
               )}
