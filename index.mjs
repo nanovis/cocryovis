@@ -26,6 +26,9 @@ import http from "http";
 import https from "https";
 import TaskHistory from "./src/models/task-history.mjs";
 import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
+import { checkCookieAge } from "./src/middleware/restrict.mjs";
+
+const SqliteStore = sqlite3SessionStore(session);
 
 const startServer = async () => {
     const host = argv[3] ?? process.env.HOST ?? "localhost";
@@ -83,14 +86,13 @@ const startServer = async () => {
     const sessionsDB = new Database("sessions/sessions.db");
     sessionsDB.pragma("journal_mode = WAL");
 
-    const SqliteStore = sqlite3SessionStore(session);
-
     const sess = {
+        name: appConfig.cookieName,
         store: new SqliteStore({
             client: sessionsDB,
             expired: {
                 clear: true,
-                intervalMs: 12 * 60 * 60 * 1000,
+                intervalMs: 10 * 60 * 1000, // 10 minutes
             },
         }),
         resave: false,
@@ -104,6 +106,7 @@ const startServer = async () => {
             sameSite: "strict",
         },
     };
+
     // @ts-ignore
     const sessionParser = session(sess);
 
@@ -127,6 +130,8 @@ const startServer = async () => {
     app.use(sessionParser);
 
     app.use(responseSanitizer);
+
+    app.use(checkCookieAge);
 
     // API
     app.use("/api", projectsApi);

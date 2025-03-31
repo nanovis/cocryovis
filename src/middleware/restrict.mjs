@@ -10,6 +10,7 @@ import Volume from "../models/volume.mjs";
 import Model from "../models/model.mjs";
 import Checkpoint from "../models/checkpoint.mjs";
 import Result from "../models/result.mjs";
+import appConfig from "../tools/config.mjs";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
@@ -18,11 +19,42 @@ import Result from "../models/result.mjs";
 
 /**
  * @param {import("express").Request} req
+ */
+export function isActiveSession(req) {
+    return req.session !== undefined && req.session.user !== undefined;
+}
+
+/**
+ * @param {import("express").Request} req
+ */
+export function sessionExpired(req) {
+    return (
+        req.session?.cookie !== undefined &&
+        req.session.cookie.expires < new Date()
+    );
+}
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+export function checkCookieAge(req, res, next) {
+    if (sessionExpired(req)) {
+        req.session.destroy(() => {
+            res.clearCookie(appConfig.cookieName);
+        });
+    }
+    next();
+}
+
+/**
+ * @param {import("express").Request} req
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
 export function restrictApi(req, res, next) {
-    if (!req.session || !req.session.user) {
+    if (!isActiveSession(req)) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
     next();

@@ -3,6 +3,7 @@
 import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
+import appConfig from "../tools/config.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -81,6 +82,7 @@ export default class UserController {
      */
     static logout(req, res) {
         req.session.destroy(function () {
+            res.clearCookie(appConfig.cookieName);
             res.sendStatus(204);
         });
     }

@@ -167,25 +167,39 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   const fetchProjectAccessData = async () => {
     try {
       if (!activeProject) {
-        return;
+        throw new Error("No active project");
       }
 
       setIsFetchingData(true);
-
-      let response = await Utils.sendReq("users", {
-        method: "GET",
-      });
-
-      const allUsers = await response.json();
-
-      response = await Utils.sendReq(`project/${activeProject.id}/access`, {
-        method: "GET",
-      });
-
-      const accessInfo: {
+      let allUsers;
+      let accessInfo: {
         projectAccess: { ownerId: number; publicAccess: number };
         userAccess: Array<{ userId: number; accessLevel: number }>;
-      } = await response.json();
+      };
+
+      try {
+        let response = await Utils.sendReq(
+          "users",
+          {
+            method: "GET",
+          },
+          false
+        );
+
+        allUsers = await response.json();
+
+        response = await Utils.sendReq(
+          `project/${activeProject.id}/access`,
+          {
+            method: "GET",
+          },
+          false
+        );
+
+        accessInfo = await response.json();
+      } catch (error) {
+        throw new Error("Failed to fetch users or access info.");
+      }
 
       activeProject.setPublicAccess(accessInfo.projectAccess.publicAccess);
       setPublicAccess(activeProject.publicAccess);
@@ -198,6 +212,11 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       refreshTagPickerOptions();
     } catch (error) {
       console.error(error);
+      setOpen(false);
+      const errMsg = Utils.getErrorMessage(error);
+      toast.error(
+        errMsg || "Failed to fetch project access data. Please try again."
+      );
     } finally {
       setIsFetchingData(false);
     }
@@ -251,12 +270,6 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   useEffect(() => {
     if (open) {
       fetchProjectAccessData();
-    } else {
-      setPendingChanges(new Map());
-      setUsersWithAccess([]);
-      setPendingChanges(new Map());
-      setSelectedIds([]);
-      setPublicAccess(activeProject?.publicAccess);
     }
   }, [open]);
 

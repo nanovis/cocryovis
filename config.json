@@ -1,6 +1,7 @@
 {
-    "idleSessionExpirationMin": 30,
+    "idleSessionExpirationMin": 720,
     "tempPath": "./data/temp",
+    "cookieName": "CoCryoViSCookie",
     "cleanTempOnStartup": true,
     "dataPath": "./data",
     "maxVolumeChannels": 4,
