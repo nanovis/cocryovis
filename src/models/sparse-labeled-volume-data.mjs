@@ -246,7 +246,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async setRawData(id, file) {
-         /** @type any */
+        /** @type any */
         const rawData = await super.setRawData(id, file);
         return rawData;
     }
@@ -255,9 +255,15 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @param {Number} labelId
      * @param {Number} volumeId,
      * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
+     * @param {Boolean} saveAsNew
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
-    static async updateAnnotations(labelId, volumeId, annotations) {
+    static async updateAnnotations(
+        labelId,
+        volumeId,
+        annotations,
+        saveAsNew = false
+    ) {
         let tempFolderPath = null;
 
         return await this.withWriteLock(
@@ -270,9 +276,6 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     );
 
                     const volumeDataSettings = JSON.parse(volumeData.settings);
-                    const currentData = await new PendingLocalFile(
-                        volumeData.rawFilePath
-                    ).getData();
 
                     tempFolderPath = Utils.createTemporaryFolder(
                         Volume.annotationsTempDirectory
@@ -282,11 +285,24 @@ export default class SparseLabeledVolumeData extends VolumeData {
                         Utils.stripExtension(annotations[0].volumeName) +
                         "_annotated.raw";
                     const outputPath = path.join(tempFolderPath, outputFile);
-                    const settings = await annotationsToVolume(
-                        annotations,
-                        outputPath,
-                        currentData
-                    );
+
+                    let settings;
+
+                    if (!saveAsNew) {
+                        const currentData = await new PendingLocalFile(
+                            volumeData.rawFilePath
+                        ).getData();
+                        settings = await annotationsToVolume(
+                            annotations,
+                            outputPath,
+                            currentData
+                        );
+                    } else {
+                        settings = await annotationsToVolume(
+                            annotations,
+                            outputPath
+                        );
+                    }
 
                     if (
                         settings.size.x !== volumeDataSettings.size.x ||

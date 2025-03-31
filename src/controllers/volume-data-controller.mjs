@@ -421,27 +421,21 @@ export default class VolumeDataController {
                 "This operation is only avaliable on Manual Label Volumes."
             );
         }
+        const saveAsNew = req.body.saveAsNew ?? false;
 
-        if (!req.files || !req.files.file) {
+        if (!req.body.annotation) {
             throw new ApiError(400, "No annotations file found.");
         }
-        if (Array.isArray(req.files.file)) {
-            throw new ApiError(400, "To many files uploaded.");
-        }
-        const annotationsFile = await fsPromises.readFile(
-            req.files.file.tempFilePath
-        );
 
-        const annotations = JSON.parse(annotationsFile.toString("utf8"));
-
-        if (!Array.isArray(annotations)) {
+        if (!Array.isArray(req.body.annotation)) {
             throw new ApiError(400, "Unknown annotations format.");
         }
 
         const sparseLabel = await SparseLabeledVolumeData.updateAnnotations(
             Number(req.params.idVolumeData),
             Number(req.params.idVolume),
-            annotations
+            req.body.annotation,
+            saveAsNew
         );
 
         res.json(sparseLabel);

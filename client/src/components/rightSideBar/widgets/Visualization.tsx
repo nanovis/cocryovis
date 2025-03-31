@@ -29,6 +29,7 @@ import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeMo
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
+import { VisualizedVolume } from "../../../stores/uiState/VisualizedVolume";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -148,13 +149,7 @@ const Visualization = observer(({ open, close }: Props) => {
       }
 
       setProcessingSaveAnnotations(true);
-      const annotations = window.WasmModule?.get_annotations();
-
-      const annotationsFile = new Blob([annotations], {
-        type: "application/json",
-      });
-      const formData = new FormData();
-      formData.append("file", annotationsFile);
+      const annotationData = window.WasmModule?.get_annotations();
 
       if (
         visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
@@ -164,7 +159,8 @@ const Visualization = observer(({ open, close }: Props) => {
           {
             method: "PUT",
             credentials: "include",
-            body: formData,
+            headers: { "Content-Type": "application/json" },
+            body: annotationData,
           },
           false
         );
@@ -191,12 +187,20 @@ const Visualization = observer(({ open, close }: Props) => {
       } else {
         const sparseLabelVolume =
           volume.sparseVolumeArray[visualizedVolume.manualLabelIndex];
+
+        const annotation = JSON.parse(annotationData);
+
         await Utils.sendReq(
           `volume/${volume.id}/volumeData/SparseLabeledVolumeData/${sparseLabelVolume.id}/update-annotations`,
           {
             method: "PUT",
             credentials: "include",
-            body: formData,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              annotation: annotation,
+              saveAsNew:
+                visualizedVolume.saveAsNew[visualizedVolume.manualLabelIndex],
+            }),
           }
         );
       }
@@ -215,12 +219,12 @@ const Visualization = observer(({ open, close }: Props) => {
     }
   };
 
-  const handleResetAnnotations = () => {
+  const handleClearAnnotations = () => {
     if (annotationsActionsDisabled()) {
       return;
     }
 
-    window.WasmModule?.reset_annotations();
+    visualizedVolume?.clearActiveAnnotationChannel();
   };
 
   const handleChangeTFColor = (
@@ -396,11 +400,11 @@ const Visualization = observer(({ open, close }: Props) => {
             </Tooltip>
 
             <Button
-              onClick={handleResetAnnotations}
+              onClick={handleClearAnnotations}
               className={classes.Button}
               disabled={annotationsActionsDisabled()}
             >
-              Reset Annotations
+              Clear Annotation
             </Button>
           </div>
 

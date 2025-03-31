@@ -109,6 +109,7 @@ export const VisualizedVolume = types
     fullscreen: types.optional(types.boolean, false),
     showRawClippingPlane: types.optional(types.boolean, false),
     eraseMode: types.optional(types.boolean, false),
+    saveAsNew: types.optional(types.array(types.boolean), Array(4).fill(false)),
   })
   .views((self) => ({
     get rawSettings() {
@@ -131,6 +132,11 @@ export const VisualizedVolume = types
     },
   }))
   .actions((self) => ({
+    resetSaveAsNew() {
+      for (let i = 0; i < self.saveAsNew.length; i++) {
+        self.saveAsNew[i] = false;
+      }
+    },
     afterAttach() {
       if (!window.WasmModule) {
         return;
@@ -192,14 +198,25 @@ export const VisualizedVolume = types
         self.setFullscreen(false);
       }
     },
+    clearActiveAnnotationChannel() {
+      if (
+        !window.WasmModule ||
+        self.manualLabelIndex > 4 ||
+        self.manualLabelIndex < 0
+      ) {
+        return;
+      }
+      self.saveAsNew[self.manualLabelIndex] = true;
+      window.WasmModule?.clear_annotations(self.manualLabelIndex);
+    },
   }))
   .actions((self) => ({
     setLabelEditingMode: flow(function* setLabelEditingMode(enable: boolean) {
+      self.resetSaveAsNew();
       if (!enable) {
         self.labelEditingMode = false;
-        self.setClippingPlane("0");
         window.WasmModule?.enable_annotation_mode(false);
-        window.WasmModule?.reset_annotations();
+        window.WasmModule?.clear_annotations(-1);
         return;
       }
       let toastId = null;
@@ -234,6 +251,10 @@ export const VisualizedVolume = types
         self.labelEditingMode = enable;
         window.WasmModule?.enable_annotation_mode(true);
         self.setManualLabelIndex(0);
+
+        if (self.clippingPlane === "0") {
+          self.setClippingPlane("2");
+        }
 
         toast.update(toastId, {
           render: "Labeling mode enabled.",
