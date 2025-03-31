@@ -109,7 +109,7 @@ const SideControls = observer(() => {
             LabelIcon={Status24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.Status}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Status)}
-            disabled={user === undefined}
+            disabled={user.isGuest}
           />
 
           <WidgetToggleButton

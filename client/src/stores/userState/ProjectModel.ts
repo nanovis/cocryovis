@@ -8,6 +8,7 @@ interface ProjectDB {
   name: string;
   description: string;
   ownerId: number;
+  publicAccess: number;
   accessLevel: number;
   volumes: VolumeDB[];
   models: ModelDB[];
@@ -20,6 +21,7 @@ export const Project = types
     description: types.string,
     ownerId: types.integer,
     accessLevel: types.integer,
+    publicAccess: types.integer,
     projectVolumes: ProjectVolumes,
     projectModels: ProjectModels,
   })
@@ -30,6 +32,14 @@ export const Project = types
     get hasWriteAccess() {
       return self.accessLevel >= 1;
     },
+  }))
+  .actions((self) => ({
+    setPublicAccess(accessLevel: number) {
+      self.publicAccess = accessLevel;
+    },
+    getProjectUrl() {
+      return `${window.location.origin}/project/${self.id}`;
+    },
   }));
 
 export interface ProjectInstance extends Instance<typeof Project> {}
@@ -38,7 +48,6 @@ export const UserProjects = types
   .model({
     projects: types.map(Project),
     activeProjectId: types.maybe(types.integer),
-    state: types.enumeration("State", ["pending", "done", "error"]),
   })
   .views((self) => ({
     get user() {
@@ -51,14 +60,45 @@ export const UserProjects = types
     },
   }))
   .actions((self) => ({
-    setActiveProject(projectId: number) {
-      if (!self.projects.has(projectId)) {
-        throw new Error(`Project with id ${projectId} not found`);
-      }
-      self.activeProjectId = projectId;
+    clear() {
+      self.projects.clear();
+      self.activeProjectId = undefined;
     },
+    fetchProject: flow(function* fetchProject(id: number) {
+      try {
+        const response = yield Utils.sendReq(`project/${id}/deep`, {
+          method: "GET",
+        });
+        // Check if the model is still alive after async call
+        if (!isAlive(self)) {
+          return;
+        }
+
+        const project = yield response.json();
+        if (!isAlive(self)) {
+          return;
+        }
+
+        if (!project) {
+          throw new Error("Project not found");
+        }
+
+        self.projects.set(project.id, {
+          ...project,
+          projectModels: { projectId: project.id },
+          projectVolumes: { projectId: project.id },
+        });
+
+        const newProject = self.projects.get(project.id);
+
+        newProject?.projectVolumes.setVolumes(project.volumes);
+        newProject?.projectModels.setModels(project.models);
+      } catch (error) {
+        console.error("Failed to fetch projects", error);
+        throw error;
+      }
+    }),
     fetchProjects: flow(function* fetchProjects() {
-      self.state = "pending";
       try {
         const response = yield Utils.sendReq("projects-deep", {
           method: "GET",
@@ -94,17 +134,14 @@ export const UserProjects = types
         if (!foundProjectId) {
           self.activeProjectId = undefined;
         }
-        self.state = "done";
       } catch (error) {
         console.error("Failed to fetch projects", error);
-        self.state = "error";
       }
     }),
     createProject: flow(function* createProject(
       projectName: string,
       projectDescription: string
     ) {
-      self.state = "pending";
       try {
         const response = yield Utils.sendRequestWithToast("projects", {
           method: "POST",
@@ -135,15 +172,11 @@ export const UserProjects = types
         });
 
         self.activeProjectId = project.id;
-
-        self.state = "done";
       } catch (error) {
         console.error("Failed to fetch projects", error);
-        self.state = "error";
       }
     }),
     deleteProject: flow(function* deleteProject(projectId: number) {
-      self.state = "pending";
       try {
         yield Utils.sendRequestWithToast(`project/${projectId}`, {
           method: "DELETE",
@@ -155,12 +188,20 @@ export const UserProjects = types
         self.projects.delete(projectId.toString());
 
         self.activeProjectId = undefined;
-
-        self.state = "done";
       } catch (error) {
         console.error("Failed to delete project", error);
-        self.state = "error";
       }
+    }),
+  }))
+  .actions((self) => ({
+    setActiveProject: flow(function* setActiveProject(projectId: number) {
+      if (!self.projects.has(projectId)) {
+        yield self.fetchProject(projectId);
+        if (!isAlive(self)) {
+          return;
+        }
+      }
+      self.activeProjectId = projectId;
     }),
   }));
 

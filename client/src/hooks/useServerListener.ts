@@ -7,12 +7,9 @@ import { CheckpointSnapshotIn } from "../stores/userState/CheckpointModel";
 import { TaskHistorySnapshotIn } from "../stores/userState/Status";
 import { RawVolumeSnapshotIn } from "../stores/userState/RawVolumeModel";
 
-export function useServerListener(
-  websocketUrl: string,
-  user: UserInstance | undefined
-) {
+export function useServerListener(websocketUrl: string, user: UserInstance) {
   const shouldReconnect = () => {
-    return !!user;
+    return !user.isGuest;
   };
 
   const { lastMessage, lastJsonMessage, connectionStatus } =
@@ -90,15 +87,15 @@ export function useServerListener(
   };
 
   const handleInsertTaskHistory = (contents: TaskHistorySnapshotIn) => {
-    user?.status.appendTaskHistory(contents);
+    user.status?.appendTaskHistory(contents);
   };
 
   const handleCPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
-    user?.status.setCPUTaskQueue(contents);
+    user.status?.setCPUTaskQueue(contents);
   };
 
   const handleGPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
-    user?.status.setGPUTaskQueue(contents);
+    user.status?.setGPUTaskQueue(contents);
   };
 
   return connectionStatus;

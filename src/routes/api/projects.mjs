@@ -3,7 +3,7 @@
 import express, { Router } from 'express';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import GPUTaskHandler from '../../tools/gpu-task-handler.mjs';
-import { restrictApi } from '../../middleware/restrict.mjs';
+import { restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
 import ProjectController from '../../controllers/project-controller.mjs';
 import VolumeController from '../../controllers/volume-controller.mjs';
@@ -53,10 +53,12 @@ projectsApi.get(`/projects-deep`, restrictApi, ProjectController.getAllUserProje
 projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 
 // Get Project
-projectsApi.get(`/project/:idProject`, restrictApi, ProjectController.getProject);
+projectsApi.get(`/project/:idProject`, restrictReadProjectAccess, ProjectController.getProject);
+// Get Project
+projectsApi.get(`/project/:idProject/deep`, restrictReadProjectAccess, ProjectController.getProjectDeep);
 
 // Get Project Access Info
-projectsApi.get(`/project/:idProject/access`, restrictApi, ProjectController.getAccessInfo);
+projectsApi.get(`/project/:idProject/access`, restrictReadProjectAccess, ProjectController.getAccessInfo);
 
 // Set Project Access Info
 projectsApi.post(`/project/:idProject/access`, restrictApi, ProjectController.setAccess);
@@ -93,8 +95,8 @@ projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
 /////// VOLUMES
 
 // Get Volumes from project
-projectsApi.get(`/project/:idProject/volumes`, restrictApi, VolumeController.getVolumesFromProject);
-projectsApi.get(`/project/:idProject/volumes/deep`, restrictApi, VolumeController.getVolumesFromProjectDeep);
+projectsApi.get(`/project/:idProject/volumes`, restrictReadProjectAccess, VolumeController.getVolumesFromProject);
+projectsApi.get(`/project/:idProject/volumes/deep`, restrictReadProjectAccess, VolumeController.getVolumesFromProjectDeep);
 
 // Create New Volume
 projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);
@@ -103,7 +105,7 @@ projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.cr
 projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, VolumeController.cloneVolume);
 
 // Get Volume
-projectsApi.get(`/volume/:idVolume`, restrictApi, VolumeController.getVolume);
+projectsApi.get(`/volume/:idVolume`, restrictReadVolumeAccess, VolumeController.getVolume);
 
 // Remove Volume
 projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.removeFromProject);
@@ -114,12 +116,14 @@ projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi,
 
 /////// VOLUME DATA
 
+const readVolumeDataPrefix = "/volumeData/:type/:idVolumeData";
+
 // Get Raw Data
-projectsApi.get(`/volumeData/:type/:idVolumeData`, restrictApi, 
+projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess, 
     async (req, res) => VolumeDataController.getById(VolumeDataType.mapName(req.params.type), req, res));
 
 // Get Raw Data Files
-projectsApi.get(`/volumeData/:type/:idVolumeData/data`, restrictApi,
+projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess,
     async (req, res) => VolumeDataController.getData(VolumeDataType.mapName(req.params.type), req, res));
 
 // Update Raw Data
@@ -127,7 +131,7 @@ projectsApi.put(`/volumeData/:type/:idVolumeData`, restrictApi,
     async (req, res) => VolumeDataController.update(VolumeDataType.mapName(req.params.type), req, res));
 
 // Visualize
-projectsApi.get(`/volumeData/:type/:idVolumeData/visualization-data`, restrictApi, 
+projectsApi.get(`${readVolumeDataPrefix}/visualization-data`, restrictReadVolumeDataAccess, 
     async (req, res) => VolumeDataController.getVolumeVisualizationFiles(VolumeDataType.mapName(req.params.type), req, res));
 
 // Create from Files
@@ -148,16 +152,16 @@ projectsApi.put(`/volume/:idVolume/volumeData/:type/:idVolumeData/update-annotat
 
     
 // Download Raw Volume Data
-projectsApi.get(`/volumeData/:type/:idVolumeData/download-full`, restrictApi, 
+projectsApi.get(`${readVolumeDataPrefix}/download-full`, restrictReadVolumeDataAccess, 
     async (req, res) => VolumeDataController.downloadFullVolumeData(VolumeDataType.mapName(req.params.type), req, res));
 
-projectsApi.get(`/volumeData/:type/:idVolumeData/download-raw-file`, restrictApi,
+projectsApi.get(`${readVolumeDataPrefix}/download-raw-file`, restrictReadVolumeDataAccess,
     async (req, res) => VolumeDataController.downloadRawFile(VolumeDataType.mapName(req.params.type), req, res));
 
-projectsApi.get(`/volumeData/:type/:idVolumeData/download-settings-file`, restrictApi, 
+projectsApi.get(`${readVolumeDataPrefix}/download-settings-file`, restrictReadVolumeDataAccess, 
     async (req, res) => VolumeDataController.downloadSettingsFile(VolumeDataType.mapName(req.params.type), req, res));
 
-projectsApi.get(`/volumeData/:type/:idVolumeData/download-mrc-file`, restrictApi, 
+projectsApi.get(`${readVolumeDataPrefix}/download-mrc-file`, restrictReadVolumeDataAccess, 
     async (req, res) => VolumeDataController.downloadMrcFile(VolumeDataType.mapName(req.params.type), req, res));
 
 // Delete Volume Data
@@ -181,7 +185,7 @@ projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.crea
 projectsApi.post(`/project/:idProject/model/:idModel/clone`, restrictApi, ModelController.cloneModel);
 
 // Get Model
-projectsApi.get(`/model/:idModel`, restrictApi, ModelController.getModel);
+projectsApi.get(`/model/:idModel`, restrictReadModelAccess, ModelController.getModel);
 
 // Remove Model
 projectsApi.delete(`/project/:idProject/model/:idModel`, restrictApi, ModelController.removeFromProject);
@@ -189,35 +193,35 @@ projectsApi.delete(`/project/:idProject/model/:idModel`, restrictApi, ModelContr
 /////// CHECKPOINTS
 
 // Get checkpoint info
-projectsApi.get(`/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.getCheckpoint);
+projectsApi.get(`/checkpoint/:idCheckpoint`, restrictReadCheckpointAccess, CheckpointController.getCheckpoint);
 
 // Delete checkpoint
 projectsApi.delete(`/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
 
 // Get checkpoints from model
-projectsApi.get(`/model/:idModel/checkpoints`, restrictApi, CheckpointController.getCheckpointsFromModel);
+projectsApi.get(`/model/:idModel/checkpoints`, restrictReadCheckpointAccess, CheckpointController.getCheckpointsFromModel);
 
 // Upload new checkpoints
 projectsApi.post(`/model/:idModel/checkpoints`, restrictApi, CheckpointController.uploadCheckpoints);
 
 // Download checkpoint
-projectsApi.get(`/checkpoint/:idCheckpoint/download`, restrictApi, CheckpointController.downloadCheckpoint);
+projectsApi.get(`/checkpoint/:idCheckpoint/download`, restrictReadCheckpointAccess, CheckpointController.downloadCheckpoint);
 
 // Download checkpoint
-projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, restrictApi, CheckpointController.checkpointToText);
+projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, restrictReadCheckpointAccess, CheckpointController.checkpointToText);
 
 // Convert checkpoint to text
 projectsApi.post(`/checkpoint/to-text`, CheckpointController.checkpointFileToText);
 
 /////// RESULTS
 // Get Result
-projectsApi.get(`/result/:idResult`, restrictApi, ResultController.getById);
+projectsApi.get(`/result/:idResult`, restrictReadModelAccess, ResultController.getById);
 
 // Get Result Details
-projectsApi.get(`/result/:idResult/details`, restrictApi, ResultController.getDetails);
+projectsApi.get(`/result/:idResult/details`, restrictReadModelAccess, ResultController.getDetails);
 
 // Get Results From Volume
-projectsApi.get(`/volume/:idVolume/results`, restrictApi, ResultController.getFromVolume);
+projectsApi.get(`/volume/:idVolume/results`, restrictReadModelAccess, ResultController.getFromVolume);
 
 // Create Result from Fules
 projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
@@ -226,7 +230,7 @@ projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.crea
 projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultController.removeFromVolume);
 
 // Result vizualization data
-projectsApi.get(`/result/:idResult/data`, restrictApi, ResultController.getResultData);
+projectsApi.get(`/result/:idResult/data`, restrictReadModelAccess, ResultController.getResultData);
 
 // Pre Processing
 projectsApi.post(`/preprocessing/:type/:idVolumeData/visualization-data`, restrictApi, 

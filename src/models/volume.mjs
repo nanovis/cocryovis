@@ -26,7 +26,8 @@ export default class Volume extends DatabaseModel {
     static modelName = "volume";
     static lockManager = new WriteLockManager(this.modelName);
     static annotationsTempDirectory = path.join(
-        appConfig.tempPath, "annotations"
+        appConfig.tempPath,
+        "annotations"
     );
 
     static get db() {

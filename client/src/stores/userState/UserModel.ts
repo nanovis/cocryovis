@@ -1,4 +1,4 @@
-import { Instance, SnapshotIn, types, flow } from "mobx-state-tree";
+import { Instance, SnapshotIn, types, flow, isAlive } from "mobx-state-tree";
 import { UserProjects, UserProjectsInstance } from "./ProjectModel";
 import { Status } from "./Status";
 
@@ -11,13 +11,18 @@ export interface UserDB {
 
 export const User = types
   .model({
-    id: types.identifierNumber,
-    name: types.string,
-    username: types.string,
-    email: types.string,
-    userProjects: UserProjects,
-    status: Status,
+    id: types.optional(types.identifierNumber, -1),
+    name: types.optional(types.string, "Guest"),
+    username: types.optional(types.string, "Guest"),
+    email: types.optional(types.string, ""),
+    userProjects: types.optional(UserProjects, {}),
+    status: types.maybe(Status),
   })
+  .views((self) => ({
+    get isGuest() {
+      return self.id < 0;
+    },
+  }))
   .actions((self) => ({
     async setUserProjects(userProjects: UserProjectsInstance) {
       self.userProjects = userProjects;

@@ -40,6 +40,25 @@ export default class Result extends DatabaseModel {
     }
 
     /**
+     * @param {Number} id
+     * @return {Promise<import("./volume.mjs").VolumeDB[]>}
+     */
+    static async getVolumes(id) {
+        const result = await this.db.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                volumes: true,
+            },
+        });
+        if (result === null) {
+            throw new ApiError(400, `Result with id ${id} not found.`);
+        }
+        return result.volumes;
+    }
+
+    /**
      * @param {Number} volumeId
      */
     static async getFromVolume(

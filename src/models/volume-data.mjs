@@ -60,6 +60,38 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
+     * @param {Number} volumeDataId
+     * @param {Number} volumeId
+     * @return {Promise<boolean>}
+     */
+    static async belongsToVolume(volumeDataId, volumeId) {
+        const volumeData = await this.db.findUnique({
+            where: { id: volumeDataId },
+            include: {
+                volumes: true,
+            },
+        });
+        if (!volumeData || !volumeData.volumes.some((v) => v.id === volumeId)) {
+            return false;
+        }
+        return true;
+    }
+
+     /**
+     * @param {Number} id
+     * @return {Promise<VolumeDB[]>}
+     */
+    static async getVolumes(id) {
+        const volumeData = await this.db.findUnique({
+            where: { id: id },
+            include: {
+                volumes: true,
+            },
+        });
+        return volumeData?.volumes;
+    }
+
+    /**
      * @param {Number} creatorId
      * @param {Number} volumeId
      * @return {Promise<Object>}

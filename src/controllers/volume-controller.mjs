@@ -111,17 +111,11 @@ export default class VolumeController {
      * @param {Response} res
      */
     static async addAnnotations(req, res) {
-        if (!req.files || !req.files.file) {
+        if (!req.body) {
             throw new ApiError(400, "No annotations file found.");
         }
-        if (Array.isArray(req.files.file)) {
-            throw new ApiError(400, "To many files uploaded.");
-        }
-        const annotationsFile = await fsPromises.readFile(
-            req.files.file.tempFilePath
-        );
-
-        const annotations = JSON.parse(annotationsFile.toString("utf8"));
+        
+        const annotations = req.body;
 
         if (!Array.isArray(annotations)) {
             throw new ApiError(400, "Unknown annotations format.");

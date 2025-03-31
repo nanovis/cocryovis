@@ -319,6 +319,7 @@ interface EmbindModule {
   showImGui(_0: boolean): void;
   save_volume(_0: EmbindString): void;
   on_resize(_0: number, _1: number): void;
+  clear_annotations(_0: number): void;
   reset_annotations(): void;
   loadForSart(_0: EmbindString, _1: number): any;
   doInference(_0: EmbindString, _1: EmbindString): any;

@@ -36,6 +36,25 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
+     * @param {Number} id
+     * @return {Promise<import("./model.mjs").ModelDB[]>}
+     */
+    static async getModels(id) {
+        const models = await this.db.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                models: true,
+            },
+        });
+        if (models === null) {
+            throw new ApiError(404, "Checkpoint not found");
+        }
+        return models.models;
+    }
+
+    /**
      * @param {Number} modelId
      * @return {Promise<CheckpointDB[]>}
      */

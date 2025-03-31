@@ -45,6 +45,20 @@ export default class ProjectController {
 
     /**
      * @param {Request} req
+     * @param {Response} res
+     */
+    static async getProjectDeep(req, res) {
+        const userId = req.session?.user?.id;
+        const project = await Project.getByIdDeep(
+            Number(req.params.idProject),
+            userId
+        );
+
+        res.json(project);
+    }
+
+    /**
+     * @param {Request} req
      * @returns {import("../models/project.mjs").Options}
      */
     static #parseOptionQuery(req) {
