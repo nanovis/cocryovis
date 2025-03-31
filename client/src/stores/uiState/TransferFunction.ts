@@ -24,28 +24,6 @@ export const TransferFunction = types
     },
   }))
   .actions((self) => ({
-    setRampLow(value: number) {
-      self.rampLow = Math.min(value / 100, self.rampHigh);
-      this.updateRenderer();
-    },
-    setRampHigh(value: number) {
-      self.rampHigh = Math.max(self.rampLow, value / 100);
-      this.updateRenderer();
-    },
-    setColor(red: number, green: number, blue: number) {
-      self.red = red;
-      self.green = green;
-      self.blue = blue;
-      this.updateRenderer();
-    },
-    setValues(values: Partial<Record<keyof typeof self, any>>) {
-      Object.keys(values).forEach((key) => {
-        if (key in self) {
-          (self as any)[key] = values[key as keyof typeof values];
-        }
-      });
-      this.updateRenderer();
-    },
     updateRenderer() {
       window.WasmModule?.adjustTransferFunction(
         getParentOfType(self, VolVisSettings).index,
@@ -55,6 +33,30 @@ export const TransferFunction = types
         self.blue,
         self.green
       );
+    },
+  }))
+  .actions((self) => ({
+    setRampLow(value: number) {
+      self.rampLow = Math.min(value / 100, self.rampHigh);
+      self.updateRenderer();
+    },
+    setRampHigh(value: number) {
+      self.rampHigh = Math.max(self.rampLow, value / 100);
+      self.updateRenderer();
+    },
+    setColor(red: number, green: number, blue: number) {
+      self.red = red;
+      self.green = green;
+      self.blue = blue;
+      self.updateRenderer();
+    },
+    setValues(values: Partial<Record<keyof typeof self, any>>) {
+      Object.keys(values).forEach((key) => {
+        if (key in self) {
+          (self as any)[key] = values[key as keyof typeof values];
+        }
+      });
+      self.updateRenderer();
     },
     handleTFUpload: flow(function* handleTFUpload(files: FileList | null) {
       if (!files || files.length < 1) {
@@ -104,6 +106,8 @@ export const TransferFunction = types
       if (Object.hasOwn(newTransferFunction, "comment")) {
         self.comment = newTransferFunction.comment;
       }
+
+      self.updateRenderer();
     }),
   }));
 
