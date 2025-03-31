@@ -147,6 +147,10 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
   const [isHoveringOverTagPicker, setIsHoveringOverTagPicker] = useState(false);
 
+  const canSetSharing = () => {
+    return !user.isGuest && user.id === activeProject?.ownerId;
+  };
+
   const handleScroll = () => {
     const element = scrollRef.current;
     if (element) {
@@ -436,7 +440,9 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                     pinned: true,
                   }}
                   size="large"
-                  disabled={pendingChanges.size > 0 || pageBusy()}
+                  disabled={
+                    pendingChanges.size > 0 || pageBusy() || !canSetSharing()
+                  }
                 >
                   <TagPickerControl
                     className={classes.userSelection}
@@ -549,6 +555,16 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
               >
                 <div></div>
               </Tooltip>
+              <Tooltip
+                content={
+                  "Only owner of the project can set access permissions."
+                }
+                relationship={"label"}
+                visible={!canSetSharing() && isHoveringOverTagPicker}
+                positioning="below"
+              >
+                <div></div>
+              </Tooltip>
             </div>
             {selectedIds.length === 0 && usersWithAccess?.length > 0 && (
               <div
@@ -631,6 +647,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                                     data.optionText === "Read & Write" ? 1 : 0
                                   )
                                 }
+                                disabled={!canSetSharing() || pageBusy()}
                               >
                                 <Option checkIcon={<></>} value="Read & Write">
                                   Read & Write
@@ -650,6 +667,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                                 size="large"
                                 style={{ marginRight: "10px" }}
                                 onClick={() => handleOnRemoveAccess(user.id)}
+                                disabled={!canSetSharing() || pageBusy()}
                               />
                             </TableCellActions>
                           </TableCell>
@@ -728,7 +746,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                   </Button>
                   <Button
                     appearance="primary"
-                    disabled={pageBusy()}
+                    disabled={pageBusy() || !canSetSharing()}
                     onClick={onConfirmChanges}
                     style={{ marginLeft: "20px" }}
                   >

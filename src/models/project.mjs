@@ -72,10 +72,6 @@ export default class Project extends DatabaseModel {
         } else if (project.projectAccess.length > 0) {
             projectWithAccessLevel.accessLevel =
                 project.projectAccess[0].accessLevel;
-        } else if (project.publicAccess === 1) {
-            projectWithAccessLevel.accessLevel = 0;
-        } else {
-            throw new ApiError(403, "Access denied");
         }
 
         return projectWithAccessLevel;

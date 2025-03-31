@@ -112,24 +112,28 @@ const MenuBar = observer(
               ]}
             />
           )}
-          {!user.isGuest && user.userProjects.activeProjectId && (
+          {user.userProjects.activeProjectId && (
             <div style={{ display: "flex", alignItems: "center" }}>
               <Label style={{ marginLeft: "10px" }}>
                 {"Active Project: "} {user.userProjects.activeProject?.name}
               </Label>
-              <Tooltip
-                content={"Sharing"}
-                relationship={"label"}
-                appearance="inverted"
-                withArrow={true}
-              >
-                <Button
-                  style={{ marginLeft: "10px" }}
-                  appearance="subtle"
-                  onClick={() => setIsShareProjectOpen(true)}
-                  icon={<PeopleAdd20Filled />}
-                ></Button>
-              </Tooltip>
+              {!user.isGuest &&
+                user.userProjects.activeProject &&
+                user.userProjects.activeProject.accessLevel >= 0 && (
+                  <Tooltip
+                    content={"Sharing"}
+                    relationship={"label"}
+                    appearance="inverted"
+                    withArrow={true}
+                  >
+                    <Button
+                      style={{ marginLeft: "10px" }}
+                      appearance="subtle"
+                      onClick={() => setIsShareProjectOpen(true)}
+                      icon={<PeopleAdd20Filled />}
+                    />
+                  </Tooltip>
+                )}
             </div>
           )}
         </div>
