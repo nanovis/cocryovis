@@ -27,50 +27,6 @@ export const User = types
     async setUserProjects(userProjects: UserProjectsInstance) {
       self.userProjects = userProjects;
     },
-    // login: flow(function* login(userData: UserDB) {
-    //   console.log("Login action called with data:", userData);
-
-    //   self.id = userData.id;
-    //   self.name = userData.name;
-    //   self.username = userData.username;
-    //   self.email = userData.email;
-    //   self.userProjects.clear();
-    //   self.status = Status.create({});
-
-    //   const expirationTime = new Date(new Date().getTime() + 60 * 1000 * 24);
-    //   Cookies.set(CookieName, JSON.stringify(userData), {
-    //     expires: expirationTime,
-    //   });
-
-    //   yield self.userProjects.fetchProjects();
-    //   if (!isAlive(self)) {
-    //     return;
-    //   }
-    //   yield self.status.fetchStatus();
-    //   if (!isAlive(self)) {
-    //     return;
-    //   }
-    //   console.log("User data after login:", self);
-    // }),
-
-    // logout: flow(function* logout() {
-    //   try {
-    //     yield Utils.sendReq("logout", {
-    //       method: "POST",
-    //     });
-    //     self.id = -1;
-    //     self.name = "Guest";
-    //     self.username = "Guest";
-    //     self.email = "";
-    //     self.status = undefined;
-    //     self.userProjects.clear();
-
-    //     Cookies.remove(CookieName);
-    //     window.location.reload();
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }),
   }));
 
 export interface UserInstance extends Instance<typeof User> {}

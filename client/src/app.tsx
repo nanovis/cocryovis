@@ -87,7 +87,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
     };
 
     const resolveProjectUrl = async () => {
-      console.log("Resolving project URL");
       const match = window.location.pathname.match(/^\/project\/(\w+)\/?$/);
       if (match) {
         window.history.replaceState(null, "", "/");

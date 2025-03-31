@@ -14,7 +14,6 @@ const RootStore = types
   })
   .actions((self) => ({
     login: flow(function* login(userData: UserDB) {
-      console.log("Login action called with data:", userData);
       self.uiState.visualizedVolume = undefined;
       self.user = User.create({
         ...userData,
@@ -35,7 +34,6 @@ const RootStore = types
           return;
         }
       }
-      console.log("User data after login:", self.user);
       return;
     }),
     logout: flow(function* logout() {
