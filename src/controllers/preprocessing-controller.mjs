@@ -7,6 +7,8 @@ import Utils from "../tools/utils.mjs";
 import fsPromises from "node:fs/promises";
 import MotionCorHandler from "../tools/motioncor-handler.mjs";
 import GCTFFindHandler from "../tools/gctffind-handler.mjs";
+import archiver from "archiver";
+import fs from "fs";
 
 export default class PreProcessingController {
     static async runMotionCor3(type, req, res) {
@@ -158,6 +160,17 @@ export default class PreProcessingController {
         const volumeData = await VolumeDataFactory.getClass(type).getById(
             Number(req.params.idVolumeData)
         );
+
+        const {
+            peak,
+            diff,
+            grow,
+            iterationsTSA,
+            patchSizeTSA,
+            patchRadius,
+            pixSizeTSA,
+            patchPixSize
+        } = req.body;
     
         const volumePath = volumeData.path;
         const mrcFilePath = path.resolve(volumeData.mrcFilePath);
@@ -171,19 +184,23 @@ export default class PreProcessingController {
         const alignedSt = path.resolve(volumePath, `${baseName}_aligned.st`);
         const logFile = path.resolve(volumePath, `${baseName}_align.log`);
         const residualFile = path.resolve(volumePath, `${baseName}_residual.txt`);
+        const outputModelFile = path.resolve(volumePath, `${baseName}_output.fid`);
     
+
+        console.log("CCDERASER------");
         // 1. Run CCDERASER
         await Utils.runScript("ccderaser", [
             "-input", mrcFilePath,
             "-output", fixedPath,
             "-find",
-            "-peak", "5.0",
-            "-diff", "5.0",
-            "-grow", "2.0",
-            "-iterations", "3"
+            "-peak", peak.toString(),
+            "-diff", diff.toString(),
+            "-grow", grow.toString(),
+            "-iterations", iterationsTSA.toString(),
         ], volumePath, console.log, console.error);
     
         // 2. Extract tilt angles
+        console.log("EXTRACTTILTS------");
         await Utils.runScript("extracttilts", [
             "-input", fixedPath,
             "-output", tiltFile
@@ -193,18 +210,17 @@ export default class PreProcessingController {
             fixedPath,
             fidModel,
             "-tiltfile", tiltFile,
-            "-number", "4,4",
-            "-size", "680,680",
-            "-radius1", "0.125"
+            "-number", `${patchSizeTSA},${patchSizeTSA}`,
+            "-size", `${patchPixSize},${patchPixSize}`,
+            "-radius1", patchRadius.toString()
         ];
-        
-        console.log("TILTXCORR args:", args);
-
     
         // 3. Patch tracking with tiltxcorr
+        console.log("TILTXCORR------");
         await Utils.runScript("tiltxcorr", args, volumePath, console.log, console.error);
     
         // 4. Solve alignment with tiltalign
+        console.log("TILTALIGN------");
         await Utils.runScript("tiltalign", [
             `${baseName}_align.ta`,       // Input parameter 1 (name only)
             `${baseName}_align.log`,      // Input parameter 2 (output log file)
@@ -212,15 +228,15 @@ export default class PreProcessingController {
             "-ImageFile", fixedPath,
             "-TiltFile", tiltFile,
             "-IncludeStartEndInc", "1,61,1",
-            "-RotationAngle", "-83.5",
+            "-RotationAngle", "60",
             "-OutputTransformFile", xfFile,
             // "-RobustFitting",
             // "-WeightWholeTracks",
-            "-OutputResidualFile", residualFile
+            "-OutputResidualFile", residualFile,
+            "-OutputModelFile", outputModelFile 
         ], volumePath, console.log, console.error, [139]);
 
-        
-        // ✅ NEW: Trim to first 56 sections
+        console.log("NEWSTACK------");
         await Utils.runScript("newstack", [
             "-secs", "1-56",
             fixedPath,
@@ -235,19 +251,36 @@ export default class PreProcessingController {
             "-xform", xfFile
         ], volumePath, console.log, console.error);
     
-        // ✅ Final output: aligned.st and final.xf
-        res.json({
-            message: "Tilt series alignment pipeline completed successfully.",
-            output: {
-                fixedStack: fixedPath,
-                trimmedStack: fixedTrimmedPath,
-                tiltAngles: tiltFile,
-                patchModel: fidModel,
-                alignmentLog: logFile,
-                transformFile: xfFile,
-                alignedStack: alignedSt
+        // Stream zip with relevant files
+        const filesToZip = [
+            // fixedTrimmedPath,
+            tiltFile,
+            fidModel,
+            logFile,
+            xfFile,
+            alignedSt,
+            // residualFile,
+            // outputModelFile
+        ];
+
+        console.log("ZIPPING------");
+        const archive = archiver("zip", { zlib: { level: 0 } });
+        const zipName = `${baseName}_aligned_output.zip`;
+
+        res.setHeader("Content-Type", "application/zip");
+        res.setHeader("Content-Disposition", `attachment; filename=\"${zipName}\"`);
+
+        archive.pipe(res);
+
+        for (const file of filesToZip) {
+            if (fs.existsSync(file)) {
+                archive.file(file, { name: path.basename(file) });
             }
-        });
+        }
+
+        await archive.finalize();
+
+        
     }
     
 }

@@ -442,7 +442,7 @@ export default class Utils {
                     if (code === 139) {
                         console.warn("Warning: tiltalign exited with code 139 (SegFault after success)");
                     }
-                    resolve(); // pretend it succeeded
+                    resolve();//omit for this code
                 } else {
                     reject(
                         new Error(

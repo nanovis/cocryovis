@@ -221,7 +221,7 @@ const CryoTools = observer(({ open, close }: Props) => {
     let toastId = null;
 
     try {
-      toastId = toast.loading("Applying tilt series alignment...");
+      toastId = toast.loading("Applying Tilt Series Alignment...");
 
       const tiltSeriesSettings = {
         peak: Number(peak),
@@ -246,10 +246,8 @@ const CryoTools = observer(({ open, close }: Props) => {
         }
       );
 
-      // Instead of parsing JSON, handle the response as a blob
       const blob = await response.blob();
 
-      // Optionally, get the filename from the Content-Disposition header
       let filename = "tilted-aligned-series.zip";
       const disposition = response.headers.get("Content-Disposition");
       if (disposition && disposition.includes("filename=")) {
@@ -316,8 +314,8 @@ const CryoTools = observer(({ open, close }: Props) => {
             <Label htmlFor="diff">Difference: [{Number(diff)}]</Label>
             <Slider
               id="peak"
-              min={1}
-              max={3}
+              min={3}
+              max={6}
               step={1}
               value={Number(diff)}
               onChange={(_, data) => setDiff(data.value.toString())}
