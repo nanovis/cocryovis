@@ -138,10 +138,12 @@ const Main = () => {
       if (spinner) {
         spinner.style.opacity = "0";
         spinner.style.visibility = "hidden";
-        setTimeout(() => spinner.remove(), 250);
+        setTimeout(() => {
+          spinner.remove();
+          rootStore.setWasmLoaded(true);
+          parseDemoUrl();
+        }, 250);
       }
-
-      parseDemoUrl();
     }, 250);
   }
 

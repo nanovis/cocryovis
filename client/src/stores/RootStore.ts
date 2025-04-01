@@ -11,8 +11,12 @@ const RootStore = types
   .model({
     user: types.optional(User, {}),
     uiState: types.optional(UiState, {}),
+    wasmLoaded: types.optional(types.boolean, false),
   })
   .actions((self) => ({
+    setWasmLoaded(loaded: boolean) {
+      self.wasmLoaded = loaded;
+    },
     login: flow(function* login(userData: UserDB) {
       self.uiState.visualizedVolume = undefined;
       self.user = User.create({
