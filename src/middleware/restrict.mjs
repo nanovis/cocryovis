@@ -92,7 +92,7 @@ export async function restrictReadProjectAccess(req, res, next) {
     if (!project) {
         throw new ApiError(404, `Project ${projectId} not found!`);
     }
-    if (!userHasReadAccessToProject(project, req.session?.user?.id)) {
+    if (!(await userHasReadAccessToProject(project, req.session?.user?.id))) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
     next();
@@ -126,7 +126,7 @@ async function userHasReadAccessToVolume(volumeId, userId) {
 export async function restrictReadVolumeAccess(req, res, next) {
     const volumeId = Number(req.params.idVolume);
 
-    if (!userHasReadAccessToVolume(volumeId, req.session?.user?.id)) {
+    if (!(await userHasReadAccessToVolume(volumeId, req.session?.user?.id))) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
 
@@ -170,11 +170,11 @@ export async function restrictReadVolumeDataAccess(req, res, next) {
     const volumeDataType = req.params.type;
 
     if (
-        !userHasReadAccessToVolumeData(
+        !(await userHasReadAccessToVolumeData(
             volumeDataId,
             VolumeDataType.mapName(volumeDataType),
             req.session?.user?.id
-        )
+        ))
     ) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
@@ -210,7 +210,7 @@ async function userHasReadAccessToResult(resultId, userId) {
 export async function restrictReadResultAccess(req, res, next) {
     const resultId = Number(req.params.idResult);
 
-    if (!userHasReadAccessToResult(resultId, req.session?.user?.id)) {
+    if (!(await userHasReadAccessToResult(resultId, req.session?.user?.id))) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
 
@@ -245,7 +245,7 @@ async function userHasReadAccessToModel(modelId, userId) {
 export async function restrictReadModelAccess(req, res, next) {
     const modelId = Number(req.params.idModel);
 
-    if (!userHasReadAccessToModel(modelId, req.session?.user?.id)) {
+    if (!(await userHasReadAccessToModel(modelId, req.session?.user?.id))) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
 
@@ -280,96 +280,14 @@ async function userHasReadAccessToCheckpoint(checkpointId, userId) {
 export async function restrictReadCheckpointAccess(req, res, next) {
     const checkpointId = Number(req.params.idCheckpoint);
 
-    if (!userHasReadAccessToCheckpoint(checkpointId, req.session?.user?.id)) {
+    if (
+        !(await userHasReadAccessToCheckpoint(
+            checkpointId,
+            req.session?.user?.id
+        ))
+    ) {
         throw new ApiError(403, `Access to ${req.path} denied!`);
     }
 
     next();
 }
-
-// /**
-//  * @param {number} volumeId
-//  * @param {ProjectDB & {volumes: VolumeDB[]}} project
-//  * @param {number | undefined} userId
-//  */
-// async function userHasReadAccessToVolume(volumeId, project, userId) {
-//     if (!project.volumes.some((v) => v.id === volumeId)) {
-//         return false;
-//     }
-//     return userHasReadAccessToProject(project, userId);
-// }
-
-// /**
-//  * @param {import("express").Request} req
-//  * @param {import("express").Response} res
-//  * @param {import("express").NextFunction} next
-//  */
-// export async function restrictReadVolumeAccess(req, res, next) {
-//     const projectId = Number(req.params.idProject);
-//     const volumeId = Number(req.params.idVolume);
-//     const project = await Project.getById(projectId);
-//     if (!project) {
-//         throw new ApiError(404, `Project ${projectId} not found!`);
-//     }
-
-//     if (!userHasReadAccessToVolume(volumeId, project, req.session?.user?.id)) {
-//         throw new ApiError(403, `Access to ${req.path} denied!`);
-//     }
-
-//     next();
-// }
-
-// /**
-//  * @param {number} volumeDataId
-//  * @param {VolumeDataType} volumeDataType
-//  * @param {number} volumeId
-//  * @param {ProjectDB & {volumes: VolumeDB[]}} project
-//  * @param {number | undefined} userId
-//  */
-// async function userHasReadAccessToVolumeData(
-//     volumeDataId,
-//     volumeDataType,
-//     volumeId,
-//     project,
-//     userId
-// ) {
-//     const partOfVolume = await VolumeDataFactory.getClass(
-//         volumeDataType
-//     ).belongsToVolume(volumeDataId, volumeId);
-
-//     if (!partOfVolume) {
-//         return false;
-//     }
-
-//     return userHasReadAccessToVolume(volumeId, project, userId);
-// }
-
-// /**
-//  * @param {import("express").Request} req
-//  * @param {import("express").Response} res
-//  * @param {import("express").NextFunction} next
-//  */
-// export async function restrictReadVolumeDataAccess(req, res, next) {
-//     const projectId = Number(req.params.idProject);
-//     const volumeId = Number(req.params.idVolume);
-//     const volumeDataId = Number(req.params.idVolumeData);
-//     const volumeDataType = req.params.volumeDataType;
-//     const project = await Project.getById(projectId);
-//     if (!project) {
-//         throw new ApiError(404, `Project ${projectId} not found!`);
-//     }
-
-//     if (
-//         !userHasReadAccessToVolumeData(
-//             volumeDataId,
-//             VolumeDataType.mapName(volumeDataType),
-//             volumeId,
-//             project,
-//             req.session?.user?.id
-//         )
-//     ) {
-//         throw new ApiError(403, `Access to ${req.path} denied!`);
-//     }
-
-//     next();
-// }

@@ -3,7 +3,7 @@
 import express, { Router } from 'express';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import GPUTaskHandler from '../../tools/gpu-task-handler.mjs';
-import { restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
+import { restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadResultAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
 import ProjectController from '../../controllers/project-controller.mjs';
 import VolumeController from '../../controllers/volume-controller.mjs';
@@ -199,7 +199,7 @@ projectsApi.get(`/checkpoint/:idCheckpoint`, restrictReadCheckpointAccess, Check
 projectsApi.delete(`/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
 
 // Get checkpoints from model
-projectsApi.get(`/model/:idModel/checkpoints`, restrictReadCheckpointAccess, CheckpointController.getCheckpointsFromModel);
+projectsApi.get(`/model/:idModel/checkpoints`, restrictReadModelAccess, CheckpointController.getCheckpointsFromModel);
 
 // Upload new checkpoints
 projectsApi.post(`/model/:idModel/checkpoints`, restrictApi, CheckpointController.uploadCheckpoints);
@@ -215,13 +215,13 @@ projectsApi.post(`/checkpoint/to-text`, CheckpointController.checkpointFileToTex
 
 /////// RESULTS
 // Get Result
-projectsApi.get(`/result/:idResult`, restrictReadModelAccess, ResultController.getById);
+projectsApi.get(`/result/:idResult`, restrictReadResultAccess, ResultController.getById);
 
 // Get Result Details
-projectsApi.get(`/result/:idResult/details`, restrictReadModelAccess, ResultController.getDetails);
+projectsApi.get(`/result/:idResult/details`, restrictReadResultAccess, ResultController.getDetails);
 
 // Get Results From Volume
-projectsApi.get(`/volume/:idVolume/results`, restrictReadModelAccess, ResultController.getFromVolume);
+projectsApi.get(`/volume/:idVolume/results`, restrictReadVolumeAccess, ResultController.getFromVolume);
 
 // Create Result from Fules
 projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
@@ -230,7 +230,7 @@ projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.crea
 projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, ResultController.removeFromVolume);
 
 // Result vizualization data
-projectsApi.get(`/result/:idResult/data`, restrictReadModelAccess, ResultController.getResultData);
+projectsApi.get(`/result/:idResult/data`, restrictReadResultAccess, ResultController.getResultData);
 
 // Pre Processing
 projectsApi.post(`/preprocessing/:type/:idVolumeData/visualization-data`, restrictApi, 
