@@ -84,7 +84,7 @@ export default class WebSocketManager {
 
 export class WebSocketInstance {
     // TODO: Use some sort of database.
-    /** @type {Map<Number, Map<String, WebSocket}>>} */
+    /** @type {Map<Number, Map<String, WebSocket>>}} */
     #connections = new Map();
     /** @type {Map<WebSocket, {userId: Number, sessionId: String}>} */
     #websocketToUserSession = new Map();
