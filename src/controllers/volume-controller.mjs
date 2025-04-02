@@ -114,7 +114,7 @@ export default class VolumeController {
         if (!req.body) {
             throw new ApiError(400, "No annotations file found.");
         }
-        
+
         const annotations = req.body;
 
         if (!Array.isArray(annotations)) {

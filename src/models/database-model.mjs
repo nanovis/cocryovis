@@ -75,7 +75,7 @@ export default class DatabaseModel {
                 return this.db.update({
                     where: { id: id },
                     data: changes,
-                    include: include
+                    include: include,
                 });
             } catch (error) {
                 if (error instanceof Prisma.PrismaClientKnownRequestError) {

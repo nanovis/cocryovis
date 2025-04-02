@@ -494,9 +494,8 @@ export default class GPUTaskHandler {
                 "results",
                 "result.json"
             );
-            const trainingResults = await fsPromises.readFile(
-                trainingResultsPath
-            );
+            const trainingResults =
+                await fsPromises.readFile(trainingResultsPath);
             const trainingResultsJSON = JSON.parse(trainingResults.toString());
 
             const bestModelPath = trainingResultsJSON.best_model_path;

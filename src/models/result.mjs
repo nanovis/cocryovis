@@ -215,9 +215,8 @@ export default class Result extends DatabaseModel {
                                 "Failed result creation: One of the volume files is missing."
                             );
                         }
-                        const settingFile = await fsPromises.readFile(
-                            settingsFilePath
-                        );
+                        const settingFile =
+                            await fsPromises.readFile(settingsFilePath);
                         const settings = JSON.parse(
                             settingFile.toString("utf8")
                         );

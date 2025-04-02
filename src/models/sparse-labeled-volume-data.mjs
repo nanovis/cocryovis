@@ -271,9 +271,8 @@ export default class SparseLabeledVolumeData extends VolumeData {
             [SparseLabeledVolumeData.modelName],
             async () => {
                 try {
-                    const volumeData = await SparseLabeledVolumeData.getById(
-                        labelId
-                    );
+                    const volumeData =
+                        await SparseLabeledVolumeData.getById(labelId);
 
                     const volumeDataSettings = JSON.parse(volumeData.settings);
 

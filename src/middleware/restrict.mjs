@@ -145,9 +145,10 @@ async function userHasReadAccessToVolumeData(
     volumeDataType,
     userId
 ) {
-    const volumes = await VolumeDataFactory.getClass(volumeDataType).getVolumes(
-        volumeDataId
-    );
+    const volumes =
+        await VolumeDataFactory.getClass(volumeDataType).getVolumes(
+            volumeDataId
+        );
     if (!volumes) {
         return false;
     }

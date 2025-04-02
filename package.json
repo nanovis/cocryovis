@@ -11,7 +11,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:db": "npx prisma studio",
     "start": "node index.mjs",
-    "start:dev": "nodemon index.mjs"
+    "start:dev": "nodemon index.mjs",
+    "format": "prettier --write ."
   },
   "repository": {
     "type": "git",
@@ -52,6 +53,7 @@
     "@types/node": "^22.7.5",
     "@types/ws": "^8.18.0",
     "nodemon": "^3.1.7",
+    "prettier": "^3.5.3",
     "prisma": "^5.18.0"
   }
 }
