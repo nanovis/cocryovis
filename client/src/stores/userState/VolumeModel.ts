@@ -364,6 +364,9 @@ export const ProjectVolumes = types
     selectedVolumeId: types.maybe(types.integer),
   })
   .views((self) => ({
+    get volumeArray() {
+      return Array.from(self.volumes.values());
+    },
     get selectedVolume() {
       return self.selectedVolumeId
         ? self.volumes.get(self.selectedVolumeId)

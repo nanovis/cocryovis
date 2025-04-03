@@ -34,11 +34,12 @@ interface Props {
 
 const NanoOtzi = observer(({ open, close }: Props) => {
   const { user } = useMst();
-  const activeProject = user?.userProjects.activeProject;
+  const activeProject = user.userProjects.activeProject;
   const projectVolumes = activeProject?.projectVolumes;
   const volumes = projectVolumes?.volumes;
   const projectModels = activeProject?.projectModels;
   const models = projectModels?.models;
+  const modelTraining = user.modelTraining;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
@@ -57,18 +58,6 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
   const [inferenceInProgress, setInferenceInProgress] = useState(false);
 
-  const [trainingModelId, setTrainingModelId] = useState<number | undefined>(
-    undefined
-  );
-  const trainingModel = trainingModelId && models?.get(trainingModelId);
-
-  const [trainingVolumes, setTrainingVolumes] = useState<string[]>([]);
-  const [validationVolumes, setValidationVolumes] = useState<string[]>([]);
-  const [testingVolumes, setTestingVolumes] = useState<string[]>([]);
-  const [trainingVolumeIds, setTrainingVolumeIds] = useState<string[]>([]);
-  const [validationVolumesIds, setValidationVolumeIds] = useState<string[]>([]);
-  const [testingVolumesIds, setTestingVolumeIds] = useState<string[]>([]);
-
   const startInference = async () => {
     if (!canDoInference()) {
       return;
@@ -86,7 +75,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             volumeId: inferenceVolumeId,
           }),
         },
-        { successText: "Inference successfuly queued!" }
+        { successText: "Inference successfuly queued!" },
       );
       setInferenceInProgress(false);
     } catch (error) {
@@ -125,7 +114,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         {
           method: "GET",
           credentials: "include",
-        }
+        },
       );
 
       const rawData = await response.json();
@@ -136,7 +125,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           method: "GET",
           credentials: "include",
         },
-        false
+        false,
       );
 
       const arrayBuffer = await response.arrayBuffer();
@@ -156,7 +145,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           method: "GET",
           credentials: "include",
         },
-        false
+        false,
       );
 
       const checkpointTxt = await response.text();
@@ -173,7 +162,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const volumeData = await window.WasmModule?.doInference(
         settingsFileName,
-        "parameters.txt"
+        "parameters.txt",
       );
 
       toast.update(toastId, {
@@ -232,7 +221,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           idVolumeData: rawData.id,
           idCheckpoint: inferenceCheckpointId,
           volumeDescriptors: volumeDescriptors,
-        })
+        }),
       );
 
       await Utils.sendReq(
@@ -241,7 +230,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           method: "POST",
           body: formData,
         },
-        false
+        false,
       );
 
       toast.update(toastId, {
@@ -284,7 +273,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     volumes?.forEach((volume) =>
-      selectionList.push(volumeSelectionProperties(volume))
+      selectionList.push(volumeSelectionProperties(volume)),
     );
     return selectionList;
   };
@@ -299,7 +288,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
   const checkpointSelectionProperties = (
     checkpoint: CheckpointInstance,
-    models: ModelInstance[]
+    models: ModelInstance[],
   ) => {
     return {
       children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
@@ -321,7 +310,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     projectModels?.uniqueCheckpoints.forEach(({ checkpoint, models }) =>
-      selectionList.push(checkpointSelectionProperties(checkpoint, models))
+      selectionList.push(checkpointSelectionProperties(checkpoint, models)),
     );
     return selectionList;
   };
@@ -359,100 +348,72 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     models?.forEach((model) =>
-      selectionList.push(modelSelectionProperties(model))
+      selectionList.push(modelSelectionProperties(model)),
     );
     return selectionList;
   };
 
   const handleTrainingModelSelect = (value: string | null) => {
-    if (!value) {
+    if (!value || !models) {
       return;
     }
-
-    setTrainingModelId(Number(value));
+    const model = models.get(Number(value));
+    if (!model) {
+      return;
+    }
+    modelTraining?.setModel(model);
   };
 
   const canDoInference = () => {
     return !inferenceInProgress && inferenceCheckpointId && inferenceVolumeId;
   };
 
-  const startTraining = async () => {
-    if (!canDoTraining()) {
-      return;
+  const onTrainingVolumeSelect = (data: OptionOnSelectData | null) => {
+    if (data?.optionValue === undefined) return;
+    const volume = volumes?.get(Number(data.optionValue));
+    if (!volume) return;
+
+    if (modelTraining.trainingVolumes.includes(volume)) {
+      modelTraining.removeTrainingVolume(volume);
+    } else {
+      modelTraining.addTrainingVolume(volume);
     }
-
-    try {
-      var trainData = {
-        modelId: trainingModelId,
-        trainingVolumes: trainingVolumeIds,
-        validationVolumes: validationVolumesIds,
-        testingVolumes: testingVolumesIds,
-      };
-
-      await Utils.sendRequestWithToast(
-        `queue-training`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(trainData),
-        },
-        { successText: "Training successfuly queued!" }
-      );
-    } catch (error) {
-      console.error("startTraining Error:", error);
-    }
-  };
-
-  const onTrainingVolumeSelect = (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => {
-    if (!data) return;
-    setTrainingVolumeIds(data.selectedOptions);
   };
 
   const onTrainingVolumeTagClick = (option: string, index: number) => {
-    const updatedTrainingVolumesIds = trainingVolumeIds.slice();
-    updatedTrainingVolumesIds.splice(index, 1);
-    setTrainingVolumeIds(updatedTrainingVolumesIds);
+    modelTraining.removeTrainingVolumeByIndex(index);
   };
 
-  const onValidationVolumeSelect = (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => {
-    if (!data) return;
-    setValidationVolumeIds(data.selectedOptions);
+  const onValidationVolumeSelect = (data: OptionOnSelectData | null) => {
+    if (data?.optionValue === undefined) return;
+    const volume = volumes?.get(Number(data.optionValue));
+    if (!volume) return;
+
+    if (modelTraining.validationVolumes.includes(volume)) {
+      modelTraining.removeValidationVolume(volume);
+    } else {
+      modelTraining.addValidationVolume(volume);
+    }
   };
 
   const onValidationVolumeTagClick = (option: string, index: number) => {
-    const updateIds = validationVolumesIds.slice();
-    updateIds.splice(index, 1);
-    setValidationVolumeIds(updateIds);
+    modelTraining.removeValidationVolumeByIndex(index);
   };
 
-  const onTestingVolumeSelect = (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => {
-    if (!data) return;
-    setTestingVolumeIds(data.selectedOptions);
+  const onTestingVolumeSelect = (data: OptionOnSelectData | null) => {
+    if (data?.optionValue === undefined) return;
+    const volume = volumes?.get(Number(data.optionValue));
+    if (!volume) return;
+
+    if (modelTraining.testingVolumes.includes(volume)) {
+      modelTraining.removeTestingVolume(volume);
+    } else {
+      modelTraining.addTestingVolume(volume);
+    }
   };
 
   const onTestingVolumeTagClick = (option: string, index: number) => {
-    const updateIds = testingVolumes.slice();
-    updateIds.splice(index, 1);
-    setTestingVolumeIds(updateIds);
-  };
-
-  const canDoTraining = () => {
-    return (
-      trainingModelId &&
-      trainingVolumeIds?.length > 0 &&
-      validationVolumesIds?.length > 0 &&
-      testingVolumesIds?.length > 0
-    );
+    modelTraining.removeTestingVolumeByIndex(index);
   };
 
   return open ? (
@@ -502,7 +463,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                 inferenceCheckpoint
                   ? checkpointSelectionProperties(
                       inferenceCheckpoint.checkpoint,
-                      inferenceCheckpoint.models
+                      inferenceCheckpoint.models,
                     )
                   : undefined
               }
@@ -584,8 +545,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           <ComboboxSearch
             selectionList={modelSelectionList()}
             selectedOption={
-              trainingModel
-                ? modelSelectionProperties(trainingModel)
+              modelTraining?.model !== undefined
+                ? modelSelectionProperties(modelTraining.model)
                 : undefined
             }
             onOptionSelect={handleTrainingModelSelect}
@@ -593,21 +554,16 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             noOptionsMessage="No models match your search."
             optionToText={({ children, value, tooltip }) => children}
             disabled={!models || models.size < 0}
-          ></ComboboxSearch>
+          />
+
           <ComboboxTagMultiselect
-            selectionList={volumeSelectionList().filter(
-              (volume) =>
-                !validationVolumesIds.includes(volume.value) &&
-                !testingVolumesIds.includes(volume.value)
+            selectionList={modelTraining.trainingVolumeOptions.map((volume) =>
+              volumeSelectionProperties(volume),
             )}
-            selectedOptions={trainingVolumeIds}
+            selectedOptions={modelTraining.trainingVolumeIds}
             onOptionSelect={onTrainingVolumeSelect}
             onTagClick={onTrainingVolumeTagClick}
-            selectionToTextMap={(volumeId) => {
-              return volumes?.get(volumeId)?.name ?? "";
-            }}
-            textState={trainingVolumes}
-            setTextState={setTrainingVolumes}
+            textState={modelTraining.trainingVolumeNames}
             title="Training Volumes"
             placeholder="Select one or more training volumes"
             noOptionsMessage="No volumes match your search."
@@ -615,19 +571,13 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           />
 
           <ComboboxTagMultiselect
-            selectionList={volumeSelectionList().filter(
-              (volume) =>
-                !trainingVolumeIds.includes(volume.value) &&
-                !testingVolumesIds.includes(volume.value)
+            selectionList={modelTraining?.validationVolumeOptions.map(
+              (volume) => volumeSelectionProperties(volume),
             )}
-            selectedOptions={validationVolumesIds}
+            selectedOptions={modelTraining.validationVolumeIds}
             onOptionSelect={onValidationVolumeSelect}
             onTagClick={onValidationVolumeTagClick}
-            selectionToTextMap={(volumeId) => {
-              return volumes?.get(volumeId)?.name ?? "";
-            }}
-            textState={validationVolumes}
-            setTextState={setValidationVolumes}
+            textState={modelTraining.validationVolumeNames}
             title="Validation Volumes"
             placeholder="Select one or more validation volumes"
             noOptionsMessage="No volumes match your search."
@@ -635,19 +585,13 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           />
 
           <ComboboxTagMultiselect
-            selectionList={volumeSelectionList().filter(
-              (volume) =>
-                !trainingVolumeIds.includes(volume.value) &&
-                !validationVolumesIds.includes(volume.value)
+            selectionList={modelTraining?.testingVolumeOptions.map((volume) =>
+              volumeSelectionProperties(volume),
             )}
-            selectedOptions={testingVolumesIds}
+            selectedOptions={modelTraining?.testingVolumeIds}
             onOptionSelect={onTestingVolumeSelect}
             onTagClick={onTestingVolumeTagClick}
-            selectionToTextMap={(volumeId) => {
-              return volumes?.get(volumeId)?.name ?? "";
-            }}
-            textState={testingVolumes}
-            setTextState={setTestingVolumes}
+            textState={modelTraining.testingVolumeNames}
             title="Testing Volumes"
             placeholder="Select one or more testing volumes"
             noOptionsMessage="No volumes match your search."
@@ -670,8 +614,10 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             <Button
               appearance="primary"
               className={globalClasses.actionButton}
-              disabled={!canDoTraining() || !activeProject?.hasWriteAccess}
-              onClick={startTraining}
+              disabled={
+                !modelTraining.canDoTraining || !activeProject?.hasWriteAccess
+              }
+              onClick={modelTraining.startTraining}
               style={{ flexGrow: 1 }}
             >
               <div className={globalClasses.actionButtonIconContainer}>

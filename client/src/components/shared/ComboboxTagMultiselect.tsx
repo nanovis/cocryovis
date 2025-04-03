@@ -44,37 +44,30 @@ const useStyles = makeStyles({
 });
 
 interface Props<
-  T extends { children: React.ReactNode | string; value: string }
+  T extends { children: React.ReactNode | string; value: string },
 > {
   selectionList: T[];
   textState: string[];
-  setTextState: React.Dispatch<React.SetStateAction<string[]>>;
   selectedOptions: string[];
-  onOptionSelect: (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => void;
+  onOptionSelect: (data: OptionOnSelectData | null) => void;
   onTagClick: (option: string, index: number) => void;
   title: string;
   placeholder: string;
   noOptionsMessage: string;
-  selectionToTextMap: (selection: string) => string;
   optionToText?: (option: T) => string;
 }
 
 const ComboboxTagMultiselect = <
-  T extends { children: React.ReactNode | string; value: string }
+  T extends { children: React.ReactNode | string; value: string },
 >({
   selectionList,
   textState,
-  setTextState,
   selectedOptions,
   onOptionSelect,
   onTagClick,
   title,
   placeholder,
   noOptionsMessage,
-  selectionToTextMap,
   optionToText = ({
     children,
     value,
@@ -89,21 +82,19 @@ const ComboboxTagMultiselect = <
 
   const handleOptionSelect = (
     event: SelectionEvents,
-    data: OptionOnSelectData
+    data: OptionOnSelectData,
   ) => {
     if (!data.optionValue) {
       setSearchQuery("");
-      onOptionSelect(event, null);
+      onOptionSelect(null);
       return;
     }
-    setTextState(data.selectedOptions.map(selectionToTextMap));
-    onOptionSelect(event, data);
+    onOptionSelect(data);
   };
 
   const handleTagClick = (option: string, index: number) => {
     const updatedselectedOptionsText = textState.slice();
     updatedselectedOptionsText.splice(index, 1);
-    setTextState(updatedselectedOptionsText);
 
     onTagClick(option, index);
   };
@@ -155,7 +146,7 @@ const ComboboxTagMultiselect = <
             </Tooltip>
           ) : (
             <div key={option.props?.value ?? -1}>{option}</div>
-          )
+          ),
         )}
       </Combobox>
     </div>
