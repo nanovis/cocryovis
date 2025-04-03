@@ -6,6 +6,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
+import appConfig from "../tools/config.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -79,7 +80,7 @@ export default class ResultController {
         }
 
         const archive = archiver("zip", {
-            zlib: { level: 9 },
+            zlib: { level: appConfig.compressionLevel },
         });
 
         res.attachment(`Result_${result.id}.zip`);

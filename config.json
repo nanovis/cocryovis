@@ -9,6 +9,7 @@
     "logPath": "./logs/",
     "ilastikQueueSize": 20,
     "gpuQueueSize": 20,
+    "compressionLevel": 9,
     "python": "python",
     "ilastik": {
         "path": "./modules/ilastik/",

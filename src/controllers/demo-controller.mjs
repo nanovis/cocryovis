@@ -3,6 +3,7 @@
 import fs from "fs";
 import archiver from "archiver";
 import { ApiError } from "../tools/error-handler.mjs";
+import appConfig from "../tools/config.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -43,7 +44,7 @@ export default class DemoController {
         const demoFiles = await fs.promises.readdir(demoPath);
 
         const archive = archiver("zip", {
-            zlib: { level: 9 },
+            zlib: { level: appConfig.compressionLevel },
         });
 
         for (const file of demoFiles) {
