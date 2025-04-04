@@ -82,7 +82,7 @@ const ComboboxTagMultiselect = <
 
   const handleOptionSelect = (
     event: SelectionEvents,
-    data: OptionOnSelectData,
+    data: OptionOnSelectData
   ) => {
     if (!data.optionValue) {
       setSearchQuery("");
@@ -146,7 +146,7 @@ const ComboboxTagMultiselect = <
             </Tooltip>
           ) : (
             <div key={option.props?.value ?? -1}>{option}</div>
-          ),
+          )
         )}
       </Combobox>
     </div>

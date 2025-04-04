@@ -53,7 +53,7 @@ export const VolumeResults = types
           method: "DELETE",
           credentials: "include",
         },
-        { successText: "Result Successfuly Removed" },
+        { successText: "Result Successfuly Removed" }
       );
       if (!isAlive(self)) {
         return;

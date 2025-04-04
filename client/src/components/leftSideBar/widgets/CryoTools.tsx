@@ -70,7 +70,7 @@ const CryoTools = observer(({ open, close }: Props) => {
 
     try {
       toastId = toast.loading("Applying CTF Estimation...");
-  
+
       const areTomoSettings = {
         kv: Number(kv),
         sphericalAberration,

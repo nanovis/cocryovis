@@ -166,9 +166,8 @@ const Local = ({ open, close }: Props) => {
 
       toastId = toast.loading("Loading raw data...");
 
-      const arrayBuffer = await Utils.readFileAsArrayBuffer(
-        inferenceRawDataFile
-      );
+      const arrayBuffer =
+        await Utils.readFileAsArrayBuffer(inferenceRawDataFile);
       if (!arrayBuffer) {
         throw new Error("Failed to read raw data file.");
       }

@@ -26,7 +26,9 @@ html {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   z-index: 1000;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s ease;
   opacity: 1;
   visibility: visible;
 }

@@ -22,10 +22,13 @@ export function useWebSocketConnection(
     if (readyState === ReadyState.OPEN) {
       console.log("Starting heartbeat interval");
 
-      heartbeatRef.current = setInterval(() => {
-        sendJsonMessage({ type: "heartbeat" });
-        console.log("Sent heartbeat");
-      }, 60 * 60 * 1000); // 1 hour
+      heartbeatRef.current = setInterval(
+        () => {
+          sendJsonMessage({ type: "heartbeat" });
+          console.log("Sent heartbeat");
+        },
+        60 * 60 * 1000
+      ); // 1 hour
 
       return () => {
         console.log("Clearing heartbeat interval");

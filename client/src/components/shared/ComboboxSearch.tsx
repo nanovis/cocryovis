@@ -16,7 +16,7 @@ interface Props<
     children: React.ReactNode | string;
     value: string;
     tooltip?: JSX.Element;
-  }
+  },
 > {
   selectionList: T[];
   selectedOption: T | undefined;
@@ -36,7 +36,7 @@ const ComboboxSearch = <
     children: React.ReactNode | string;
     value: string;
     tooltip?: JSX.Element;
-  }
+  },
 >({
   selectionList,
   selectedOption,
@@ -154,7 +154,9 @@ const ComboboxSearch = <
       </Combobox>
       {/* Attaching the tooltip directly onto combobox breaks it, so it is attached to a hidden element beside it instead.*/}
       <TooltipWrapper
-        content={!open && showTooltip ? selectedOption?.tooltip ?? null : null}
+        content={
+          !open && showTooltip ? (selectedOption?.tooltip ?? null) : null
+        }
         relationship="description"
         visible={visibleTooltip}
         child={<div></div>}

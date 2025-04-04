@@ -440,7 +440,7 @@ const VolumeUploadDialog = observer(
                         value={
                           fileUploadInputs.isMrcUpload
                             ? "auto"
-                            : fileUploadInputs.width?.toString() ?? ""
+                            : (fileUploadInputs.width?.toString() ?? "")
                         }
                         className={classes.dimensionsInput}
                         onChange={(_, data) =>
@@ -454,7 +454,7 @@ const VolumeUploadDialog = observer(
                         value={
                           fileUploadInputs.isMrcUpload
                             ? "auto"
-                            : fileUploadInputs.height?.toString() ?? ""
+                            : (fileUploadInputs.height?.toString() ?? "")
                         }
                         onChange={(_, data) =>
                           fileUploadInputs.setHeight(data.value)
@@ -468,7 +468,7 @@ const VolumeUploadDialog = observer(
                         value={
                           fileUploadInputs.isMrcUpload
                             ? "auto"
-                            : fileUploadInputs.depth?.toString() ?? ""
+                            : (fileUploadInputs.depth?.toString() ?? "")
                         }
                         className={classes.dimensionsInput}
                         onChange={(_, data) =>
@@ -573,7 +573,7 @@ const VolumeUploadDialog = observer(
                         value={
                           urlUploadInputs.isMrcUpload
                             ? "auto"
-                            : urlUploadInputs.width?.toString() ?? ""
+                            : (urlUploadInputs.width?.toString() ?? "")
                         }
                         className={classes.dimensionsInput}
                         onChange={(_, data) =>
@@ -587,7 +587,7 @@ const VolumeUploadDialog = observer(
                         value={
                           urlUploadInputs.isMrcUpload
                             ? "auto"
-                            : urlUploadInputs.height?.toString() ?? ""
+                            : (urlUploadInputs.height?.toString() ?? "")
                         }
                         onChange={(_, data) =>
                           urlUploadInputs.setHeight(data.value)
@@ -601,7 +601,7 @@ const VolumeUploadDialog = observer(
                         value={
                           urlUploadInputs.isMrcUpload
                             ? "auto"
-                            : urlUploadInputs.depth?.toString() ?? ""
+                            : (urlUploadInputs.depth?.toString() ?? "")
                         }
                         className={classes.dimensionsInput}
                         onChange={(_, data) =>

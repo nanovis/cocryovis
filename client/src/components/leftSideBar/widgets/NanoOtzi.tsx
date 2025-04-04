@@ -94,7 +94,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             volumeId: inferenceVolumeId,
           }),
         },
-        { successText: "Inference successfuly queued!" },
+        { successText: "Inference successfuly queued!" }
       );
       setInferenceInProgress(false);
     } catch (error) {
@@ -133,7 +133,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         {
           method: "GET",
           credentials: "include",
-        },
+        }
       );
 
       const rawData = await response.json();
@@ -144,7 +144,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           method: "GET",
           credentials: "include",
         },
-        false,
+        false
       );
 
       const arrayBuffer = await response.arrayBuffer();
@@ -164,7 +164,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           method: "GET",
           credentials: "include",
         },
-        false,
+        false
       );
 
       const checkpointTxt = await response.text();
@@ -181,7 +181,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const volumeData = await window.WasmModule?.doInference(
         settingsFileName,
-        "parameters.txt",
+        "parameters.txt"
       );
 
       toast.update(toastId, {
@@ -240,7 +240,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           idVolumeData: rawData.id,
           idCheckpoint: inferenceCheckpointId,
           volumeDescriptors: volumeDescriptors,
-        }),
+        })
       );
 
       await Utils.sendReq(
@@ -249,7 +249,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           method: "POST",
           body: formData,
         },
-        false,
+        false
       );
 
       toast.update(toastId, {
@@ -292,7 +292,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     volumes?.forEach((volume) =>
-      selectionList.push(volumeSelectionProperties(volume)),
+      selectionList.push(volumeSelectionProperties(volume))
     );
     return selectionList;
   };
@@ -318,7 +318,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
   };
 
   const checkpointSelectionProperties = (
-    checkpoint: CheckpointInstance | undefined,
+    checkpoint: CheckpointInstance | undefined
   ) => {
     if (!checkpoint) {
       return;
@@ -336,7 +336,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
   const checkpointSelectionPropertiesWithModel = (
     checkpoint: CheckpointInstance,
-    models: ModelInstance[],
+    models: ModelInstance[]
   ) => {
     return {
       children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
@@ -359,8 +359,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     }> = [];
     projectModels?.uniqueCheckpoints.forEach(({ checkpoint, models }) =>
       selectionList.push(
-        checkpointSelectionPropertiesWithModel(checkpoint, models),
-      ),
+        checkpointSelectionPropertiesWithModel(checkpoint, models)
+      )
     );
     return selectionList;
   };
@@ -372,7 +372,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     modelTraining.model?.modelCheckpoints.checkpoints.forEach((checkpoint) =>
-      selectionList.push(checkpointListProperties(checkpoint)),
+      selectionList.push(checkpointListProperties(checkpoint))
     );
     return selectionList;
   };
@@ -410,7 +410,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     models?.forEach((model) =>
-      selectionList.push(modelSelectionProperties(model)),
+      selectionList.push(modelSelectionProperties(model))
     );
     return selectionList;
   };
@@ -540,7 +540,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                 inferenceCheckpoint
                   ? checkpointSelectionPropertiesWithModel(
                       inferenceCheckpoint.checkpoint,
-                      inferenceCheckpoint.models,
+                      inferenceCheckpoint.models
                     )
                   : undefined
               }
@@ -657,8 +657,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                     modelTraining.model !== undefined
                       ? checkpointSelectionProperties(
                           modelTraining.model.modelCheckpoints.checkpoints.get(
-                            modelTraining.checkpointId,
-                          ),
+                            modelTraining.checkpointId
+                          )
                         )
                       : undefined
                   }
@@ -763,7 +763,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
             <ComboboxTagMultiselect
               selectionList={modelTraining.trainingVolumeOptions.map((volume) =>
-                volumeSelectionProperties(volume),
+                volumeSelectionProperties(volume)
               )}
               selectedOptions={modelTraining.trainingVolumeIds}
               onOptionSelect={onTrainingVolumeSelect}
@@ -777,7 +777,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
             <ComboboxTagMultiselect
               selectionList={modelTraining?.validationVolumeOptions.map(
-                (volume) => volumeSelectionProperties(volume),
+                (volume) => volumeSelectionProperties(volume)
               )}
               selectedOptions={modelTraining.validationVolumeIds}
               onOptionSelect={onValidationVolumeSelect}
@@ -791,7 +791,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
             <ComboboxTagMultiselect
               selectionList={modelTraining?.testingVolumeOptions.map((volume) =>
-                volumeSelectionProperties(volume),
+                volumeSelectionProperties(volume)
               )}
               selectedOptions={modelTraining?.testingVolumeIds}
               onOptionSelect={onTestingVolumeSelect}

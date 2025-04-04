@@ -207,8 +207,8 @@ export const UiState = types
               index === config.rawVolumeChannel
                 ? "raw"
                 : index === CONFIG.shadowsTransferFunctionIndex
-                ? "shadows"
-                : "volume",
+                  ? "shadows"
+                  : "volume",
             transferFunction: {
               rampLow: transferFunction.rampLow,
               rampHigh: transferFunction.rampHigh,

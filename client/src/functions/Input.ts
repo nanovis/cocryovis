@@ -31,7 +31,7 @@ export class NumberInputField extends InputField {
     validationMessage: string,
     defaultValue: number,
     infoLabel: string | null = null,
-    valid: (value: number) => boolean = (value: number) => true,
+    valid: (value: number) => boolean = (value: number) => true
   ) {
     super(name, infoLabel);
     this.type = type;
@@ -71,7 +71,7 @@ export class DropdownInputField extends InputField {
     name: string,
     options: Record<string, string>,
     defaultValue: string,
-    infoLabel: string | null = null,
+    infoLabel: string | null = null
   ) {
     super(name, infoLabel);
     this.options = options;
@@ -95,7 +95,7 @@ export class BooleanInputField extends InputField {
   constructor(
     name: string,
     defaultValue: boolean,
-    infoLabel: string | null = null,
+    infoLabel: string | null = null
   ) {
     super(name, infoLabel);
     this.defaultValue = defaultValue;

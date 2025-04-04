@@ -24,6 +24,7 @@ export class AreTomoSettings {
   }
 
   toCommandArgs(): string[] {
+    //prettier-ignore
     const args = [
       `-DoseTotal`, `${this.totalDose}`,
       `-TiltAxis`, `${this.tiltAxis}`,

@@ -56,7 +56,7 @@ export const ModelTraining = types
       null,
       (value: number) => {
         return value > 0;
-      },
+      }
     ),
     learningRateInput: new NumberInputField(
       "Learning Rate",
@@ -66,11 +66,11 @@ export const ModelTraining = types
       null,
       (value: number) => {
         return value > 0;
-      },
+      }
     ),
     findLearningRateInput: new BooleanInputField(
       "Find Learning Rate",
-      self.findLearningRate,
+      self.findLearningRate
     ),
     batchSizeInput: new NumberInputField(
       "Batch Size",
@@ -80,7 +80,7 @@ export const ModelTraining = types
       null,
       (value: number) => {
         return value > 0;
-      },
+      }
     ),
     accumulateGradientsInput: new NumberInputField(
       "Accumulate Gradients",
@@ -90,13 +90,13 @@ export const ModelTraining = types
       null,
       (value: number) => {
         return value > 0;
-      },
+      }
     ),
     lossInput: new DropdownInputField("Loss", lossOptions, self.loss),
     optimizerInput: new DropdownInputField(
       "Optimizer",
       optimizerOptions,
-      self.optimizer,
+      self.optimizer
     ),
   }))
   .volatile((self) => ({
@@ -111,7 +111,7 @@ export const ModelTraining = types
           value > 0 &&
           value >= self.minEpochsInput.convertToValue(self.minEpochs)
         );
-      },
+      }
     ),
   }))
   .views((self) => ({
@@ -141,7 +141,7 @@ export const ModelTraining = types
       return self.volumes.filter(
         (volume) =>
           !self.validationVolumes.includes(volume) &&
-          !self.testingVolumes.includes(volume),
+          !self.testingVolumes.includes(volume)
       );
     },
     get trainingVolumeNames() {
@@ -154,7 +154,7 @@ export const ModelTraining = types
       return self.volumes.filter(
         (volume) =>
           !self.trainingVolumes.includes(volume) &&
-          !self.testingVolumes.includes(volume),
+          !self.testingVolumes.includes(volume)
       );
     },
     get validationVolumeNames() {
@@ -167,7 +167,7 @@ export const ModelTraining = types
       return self.volumes.filter(
         (volume) =>
           !self.trainingVolumes.includes(volume) &&
-          !self.validationVolumes.includes(volume),
+          !self.validationVolumes.includes(volume)
       );
     },
     get testingVolumeNames() {
@@ -276,7 +276,7 @@ export const ModelTraining = types
           self.model?.modelCheckpoints.checkpoints.size > 0
         ) {
           throw new Error(
-            "If a checkpoint is not selected, the chosen model must be empty",
+            "If a checkpoint is not selected, the chosen model must be empty"
           );
         }
 
@@ -308,7 +308,7 @@ export const ModelTraining = types
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(trainData),
           },
-          false,
+          false
         );
         if (!isAlive(self)) {
           return;
