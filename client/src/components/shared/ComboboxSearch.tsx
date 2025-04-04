@@ -16,7 +16,7 @@ interface Props<
     children: React.ReactNode | string;
     value: string;
     tooltip?: JSX.Element;
-  }
+  },
 > {
   selectionList: T[];
   selectedOption: T | undefined;
@@ -28,6 +28,7 @@ interface Props<
   className?: string;
   showTooltip?: boolean;
   disabled?: boolean;
+  clearable?: boolean;
 }
 
 const ComboboxSearch = <
@@ -35,7 +36,7 @@ const ComboboxSearch = <
     children: React.ReactNode | string;
     value: string;
     tooltip?: JSX.Element;
-  }
+  },
 >({
   selectionList,
   selectedOption,
@@ -47,6 +48,7 @@ const ComboboxSearch = <
   className = undefined,
   showTooltip = true,
   disabled = false,
+  clearable = false,
 }: Props<T>) => {
   const classes = useStyles();
 
@@ -131,6 +133,7 @@ const ComboboxSearch = <
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         style={{ flex: 1 }}
+        clearable={clearable}
       >
         {selectionOptions.map((option, index) =>
           showTooltip && option.props.tooltip ? (
@@ -151,7 +154,9 @@ const ComboboxSearch = <
       </Combobox>
       {/* Attaching the tooltip directly onto combobox breaks it, so it is attached to a hidden element beside it instead.*/}
       <TooltipWrapper
-        content={!open && showTooltip ? selectedOption?.tooltip ?? null : null}
+        content={
+          !open && showTooltip ? (selectedOption?.tooltip ?? null) : null
+        }
         relationship="description"
         visible={visibleTooltip}
         child={<div></div>}

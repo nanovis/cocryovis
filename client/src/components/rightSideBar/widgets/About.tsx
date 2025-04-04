@@ -61,11 +61,11 @@ const About = ({ open, close }: Props) => {
             </Link>
           </h2>
 
-          <h2>About Tomography</h2>
+          <h2>About CoCryoViS</h2>
           <Text>
-            <strong>Tomography</strong> is a web-based system designed to
-            support tomographic reconstruction, segmentation, and visualization
-            of Cryo-Electron Tomography (CryoET) data. Developed at{" "}
+            <strong>CoCryoViS</strong> is a web-based system designed to support
+            tomographic reconstruction, segmentation, and visualization of
+            Cryo-Electron Tomography (CryoET) data. Developed at{" "}
             <strong>KAUST</strong>, it integrates findings from multiple
             research projects to provide advanced tools for analyzing nanoscale
             biological structures.

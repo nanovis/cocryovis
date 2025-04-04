@@ -2,6 +2,8 @@
 
 import WebSocket, { WebSocketServer } from "ws";
 import { sanitize } from "../middleware/sanitizer.mjs";
+import { isActiveSession, sessionExpired } from "../middleware/restrict.mjs";
+import { Session } from "express-session";
 
 /**
  * Enum websocket broadcast actions.
@@ -82,8 +84,10 @@ export default class WebSocketManager {
 
 export class WebSocketInstance {
     // TODO: Use some sort of database.
-    /** @type {Map<Number, Map<String, WebSocket>>} */
+    /** @type {Map<Number, Map<String, WebSocket>>}} */
     #connections = new Map();
+    /** @type {Map<WebSocket, {userId: Number, sessionId: String}>} */
+    #websocketToUserSession = new Map();
 
     /**
      * @param {import("http").Server} expressServer
@@ -119,7 +123,7 @@ export class WebSocketInstance {
 
         // @ts-ignore
         this.sessionParser(req, {}, () => {
-            if (!req.session || !req.session.user) {
+            if (!isActiveSession(req) || sessionExpired(req)) {
                 socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
                 socket.destroy();
                 return;
@@ -144,7 +148,7 @@ export class WebSocketInstance {
      * @param {import("express").Request} req
      */
     #onConnection(ws, req) {
-        if (!req.session || !req.session.user) {
+        if (!isActiveSession(req)) {
             ws.close();
             return;
         }
@@ -154,21 +158,32 @@ export class WebSocketInstance {
             req.session.user.username
         );
 
-        this.#registerUser(req.session.user.id, req.session.id, ws);
+        this.#registerUser(req.session.user.id, req.sessionID, ws);
 
         ws.on("message", (message) => {
-            console.log(
-                `Received message from ${req.session.user.username}:`,
-                message
-            );
+            try {
+                if (!isActiveSession(req) || sessionExpired(req)) {
+                    ws.close();
+                    req.session.destroy(() => {});
+                    return;
+                }
+                const data = JSON.parse(message.toString());
+                if (data.type === "heartbeat") {
+                    req.session.touch();
+                }
+            } catch (err) {
+                console.error("Invalid message received:", err);
+            }
         });
 
-        ws.on("close", () => this.#onConnectionClosed(req));
+        ws.on("close", () => this.#onConnectionClosed(ws));
     }
 
-    #onConnectionClosed(req) {
-        this.#unregisterUser(req.session.user.id, req.session.id);
-        console.log("Connection closed");
+    /**
+     * @param {WebSocket} ws
+     */
+    #onConnectionClosed(ws) {
+        this.#unregisterUser(ws);
     }
 
     closeServer() {
@@ -204,21 +219,39 @@ export class WebSocketInstance {
      * @param {WebSocket} websocket
      */
     #registerUser(userId, sessionId, websocket) {
-        let userEntry = this.#connections.get(userId);
-        if (!userEntry) {
-            userEntry = new Map();
-            this.#connections.set(userId, userEntry);
+        try {
+            this.#websocketToUserSession.set(websocket, {
+                userId: userId,
+                sessionId: sessionId,
+            });
+            let userEntry = this.#connections.get(userId);
+            if (!userEntry) {
+                userEntry = new Map();
+                this.#connections.set(userId, userEntry);
+            }
+            userEntry.set(sessionId, websocket);
+        } catch (error) {
+            console.error("Failed to register websocket: ", error);
         }
-        userEntry.set(sessionId, websocket);
     }
 
     /**
-     * @param {Number} userId
-     * @param {String} sessionId
+     * @param {WebSocket} ws
      */
-    #unregisterUser(userId, sessionId) {
-        this.#connections.clear();
-        let userEntry = this.#connections.get(userId);
-        userEntry?.delete(sessionId);
+    #unregisterUser(ws) {
+        try {
+            const userSession = this.#websocketToUserSession.get(ws);
+            if (!userSession) {
+                return;
+            }
+            this.#websocketToUserSession.delete(ws);
+            const userEntry = this.#connections.get(userSession.userId);
+            userEntry?.delete(userSession.sessionId);
+            if (userEntry?.size === 0) {
+                this.#connections.delete(userSession.userId);
+            }
+        } catch (error) {
+            console.error("Failed to unregister websocket: ", error);
+        }
     }
 }

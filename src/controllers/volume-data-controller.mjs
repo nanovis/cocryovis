@@ -19,6 +19,7 @@ import fsPromises from "node:fs/promises";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 import Volume from "../models/volume.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
+import appConfig from "../tools/config.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -110,7 +111,7 @@ export default class VolumeDataController {
         }
 
         const archive = archiver("zip", {
-            zlib: { level: 9 },
+            zlib: { level: appConfig.compressionLevel },
         });
 
         res.setHeader("Content-Type", "application/zip");

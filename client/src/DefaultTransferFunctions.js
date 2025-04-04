@@ -8,7 +8,7 @@ export const DEFAULT_TF = Object.freeze({
       y: 255,
       z: 255,
     },
-    comment: "blank"
+    comment: "blank",
   },
   tfArray: [
     {

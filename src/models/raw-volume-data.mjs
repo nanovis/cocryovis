@@ -258,7 +258,7 @@ export default class RawVolumeData extends VolumeData {
         let hasFiles = false;
 
         const archive = archiver("zip", {
-            zlib: { level: 9 },
+            zlib: { level: appConfig.compressionLevel },
         });
 
         if (downloadRawFile && volumeData.rawFilePath != null) {

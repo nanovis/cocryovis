@@ -1,0 +1,17 @@
+src/routes/api/projects.mjs
+client/
+data/
+demo/
+docs-api/
+logs/
+modules/
+node_modules/
+sessions/
+transfer-functions/
+uploads/
+*.json
+*.log
+*.sh
+*.yaml
+*.yml
+*.md

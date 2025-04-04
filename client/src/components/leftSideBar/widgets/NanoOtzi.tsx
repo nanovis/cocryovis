@@ -5,8 +5,13 @@ import {
   tokens,
   Button,
   Tooltip,
-  SelectionEvents,
   OptionOnSelectData,
+  Accordion,
+  AccordionItem,
+  AccordionHeader,
+  AccordionPanel,
+  Text,
+  AccordionToggleData,
 } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
@@ -24,8 +29,20 @@ import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessToolti
 import { VolumeInstance } from "../../../stores/userState/VolumeModel";
 import { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
 import { ModelInstance } from "../../../stores/userState/ModelModel";
+import {
+  BooleanInputValidatedField,
+  DropdownInputValidatedField,
+  NumberInputValidatedField,
+} from "../../shared/ValidatedFields";
 
-const useStyles = makeStyles({});
+const useStyles = makeStyles({
+  advancedOptionsRow: {
+    display: "flex",
+    flexDirection: "row",
+    gap: "10px",
+    justifyContent: "space-between",
+  },
+});
 
 interface Props {
   open: boolean;
@@ -34,11 +51,12 @@ interface Props {
 
 const NanoOtzi = observer(({ open, close }: Props) => {
   const { user } = useMst();
-  const activeProject = user?.userProjects.activeProject;
+  const activeProject = user.userProjects.activeProject;
   const projectVolumes = activeProject?.projectVolumes;
   const volumes = projectVolumes?.volumes;
   const projectModels = activeProject?.projectModels;
   const models = projectModels?.models;
+  const modelTraining = user.modelTraining;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
@@ -57,17 +75,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
   const [inferenceInProgress, setInferenceInProgress] = useState(false);
 
-  const [trainingModelId, setTrainingModelId] = useState<number | undefined>(
-    undefined
-  );
-  const trainingModel = trainingModelId && models?.get(trainingModelId);
-
-  const [trainingVolumes, setTrainingVolumes] = useState<string[]>([]);
-  const [validationVolumes, setValidationVolumes] = useState<string[]>([]);
-  const [testingVolumes, setTestingVolumes] = useState<string[]>([]);
-  const [trainingVolumeIds, setTrainingVolumeIds] = useState<string[]>([]);
-  const [validationVolumesIds, setValidationVolumeIds] = useState<string[]>([]);
-  const [testingVolumesIds, setTestingVolumeIds] = useState<string[]>([]);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState<string[]>([]);
 
   const startInference = async () => {
     if (!canDoInference()) {
@@ -297,7 +305,36 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     setInferenceVolumeId(Number(value));
   };
 
+  const checkpointListProperties = (checkpoint: CheckpointInstance) => {
+    return {
+      children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
+      value: checkpoint.id.toString(),
+      tooltip: (
+        <div className={globalClasses.selectionDropdownTooltip}>
+          <b>ID:</b> {checkpoint.id}
+        </div>
+      ),
+    };
+  };
+
   const checkpointSelectionProperties = (
+    checkpoint: CheckpointInstance | undefined
+  ) => {
+    if (!checkpoint) {
+      return;
+    }
+    return {
+      children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
+      value: checkpoint.id.toString(),
+      tooltip: (
+        <div className={globalClasses.selectionDropdownTooltip}>
+          <b>ID:</b> {checkpoint.id}
+        </div>
+      ),
+    };
+  };
+
+  const checkpointSelectionPropertiesWithModel = (
     checkpoint: CheckpointInstance,
     models: ModelInstance[]
   ) => {
@@ -321,7 +358,21 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       tooltip: JSX.Element;
     }> = [];
     projectModels?.uniqueCheckpoints.forEach(({ checkpoint, models }) =>
-      selectionList.push(checkpointSelectionProperties(checkpoint, models))
+      selectionList.push(
+        checkpointSelectionPropertiesWithModel(checkpoint, models)
+      )
+    );
+    return selectionList;
+  };
+
+  const modelCheckpointSelectionList = () => {
+    const selectionList: Array<{
+      children: string;
+      value: string;
+      tooltip: JSX.Element;
+    }> = [];
+    modelTraining.model?.modelCheckpoints.checkpoints.forEach((checkpoint) =>
+      selectionList.push(checkpointListProperties(checkpoint))
     );
     return selectionList;
   };
@@ -365,94 +416,81 @@ const NanoOtzi = observer(({ open, close }: Props) => {
   };
 
   const handleTrainingModelSelect = (value: string | null) => {
-    if (!value) {
+    if (!value || !models) {
       return;
     }
+    const model = models.get(Number(value));
+    if (!model) {
+      return;
+    }
+    modelTraining.setModel(model);
+  };
 
-    setTrainingModelId(Number(value));
+  const handleTrainingCheckpointSelect = (value: string | null) => {
+    if (value === null) {
+      modelTraining.setCheckpointId(undefined);
+      return;
+    }
+    if (!modelTraining?.model) {
+      return;
+    }
+    const checkpointId = parseInt(value);
+    if (isNaN(checkpointId)) {
+      return;
+    }
+    modelTraining.setCheckpointId(checkpointId);
   };
 
   const canDoInference = () => {
     return !inferenceInProgress && inferenceCheckpointId && inferenceVolumeId;
   };
 
-  const startTraining = async () => {
-    if (!canDoTraining()) {
-      return;
+  const onTrainingVolumeSelect = (data: OptionOnSelectData | null) => {
+    if (data?.optionValue === undefined) return;
+    const volume = volumes?.get(Number(data.optionValue));
+    if (!volume) return;
+
+    if (modelTraining.trainingVolumes.includes(volume)) {
+      modelTraining.removeTrainingVolume(volume);
+    } else {
+      modelTraining.addTrainingVolume(volume);
     }
-
-    try {
-      var trainData = {
-        modelId: trainingModelId,
-        trainingVolumes: trainingVolumeIds,
-        validationVolumes: validationVolumesIds,
-        testingVolumes: testingVolumesIds,
-      };
-
-      await Utils.sendRequestWithToast(
-        `queue-training`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(trainData),
-        },
-        { successText: "Training successfuly queued!" }
-      );
-    } catch (error) {
-      console.error("startTraining Error:", error);
-    }
-  };
-
-  const onTrainingVolumeSelect = (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => {
-    if (!data) return;
-    setTrainingVolumeIds(data.selectedOptions);
   };
 
   const onTrainingVolumeTagClick = (option: string, index: number) => {
-    const updatedTrainingVolumesIds = trainingVolumeIds.slice();
-    updatedTrainingVolumesIds.splice(index, 1);
-    setTrainingVolumeIds(updatedTrainingVolumesIds);
+    modelTraining.removeTrainingVolumeByIndex(index);
   };
 
-  const onValidationVolumeSelect = (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => {
-    if (!data) return;
-    setValidationVolumeIds(data.selectedOptions);
+  const onValidationVolumeSelect = (data: OptionOnSelectData | null) => {
+    if (data?.optionValue === undefined) return;
+    const volume = volumes?.get(Number(data.optionValue));
+    if (!volume) return;
+
+    if (modelTraining.validationVolumes.includes(volume)) {
+      modelTraining.removeValidationVolume(volume);
+    } else {
+      modelTraining.addValidationVolume(volume);
+    }
   };
 
   const onValidationVolumeTagClick = (option: string, index: number) => {
-    const updateIds = validationVolumesIds.slice();
-    updateIds.splice(index, 1);
-    setValidationVolumeIds(updateIds);
+    modelTraining.removeValidationVolumeByIndex(index);
   };
 
-  const onTestingVolumeSelect = (
-    event: SelectionEvents,
-    data: OptionOnSelectData | null
-  ) => {
-    if (!data) return;
-    setTestingVolumeIds(data.selectedOptions);
+  const onTestingVolumeSelect = (data: OptionOnSelectData | null) => {
+    if (data?.optionValue === undefined) return;
+    const volume = volumes?.get(Number(data.optionValue));
+    if (!volume) return;
+
+    if (modelTraining.testingVolumes.includes(volume)) {
+      modelTraining.removeTestingVolume(volume);
+    } else {
+      modelTraining.addTestingVolume(volume);
+    }
   };
 
   const onTestingVolumeTagClick = (option: string, index: number) => {
-    const updateIds = testingVolumes.slice();
-    updateIds.splice(index, 1);
-    setTestingVolumeIds(updateIds);
-  };
-
-  const canDoTraining = () => {
-    return (
-      trainingModelId &&
-      trainingVolumeIds?.length > 0 &&
-      validationVolumesIds?.length > 0 &&
-      testingVolumesIds?.length > 0
-    );
+    modelTraining.removeTestingVolumeByIndex(index);
   };
 
   return open ? (
@@ -500,7 +538,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               selectionList={checkpointSelectionList()}
               selectedOption={
                 inferenceCheckpoint
-                  ? checkpointSelectionProperties(
+                  ? checkpointSelectionPropertiesWithModel(
                       inferenceCheckpoint.checkpoint,
                       inferenceCheckpoint.models
                     )
@@ -578,108 +616,222 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             }}
           />
 
-          <h2 className={globalClasses.sectionTitle} style={{ marginTop: 0 }}>
-            Training
-          </h2>
-          <ComboboxSearch
-            selectionList={modelSelectionList()}
-            selectedOption={
-              trainingModel
-                ? modelSelectionProperties(trainingModel)
-                : undefined
-            }
-            onOptionSelect={handleTrainingModelSelect}
-            placeholder="Select a model"
-            noOptionsMessage="No models match your search."
-            optionToText={({ children, value, tooltip }) => children}
-            disabled={!models || models.size < 0}
-          ></ComboboxSearch>
-          <ComboboxTagMultiselect
-            selectionList={volumeSelectionList().filter(
-              (volume) =>
-                !validationVolumesIds.includes(volume.value) &&
-                !testingVolumesIds.includes(volume.value)
-            )}
-            selectedOptions={trainingVolumeIds}
-            onOptionSelect={onTrainingVolumeSelect}
-            onTagClick={onTrainingVolumeTagClick}
-            selectionToTextMap={(volumeId) => {
-              return volumes?.get(volumeId)?.name ?? "";
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              rowGap: "20px",
             }}
-            textState={trainingVolumes}
-            setTextState={setTrainingVolumes}
-            title="Training Volumes"
-            placeholder="Select one or more training volumes"
-            noOptionsMessage="No volumes match your search."
-            optionToText={({ children, value, tooltip }) => children}
-          />
-
-          <ComboboxTagMultiselect
-            selectionList={volumeSelectionList().filter(
-              (volume) =>
-                !trainingVolumeIds.includes(volume.value) &&
-                !testingVolumesIds.includes(volume.value)
-            )}
-            selectedOptions={validationVolumesIds}
-            onOptionSelect={onValidationVolumeSelect}
-            onTagClick={onValidationVolumeTagClick}
-            selectionToTextMap={(volumeId) => {
-              return volumes?.get(volumeId)?.name ?? "";
-            }}
-            textState={validationVolumes}
-            setTextState={setValidationVolumes}
-            title="Validation Volumes"
-            placeholder="Select one or more validation volumes"
-            noOptionsMessage="No volumes match your search."
-            optionToText={({ children, value, tooltip }) => children}
-          />
-
-          <ComboboxTagMultiselect
-            selectionList={volumeSelectionList().filter(
-              (volume) =>
-                !trainingVolumeIds.includes(volume.value) &&
-                !validationVolumesIds.includes(volume.value)
-            )}
-            selectedOptions={testingVolumesIds}
-            onOptionSelect={onTestingVolumeSelect}
-            onTagClick={onTestingVolumeTagClick}
-            selectionToTextMap={(volumeId) => {
-              return volumes?.get(volumeId)?.name ?? "";
-            }}
-            textState={testingVolumes}
-            setTextState={setTestingVolumes}
-            title="Testing Volumes"
-            placeholder="Select one or more testing volumes"
-            noOptionsMessage="No volumes match your search."
-            optionToText={({ children, value, tooltip }) => children}
-          />
-
-          <Tooltip
-            content={
-              <WriteAccessTooltipContentWrapper
-                content={
-                  "Start model training on the server. Server can process only a single request at the time. Your position in the request queue and status of the request can be observed in the Status widget."
-                }
-                hasWriteAccess={activeProject?.hasWriteAccess}
-              />
-            }
-            relationship="label"
-            appearance="inverted"
-            hideDelay={0}
           >
-            <Button
-              appearance="primary"
-              className={globalClasses.actionButton}
-              disabled={!canDoTraining() || !activeProject?.hasWriteAccess}
-              onClick={startTraining}
-              style={{ flexGrow: 1 }}
+            <h2 className={globalClasses.sectionTitle} style={{ marginTop: 0 }}>
+              Training
+            </h2>
+            <ComboboxSearch
+              selectionList={modelSelectionList()}
+              selectedOption={
+                modelTraining?.model !== undefined
+                  ? modelSelectionProperties(modelTraining.model)
+                  : undefined
+              }
+              onOptionSelect={handleTrainingModelSelect}
+              placeholder="Select a model"
+              noOptionsMessage="No models match your search."
+              optionToText={({ children, value, tooltip }) => children}
+              disabled={!models || models.size < 0}
+            />
+
+            <Tooltip
+              content={{
+                children: "Select a model first.",
+                className: modelTraining?.model && globalClasses.invisible,
+              }}
+              relationship="label"
+              appearance="inverted"
+              hideDelay={0}
             >
-              <div className={globalClasses.actionButtonIconContainer}>
-                <GlobeDesktop20Regular />
+              <div>
+                <ComboboxSearch
+                  selectionList={modelCheckpointSelectionList()}
+                  selectedOption={
+                    modelTraining.checkpointId !== undefined &&
+                    modelTraining.model !== undefined
+                      ? checkpointSelectionProperties(
+                          modelTraining.model.modelCheckpoints.checkpoints.get(
+                            modelTraining.checkpointId
+                          )
+                        )
+                      : undefined
+                  }
+                  onOptionSelect={handleTrainingCheckpointSelect}
+                  placeholder="Select a checkpoint (optional)"
+                  noOptionsMessage="No models match your search."
+                  optionToText={({ children, value, tooltip }) => children}
+                  disabled={!modelTraining?.model}
+                  clearable={true}
+                />
               </div>
-              <div className="buttonText">Start Training (Server)</div>
-            </Button>
-          </Tooltip>
+            </Tooltip>
+
+            <Accordion
+              openItems={showAdvancedOptions}
+              onToggle={(_, data: AccordionToggleData<string>) => {
+                setShowAdvancedOptions(data.openItems);
+              }}
+              collapsible
+            >
+              <AccordionItem value="1" style={{ marginBottom: "12px" }}>
+                <AccordionHeader>
+                  <Text> Advanced Options</Text>
+                </AccordionHeader>
+                <AccordionPanel
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    rowGap: "10px",
+                    margin: "0 2px",
+                  }}
+                >
+                  <div className={classes.advancedOptionsRow}>
+                    <NumberInputValidatedField
+                      value={modelTraining.minEpochs}
+                      setValue={(value) => modelTraining.setMinEpochs(value)}
+                      input={modelTraining.minEpochsInput}
+                      style={{ flex: 1 }}
+                    />
+                    <NumberInputValidatedField
+                      value={modelTraining.maxEpochs}
+                      setValue={(value) => modelTraining.setMaxEpochs(value)}
+                      input={modelTraining.maxEpochsInput}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  <div
+                    className={classes.advancedOptionsRow}
+                    style={{
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <NumberInputValidatedField
+                      value={modelTraining.learningRate}
+                      setValue={(value) => modelTraining.setLearningRate(value)}
+                      input={modelTraining.learningRateInput}
+                      style={{ flex: 1 }}
+                      disabled={modelTraining.findLearningRate}
+                    />
+                    <BooleanInputValidatedField
+                      value={modelTraining.findLearningRate}
+                      setValue={(value) =>
+                        modelTraining.setFindLearningRate(value)
+                      }
+                      input={modelTraining.findLearningRateInput}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  <div className={classes.advancedOptionsRow}>
+                    <NumberInputValidatedField
+                      value={modelTraining.batchSize}
+                      setValue={(value) => modelTraining.setBatchSize(value)}
+                      input={modelTraining.batchSizeInput}
+                      style={{ flex: 1 }}
+                    />
+                    <NumberInputValidatedField
+                      value={modelTraining.accumulateGradients}
+                      setValue={(value) =>
+                        modelTraining.setAccumulateGradients(value)
+                      }
+                      input={modelTraining.accumulateGradientsInput}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  <div className={classes.advancedOptionsRow}>
+                    <DropdownInputValidatedField
+                      value={modelTraining.optimizer}
+                      setValue={(value) => modelTraining.setOptimizer(value)}
+                      input={modelTraining.optimizerInput}
+                      style={{ flex: 1 }}
+                    />
+                    <DropdownInputValidatedField
+                      value={modelTraining.loss}
+                      setValue={(value) => modelTraining.setLoss(value)}
+                      input={modelTraining.lossInput}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+
+            <ComboboxTagMultiselect
+              selectionList={modelTraining.trainingVolumeOptions.map((volume) =>
+                volumeSelectionProperties(volume)
+              )}
+              selectedOptions={modelTraining.trainingVolumeIds}
+              onOptionSelect={onTrainingVolumeSelect}
+              onTagClick={onTrainingVolumeTagClick}
+              textState={modelTraining.trainingVolumeNames}
+              title="Training Volumes"
+              placeholder="Select one or more training volumes"
+              noOptionsMessage="No volumes match your search."
+              optionToText={({ children, value, tooltip }) => children}
+            />
+
+            <ComboboxTagMultiselect
+              selectionList={modelTraining?.validationVolumeOptions.map(
+                (volume) => volumeSelectionProperties(volume)
+              )}
+              selectedOptions={modelTraining.validationVolumeIds}
+              onOptionSelect={onValidationVolumeSelect}
+              onTagClick={onValidationVolumeTagClick}
+              textState={modelTraining.validationVolumeNames}
+              title="Validation Volumes"
+              placeholder="Select one or more validation volumes"
+              noOptionsMessage="No volumes match your search."
+              optionToText={({ children, value, tooltip }) => children}
+            />
+
+            <ComboboxTagMultiselect
+              selectionList={modelTraining?.testingVolumeOptions.map((volume) =>
+                volumeSelectionProperties(volume)
+              )}
+              selectedOptions={modelTraining?.testingVolumeIds}
+              onOptionSelect={onTestingVolumeSelect}
+              onTagClick={onTestingVolumeTagClick}
+              textState={modelTraining.testingVolumeNames}
+              title="Testing Volumes"
+              placeholder="Select one or more testing volumes"
+              noOptionsMessage="No volumes match your search."
+              optionToText={({ children, value, tooltip }) => children}
+            />
+
+            <Tooltip
+              content={
+                <WriteAccessTooltipContentWrapper
+                  content={
+                    "Start model training on the server. Server can process only a single request at the time. Your position in the request queue and status of the request can be observed in the Status widget."
+                  }
+                  hasWriteAccess={activeProject?.hasWriteAccess}
+                />
+              }
+              relationship="label"
+              appearance="inverted"
+              hideDelay={0}
+            >
+              <Button
+                appearance="primary"
+                className={globalClasses.actionButton}
+                disabled={
+                  !modelTraining.canDoTraining || !activeProject?.hasWriteAccess
+                }
+                onClick={modelTraining.startTraining}
+                style={{ flexGrow: 1 }}
+              >
+                <div className={globalClasses.actionButtonIconContainer}>
+                  <GlobeDesktop20Regular />
+                </div>
+                <div className="buttonText">Start Training (Server)</div>
+              </Button>
+            </Tooltip>
+          </div>
         </div>
       </div>
     </div>

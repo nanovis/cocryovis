@@ -217,6 +217,9 @@ const globalStyles = makeStyles({
     paddingTop: "16px",
     overflowY: "auto",
   },
+  invisible: {
+    display: "none",
+  },
 });
 
 export default globalStyles;

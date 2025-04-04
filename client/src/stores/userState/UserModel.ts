@@ -1,6 +1,7 @@
 import { Instance, SnapshotIn, types, flow, isAlive } from "mobx-state-tree";
 import { UserProjects, UserProjectsInstance } from "./ProjectModel";
 import { Status } from "./Status";
+import { ModelTraining } from "./ModelTraining";
 
 export interface UserDB {
   id: number;
@@ -17,6 +18,7 @@ export const User = types
     email: types.optional(types.string, ""),
     userProjects: types.optional(UserProjects, {}),
     status: types.maybe(Status),
+    modelTraining: types.optional(ModelTraining, {}),
   })
   .views((self) => ({
     get isGuest() {

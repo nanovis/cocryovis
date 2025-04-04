@@ -29,14 +29,16 @@
     "@babel/plugin-transform-private-property-in-object": "^7.25.9",
     "@types/file-saver": "^2.0.7",
     "@types/js-cookie": "^3.0.6",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "prettier": "^3.5.3"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "start2": "set HTTPS=true && set PORT=8080 && set SSL_CRT_FILE=reactcert/cert.pem && set SSL_KEY_FILE=reactcert/key.pem && set HTTPS_CERT=reactcert/cert.pem && set HTTPS_KEY=reactcert/key.pem && react-scripts start",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "format": "prettier --write ."
   },
   "browserslist": {
     "production": [

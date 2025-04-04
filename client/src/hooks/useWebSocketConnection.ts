@@ -1,12 +1,12 @@
+import { useEffect, useRef } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
 export function useWebSocketConnection(
   url: string,
   shouldReconnect: () => boolean
 ) {
-  const { lastMessage, lastJsonMessage, readyState } = useWebSocket(
-    shouldReconnect() ? url : null,
-    {
+  const { lastMessage, lastJsonMessage, readyState, sendJsonMessage } =
+    useWebSocket(shouldReconnect() ? url : null, {
       retryOnError: true,
       shouldReconnect: shouldReconnect,
       reconnectAttempts: 999999999,
@@ -14,8 +14,28 @@ export function useWebSocketConnection(
       onOpen: () => console.log("WebSocket connected"),
       onClose: () => console.log("WebSocket disconnected"),
       onError: (error) => console.error("WebSocket error", error),
+    });
+
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (readyState === ReadyState.OPEN) {
+      console.log("Starting heartbeat interval");
+
+      heartbeatRef.current = setInterval(
+        () => {
+          sendJsonMessage({ type: "heartbeat" });
+          console.log("Sent heartbeat");
+        },
+        60 * 60 * 1000
+      ); // 1 hour
+
+      return () => {
+        console.log("Clearing heartbeat interval");
+        if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+      };
     }
-  );
+  }, [readyState]);
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: "Connecting",

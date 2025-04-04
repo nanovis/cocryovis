@@ -77,7 +77,7 @@ export default class VolumeData extends DatabaseModel {
         return true;
     }
 
-     /**
+    /**
      * @param {Number} id
      * @return {Promise<VolumeDB[]>}
      */
@@ -190,9 +190,8 @@ export default class VolumeData extends DatabaseModel {
                             folderPath = await this.createVolumeDataFolder(
                                 volumeData.id
                             );
-                            const rawFilePath = await rawFile.saveAs(
-                                folderPath
-                            );
+                            const rawFilePath =
+                                await rawFile.saveAs(folderPath);
                             const settingFileContents =
                                 await settingsFile.getData();
                             const settings = await this.parseSettings(
@@ -404,7 +403,7 @@ export default class VolumeData extends DatabaseModel {
         let hasFiles = false;
 
         const archive = archiver("zip", {
-            zlib: { level: 9 },
+            zlib: { level: appConfig.compressionLevel },
         });
 
         if (downloadRawFile && volumeData.rawFilePath != null) {

@@ -1,6 +1,7 @@
 {
-    "idleSessionExpirationMin": 30,
+    "idleSessionExpirationMin": 720,
     "tempPath": "./data/temp",
+    "cookieName": "CoCryoViSCookie",
     "cleanTempOnStartup": true,
     "dataPath": "./data",
     "maxVolumeChannels": 4,
@@ -8,6 +9,7 @@
     "logPath": "./logs/",
     "ilastikQueueSize": 20,
     "gpuQueueSize": 20,
+    "compressionLevel": 9,
     "python": "python",
     "ilastik": {
         "path": "./modules/ilastik/",
@@ -32,8 +34,6 @@
         },
         "training": {
             "command": "train.py",
-            "min_epochs": 1,
-            "max_epochs": 1,
             "cleanTemporaryFiles": true
         }
     },
