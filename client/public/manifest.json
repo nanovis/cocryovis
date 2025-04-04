@@ -1,6 +1,6 @@
 {
-  "short_name": "Tomography",
-  "name": "KAUST Tomography",
+  "short_name": "CoCryoViS",
+  "name": "KAUST CoCryoViS",
   "icons": [
     {
       "src": "favicon.ico",
