@@ -113,8 +113,8 @@ export default class Utils {
     return fileName.toLowerCase().endsWith(".mrc");
   }
 
-  static isInteger(string: string) {
-    const num = Number(string);
+  static isInteger(value: string | number) {
+    const num = Number(value);
     return Number.isInteger(num);
   }
 
@@ -123,8 +123,8 @@ export default class Utils {
     return Number.isInteger(num) && num >= min && num <= max;
   }
 
-  static isFloat(string: string) {
-    const num = Number(string);
+  static isFloat(value: string | number) {
+    const num = Number(value);
     return !Number.isNaN(num);
   }
 

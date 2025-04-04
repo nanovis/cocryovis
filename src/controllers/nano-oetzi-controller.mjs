@@ -37,19 +37,23 @@ export default class NanoOetziController {
         const trainingVolumesIds = Utils.parseStringArray(
             req.body.trainingVolumes
         );
+        delete req.body.trainingVolumes;
         const validationVolumesIds = Utils.parseStringArray(
             req.body.validationVolumes
         );
+        delete req.body.validationVolumes;
         const testingVolumesIds = Utils.parseStringArray(
             req.body.testingVolumes
         );
+        delete req.body.testingVolumes;
 
         await gpuTaskHandler.queueTraining(
             Number(req.body.modelId),
             Number(req.session.user.id),
             trainingVolumesIds,
             validationVolumesIds,
-            testingVolumesIds
+            testingVolumesIds,
+            req.body
         );
 
         res.sendStatus(204);

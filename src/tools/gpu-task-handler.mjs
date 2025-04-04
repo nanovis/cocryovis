@@ -27,6 +27,7 @@ import TaskHistory from "../models/task-history.mjs";
  * @typedef { import("@prisma/client").Result } ResultDB
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
  * @typedef { VolumeDB & {rawData: RawVolumeDataDB, pseudoVolumes: PseudoVolumeDataDB[]} } DeepVolume
+ * @typedef { { minEpochs?: number, maxEpochs?: number, findLearningRate?: boolean, learningRate?: number, batchSize?: number, loss?: string, optimizer?: string, accumulateGradients?: number, checkpointId?: number } } TrainingParams
  */
 
 export default class GPUTaskHandler {
@@ -271,8 +272,8 @@ export default class GPUTaskHandler {
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
+     * @param {TrainingParams} params
      * @param {String?} outputPath
-     * @param {boolean} removeTempFiles
      * @returns {Promise<Void>}
      */
     async queueTraining(
@@ -281,8 +282,8 @@ export default class GPUTaskHandler {
         trainingVolumesIds,
         validationVolumesIds,
         testingVolumesIds,
-        outputPath = null,
-        removeTempFiles = true
+        params,
+        outputPath = null
     ) {
         if (!trainingVolumesIds || trainingVolumesIds.length == 0) {
             throw new ApiError(
@@ -305,9 +306,49 @@ export default class GPUTaskHandler {
         if (this.#taskQueue.size >= this.config.gpuQueueSize) {
             throw new ApiError(
                 400,
-                "Failed Attempt to start inference: Too many tasks in queue."
+                "Failed Attempt to start training: Too many tasks in queue."
             );
         }
+
+        const model = await Model.getById(modelId, { checkpoints: true });
+        if (!model) {
+            throw new ApiError(
+                400,
+                "Failed Attempt to start training: Model not found."
+            );
+        }
+        if (params.checkpointId === undefined && model.checkpoints.length > 0) {
+            throw new ApiError(
+                400,
+                "If a checkpoint is not selected, the chosen model must be empty."
+            );
+        }
+
+        if (params.checkpointId !== undefined) {
+            const checkpoint = await Checkpoint.getById(params.checkpointId);
+            let foundCheckpoint = false;
+            for (const modelCheckpoint of model.checkpoints) {
+                if (modelCheckpoint.id == checkpoint.id) {
+                    foundCheckpoint = true;
+                    break;
+                }
+            }
+            if (!foundCheckpoint) {
+                throw new ApiError(
+                    400,
+                    "Checkpoint not found in the selected model."
+                );
+            }
+
+            if (!checkpoint) {
+                throw new ApiError(404, "Checkpoint not found.");
+            }
+            if (!checkpoint.filePath) {
+                throw new ApiError(404, "Checkpoint file not found.");
+            }
+        }
+
+        this.#checkTrainingInput(params);
 
         if (!outputPath) {
             outputPath = this.createTemporaryOutputPath();
@@ -364,9 +405,9 @@ export default class GPUTaskHandler {
                         trainingVolumesIds,
                         validationVolumesIds,
                         testingVolumesIds,
+                        params,
                         outputPath,
-                        taskHistory.id,
-                        removeTempFiles
+                        taskHistory.id
                     )
                 );
             } catch (error) {
@@ -378,14 +419,69 @@ export default class GPUTaskHandler {
     }
 
     /**
+     * @param {TrainingParams} params
+     * @returns {void}
+     */
+    #checkTrainingInput(params) {
+        if (params.minEpochs < 1) {
+            throw new ApiError(
+                400,
+                "Training error: Minimum epochs must be greater than 0."
+            );
+        }
+        if (params.maxEpochs < 1) {
+            throw new ApiError(
+                400,
+                "Training error: Maximum epochs must be greater than 0."
+            );
+        }
+        if (params.minEpochs > params.maxEpochs) {
+            throw new ApiError(
+                400,
+                "Training error: Maximum epochs must be greater than minimum epochs."
+            );
+        }
+        if (params.batchSize < 1) {
+            throw new ApiError(
+                400,
+                "Training error: Batch size must be greater than 0."
+            );
+        }
+        if (params.learningRate <= 0) {
+            throw new ApiError(
+                400,
+                "Training error: Learning rate must be greater than 0."
+            );
+        }
+        if (!["mse", "bce", "awl"].includes(params.loss.toLowerCase())) {
+            throw new ApiError(
+                400,
+                "Training error: Loss function not supported."
+            );
+        }
+        if (params.accumulateGradients < 1) {
+            throw new ApiError(
+                400,
+                "Training error: Accumulate gradients must be greater than 0."
+            );
+        }
+        if (
+            params.optimizer.toLowerCase() != "adam" &&
+            params.optimizer.toLowerCase() != "ranger"
+        ) {
+            throw new ApiError(400, "Training error: Optimizer not supported.");
+        }
+    }
+
+    /**
      * @param {Number} modelId
      * @param {Number} userId
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
+     * @param {TrainingParams} params
      * @param {String} outputPath
      * @param {Number} taskHistoryId
-     * @param {boolean} removeTempFiles
      * @returns {Promise<CheckpointDB>}
      */
     async #runTraining(
@@ -394,9 +490,9 @@ export default class GPUTaskHandler {
         trainingVolumesIds,
         validationVolumesIds,
         testingVolumesIds,
+        params,
         outputPath,
-        taskHistoryId,
-        removeTempFiles = true
+        taskHistoryId
     ) {
         const logFile = await LogFile.createLogFile("training");
         const workFolder = path.join(outputPath, "training-data");
@@ -465,16 +561,64 @@ export default class GPUTaskHandler {
                 `\n--------------\nSuccess.\n\nLauching training script...\n`
             );
 
+            const scriptParams = [
+                this.config.nanoOetzi.training.command,
+                outputAbsolutePath,
+            ];
+
+            if (params.minEpochs !== undefined) {
+                scriptParams.push("--min_epochs", params.minEpochs);
+            }
+            if (params.maxEpochs !== undefined) {
+                scriptParams.push("--max_epochs", params.maxEpochs);
+            }
+            if (params.findLearningRate) {
+                scriptParams.push("--find_lr");
+            }
+            if (params.learningRate !== undefined) {
+                scriptParams.push("--learning_rate", params.learningRate);
+            }
+            if (params.batchSize !== undefined) {
+                scriptParams.push("--batch_size", params.batchSize);
+            }
+            if (params.loss !== undefined) {
+                scriptParams.push("--loss", params.loss.toLowerCase());
+            }
+            if (params.optimizer !== undefined) {
+                scriptParams.push("--opt", params.optimizer.toLowerCase());
+            }
+            if (params.accumulateGradients !== undefined) {
+                scriptParams.push(
+                    "--accumulate-grads",
+                    params.accumulateGradients
+                );
+            }
+
+            if (params.checkpointId !== undefined) {
+                const checkpoint = await Checkpoint.getById(
+                    params.checkpointId
+                );
+                if (!checkpoint) {
+                    throw new ApiError(
+                        400,
+                        "Training error: Checkpoint not found."
+                    );
+                }
+                if (!checkpoint.filePath) {
+                    throw new ApiError(
+                        400,
+                        "Training error: Checkpoint file not found."
+                    );
+                }
+                const checkpointAbsolutePath = path.resolve(
+                    checkpoint.filePath
+                );
+                scriptParams.push("--checkpoint", checkpointAbsolutePath);
+            }
+
             await Utils.runScript(
                 this.config.nanoOetzi.python,
-                [
-                    this.config.nanoOetzi.training.command,
-                    outputAbsolutePath,
-                    "--min_epochs",
-                    this.config.nanoOetzi.training.min_epochs,
-                    "--max_epochs",
-                    this.config.nanoOetzi.training.max_epochs,
-                ],
+                scriptParams,
                 path.resolve(
                     path.join(
                         this.config.nanoOetzi.path,
@@ -559,7 +703,6 @@ export default class GPUTaskHandler {
                     `Failed to remove temporary files after a failed Nano-Oetzi training:\n${error.message}`
                 );
             }
-            removeTempFiles = false;
             await TaskHistory.update(taskHistoryId, {
                 taskStatus: TaskHistory.status.failed,
                 endTime: new Date(),

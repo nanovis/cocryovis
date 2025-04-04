@@ -28,6 +28,7 @@ interface Props<
   className?: string;
   showTooltip?: boolean;
   disabled?: boolean;
+  clearable?: boolean;
 }
 
 const ComboboxSearch = <
@@ -47,6 +48,7 @@ const ComboboxSearch = <
   className = undefined,
   showTooltip = true,
   disabled = false,
+  clearable = false,
 }: Props<T>) => {
   const classes = useStyles();
 
@@ -131,6 +133,7 @@ const ComboboxSearch = <
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         style={{ flex: 1 }}
+        clearable={clearable}
       >
         {selectionOptions.map((option, index) =>
           showTooltip && option.props.tooltip ? (

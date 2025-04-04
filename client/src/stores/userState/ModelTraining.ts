@@ -7,37 +7,136 @@ import {
   isAlive,
 } from "mobx-state-tree";
 import { Volume, VolumeInstance } from "./VolumeModel";
-import { Checkpoint, CheckpointInstance } from "./CheckpointModel";
 import { User } from "./UserModel";
 import { Model, ModelInstance } from "./ModelModel";
 import Utils from "../../functions/Utils";
+import { toast } from "react-toastify";
+import {
+  BooleanInputField,
+  DropdownInputField,
+  NumberInputField,
+  StringInputFieldType,
+} from "../../functions/Input";
+
+export enum lossOptions {
+  mse = "Mean Squared Error",
+  bce = "Binary Cross Entropy",
+  awl = "Adaptive Weighted Loss",
+}
+
+export enum optimizerOptions {
+  Adam = "Adam",
+  Ranger = "Ranger",
+}
 
 export const ModelTraining = types
   .model({
     model: types.maybe(types.reference(Model)),
-    checkpoint: types.maybe(types.reference(Checkpoint)),
+    checkpointId: types.maybe(types.integer),
     trainingVolumes: types.optional(types.array(types.reference(Volume)), []),
     validationVolumes: types.optional(types.array(types.reference(Volume)), []),
     testingVolumes: types.optional(types.array(types.reference(Volume)), []),
+    minEpochs: types.optional(types.string, ""),
+    maxEpochs: types.optional(types.string, ""),
+    findLearningRate: types.optional(types.boolean, false),
+    learningRate: types.optional(types.string, ""),
+    batchSize: types.optional(types.string, ""),
+    loss: types.optional(types.string, "mse"),
+    optimizer: types.optional(types.string, "Adam"),
+    accumulateGradients: types.optional(types.string, ""),
   })
-  .volatile(() => ({
+  .volatile((self) => ({
     isBusy: false,
+
+    minEpochsInput: new NumberInputField(
+      "Minimum Epochs",
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than 0.",
+      50,
+      null,
+      (value: number) => {
+        return value > 0;
+      },
+    ),
+    learningRateInput: new NumberInputField(
+      "Learning Rate",
+      StringInputFieldType.FLOAT,
+      "Must be greater than 0.",
+      1e-3,
+      null,
+      (value: number) => {
+        return value > 0;
+      },
+    ),
+    findLearningRateInput: new BooleanInputField(
+      "Find Learning Rate",
+      self.findLearningRate,
+    ),
+    batchSizeInput: new NumberInputField(
+      "Batch Size",
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than 0.",
+      4,
+      null,
+      (value: number) => {
+        return value > 0;
+      },
+    ),
+    accumulateGradientsInput: new NumberInputField(
+      "Accumulate Gradients",
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than 0.",
+      1,
+      null,
+      (value: number) => {
+        return value > 0;
+      },
+    ),
+    lossInput: new DropdownInputField("Loss", lossOptions, self.loss),
+    optimizerInput: new DropdownInputField(
+      "Optimizer",
+      optimizerOptions,
+      self.optimizer,
+    ),
+  }))
+  .volatile((self) => ({
+    maxEpochsInput: new NumberInputField(
+      "Maximum Epochs",
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than min. epochs.",
+      150,
+      null,
+      (value: number) => {
+        return (
+          value > 0 &&
+          value >= self.minEpochsInput.convertToValue(self.minEpochs)
+        );
+      },
+    ),
   }))
   .views((self) => ({
     get volumes(): VolumeInstance[] {
       const userProjects = getParentOfType(self, User)?.userProjects;
       return userProjects?.activeProject?.projectVolumes.volumeArray || [];
     },
+  }))
+  .views((self) => ({
     get canDoTraining() {
       return (
+        !self.isBusy &&
         self.model !== undefined &&
         self.trainingVolumes.length > 0 &&
         self.validationVolumes.length > 0 &&
-        self.testingVolumes.length > 0
+        self.testingVolumes.length > 0 &&
+        self.minEpochsInput.isValid(self.minEpochs) &&
+        self.maxEpochsInput.isValid(self.maxEpochs) &&
+        self.learningRateInput.isValid(self.learningRate) &&
+        self.batchSizeInput.isValid(self.batchSize) &&
+        self.lossInput.isValid(self.loss) &&
+        self.optimizerInput.isValid(self.optimizer) &&
+        self.accumulateGradientsInput.isValid(self.accumulateGradients)
       );
     },
-  }))
-  .views((self) => ({
     get trainingVolumeOptions() {
       return self.volumes.filter(
         (volume) =>
@@ -82,8 +181,8 @@ export const ModelTraining = types
     setModel(model: ModelInstance) {
       self.model = model;
     },
-    setCheckpoint(checkpoint: CheckpointInstance) {
-      self.checkpoint = checkpoint;
+    setCheckpointId(checkpointId: number | undefined) {
+      self.checkpointId = checkpointId;
     },
     addTrainingVolume(volume: VolumeInstance) {
       if (!self.trainingVolumes.includes(volume)) {
@@ -136,21 +235,72 @@ export const ModelTraining = types
       }
       self.testingVolumes.splice(index, 1);
     },
+    setMinEpochs(minEpochs: string) {
+      self.minEpochs = minEpochs;
+    },
+    setMaxEpochs(maxEpochs: string) {
+      self.maxEpochs = maxEpochs;
+    },
+    setFindLearningRate(findLeatningRate: boolean) {
+      self.findLearningRate = findLeatningRate;
+    },
+    setLearningRate(learningRate: string) {
+      self.learningRate = learningRate;
+    },
+    setBatchSize(batchSize: string) {
+      self.batchSize = batchSize;
+    },
+    setLoss(loss: string) {
+      self.loss = loss;
+    },
+    setOptimizer(optimizer: string) {
+      self.optimizer = optimizer;
+    },
+    setAccumulateGradients(accumulateGradients: string) {
+      self.accumulateGradients = accumulateGradients;
+    },
   }))
   .actions((self) => ({
     startTraining: flow(function* () {
       if (!self.canDoTraining) {
         return;
       }
+      let toastId = null;
       try {
-        var trainData = {
+        toastId = toast.loading("Training in progress...");
+        self.isBusy = true;
+
+        if (
+          self.checkpointId === undefined &&
+          self.model &&
+          self.model?.modelCheckpoints.checkpoints.size > 0
+        ) {
+          throw new Error(
+            "If a checkpoint is not selected, the chosen model must be empty",
+          );
+        }
+
+        //prettier-ignore
+        const trainData: Record<string, any> = {
           modelId: self.model?.id,
           trainingVolumes: self.trainingVolumeIds,
           validationVolumes: self.validationVolumeIds,
           testingVolumes: self.testingVolumeIds,
+          minEpochs: self.minEpochsInput.convertToValue(self.minEpochs),
+          maxEpochs: self.maxEpochsInput.convertToValue(self.maxEpochs),
+          findLearningRate: self.findLearningRateInput.convertToValue(self.findLearningRate,),
+          learningRate: self.learningRateInput.convertToValue(self.learningRate),
+          batchSize: self.batchSizeInput.convertToValue(self.batchSize),
+          loss: self.lossInput.convertToValue(self.loss),
+          optimizer: self.optimizerInput.convertToValue(self.optimizer),
+          accumulateGradients: self.accumulateGradientsInput.convertToValue(self.accumulateGradients),
         };
 
-        yield Utils.sendRequestWithToast(
+        if (self.checkpointId !== undefined) {
+          trainData.checkpointId = self.checkpointId;
+        }
+
+        yield Utils.sendReq(
           `queue-training`,
           {
             method: "POST",
@@ -158,13 +308,22 @@ export const ModelTraining = types
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(trainData),
           },
-          { successText: "Training successfuly queued!" },
+          false,
         );
         if (!isAlive(self)) {
           return;
         }
+        toast.update(toastId, {
+          render: "Training queued successfuly!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
       } catch (error) {
         console.error("startTraining Error:", error);
+        Utils.updateToastWithErrorMsg(toastId, error);
+      } finally {
+        self.isBusy = false;
       }
     }),
   }));

@@ -34,8 +34,6 @@
         },
         "training": {
             "command": "train.py",
-            "min_epochs": 1,
-            "max_epochs": 1,
             "cleanTemporaryFiles": true
         }
     },
