@@ -57,6 +57,16 @@ const CryoTools = observer(({ open, close }: Props) => {
   const [sphericalAberration, setSphericalAberration] = useState("0.7");
   const [tileSize, setTileSize] = useState("512");
 
+  //Tilt series alignment tool 
+  const [peak, setPeak] = useState("5.0");
+  const [diff, setDiff] = useState("2.0");
+  const [grow, setGrow] = useState("5.0");
+  const [iterationsTSA, setIterationsTSA] = useState("5");
+  const [patchSizeTSA, setPatchSizeTSA] = useState("4");
+  const [patchRadius, setPatchRadius] = useState("0.125");
+  const [pixSizeTSA, setPixelSizeTSA] = useState("1.19");
+  const [patchPixSize, setPatchPixSize] = useState("680");
+
   const isPageBusy = () => {
     return uiState.uploadDialog.isBusy;
   };
@@ -203,6 +213,73 @@ const CryoTools = observer(({ open, close }: Props) => {
     }
   };
 
+  const handleTiltSeriesAlignment = async (id: Number | undefined) => {
+    if (!id) {
+      return;
+    }
+
+    let toastId = null;
+
+    try {
+      toastId = toast.loading("Applying Tilt Series Alignment...");
+
+      const tiltSeriesSettings = {
+        peak: Number(peak),
+        diff: Number(diff),
+        grow: Number(grow),
+        iterationsTSA: Number(iterationsTSA),
+        patchSizeTSA: Number(patchSizeTSA),
+        patchRadius: Number(patchRadius),
+        pixSizeTSA: Number(pixSizeTSA),
+        patchPixSize: Number(patchPixSize),
+      };
+
+      const response = await Utils.sendReq(
+        `preprocessing/RawVolumeData/${id}/tilt-series-alignment`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(tiltSeriesSettings),
+        }
+      );
+
+      const blob = await response.blob();
+
+      let filename = "tilted-aligned-series.zip";
+      const disposition = response.headers.get("Content-Disposition");
+      if (disposition && disposition.includes("filename=")) {
+        const filenameMatch = disposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create a temporary link element to trigger the download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.update(toastId, {
+        render: "Tilted Series Aligned succesfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 10000,
+      });
+      toast.dismiss(toastId);
+    } catch (error) {
+      Utils.updateToastWithErrorMsg(toastId, error);
+      console.error("Error:", error);
+    }
+  };
+
   return open ? (
     <div className={globalClasses.leftSidebar}>
       <div className={globalClasses.sidebarContents}>
@@ -219,6 +296,124 @@ const CryoTools = observer(({ open, close }: Props) => {
         </div>
 
         <div className={globalClasses.siderbarBody}>
+
+          {/* Motion Correction */}
+          <h2>Tilt Series Alignment</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+
+            <Label htmlFor="peak">Peak: [{Number(peak)}]</Label>
+            <Slider
+              id="peak"
+              min={1}
+              max={10}
+              step={1}
+              value={Number(peak)}
+              onChange={(_, data) => setPeak(data.value.toString())}
+            />
+
+            <Label htmlFor="diff">Difference: [{Number(diff)}]</Label>
+            <Slider
+              id="peak"
+              min={3}
+              max={6}
+              step={1}
+              value={Number(diff)}
+              onChange={(_, data) => setDiff(data.value.toString())}
+            />
+
+            <Label htmlFor="peak">Grow: [{Number(grow)}]</Label>
+            <Slider
+              id="grow"
+              min={1}
+              max={5}
+              step={1}
+              value={Number(grow)}
+              onChange={(_, data) => setGrow(data.value.toString())}
+            />
+
+            <Label htmlFor="iterations">Iterations: [{Number(iterationsTSA)}]</Label>
+            <Slider
+              id="iterations"
+              min={1}
+              max={5}
+              step={1}
+              value={Number(iterationsTSA)}
+              onChange={(_, data) => setIterationsTSA(data.value.toString())}
+            />
+
+            <Label htmlFor="patchSize">
+              Patch Size: [{Number(patchSize)}] x [{Number(patchSize)}]
+            </Label>
+            <Slider
+              id="patchSize"
+              min={1}
+              max={10}
+              step={1}
+              value={Number(patchSize)}
+              onChange={(_, data) => setPatchSize(data.value.toString())}
+            />
+
+            <Label htmlFor="patchSizePX">
+              Patch Size in Pixels: [{Number(patchPixSize)}] x [{Number(patchPixSize)}]
+            </Label>
+            <Slider
+              id="patchSize"
+              min={1}
+              max={10}
+              step={1}
+              value={Number(patchPixSize)}
+              onChange={(_, data) => setPatchPixSize(data.value.toString())}
+            />
+
+            <Label htmlFor="patchRadius">
+              Patch Radius: [{Number(patchRadius)}]
+            </Label>
+            <Slider
+              id="patchSize"
+              min={0.025}
+              max={2}
+              step={0.025}
+              value={Number(patchRadius)}
+              onChange={(_, data) => setPatchRadius(data.value.toString())}
+            />
+
+            {/* Visualize Button */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "20px",
+              }}
+            >
+              <Tooltip
+                content="Apply Tilt Series Alignment"
+                relationship="label"
+                appearance="inverted"
+                hideDelay={0}
+              >
+                <Button
+                  appearance="primary"
+                  className={mergeClasses(
+                    globalClasses.actionButton,
+                    classes.visualizeButton
+                  )}
+                  disabled={
+                    selectedVolume?.rawData === undefined || isPageBusy()
+                  }
+                  onClick={() =>
+                    handleTiltSeriesAlignment(selectedVolume?.rawData?.id)
+                  }
+                >
+                  <div className={globalClasses.actionButtonIconContainer}>
+                    <ProjectionScreen20Regular />
+                  </div>
+                  <div className="buttonText">Apply</div>
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
+
+
           {/* Motion Correction */}
           <h2>Motion Correction</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
