@@ -475,3 +475,25 @@ export default class Utils {
     };
   }
 }
+
+export async function loadScript(src: string): Promise<void> {
+  const res = await fetch(src, { method: "GET" });
+  const contentType = res.headers.get("content-type");
+  if (!res.ok || !contentType?.includes("javascript")) {
+    throw new Error(`Script ${src} failed to load: ${res.status}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}

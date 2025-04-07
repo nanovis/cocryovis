@@ -10,8 +10,7 @@ import {
 } from "@fluentui/react-components";
 import { onPatch, onSnapshot } from "mobx-state-tree";
 import React from "react";
-import { toast } from "react-toastify";
-import Utils from "./functions/Utils";
+import { loadScript } from "./functions/Utils";
 
 // Import GPUFeatureName type
 type GPUFeatureName = "texture-compression-bc" | "timestamp-query";
@@ -92,58 +91,67 @@ const Main = () => {
   };
 
   async function initModule() {
-    window.WasmModule = null;
-    window.WasmModule = await window.createVolumeRenderer({
-      canvas: document.getElementById("canvas"),
+    try {
+      window.WasmModule = null;
+      await loadScript("/index.js");
 
-      locateFile: function (path: string) {
-        if (path.endsWith(".data")) {
-          return "/index.data";
-        }
-        if (path.endsWith(".wasm")) {
-          return "/index.wasm";
-        }
-        return path;
-      },
+      window.WasmModule = await window.createVolumeRenderer({
+        canvas: document.getElementById("canvas"),
 
-      preRun: [],
-      postRun: [],
-      print: (function () {
-        return function (text: any) {
+        locateFile: function (path: string) {
+          if (path.endsWith(".data")) {
+            return "/index.data";
+          }
+          if (path.endsWith(".wasm")) {
+            return "/index.wasm";
+          }
+          return path;
+        },
+
+        preRun: [],
+        postRun: [],
+        print: (function () {
+          return function (text: any) {
+            text = Array.prototype.slice.call(arguments).join(" ");
+            console.log("Renderer log: ", text);
+          };
+        })(),
+        printErr: function (text: any) {
           text = Array.prototype.slice.call(arguments).join(" ");
-          console.log("Renderer log: ", text);
-        };
-      })(),
-      printErr: function (text: any) {
-        text = Array.prototype.slice.call(arguments).join(" ");
-        console.error("Renderer error: ", text);
-      },
-      setStatus: function (text: any) {
-        console.log("Renderer status: " + text);
-      },
-      monitorRunDependencies: function (left: any) {},
-    });
+          console.error("Renderer error: ", text);
+        },
+        setStatus: function (text: any) {
+          console.log("Renderer status: " + text);
+        },
+        monitorRunDependencies: function (left: any) {},
+      });
 
-    console.log("Emscripten Module Initialized with WebGPU.");
-    if (!window.WasmModule) {
-      console.error("Could not initialize WebGPU device.");
-      return;
-    }
-    await window.WasmModule.start_app();
-    canvasResize();
-    window.addEventListener("resize", canvasResize);
+      console.log("Emscripten Module Initialized with WebGPU.");
+      if (!window.WasmModule) {
+        console.error("Could not initialize WebGPU device.");
+        return;
+      }
+      await window.WasmModule.start_app();
+      canvasResize();
+      window.addEventListener("resize", canvasResize);
 
-    setTimeout(() => {
+      setTimeout(() => {
+        const spinner = document.getElementById("loading-spinner");
+        if (spinner) {
+          spinner.style.opacity = "0";
+          spinner.style.visibility = "hidden";
+          setTimeout(() => {
+            spinner.remove();
+            rootStore.setWasmLoaded(true);
+          }, 250);
+        }
+      }, 250);
+    } catch {
       const spinner = document.getElementById("loading-spinner");
       if (spinner) {
-        spinner.style.opacity = "0";
-        spinner.style.visibility = "hidden";
-        setTimeout(() => {
-          spinner.remove();
-          rootStore.setWasmLoaded(true);
-        }, 250);
+        spinner.innerHTML = `<div style="color: white">WebGPU not found, please refresh the page.</div>`;
       }
-    }, 250);
+    }
   }
 
   function canvasResize() {
