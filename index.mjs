@@ -36,12 +36,11 @@ const startServer = async () => {
         Utils.findArgument(argv, "--host") ?? process.env.HOST ?? "localhost";
     const useHttps =
         Utils.hasArgument(argv, "--https") ?? process.env.HTTPS === "true";
+
     const port =
         Number(Utils.findArgument(argv, "--port")) ||
         Number(process.env.PORT) ||
-        useHttps
-            ? 443
-            : 8080;
+        (useHttps ? 443 : 8080);
 
     const demoProjectIndex =
         Number(Utils.findArgument(argv, "--demoProject")) ||
