@@ -141,7 +141,6 @@ const Main = () => {
         setTimeout(() => {
           spinner.remove();
           rootStore.setWasmLoaded(true);
-          parseDemoUrl();
         }, 250);
       }
     }, 250);
@@ -181,45 +180,6 @@ const Main = () => {
         console.error("Failed to initialize WebGPU module.", e)
       );
     }
-  }, []);
-
-  const parseDemoUrl = async () => {
-    const match = window.location.pathname.match(/^\/demo\/(\w+)\/?$/);
-    if (match && window.WasmModule) {
-      const id = match[1];
-      await openDemo(id);
-      window.history.replaceState(null, "", "/");
-    }
-  };
-
-  const openDemo = async (id: string) => {
-    let toastId = null;
-    try {
-      toastId = toast.loading("Loading Demo...");
-      const response = await Utils.sendReq(
-        `demo/${id}`,
-        {
-          method: "GET",
-        },
-        false
-      );
-      const contents = await response.blob();
-      const fileMap = await Utils.zipToFileMap(contents);
-      await rootStore.uiState.visualizeVolume(fileMap, undefined);
-      toast.update(toastId, {
-        render: "Demo loaded successfully!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-      });
-    } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    parseDemoUrl();
   }, []);
 
   return (

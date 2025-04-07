@@ -83,7 +83,20 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         }
       }
 
+      // Wait until renderer is ready
+      while (!rootStore.wasmLoaded) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
       await resolveProjectUrl();
+      await resolveDemoUrl();
+    };
+
+    const resolveDemoUrl = async () => {
+      const match = window.location.pathname.match(/^\/demo\/?$/);
+      if (match) {
+        window.history.replaceState(null, "", "/");
+        await rootStore.user.userProjects.loadDemoProject();
+      }
     };
 
     const resolveProjectUrl = async () => {
@@ -94,10 +107,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         try {
           toastId = toast.loading("Loading Project...");
 
-          // Wait until renderer is ready
-          while (!rootStore.wasmLoaded) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
           const projectId = parseInt(match[1]);
           if (isNaN(projectId)) {
             throw new Error("Invalid project ID");
