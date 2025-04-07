@@ -35,7 +35,7 @@ const startServer = async () => {
     const host =
         Utils.findArgument(argv, "--host") ?? process.env.HOST ?? "localhost";
     const useHttps =
-        Utils.hasArgument(argv, "--host") ?? process.env.HTTPS === "true";
+        Utils.hasArgument(argv, "--https") ?? process.env.HTTPS === "true";
     const port =
         Number(Utils.findArgument(argv, "--port")) ||
         Number(process.env.PORT) ||
