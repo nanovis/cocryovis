@@ -27,17 +27,26 @@ import https from "https";
 import TaskHistory from "./src/models/task-history.mjs";
 import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
 import { checkCookieAge } from "./src/middleware/restrict.mjs";
+import Utils from "./src/tools/utils.mjs";
 
 const SqliteStore = sqlite3SessionStore(session);
 
 const startServer = async () => {
-    const host = argv[3] ?? process.env.HOST ?? "localhost";
-    const useHttps = argv[4]
-        ? argv[4] === "true"
-        : process.env.HTTPS === "true";
-
+    const host =
+        Utils.findArgument(argv, "--host") ?? process.env.HOST ?? "localhost";
+    const useHttps =
+        Utils.hasArgument(argv, "--host") ?? process.env.HTTPS === "true";
     const port =
-        Number(argv[2]) || Number(process.env.PORT) || (useHttps ? 443 : 8080);
+        Number(Utils.findArgument(argv, "--port")) ||
+        Number(process.env.PORT) ||
+        useHttps
+            ? 443
+            : 8080;
+
+    const demoProjectIndex =
+        Number(Utils.findArgument(argv, "--demoProject")) ||
+        appConfig.demoProjectIndex;
+    appConfig.demoProjectIndex = demoProjectIndex;
 
     const app = express();
 

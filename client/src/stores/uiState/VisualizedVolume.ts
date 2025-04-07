@@ -253,7 +253,7 @@ export const VisualizedVolume = types
         self.setManualLabelIndex(0);
 
         if (self.clippingPlane === "0") {
-          self.setClippingPlane("2");
+          self.setClippingPlane("4");
         }
 
         toast.update(toastId, {

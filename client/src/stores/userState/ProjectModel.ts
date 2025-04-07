@@ -2,6 +2,7 @@ import { flow, getParent, Instance, isAlive, types } from "mobx-state-tree";
 import { ModelDB, ProjectModels } from "./ModelModel";
 import { ProjectVolumes, VolumeDB } from "./VolumeModel";
 import Utils from "../../functions/Utils";
+import { toast } from "react-toastify";
 
 interface ProjectDB {
   id: number;
@@ -202,6 +203,52 @@ export const UserProjects = types
         }
       }
       self.activeProjectId = projectId;
+    }),
+    loadDemoProject: flow(function* loadDemoProject() {
+      let toastId = null;
+      try {
+        toastId = toast.loading("Loading demo project...");
+        const response = yield Utils.sendReq(
+          "demo",
+          {
+            method: "GET",
+          },
+          false
+        );
+        if (!isAlive(self)) {
+          return;
+        }
+
+        const project = yield response.json();
+        if (!isAlive(self)) {
+          return;
+        }
+
+        if (!self.projects.has(project.id)) {
+          self.projects.set(project.id, {
+            ...project,
+            projectModels: { projectId: project.id },
+            projectVolumes: { projectId: project.id },
+          });
+
+          const newProject = self.projects.get(project.id);
+
+          newProject?.projectVolumes.setVolumes(project.volumes);
+          newProject?.projectModels.setModels(project.models);
+        }
+
+        toast.update(toastId, {
+          render: "Demo project loaded",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+
+        self.activeProjectId = project.id;
+      } catch (error) {
+        Utils.updateToastWithErrorMsg(toastId, error);
+        console.error("Failed to load demo project", error);
+      }
     }),
   }));
 

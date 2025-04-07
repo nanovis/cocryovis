@@ -792,12 +792,7 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const canActivateEditingMode = () => {
-    return (
-      activeProject?.hasWriteAccess &&
-      selectedVolume &&
-      visualizedVolume &&
-      visualizedVolume.canEditLabels
-    );
+    return selectedVolume && visualizedVolume && visualizedVolume.canEditLabels;
   };
 
   return open ? (
@@ -1097,9 +1092,6 @@ const Volume = observer(({ open, close }: Props) => {
                         Selected volume must be visualized.
                       </Text>
                     </div>
-                    <WriteAccessTooltipContent
-                      hasWriteAccess={activeProject?.hasWriteAccess}
-                    />
                   </div>
                 ),
               }}

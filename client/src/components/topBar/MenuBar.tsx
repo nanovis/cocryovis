@@ -101,7 +101,7 @@ const MenuBar = observer(
           <Image src={KaustLogo} className={classes.logoIcon} />
           {!user.isGuest && (
             <MenuBarItem
-              label="Project"
+              label="Select Project"
               children={[
                 <MenuItem key="newProject" onClick={handleCreateProjectClick}>
                   New Project
@@ -114,7 +114,7 @@ const MenuBar = observer(
           )}
           {user.userProjects.activeProjectId && (
             <div style={{ display: "flex", alignItems: "center" }}>
-              <Label style={{ marginLeft: "10px" }}>
+              <Label style={{ marginLeft: "20px" }}>
                 {"Active Project: "} {user.userProjects.activeProject?.name}
               </Label>
               {!user.isGuest &&
@@ -136,6 +136,21 @@ const MenuBar = observer(
                 )}
             </div>
           )}
+          <Tooltip
+            content={"Loads the demo project from the server."}
+            relationship={"label"}
+            appearance="inverted"
+            withArrow={true}
+            positioning={"after"}
+          >
+            <Button
+              style={{ marginLeft: "50px" }}
+              appearance="subtle"
+              onClick={() => user.userProjects.loadDemoProject()}
+            >
+              Open Demo Project
+            </Button>
+          </Tooltip>
         </div>
         <div style={{ display: "flex" }}>
           {!user.isGuest ? (

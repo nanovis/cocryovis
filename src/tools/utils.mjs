@@ -361,7 +361,7 @@ export default class Utils {
                         }
 
                         response.pipe(fileStream);
-                        fileStream.on("finish", resolve);
+                        fileStream.on("finish", () => resolve());
                         fileStream.on("error", reject);
                     })
                     .on("error", reject);
@@ -422,27 +422,29 @@ export default class Utils {
         return new Promise((resolve, reject) => {
             const child = spawn(command, args, {
                 cwd: cwd || process.cwd(),
-                stdio: ['ignore', 'pipe', 'pipe']
+                stdio: ["ignore", "pipe", "pipe"],
             });
-    
+
             if (stdoutCallback) {
                 child.stdout.on("data", (data) => {
                     stdoutCallback(data.toString());
                 });
             }
-    
+
             if (stderrCallback) {
                 child.stderr.on("data", (data) => {
                     stderrCallback(data.toString());
                 });
             }
-    
+
             child.on("close", (code) => {
                 if (code === 0 || allowSoftFailCodes.includes(code)) {
                     if (code === 139) {
-                        console.warn("Warning: tiltalign exited with code 139 (SegFault after success)");
+                        console.warn(
+                            "Warning: tiltalign exited with code 139 (SegFault after success)"
+                        );
                     }
-                    resolve();//omit for this code
+                    resolve(); //omit for this code
                 } else {
                     reject(
                         new Error(
@@ -451,7 +453,7 @@ export default class Utils {
                     );
                 }
             });
-    
+
             child.on("error", (err) => {
                 reject(new Error(`Failed to start script: ${err.message}`));
             });
@@ -481,5 +483,33 @@ export default class Utils {
             stdoutCallback,
             stderrCallback
         );
+    }
+
+    /**
+     * Checks if a command line argument is present.
+     * @param {string[]} args - The command line arguments.
+     * @param {string} argName - The name of the argument to find (e.g., "--arg").
+     * @returns {boolean}
+     */
+    static hasArgument(args, argName) {
+        const index = args.indexOf(argName);
+        if (index !== -1) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Finds the value of a command line argument by its name.
+     * @param {string[]} args - The command line arguments.
+     * @param {string} argName - The name of the argument to find (e.g., "--arg").
+     * @returns {string | undefined}
+     */
+    static findArgument(args, argName) {
+        const index = args.indexOf(argName);
+        if (index !== -1 && index + 1 < args.length) {
+            return args[index + 1];
+        }
+        return undefined;
     }
 }

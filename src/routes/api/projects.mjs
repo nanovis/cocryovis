@@ -244,4 +244,4 @@ projectsApi.post(`/preprocessing/:type/:idVolumeData/tilt-series-alignment`, res
 
 /////// DEMO
 // Get Result
-projectsApi.get(`/demo/:idDemo`, DemoController.getDemo);
+projectsApi.get(`/demo`, DemoController.getDemo);
