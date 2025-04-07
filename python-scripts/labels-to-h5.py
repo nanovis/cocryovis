@@ -34,7 +34,7 @@ def labels_to_h5(label_paths: List[str], output_path: str, dataset_name: str, di
     directory = os.path.dirname(output_path)
     os.makedirs(directory, exist_ok=True)
     with h5py.File(output_path, 'w') as file:
-        file.create_dataset(dataset_name, data=labels)
+        file.create_dataset(dataset_name, data=labels, chunks=True)
 
 
 if __name__ == '__main__':

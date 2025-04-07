@@ -55,7 +55,7 @@ def raw_to_h5(raw_file_path: str, output_path: str, dataset_name: str,
     directory = os.path.dirname(output_path)
     os.makedirs(directory, exist_ok=True)
     with h5py.File(output_path, 'w') as file:
-        file.create_dataset(dataset_name, data=np_data)
+        file.create_dataset(dataset_name, data=np_data, chunks=True)
 
 
 if __name__ == '__main__':
