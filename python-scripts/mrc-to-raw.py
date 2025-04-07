@@ -46,6 +46,9 @@ def mrc_to_raw(mrc_file_path, output_path):
 
         raw_filename = generate_unique_filename(output_path, raw_file_output)
 
+        # Flip the data along the y-axis
+        data = np.flip(data, axis=1)
+
         data.tofile(os.path.join(output_path, raw_filename))
 
         json_output = generate_settings_object(raw_filename,
