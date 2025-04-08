@@ -21,6 +21,8 @@ import { toast } from "react-toastify";
 import Utils from "../../../functions/Utils";
 import JSZip from "jszip";
 import saveAs from "file-saver";
+import { observer } from "mobx-react-lite";
+import { useMst } from "../../../stores/RootStore";
 
 const useStyles = makeStyles({
   inferenceButtons: {
@@ -37,9 +39,11 @@ interface Props {
   close: () => void;
 }
 
-const Local = ({ open, close }: Props) => {
+const Local = observer(({ open, close }: Props) => {
   const classes = useStyles();
   const globalClasses = globalStyles();
+
+  const { uiState } = useMst();
 
   const [tiltSeriesProccessing, setTiltSeriesProccessing] = useState(false);
   const [isTiltSeriesDialogOpen, setIsTiltSeriesDialogOpen] = useState(false);
@@ -344,6 +348,7 @@ const Local = ({ open, close }: Props) => {
             open={isTiltSeriesDialogOpen}
             onClose={() => setIsTiltSeriesDialogOpen(false)}
             onSubmit={processTiltSeries}
+            tiltSeriesDialogStore={uiState.tiltSeriesDialogClient}
           />
           <hr
             style={{
@@ -468,6 +473,5 @@ const Local = ({ open, close }: Props) => {
       </div>
     </div>
   ) : null;
-};
-
+});
 export default Local;

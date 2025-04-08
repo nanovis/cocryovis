@@ -45,138 +45,6 @@ export const ModelTraining = types
     optimizer: types.optional(types.string, "Adam"),
     accumulateGradients: types.optional(types.string, ""),
   })
-  .volatile((self) => ({
-    isBusy: false,
-
-    minEpochsInput: new NumberInputField(
-      "Minimum Epochs",
-      StringInputFieldType.INTEGER,
-      "Must be an integer greater than 0.",
-      50,
-      null,
-      (value: number) => {
-        return value > 0;
-      }
-    ),
-    learningRateInput: new NumberInputField(
-      "Learning Rate",
-      StringInputFieldType.FLOAT,
-      "Must be greater than 0.",
-      1e-3,
-      null,
-      (value: number) => {
-        return value > 0;
-      }
-    ),
-    findLearningRateInput: new BooleanInputField(
-      "Find Learning Rate",
-      self.findLearningRate
-    ),
-    batchSizeInput: new NumberInputField(
-      "Batch Size",
-      StringInputFieldType.INTEGER,
-      "Must be an integer greater than 0.",
-      4,
-      null,
-      (value: number) => {
-        return value > 0;
-      }
-    ),
-    accumulateGradientsInput: new NumberInputField(
-      "Accumulate Gradients",
-      StringInputFieldType.INTEGER,
-      "Must be an integer greater than 0.",
-      1,
-      null,
-      (value: number) => {
-        return value > 0;
-      }
-    ),
-    lossInput: new DropdownInputField("Loss", lossOptions, self.loss),
-    optimizerInput: new DropdownInputField(
-      "Optimizer",
-      optimizerOptions,
-      self.optimizer
-    ),
-  }))
-  .volatile((self) => ({
-    maxEpochsInput: new NumberInputField(
-      "Maximum Epochs",
-      StringInputFieldType.INTEGER,
-      "Must be an integer greater than min. epochs.",
-      150,
-      null,
-      (value: number) => {
-        return (
-          value > 0 &&
-          value >= self.minEpochsInput.convertToValue(self.minEpochs)
-        );
-      }
-    ),
-  }))
-  .views((self) => ({
-    get volumes(): VolumeInstance[] {
-      const userProjects = getParentOfType(self, User)?.userProjects;
-      return userProjects?.activeProject?.projectVolumes.volumeArray || [];
-    },
-  }))
-  .views((self) => ({
-    get canDoTraining() {
-      return (
-        !self.isBusy &&
-        self.model !== undefined &&
-        self.trainingVolumes.length > 0 &&
-        self.validationVolumes.length > 0 &&
-        self.testingVolumes.length > 0 &&
-        self.minEpochsInput.isValid(self.minEpochs) &&
-        self.maxEpochsInput.isValid(self.maxEpochs) &&
-        self.learningRateInput.isValid(self.learningRate) &&
-        self.batchSizeInput.isValid(self.batchSize) &&
-        self.lossInput.isValid(self.loss) &&
-        self.optimizerInput.isValid(self.optimizer) &&
-        self.accumulateGradientsInput.isValid(self.accumulateGradients)
-      );
-    },
-    get trainingVolumeOptions() {
-      return self.volumes.filter(
-        (volume) =>
-          !self.validationVolumes.includes(volume) &&
-          !self.testingVolumes.includes(volume)
-      );
-    },
-    get trainingVolumeNames() {
-      return self.trainingVolumes.map((volume) => volume.name);
-    },
-    get trainingVolumeIds() {
-      return self.trainingVolumes.map((volume) => volume.id.toString());
-    },
-    get validationVolumeOptions() {
-      return self.volumes.filter(
-        (volume) =>
-          !self.trainingVolumes.includes(volume) &&
-          !self.testingVolumes.includes(volume)
-      );
-    },
-    get validationVolumeNames() {
-      return self.validationVolumes.map((volume) => volume.name);
-    },
-    get validationVolumeIds() {
-      return self.validationVolumes.map((volume) => volume.id.toString());
-    },
-    get testingVolumeOptions() {
-      return self.volumes.filter(
-        (volume) =>
-          !self.trainingVolumes.includes(volume) &&
-          !self.validationVolumes.includes(volume)
-      );
-    },
-    get testingVolumeNames() {
-      return self.testingVolumes.map((volume) => volume.name);
-    },
-    get testingVolumeIds() {
-      return self.testingVolumes.map((volume) => volume.id.toString());
-    },
-  }))
   .actions((self) => ({
     setModel(model: ModelInstance) {
       self.model = model;
@@ -260,6 +128,171 @@ export const ModelTraining = types
       self.accumulateGradients = accumulateGradients;
     },
   }))
+  .volatile((self) => ({
+    isBusy: false,
+
+    minEpochsInput: new NumberInputField(
+      "Minimum Epochs",
+      () => {
+        return self.minEpochs;
+      },
+      self.setMinEpochs,
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than 0.",
+      50,
+      null,
+      (value: number) => {
+        return value > 0;
+      }
+    ),
+    learningRateInput: new NumberInputField(
+      "Learning Rate",
+      () => {
+        return self.learningRate;
+      },
+      self.setLearningRate,
+      StringInputFieldType.FLOAT,
+      "Must be greater than 0.",
+      1e-3,
+      null,
+      (value: number) => {
+        return value > 0;
+      }
+    ),
+    findLearningRateInput: new BooleanInputField(
+      "Find Learning Rate",
+      () => {
+        return self.findLearningRate;
+      },
+      self.setFindLearningRate,
+      false
+    ),
+    batchSizeInput: new NumberInputField(
+      "Batch Size",
+      () => {
+        return self.batchSize;
+      },
+      self.setBatchSize,
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than 0.",
+      4,
+      null,
+      (value: number) => {
+        return value > 0;
+      }
+    ),
+    accumulateGradientsInput: new NumberInputField(
+      "Accumulate Gradients",
+      () => {
+        return self.accumulateGradients;
+      },
+      self.setAccumulateGradients,
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than 0.",
+      1,
+      null,
+      (value: number) => {
+        return value > 0;
+      }
+    ),
+    lossInput: new DropdownInputField(
+      "Loss",
+      () => {
+        return self.loss;
+      },
+      self.setLoss,
+      lossOptions,
+      "mse"
+    ),
+    optimizerInput: new DropdownInputField(
+      "Optimizer",
+      () => {
+        return self.optimizer;
+      },
+      self.setOptimizer,
+      optimizerOptions,
+      "Adam"
+    ),
+  }))
+  .volatile((self) => ({
+    maxEpochsInput: new NumberInputField(
+      "Maximum Epochs",
+      () => {
+        return self.maxEpochs;
+      },
+      self.setMaxEpochs,
+      StringInputFieldType.INTEGER,
+      "Must be an integer greater than min. epochs.",
+      150,
+      null,
+      (value: number) => {
+        return value > 0 && value >= self.minEpochsInput.convertToValue();
+      }
+    ),
+  }))
+  .views((self) => ({
+    get volumes(): VolumeInstance[] {
+      const userProjects = getParentOfType(self, User)?.userProjects;
+      return userProjects?.activeProject?.projectVolumes.volumeArray || [];
+    },
+  }))
+  .views((self) => ({
+    get canDoTraining() {
+      return (
+        !self.isBusy &&
+        self.model !== undefined &&
+        self.trainingVolumes.length > 0 &&
+        self.validationVolumes.length > 0 &&
+        self.testingVolumes.length > 0 &&
+        self.minEpochsInput.isValid() &&
+        self.maxEpochsInput.isValid() &&
+        self.learningRateInput.isValid() &&
+        self.batchSizeInput.isValid() &&
+        self.lossInput.isValid() &&
+        self.optimizerInput.isValid() &&
+        self.accumulateGradientsInput.isValid()
+      );
+    },
+    get trainingVolumeOptions() {
+      return self.volumes.filter(
+        (volume) =>
+          !self.validationVolumes.includes(volume) &&
+          !self.testingVolumes.includes(volume)
+      );
+    },
+    get trainingVolumeNames() {
+      return self.trainingVolumes.map((volume) => volume.name);
+    },
+    get trainingVolumeIds() {
+      return self.trainingVolumes.map((volume) => volume.id.toString());
+    },
+    get validationVolumeOptions() {
+      return self.volumes.filter(
+        (volume) =>
+          !self.trainingVolumes.includes(volume) &&
+          !self.testingVolumes.includes(volume)
+      );
+    },
+    get validationVolumeNames() {
+      return self.validationVolumes.map((volume) => volume.name);
+    },
+    get validationVolumeIds() {
+      return self.validationVolumes.map((volume) => volume.id.toString());
+    },
+    get testingVolumeOptions() {
+      return self.volumes.filter(
+        (volume) =>
+          !self.trainingVolumes.includes(volume) &&
+          !self.validationVolumes.includes(volume)
+      );
+    },
+    get testingVolumeNames() {
+      return self.testingVolumes.map((volume) => volume.name);
+    },
+    get testingVolumeIds() {
+      return self.testingVolumes.map((volume) => volume.id.toString());
+    },
+  }))
   .actions((self) => ({
     startTraining: flow(function* () {
       if (!self.canDoTraining) {
@@ -286,14 +319,14 @@ export const ModelTraining = types
           trainingVolumes: self.trainingVolumeIds,
           validationVolumes: self.validationVolumeIds,
           testingVolumes: self.testingVolumeIds,
-          minEpochs: self.minEpochsInput.convertToValue(self.minEpochs),
-          maxEpochs: self.maxEpochsInput.convertToValue(self.maxEpochs),
-          findLearningRate: self.findLearningRateInput.convertToValue(self.findLearningRate,),
-          learningRate: self.learningRateInput.convertToValue(self.learningRate),
-          batchSize: self.batchSizeInput.convertToValue(self.batchSize),
-          loss: self.lossInput.convertToValue(self.loss),
-          optimizer: self.optimizerInput.convertToValue(self.optimizer),
-          accumulateGradients: self.accumulateGradientsInput.convertToValue(self.accumulateGradients),
+          minEpochs: self.minEpochsInput.convertToValue(),
+          maxEpochs: self.maxEpochsInput.convertToValue(),
+          findLearningRate: self.findLearningRateInput.convertToValue(),
+          learningRate: self.learningRateInput.convertToValue(),
+          batchSize: self.batchSizeInput.convertToValue(),
+          loss: self.lossInput.convertToValue(),
+          optimizer: self.optimizerInput.convertToValue(),
+          accumulateGradients: self.accumulateGradientsInput.convertToValue(),
         };
 
         if (self.checkpointId !== undefined) {

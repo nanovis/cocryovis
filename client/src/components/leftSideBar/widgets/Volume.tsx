@@ -268,7 +268,10 @@ const Volume = observer(({ open, close }: Props) => {
           "data",
           JSON.stringify({
             volumeId: selectedVolumeId,
-            options: options,
+            options: {
+              reconstruction: options,
+              alignment: { RotationAngle: 60 },
+            },
           })
         );
         await Utils.sendRequestWithToast(
@@ -993,6 +996,7 @@ const Volume = observer(({ open, close }: Props) => {
             onClose={() => setIsTiltSeriesDialogOpen(false)}
             onSubmit={tiltSeriesUpload}
             showServerVariant={true}
+            tiltSeriesDialogStore={uiState.tiltSeriesDialogServer}
           />
 
           <VolumeUploadDialog

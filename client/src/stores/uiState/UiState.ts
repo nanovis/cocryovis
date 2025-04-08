@@ -20,6 +20,7 @@ import { UploadDialog } from "./UploadDialog";
 import { Result } from "../userState/ResultModel";
 import { SparseLabelVolume } from "../userState/SparseVolumeModel";
 import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
+import { TiltSeriesDialog } from "./TiltSeriesDialog";
 
 export const UiState = types
   .model({
@@ -29,6 +30,8 @@ export const UiState = types
     visualizedVolume: types.maybe(VisualizedVolume),
     renderSettings: types.optional(RenderSettings, {}),
     uploadDialog: types.optional(UploadDialog, {}),
+    tiltSeriesDialogServer: types.optional(TiltSeriesDialog, {}),
+    tiltSeriesDialogClient: types.optional(TiltSeriesDialog, {}),
   })
   .actions((self) => ({
     setOpenLeftWidget(id: number) {

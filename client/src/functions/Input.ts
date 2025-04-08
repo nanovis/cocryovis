@@ -1,17 +1,26 @@
 import Utils from "./Utils";
 
-abstract class InputField {
+abstract class InputField<T> {
   name: string;
   infoLabel: string | null;
+  getValue: () => T;
+  setValue: (value: T) => void;
 
-  constructor(name: string, infoLabel: string | null = null) {
+  constructor(
+    name: string,
+    getValue: () => T,
+    setValue: (value: T) => void,
+    infoLabel: string | null = null
+  ) {
     this.name = name;
     this.infoLabel = infoLabel;
+    this.getValue = getValue;
+    this.setValue = setValue;
   }
 
-  abstract isValid(value: any): boolean;
+  abstract isValid(): boolean;
 
-  abstract convertToValue(value: any): any;
+  abstract convertToValue(): any;
 }
 
 export enum StringInputFieldType {
@@ -19,7 +28,7 @@ export enum StringInputFieldType {
   FLOAT,
 }
 
-export class NumberInputField extends InputField {
+export class NumberInputField extends InputField<string> {
   defaultValue: number;
   type: StringInputFieldType;
   validationMessage: string;
@@ -27,20 +36,23 @@ export class NumberInputField extends InputField {
 
   constructor(
     name: string,
+    getValue: () => string,
+    setValue: (value: string) => void,
     type: StringInputFieldType,
     validationMessage: string,
     defaultValue: number,
     infoLabel: string | null = null,
-    valid: (value: number) => boolean = (value: number) => true
+    valid: (value: number) => boolean = () => true
   ) {
-    super(name, infoLabel);
+    super(name, getValue, setValue, infoLabel);
     this.type = type;
     this.validationMessage = validationMessage;
     this.defaultValue = defaultValue;
     this.valid = valid;
   }
 
-  isValid(value: string) {
+  isValid() {
+    const value = this.getValue();
     if (this.type === StringInputFieldType.INTEGER) {
       const parsedValue = parseInt(value);
       return (
@@ -52,7 +64,8 @@ export class NumberInputField extends InputField {
     }
   }
 
-  convertToValue(value: string) {
+  convertToValue() {
+    const value = this.getValue();
     if (value === "") {
       return this.defaultValue;
     } else if (StringInputFieldType.INTEGER) {
@@ -63,49 +76,53 @@ export class NumberInputField extends InputField {
   }
 }
 
-export class DropdownInputField extends InputField {
+export class DropdownInputField extends InputField<string> {
   options: Record<string, string>;
   defaultValue: string;
 
   constructor(
     name: string,
+    getValue: () => string,
+    setValue: (value: string) => void,
     options: Record<string, string>,
     defaultValue: string,
     infoLabel: string | null = null
   ) {
-    super(name, infoLabel);
+    super(name, getValue, setValue, infoLabel);
     this.options = options;
     this.defaultValue = defaultValue;
   }
 
-  isValid(value: string) {
-    return value in this.options;
+  isValid() {
+    return this.getValue() in this.options;
   }
-  getText(value: string) {
-    return this.options[value];
+  getText() {
+    return this.options[this.getValue()];
   }
-  convertToValue(value: string) {
-    return value;
+  convertToValue() {
+    return this.getValue();
   }
 }
 
-export class BooleanInputField extends InputField {
+export class BooleanInputField extends InputField<boolean> {
   defaultValue: boolean;
 
   constructor(
     name: string,
+    getValue: () => boolean,
+    setValue: (value: boolean) => void,
     defaultValue: boolean,
     infoLabel: string | null = null
   ) {
-    super(name, infoLabel);
+    super(name, getValue, setValue, infoLabel);
     this.defaultValue = defaultValue;
   }
 
-  convertToValue(value: boolean) {
-    return value;
+  convertToValue() {
+    return this.getValue();
   }
 
-  isValid(value: boolean): boolean {
+  isValid(): boolean {
     return true;
   }
 }

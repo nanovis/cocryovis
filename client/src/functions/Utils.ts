@@ -118,7 +118,7 @@ export default class Utils {
     return Number.isInteger(num);
   }
 
-  static isIntegerBetween(string: string, min: number, max: number) {
+  static isIntegerBetween(string: string | number, min: number, max: number) {
     const num = Number(string);
     return Number.isInteger(num) && num >= min && num <= max;
   }
@@ -128,7 +128,7 @@ export default class Utils {
     return !Number.isNaN(num);
   }
 
-  static isFloatBetween(string: string, min: number, max: number) {
+  static isFloatBetween(string: string | number, min: number, max: number) {
     const num = Number(string);
     return !Number.isNaN(num) && num >= min && num <= max;
   }

@@ -693,14 +693,10 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                 >
                   <div className={classes.advancedOptionsRow}>
                     <NumberInputValidatedField
-                      value={modelTraining.minEpochs}
-                      setValue={(value) => modelTraining.setMinEpochs(value)}
                       input={modelTraining.minEpochsInput}
                       style={{ flex: 1 }}
                     />
                     <NumberInputValidatedField
-                      value={modelTraining.maxEpochs}
-                      setValue={(value) => modelTraining.setMaxEpochs(value)}
                       input={modelTraining.maxEpochsInput}
                       style={{ flex: 1 }}
                     />
@@ -712,47 +708,31 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                     }}
                   >
                     <NumberInputValidatedField
-                      value={modelTraining.learningRate}
-                      setValue={(value) => modelTraining.setLearningRate(value)}
                       input={modelTraining.learningRateInput}
                       style={{ flex: 1 }}
                       disabled={modelTraining.findLearningRate}
                     />
                     <BooleanInputValidatedField
-                      value={modelTraining.findLearningRate}
-                      setValue={(value) =>
-                        modelTraining.setFindLearningRate(value)
-                      }
                       input={modelTraining.findLearningRateInput}
                       style={{ flex: 1 }}
                     />
                   </div>
                   <div className={classes.advancedOptionsRow}>
                     <NumberInputValidatedField
-                      value={modelTraining.batchSize}
-                      setValue={(value) => modelTraining.setBatchSize(value)}
                       input={modelTraining.batchSizeInput}
                       style={{ flex: 1 }}
                     />
                     <NumberInputValidatedField
-                      value={modelTraining.accumulateGradients}
-                      setValue={(value) =>
-                        modelTraining.setAccumulateGradients(value)
-                      }
                       input={modelTraining.accumulateGradientsInput}
                       style={{ flex: 1 }}
                     />
                   </div>
                   <div className={classes.advancedOptionsRow}>
                     <DropdownInputValidatedField
-                      value={modelTraining.optimizer}
-                      setValue={(value) => modelTraining.setOptimizer(value)}
                       input={modelTraining.optimizerInput}
                       style={{ flex: 1 }}
                     />
                     <DropdownInputValidatedField
-                      value={modelTraining.loss}
-                      setValue={(value) => modelTraining.setLoss(value)}
                       input={modelTraining.lossInput}
                       style={{ flex: 1 }}
                     />
