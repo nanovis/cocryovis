@@ -1,6 +1,6 @@
 import Utils from "./Utils";
 
-abstract class InputField<T> {
+export abstract class InputField<T> {
   name: string;
   infoLabel: string | null;
   getValue: () => T;
@@ -29,7 +29,7 @@ export enum StringInputFieldType {
 }
 
 export class NumberInputField extends InputField<string> {
-  defaultValue: number;
+  defaultValue: number | null;
   type: StringInputFieldType;
   validationMessage: string;
   valid: (value: number) => boolean;
@@ -40,7 +40,7 @@ export class NumberInputField extends InputField<string> {
     setValue: (value: string) => void,
     type: StringInputFieldType,
     validationMessage: string,
-    defaultValue: number,
+    defaultValue: number | null = null,
     infoLabel: string | null = null,
     valid: (value: number) => boolean = () => true
   ) {
@@ -51,22 +51,36 @@ export class NumberInputField extends InputField<string> {
     this.valid = valid;
   }
 
+  placeholder() {
+    if (this.defaultValue !== null) {
+      return this.defaultValue.toString();
+    }
+    return "";
+  }
+
   isValid() {
     const value = this.getValue();
+    if (value === "") {
+      return this.defaultValue !== null;
+    }
+
     if (this.type === StringInputFieldType.INTEGER) {
       const parsedValue = parseInt(value);
-      return (
-        value === "" || (Utils.isInteger(value) && this.valid(parsedValue))
-      );
+      return Utils.isInteger(value) && this.valid(parsedValue);
     } else {
       const parsedValue = parseFloat(value);
-      return value === "" || (Utils.isFloat(value) && this.valid(parsedValue));
+      return Utils.isFloat(value) && this.valid(parsedValue);
     }
   }
 
   convertToValue() {
     const value = this.getValue();
     if (value === "") {
+      if (this.defaultValue === null) {
+        throw new Error(
+          `Option ${this.name} is not set and has no default value`
+        );
+      }
       return this.defaultValue;
     } else if (StringInputFieldType.INTEGER) {
       return parseInt(value, 10);
@@ -119,7 +133,7 @@ export class BooleanInputField extends InputField<boolean> {
   }
 
   convertToValue() {
-    return this.getValue();
+    return this.getValue() ? 1 : 0;
   }
 
   isValid(): boolean {

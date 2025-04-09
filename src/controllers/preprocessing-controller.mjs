@@ -10,7 +10,41 @@ import GCTFFindHandler from "../tools/gctffind-handler.mjs";
 import archiver from "archiver";
 import fs from "fs";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ */
+
 export default class PreProcessingController {
+    /**
+     * @param {GPUTaskHandler} gpuTaskHandler
+     * @param {Request} req
+     * @param {Response} res
+     */
+    static async queueTiltSeriesReconstruction(gpuTaskHandler, req, res) {
+        if (!req.files || !req.files.tiltSeries) {
+            throw new ApiError(400, "No files uploaded.");
+        }
+
+        if (Array.isArray(req.files.tiltSeries)) {
+            throw new ApiError(
+                400,
+                "Only one tilt series can be added to volume."
+            );
+        }
+
+        const data = JSON.parse(req.body.data);
+
+        await gpuTaskHandler.queueTiltSeriesReconstruction(
+            req.files.tiltSeries,
+            data.options,
+            Number(data.volumeId),
+            req.session.user.id
+        );
+
+        res.sendStatus(204);
+    }
+
     static async runMotionCor3(type, req, res) {
         // Run motion correction
         const volumeData = await VolumeDataFactory.getClass(type).getById(
@@ -125,7 +159,6 @@ export default class PreProcessingController {
         const args = [
                 "-InMrc", correctedMrcPath,
                 "-OutMrc", outputSpectrumPath,
-                "-OutCtf", outputCtfPath,
                 "-kV", kv,
                 "-Cs", sphericalAberration,
                 "-AmpContrast", ampContrast,
@@ -169,88 +202,135 @@ export default class PreProcessingController {
             patchSizeTSA,
             patchRadius,
             pixSizeTSA,
-            patchPixSize
+            patchPixSize,
         } = req.body;
-    
+
         const volumePath = volumeData.path;
         const mrcFilePath = path.resolve(volumeData.mrcFilePath);
         const baseName = path.basename(mrcFilePath, ".mrc");
-    
+
         const fixedPath = path.resolve(volumePath, `${baseName}_fixed.mrc`);
-        const fixedTrimmedPath = path.resolve(volumePath, `${baseName}_trimmed.mrc`);
+        const fixedTrimmedPath = path.resolve(
+            volumePath,
+            `${baseName}_trimmed.mrc`
+        );
         const tiltFile = path.resolve(volumePath, `${baseName}.tlt`);
         const fidModel = path.resolve(volumePath, `${baseName}_patchtrack.fid`);
         const xfFile = path.resolve(volumePath, `${baseName}_final.xf`);
         const alignedSt = path.resolve(volumePath, `${baseName}_aligned.st`);
         const logFile = path.resolve(volumePath, `${baseName}_align.log`);
-        const residualFile = path.resolve(volumePath, `${baseName}_residual.txt`);
-        const outputModelFile = path.resolve(volumePath, `${baseName}_output.fid`);
-    
+        const residualFile = path.resolve(
+            volumePath,
+            `${baseName}_residual.txt`
+        );
+        const outputModelFile = path.resolve(
+            volumePath,
+            `${baseName}_output.fid`
+        );
 
         console.log("CCDERASER------");
         // 1. Run CCDERASER
-        await Utils.runScript("ccderaser", [
-            "-input", mrcFilePath,
-            "-output", fixedPath,
-            "-find",
-            "-peak", peak.toString(),
-            "-diff", diff.toString(),
-            "-grow", grow.toString(),
-            "-iterations", iterationsTSA.toString(),
-        ], volumePath, console.log, console.error);
-    
+
+        // prettier-ignore
+        await Utils.runScript(
+            "ccderaser",
+            [
+                "-input", mrcFilePath,
+                "-output", fixedPath,
+                "-find",
+                "-peak", peak.toString(),
+                "-diff", diff.toString(),
+                "-grow", grow.toString(),
+                "-iterations", iterationsTSA.toString(),
+            ],
+            volumePath,
+            console.log,
+            console.error
+        );
+
         // 2. Extract tilt angles
         console.log("EXTRACTTILTS------");
-        await Utils.runScript("extracttilts", [
-            "-input", fixedPath,
-            "-output", tiltFile
-        ], volumePath, console.log, console.error);
+        await Utils.runScript(
+            "extracttilts",
+            ["-input", fixedPath, "-output", tiltFile],
+            volumePath,
+            console.log,
+            console.error
+        );
 
+        // prettier-ignore
         const args = [
             fixedPath,
             fidModel,
             "-tiltfile", tiltFile,
             "-number", `${patchSizeTSA},${patchSizeTSA}`,
             "-size", `${patchPixSize},${patchPixSize}`,
-            "-radius1", patchRadius.toString()
+            "-radius1", patchRadius.toString(),
         ];
-    
+
         // 3. Patch tracking with tiltxcorr
         console.log("TILTXCORR------");
-        await Utils.runScript("tiltxcorr", args, volumePath, console.log, console.error);
-    
+        await Utils.runScript(
+            "tiltxcorr",
+            args,
+            volumePath,
+            console.log,
+            console.error
+        );
+
         // 4. Solve alignment with tiltalign
         console.log("TILTALIGN------");
-        await Utils.runScript("tiltalign", [
-            `${baseName}_align.ta`,       // Input parameter 1 (name only)
-            `${baseName}_align.log`,      // Input parameter 2 (output log file)
-            "-ModelFile", fidModel,
-            "-ImageFile", fixedPath,
-            "-TiltFile", tiltFile,
-            "-IncludeStartEndInc", "1,61,1",
-            "-RotationAngle", "60",
-            "-OutputTransformFile", xfFile,
-            // "-RobustFitting",
-            // "-WeightWholeTracks",
-            "-OutputResidualFile", residualFile,
-            "-OutputModelFile", outputModelFile 
-        ], volumePath, console.log, console.error, [139]);
+        // prettier-ignore
+        await Utils.runScript(
+            "tiltalign",
+            [
+                `${baseName}_align.ta`, // Input parameter 1 (name only)
+                `${baseName}_align.log`, // Input parameter 2 (output log file)
+                "-ModelFile", fidModel,
+                "-ImageFile", fixedPath,
+                "-TiltFile", tiltFile,
+                "-IncludeStartEndInc", "1,61,1",
+                "-RotationAngle", "60",
+                "-OutputTransformFile", xfFile,
+                // "-RobustFitting",
+                // "-WeightWholeTracks",
+                "-OutputResidualFile", residualFile,
+                "-OutputModelFile", outputModelFile,
+            ],
+            volumePath,
+            console.log,
+            console.error,
+            [139]
+        );
 
         console.log("NEWSTACK------");
-        await Utils.runScript("newstack", [
-            "-secs", "1-56",
-            fixedPath,
-            fixedTrimmedPath
-        ], volumePath, console.log, console.error);
+        await Utils.runScript(
+            "newstack",
+            // prettier-ignore
+            [
+                "-secs", "1-56",
+                "-input", fixedPath,
+                "-output", fixedTrimmedPath
+            ],
+            volumePath,
+            console.log,
+            console.error
+        );
 
-    
         // 5. Apply alignment with newstack
-        await Utils.runScript("newstack", [
-            "-input", fixedTrimmedPath,
-            "-output", alignedSt,
-            "-xform", xfFile
-        ], volumePath, console.log, console.error);
-    
+        // prettier-ignore
+        await Utils.runScript(
+            "newstack",
+            [
+                "-input", fixedTrimmedPath,
+                "-output", alignedSt,
+                "-xform", xfFile,
+            ],
+            volumePath,
+            console.log,
+            console.error
+        );
+
         // Stream zip with relevant files
         const filesToZip = [
             // fixedTrimmedPath,
@@ -268,7 +348,10 @@ export default class PreProcessingController {
         const zipName = `${baseName}_aligned_output.zip`;
 
         res.setHeader("Content-Type", "application/zip");
-        res.setHeader("Content-Disposition", `attachment; filename=\"${zipName}\"`);
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=\"${zipName}\"`
+        );
 
         archive.pipe(res);
 
@@ -279,8 +362,5 @@ export default class PreProcessingController {
         }
 
         await archive.finalize();
-
-        
     }
-    
 }

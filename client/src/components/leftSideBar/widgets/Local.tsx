@@ -17,7 +17,7 @@ import ProcessTiltSeriesDialog, {
   TiltSeriesOptions,
 } from "../../shared/ProcessTiltSeriesDialog";
 import { useRef, useState } from "react";
-import { toast } from "react-toastify";
+import { Id, toast } from "react-toastify";
 import Utils from "../../../functions/Utils";
 import JSZip from "jszip";
 import saveAs from "file-saver";
@@ -63,9 +63,11 @@ const Local = observer(({ open, close }: Props) => {
     return tiltSeriesProccessing || isInferenceOngoing;
   };
 
-  const processTiltSeries = async (file: File, options: TiltSeriesOptions) => {
-    let toastId = null;
-
+  const processTiltSeries = async (
+    file: File,
+    options: TiltSeriesOptions,
+    toastId: Id
+  ) => {
     try {
       setTiltSeriesProccessing(true);
 
@@ -73,16 +75,25 @@ const Local = observer(({ open, close }: Props) => {
         return;
       }
 
-      toastId = toast.loading("Processing data...");
+      toast.update(toastId, {
+        render: "Performing local tilt series reconstruction...",
+        isLoading: true,
+        autoClose: false,
+      });
+      await Utils.waitForNextFrame();
 
       const { parsedSettings, fileData } =
-        await Utils.convertTiltSeriesToRawData(file, options.volume_depth);
+        await Utils.convertTiltSeriesToRawData(
+          file,
+          options.reconstruction.volume_depth
+        );
 
       toast.update(toastId, {
         render: "Preparing data for download...",
         isLoading: true,
         autoClose: false,
       });
+      await Utils.waitForNextFrame();
 
       const baseName = Utils.removeExtensionFromPath(parsedSettings.file);
 
@@ -111,7 +122,6 @@ const Local = observer(({ open, close }: Props) => {
         closeOnClick: true,
       });
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
       throw error;
     } finally {
@@ -348,7 +358,7 @@ const Local = observer(({ open, close }: Props) => {
             open={isTiltSeriesDialogOpen}
             onClose={() => setIsTiltSeriesDialogOpen(false)}
             onSubmit={processTiltSeries}
-            tiltSeriesDialogStore={uiState.tiltSeriesDialogClient}
+            store={uiState.tiltSeriesDialogClient}
           />
           <hr
             style={{

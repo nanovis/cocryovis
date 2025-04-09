@@ -19,6 +19,7 @@ import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import fileUpload from "express-fileupload";
 import { PendingLocalFile } from "./file-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
+import appConfig from "./config.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -27,7 +28,6 @@ import TaskHistory from "../models/task-history.mjs";
  * @typedef { import("@prisma/client").Result } ResultDB
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
  * @typedef { VolumeDB & {rawData: RawVolumeDataDB, pseudoVolumes: PseudoVolumeDataDB[]} } DeepVolume
- * @typedef { { minEpochs?: number, maxEpochs?: number, findLearningRate?: boolean, learningRate?: number, batchSize?: number, loss?: string, optimizer?: string, accumulateGradients?: number, checkpointId?: number } } TrainingParams
  */
 
 export default class GPUTaskHandler {
@@ -272,7 +272,7 @@ export default class GPUTaskHandler {
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
-     * @param {TrainingParams} params
+     * @param {import("../../types").TrainingOptions} params
      * @param {String?} outputPath
      * @returns {Promise<Void>}
      */
@@ -419,7 +419,7 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {TrainingParams} params
+     * @param {import("../../types").TrainingOptions} params
      * @returns {void}
      */
     #checkTrainingInput(params) {
@@ -479,7 +479,7 @@ export default class GPUTaskHandler {
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
-     * @param {TrainingParams} params
+     * @param {import("../../types").TrainingOptions} params
      * @param {String} outputPath
      * @param {Number} taskHistoryId
      * @returns {Promise<CheckpointDB>}
@@ -909,7 +909,7 @@ export default class GPUTaskHandler {
 
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
-     * @param {Object} options
+     * @param {import("../../types").TiltSeriesOptions | undefined} options
      * @param {Number} volumeId
      * @param {Number} userId
      * @returns {Promise<void>}
@@ -926,6 +926,12 @@ export default class GPUTaskHandler {
                 "Failed Attempt to start tilt series reconstruction: Too many tasks in queue."
             );
         }
+
+        await this.#validateReconstructionInput(
+            tiltSeriesFile,
+            options,
+            volumeId
+        );
 
         const outputPath = this.createTemporaryOutputPath();
 
@@ -965,7 +971,45 @@ export default class GPUTaskHandler {
 
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
-     * @param {Object | undefined} options
+     * @param {import("../../types").TiltSeriesOptions | undefined} options
+     * @param {Number} volumeId
+     * @returns {Promise<void>}
+     */
+    async #validateReconstructionInput(tiltSeriesFile, options, volumeId) {
+        if (!tiltSeriesFile) {
+            throw new ApiError(
+                400,
+                "Failed Attempt to start tilt series reconstruction: Missing tilt series file."
+            );
+        }
+        if (
+            !options ||
+            !options.reconstruction ||
+            !options.reconstruction.volume_depth
+        ) {
+            throw new ApiError(
+                400,
+                "Failed Attempt to start tilt series reconstruction: Missing volume depth."
+            );
+        }
+        if (!volumeId) {
+            throw new ApiError(
+                400,
+                "Failed Attempt to start tilt series reconstruction: Missing volume id."
+            );
+        }
+        const volume = await Volume.getById(volumeId);
+        if (!volume) {
+            throw new ApiError(
+                400,
+                "Failed Attempt to start tilt series reconstruction: Volume not found."
+            );
+        }
+    }
+
+    /**
+     * @param {fileUpload.UploadedFile} tiltSeriesFile
+     * @param {import("../../types").TiltSeriesOptions} options
      * @param {Number} volumeId
      * @param {Number} userId
      * @param {String} outputPath
@@ -989,13 +1033,47 @@ export default class GPUTaskHandler {
                 logFile: logFile.fileName,
             });
 
+            await this.#validateReconstructionInput(
+                tiltSeriesFile,
+                options,
+                volumeId
+            );
+
             fsPromises.mkdir(outputPath, { recursive: true });
+
+            let inputFileAbsolutePath = path.resolve(
+                tiltSeriesFile.tempFilePath
+            );
+
+            if (options.alignment !== undefined) {
+                inputFileAbsolutePath = await this.#runIMODTiltSeriesAlignment(
+                    inputFileAbsolutePath,
+                    outputPath,
+                    options.alignment,
+                    logFile
+                );
+            }
+
+            if (options.motionCorrection !== undefined) {
+                inputFileAbsolutePath = await this.#runMotionCor3(
+                    inputFileAbsolutePath,
+                    outputPath,
+                    options.motionCorrection,
+                    logFile
+                );
+            }
+
+            if (options.ctf !== undefined) {
+                inputFileAbsolutePath = await this.#runGCTFFind(
+                    inputFileAbsolutePath,
+                    outputPath,
+                    options.ctf,
+                    logFile
+                );
+            }
 
             await logFile.writeLog("Tilt series reconstruction started\n");
 
-            const inputFileAbsolutePath = path.resolve(
-                tiltSeriesFile.tempFilePath
-            );
             const inputFileName = Utils.stripExtension(tiltSeriesFile.name);
 
             const outputAbsolutePath = path.resolve(
@@ -1009,26 +1087,14 @@ export default class GPUTaskHandler {
                 outputAbsolutePath,
             ];
 
-            if (options) {
-                for (const [key, value] of Object.entries(options)) {
+            if (options.reconstruction) {
+                for (const [key, value] of Object.entries(
+                    options.reconstruction
+                )) {
                     params.push(key);
                     params.push(value.toString());
                 }
             }
-
-            // const command =
-            //     "./" +
-            //     this.config.Proximal_CryoET.executable +
-            //     " " +
-            //     params.join(" ");
-
-            // const { stdout, stderr } = await execPromise(command, {
-            //     cwd: path.resolve(this.config.Proximal_CryoET.path),
-            // });
-
-            // await logFile.writeLog(
-            //     `stdout: \n${stdout}\n\nstderr: \n${stderr}\n--------------\nTilt series reconstruction finished\n\nConverting output to raw...\n`
-            // );
 
             await Utils.runScript(
                 "./" + this.config.Proximal_CryoET.executable,
@@ -1116,5 +1182,355 @@ export default class GPUTaskHandler {
                 );
             }
         }
+    }
+
+    /**
+     * @param {String} inputPath
+     * @param {String} outputFolder
+     * @param {import("../../types").IMODOptions}  options
+     * @param {LogFile} logFile
+     * @returns {Promise<String>}
+     */
+    async #runIMODTiltSeriesAlignment(
+        inputPath,
+        outputFolder,
+        options,
+        logFile
+    ) {
+        if (!fileSystem.existsSync(inputPath)) {
+            throw new ApiError(
+                400,
+                `CTF estimation: Input file ${inputPath} does not exist.`
+            );
+        }
+
+        logFile.writeLog("--------------STARTING IMOD TILT SERIESALIGNMENT\n");
+
+        // 1. Run CCDERASER
+        logFile.writeLog("CCDERASER------\n");
+        const baseName = Utils.stripExtension(inputPath);
+        const inputAbsolutePath = path.resolve(inputPath);
+        const ccderaserOutputPath = path.resolve(
+            path.join(outputFolder, baseName + "_ccderaser.mrc")
+        );
+
+        //prettier-ignore
+        const ccderaserParams = [
+            "-input", inputAbsolutePath,
+            "-output", ccderaserOutputPath,
+            "-find",
+        ]
+
+        Utils.checkAndAddParameter(
+            options.peak,
+            ccderaserParams,
+            "-peak",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.diff,
+            ccderaserParams,
+            "-diff",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.grow,
+            ccderaserParams,
+            "-grow",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.iterations,
+            ccderaserParams,
+            "-iterations",
+            Utils.isInteger
+        );
+
+        await Utils.runScript(
+            "ccderaser",
+            ccderaserParams,
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+        logFile.writeLog(`CCDERASER finished.\n`);
+
+        // 2. Extract tilt angles
+        logFile.writeLog("EXTRACTTILTS------\n");
+
+        const extracttiltsOutputPath = path.resolve(
+            path.join(outputFolder, baseName + "_tilts.tlt")
+        );
+        await Utils.runScript(
+            "extracttilts",
+            ["-input", ccderaserOutputPath, "-output", extracttiltsOutputPath],
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+
+        // 3. Patch tracking with tiltxcorr
+        logFile.writeLog("TILTXCORR------\n");
+        const fidModelOutputPath = path.resolve(
+            path.join(outputFolder, baseName + "_patchtrack.fid")
+        );
+
+        // prettier-ignore
+        const tiltxcorrParams = [
+            ccderaserOutputPath,
+            fidModelOutputPath,
+            "-tiltfile", extracttiltsOutputPath,
+        ];
+
+        Utils.checkAndAddParameter(
+            options.numOfPatches,
+            tiltxcorrParams,
+            "-number",
+            Utils.isInteger
+        );
+
+        Utils.checkAndAddParameter(
+            options.patchSize,
+            tiltxcorrParams,
+            "-size",
+            Utils.isInteger
+        );
+
+        Utils.checkAndAddParameter(
+            options.patchRadius,
+            tiltxcorrParams,
+            "-radius1",
+            Utils.isFloat
+        );
+
+        await Utils.runScript(
+            "tiltxcorr",
+            tiltxcorrParams,
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+
+        // 4. Solve alignment with tiltalign
+
+        logFile.writeLog("TILTALIGN------\n");
+
+        const transformPath = path.resolve(
+            path.join(outputFolder, baseName + "_patchtrack.fid")
+        );
+
+        //prettier-ignore
+        const tiltAlignParams = [
+            "-ModelFile", fidModelOutputPath,
+            "-ImageFile", ccderaserOutputPath,
+            "-TiltFile", extracttiltsOutputPath,
+            "-OutputTransformFile", transformPath,
+        ]
+
+        Utils.checkAndAddParameter(
+            options.rotationAngle,
+            tiltAlignParams,
+            "-RotationAngle",
+            Utils.isFloat,
+            true
+        );
+
+        await Utils.runScript(
+            "tiltalign",
+            tiltAlignParams,
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value),
+            [139]
+        );
+
+        logFile.writeLog("NEWSTACK------\n");
+
+        const trimmedPath = path.resolve(
+            path.join(outputFolder, baseName + "_trimmed.mrc")
+        );
+
+        await Utils.runScript(
+            "newstack",
+            // prettier-ignore
+            [
+                "-secs", "1-56",
+                "-input", ccderaserOutputPath,
+                "-output", trimmedPath
+            ],
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+
+        // 5. Apply alignment with newstack
+        const alignedPath = path.resolve(
+            path.join(outputFolder, baseName + "_aligned.mrc")
+        );
+
+        await Utils.runScript(
+            "newstack",
+            // prettier-ignore
+            [
+                "-input", trimmedPath,
+                "-output", alignedPath,
+                "-xform", transformPath,
+            ],
+            null,
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+
+        logFile.writeLog("--------------IMOD TILT SERIES ALIGNMENT FINISHED\n");
+
+        return alignedPath;
+    }
+
+    /**
+     * @param {String} inputPath
+     * @param {String} outputFolder
+     * @param {import("../../types").CTFOptions}  options
+     * @param {LogFile} logFile
+     * @returns {Promise<String>}
+     */
+    async #runGCTFFind(inputPath, outputFolder, options, logFile) {
+        logFile.writeLog("--------------STARTING CTF ESTIMATION\n");
+        if (!fileSystem.existsSync(inputPath)) {
+            throw new ApiError(400, `Input file ${inputPath} does not exist.`);
+        }
+
+        const baseName = Utils.stripExtension(inputPath);
+        const inputAbsolutePath = path.resolve(inputPath);
+        const outputPath = path.resolve(
+            path.join(outputFolder, baseName + "_ctf.mrc")
+        );
+
+        //prettier-ignore
+        const params = [
+           "-InMrc", inputAbsolutePath,
+            "-OutMrc", outputPath,
+            "-Gpu", "0",
+        ]
+
+        Utils.checkAndAddParameter(
+            options.highTension,
+            params,
+            "-kV",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.sphericalAberration,
+            params,
+            "-Cs",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.amplitudeContrast,
+            params,
+            "-AmpContrast",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.pixelSize,
+            params,
+            "-PixSize",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.tileSize,
+            params,
+            "-TileSize",
+            Utils.isInteger
+        );
+
+        await Utils.runScript(
+            "./" + appConfig.GCtfFind.executable,
+            params,
+            path.resolve(appConfig.GCtfFind.path),
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+
+        logFile.writeLog("--------------CTF ESTIMATION FINISHED\n");
+        return outputPath;
+    }
+
+    /**
+     * @param {String} inputPath
+     * @param {String} outputFolder
+     * @param {import("../../types").MotionCorrectionOptions} options
+     * @param {LogFile} logFile
+     * @returns {Promise<String>}
+     */
+    async #runMotionCor3(inputPath, outputFolder, options, logFile) {
+        logFile.writeLog("--------------STARTING MOTION CORRECTION\n");
+        if (!fileSystem.existsSync(inputPath)) {
+            throw new ApiError(400, `Input file ${inputPath} does not exist.`);
+        }
+
+        const baseName = Utils.stripExtension(inputPath);
+        const inputAbsolutePath = path.resolve(inputPath);
+        const outputPath = path.resolve(
+            path.join(outputFolder, baseName + "_motion_correcterd.mrc")
+        );
+
+        // prettier-ignore
+        const params = [
+            "-InMrc", inputAbsolutePath,
+            "-OutMrc", outputPath,
+            "-Gpu", "0",
+        ];
+
+        if (
+            options.patchSize !== undefined &&
+            Utils.isInteger(options.patchSize)
+        ) {
+            params.push(
+                "-Patch",
+                options.patchSize.toString(),
+                options.patchSize.toString()
+            );
+        }
+        Utils.checkAndAddParameter(
+            options.iterations,
+            params,
+            "-Iter",
+            Utils.isInteger
+        );
+        Utils.checkAndAddParameter(
+            options.tolerance,
+            params,
+            "-Tol",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.pixelSize,
+            params,
+            "-PixSize",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.fmDose,
+            params,
+            "-FmDose",
+            Utils.isFloat
+        );
+        Utils.checkAndAddParameter(
+            options.highTension,
+            params,
+            "-kV",
+            Utils.isFloat
+        );
+
+        await Utils.runScript(
+            "./" + appConfig.MotionCor3.executable,
+            params,
+            path.resolve(appConfig.MotionCor3.path),
+            (value) => logFile.writeLog(value),
+            (value) => logFile.writeLog(value)
+        );
+
+        logFile.writeLog("--------------MOTION CORRECTION FINISHED\n");
+        return outputPath;
     }
 }

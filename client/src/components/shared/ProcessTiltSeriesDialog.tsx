@@ -11,12 +11,13 @@ import {
   Text,
   tokens,
   Switch,
-  SwitchOnChangeData,
   Accordion,
   AccordionItem,
   AccordionHeader,
   AccordionPanel,
-  AccordionToggleEventHandler,
+  TabList,
+  Tab,
+  Checkbox,
 } from "@fluentui/react-components";
 import { Document20Regular } from "@fluentui/react-icons";
 import globalStyles from "../GlobalStyles";
@@ -26,112 +27,121 @@ import {
   NumberInputValidatedField,
 } from "./ValidatedFields";
 import { observer } from "mobx-react-lite";
-import { BooleanInputField } from "../../functions/Input";
+import { BooleanInputField, NumberInputField } from "../../functions/Input";
+import Utils from "../../functions/Utils";
+import { toast, Id } from "react-toastify";
 
-const useStyles = makeStyles({});
+const useStyles = makeStyles({
+  optionsTabElement: {
+    display: "flex",
+    alignItems: "center",
+  },
+  optionsTabCheckbox: {
+    marginLeft: "-12px",
+  },
+});
 
 export interface TiltSeriesOptions {
-  volume_depth: number;
-  tiled?: boolean;
-  crop?: boolean;
-  is_data_linearized?: boolean;
-  delinearize_result?: boolean;
-  data_term_end?: boolean;
-  data_term_iters?: number;
-  proximal_iters?: number;
-  sample_rate?: number;
-  chill_factor?: number;
-  lambda?: number;
-  number_extra_rows?: number;
-  starting_angle?: number;
-  angle_step?: number;
-  nlm_skip?: number;
+  alignment?: { [key: string]: any };
+  ctf?: { [key: string]: any };
+  motionCorrection?: { [key: string]: any };
+  reconstruction: { volume_depth: number; [key: string]: any };
 }
 
 interface Props {
   open: boolean;
-  tiltSeriesDialogStore: TiltSeriesDialogInstance;
+  store: TiltSeriesDialogInstance;
   onClose: () => void;
   onSubmit: (
     file: File,
     options: TiltSeriesOptions,
+    toastId: Id,
     serverSide?: boolean
   ) => Promise<void>;
   showServerVariant?: boolean;
 }
 
+enum OptionTabs {
+  Alignment,
+  CTF,
+  MotionCorrection,
+  Reconstruction,
+}
+
 const ProcessTiltSeriesDialog = observer(
-  ({
-    open,
-    tiltSeriesDialogStore,
-    onClose,
-    onSubmit,
-    showServerVariant = false,
-  }: Props) => {
+  ({ open, store, onClose, onSubmit, showServerVariant = false }: Props) => {
     const classes = useStyles();
     const globalClasses = globalStyles();
 
     const [isBusy, setIsBusy] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [file, setFile] = useState<File | null>(null);
-    const [serverSide, setServerSide] = useState(false);
-    const handleServerSideToggle = (
-      _: InputChangeEvent,
-      data: SwitchOnChangeData
-    ) => {
-      setServerSide(data.checked);
-      if (showAdvancedOptions.length > 0) {
-        setShowAdvancedOptions([]);
-      }
-    };
 
-    const [showAdvancedOptions, setShowAdvancedOptions] = useState<string[]>(
-      []
-    );
-    const handleAdvancedOptionsToggle: AccordionToggleEventHandler<string> = (
-      _,
-      data
+    const parseOptions = (
+      optionsList: [string, NumberInputField | BooleanInputField][]
     ) => {
-      setShowAdvancedOptions(data.openItems);
+      const options: { [key: string]: any } = {};
+      for (const [key, input] of optionsList) {
+        if (!input.isValid()) {
+          throw new Error(`Invalid input for ${input.name}`);
+        }
+        options[key] = input.convertToValue();
+      }
+      return options;
     };
 
     const handleSubmit = async () => {
-      // try {
-      //   if (!validVolumeDepth || !file) {
-      //     return;
-      //   }
-      //   setIsBusy(true);
-      //   if (!validVolumeDepth) {
-      //     throw new Error("Volume depth must be a positive integer.");
-      //   }
-      //   const options: TiltSeriesOptions = {
-      //     volume_depth: Number(volumeDepth) || 50,
-      //   };
-      //   if (serverSide) {
-      //     for (const [key, fieldSpecs] of Object.entries(advancedOptions)) {
-      //       if (!fieldSpecs.isValid()) {
-      //         throw new Error(fieldSpecs.validationMessage);
-      //       }
-      //       (options as any)[key] = fieldSpecs.convertToValue();
-      //     }
-      //   }
-      //   await onSubmit(file, options, serverSide);
-      //   if (fileInputRef.current) {
-      //     fileInputRef.current.value = "";
-      //   }
-      //   setVolumeDepth("");
-      //   setFile(null);
-      //   for (const [key, fieldSpecs] of Object.entries(advancedOptions)) {
-      //     fieldSpecs.reset();
-      //   }
-      //   onClose();
-      // } catch (error) {
-      //   const errMsg = Utils.getErrorMessage(error);
-      //   toast.error(errMsg);
-      // } finally {
-      //   setIsBusy(false);
-      // }
+      let toastId = null;
+      try {
+        toastId = toast.loading("Processing inputs...");
+        if (!store.generalInputs.volume_depth.isValid()) {
+          throw new Error("Invalid volume depth");
+        }
+        if (!store.pendingFile) {
+          throw new Error("No file selected");
+        }
+        setIsBusy(true);
+
+        const options: TiltSeriesOptions = {
+          reconstruction: {
+            volume_depth: store.generalInputs.volume_depth.convertToValue(),
+          },
+        };
+        if (store.serverSide) {
+          if (store.alignmentEnabled) {
+            options.alignment = parseOptions(
+              Object.entries(store.alignmentInputs)
+            );
+          }
+          if (store.ctfEnabled) {
+            options.ctf = parseOptions(Object.entries(store.ctfInputs));
+          }
+          if (store.motionCorrectionEnabled) {
+            options.motionCorrection = parseOptions(
+              Object.entries(store.motionCorrectionInputs)
+            );
+          }
+          options.reconstruction = {
+            ...options.reconstruction,
+            ...parseOptions(Object.entries(store.reconstructionInputs)),
+          };
+        }
+        await onSubmit(store.pendingFile, options, toastId, store.serverSide);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        onClose();
+        toast.update(toastId, {
+          render: "Tilt series processed successfully.",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
+      } catch (error) {
+        Utils.updateToastWithErrorMsg(toastId, error);
+      } finally {
+        setIsBusy(false);
+      }
     };
 
     const handleButtonClick = () => {
@@ -140,12 +150,13 @@ const ProcessTiltSeriesDialog = observer(
 
     const handleFileChange = (event: FileChangeEvent) => {
       if (!event.target?.files || event.target.files.length < 1) {
-        setFile(null);
+        store.setPendingFile(null);
         return;
       }
+
       const file = event.target.files[0];
       if (file) {
-        setFile(file);
+        store.setPendingFile(file);
       }
     };
 
@@ -160,10 +171,10 @@ const ProcessTiltSeriesDialog = observer(
               {showServerVariant && (
                 <Switch
                   style={{ alignSelf: "end" }}
-                  checked={serverSide}
+                  checked={store.serverSide}
                   label={`Server side`}
                   labelPosition="before"
-                  onChange={handleServerSideToggle}
+                  onChange={(_, data) => store.setServerSide(data.checked)}
                 />
               )}
             </DialogTitle>
@@ -177,33 +188,22 @@ const ProcessTiltSeriesDialog = observer(
               }}
             >
               <NumberInputValidatedField
-                input={tiltSeriesDialogStore.volumeDepthInput}
+                input={store.generalInputs.volume_depth}
               />
-              {/* <Field
-              label="Volume Depth"
-              validationState={getVolumeDepthValidationState()}
-              validationMessage="Volume Depth must be a positive integer."
-            >
-              <Input
-                appearance="underline"
-                value={tiltSeriesDialogStore.volumeDepth}
-                onChange={(value) => {
-                  tiltSeriesDialogStore.;
-                }}
-                placeholder="50"
-                disabled={isBusy}
-              />
-            </Field> */}
               {showServerVariant && (
                 <Accordion
-                  openItems={showAdvancedOptions}
-                  onToggle={handleAdvancedOptionsToggle}
+                  openItems={
+                    store.showAdvancedOptions && store.serverSide ? ["1"] : []
+                  }
+                  onToggle={(_, data) => {
+                    store.setShowAdvancedOptions(data.openItems.length > 0);
+                  }}
                   collapsible
                 >
                   <AccordionItem
                     style={{ maxHeight: "400px", overflowY: "auto" }}
-                    value="1"
-                    disabled={!serverSide}
+                    value={"1"}
+                    disabled={!store.serverSide}
                   >
                     <AccordionHeader>
                       <Text> Advanced Options</Text>
@@ -216,26 +216,95 @@ const ProcessTiltSeriesDialog = observer(
                         display: "flex",
                         flexDirection: "column",
                         rowGap: "10px",
+                        margin: 0,
                       }}
                     >
-                      {Object.entries(
-                        tiltSeriesDialogStore.reconstructionInputs
-                      ).map(([key, fieldSpecs]) =>
-                        fieldSpecs instanceof BooleanInputField ? (
-                          <BooleanInputValidatedField
-                            key={key}
-                            input={fieldSpecs}
-                            labelPosition="before"
-                            disabled={isBusy}
+                      <TabList
+                        selectedValue={store.optionsTab}
+                        onTabSelect={(_, data) =>
+                          store.setOptionsTab(data.value as number)
+                        }
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div className={classes.optionsTabElement}>
+                          <Tab
+                            value={OptionTabs.Alignment}
+                            disabled={!store.alignmentEnabled}
+                          >
+                            Alignment
+                          </Tab>
+                          <Checkbox
+                            className={classes.optionsTabCheckbox}
+                            checked={store.alignmentEnabled}
+                            onChange={(_, data) =>
+                              store.setAlignmentEnabled(data.checked as boolean)
+                            }
                           />
-                        ) : (
-                          <NumberInputValidatedField
-                            key={key}
-                            input={fieldSpecs}
-                            disabled={isBusy}
-                            style={{ width: "300px" }}
+                        </div>
+                        <div className={classes.optionsTabElement}>
+                          <Tab
+                            value={OptionTabs.CTF}
+                            disabled={!store.ctfEnabled}
+                          >
+                            CTF Estimation
+                          </Tab>
+                          <Checkbox
+                            className={classes.optionsTabCheckbox}
+                            checked={store.ctfEnabled}
+                            onChange={(_, data) =>
+                              store.setCtfEnabled(data.checked as boolean)
+                            }
                           />
-                        )
+                        </div>
+                        <div className={classes.optionsTabElement}>
+                          <Tab
+                            value={OptionTabs.MotionCorrection}
+                            disabled={!store.motionCorrectionEnabled}
+                          >
+                            Motion Correction
+                          </Tab>
+                          <Checkbox
+                            className={classes.optionsTabCheckbox}
+                            checked={store.motionCorrectionEnabled}
+                            onChange={(_, data) =>
+                              store.setMotionCorrectionEnabled(
+                                data.checked as boolean
+                              )
+                            }
+                          />
+                        </div>
+                        <Tab value={OptionTabs.Reconstruction}>
+                          Reconstruction
+                        </Tab>
+                      </TabList>
+                      {store.optionsTab === OptionTabs.Alignment && (
+                        <OptionsTab
+                          inputList={Object.values(store.alignmentInputs)}
+                          isBusy={isBusy}
+                        />
+                      )}
+                      {store.optionsTab === OptionTabs.CTF && (
+                        <OptionsTab
+                          inputList={Object.values(store.ctfInputs)}
+                          isBusy={isBusy}
+                        />
+                      )}
+                      {store.optionsTab === OptionTabs.MotionCorrection && (
+                        <OptionsTab
+                          inputList={Object.values(
+                            store.motionCorrectionInputs
+                          )}
+                          isBusy={isBusy}
+                        />
+                      )}
+                      {store.optionsTab === OptionTabs.Reconstruction && (
+                        <OptionsTab
+                          inputList={Object.values(store.reconstructionInputs)}
+                          isBusy={isBusy}
+                        />
                       )}
                     </AccordionPanel>
                   </AccordionItem>
@@ -268,7 +337,9 @@ const ProcessTiltSeriesDialog = observer(
                     color: tokens.colorNeutralForeground2,
                   }}
                 >
-                  {file ? file.name : "No file selected."}
+                  {store.pendingFile
+                    ? store.pendingFile.name
+                    : "No file selected."}
                 </Text>
               </div>
 
@@ -290,7 +361,11 @@ const ProcessTiltSeriesDialog = observer(
                 Cancel
               </Button>
               <Button
-                // disabled={!validVolumeDepth || !file || isBusy}
+                disabled={
+                  !store.generalInputs.volume_depth.isValid() ||
+                  !store.pendingFile ||
+                  isBusy
+                }
                 appearance="primary"
                 onClick={handleSubmit}
               >
@@ -300,6 +375,37 @@ const ProcessTiltSeriesDialog = observer(
           </DialogBody>
         </DialogSurface>
       </Dialog>
+    );
+  }
+);
+
+const OptionsTab = observer(
+  ({
+    inputList,
+    isBusy,
+  }: {
+    inputList: Array<NumberInputField | BooleanInputField>;
+    isBusy: boolean;
+  }) => {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", rowGap: "10px" }}>
+        {inputList.map((input, index) =>
+          input instanceof BooleanInputField ? (
+            <BooleanInputValidatedField
+              key={index}
+              input={input}
+              labelPosition="before"
+              disabled={isBusy}
+            />
+          ) : (
+            <NumberInputValidatedField
+              key={index}
+              input={input}
+              disabled={isBusy}
+            />
+          )
+        )}
+      </div>
     );
   }
 );

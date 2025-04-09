@@ -89,7 +89,7 @@ projectsApi.post(`/queue-training`, restrictApi,
 /////// CRYO-ET
 
 projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
-    async (req, res) => NanoOetziController.queueTiltSeriesReconstruction(gpuTaskHandler, req, res));
+    async (req, res) => PreProcessingController.queueTiltSeriesReconstruction(gpuTaskHandler, req, res));
 
 
 /////// VOLUMES

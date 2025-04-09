@@ -12,9 +12,11 @@ db.json
 .vscode/
 .venv/
 /temp/
-/modules/ilastik
+/modules/ilastik/*
 !/modules/ilastik/.gitkeep
 !/modules/nano-oetzi
+/modules/imod/*
+!/modules/imod/.gitkeep
 python-scripts/__pycache__
 
 sessions/*.db

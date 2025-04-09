@@ -48,5 +48,8 @@
     "GCtfFind": {
         "path": "./modules/gctffind/",
         "executable": "GCtfFind"
+    },
+    "IMOD": {
+        "path": "./modules/imod/IMOD/bin"
     }
 }

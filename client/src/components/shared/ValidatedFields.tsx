@@ -51,7 +51,7 @@ export const NumberInputValidatedField = observer(
           onChange={(ev: InputChangeEvent, data: InputOnChangeData) => {
             input.setValue(data.value);
           }}
-          placeholder={input.defaultValue.toString()}
+          placeholder={input.placeholder()}
           disabled={disabled}
         />
       </Field>

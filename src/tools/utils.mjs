@@ -409,7 +409,7 @@ export default class Utils {
      * @param {string} cwd - Optional working directory. Defaults to current directory.
      * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
      * @param {(value: string) => void?} stderrCallback - Callback for stderr.
-     * @returns {Promise<void>}
+     * @returns {Promise<number>}
      */
     static async runScript(
         command,
@@ -439,12 +439,12 @@ export default class Utils {
 
             child.on("close", (code) => {
                 if (code === 0 || allowSoftFailCodes.includes(code)) {
-                    if (code === 139) {
-                        console.warn(
-                            "Warning: tiltalign exited with code 139 (SegFault after success)"
+                    if (code !== 0) {
+                        stdoutCallback(
+                            `Warning: script exited with non-zero allowed code ${code}`
                         );
                     }
-                    resolve(); //omit for this code
+                    resolve(code); //omit for this code
                 } else {
                     reject(
                         new Error(
@@ -466,7 +466,7 @@ export default class Utils {
      * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
      * @param {(value: string) => void?} stderrCallback - Callback for stderr.
      * @param {string} pythonPath - Optional path to the Python executable.
-     * @returns {Promise<void>}
+     * @returns {Promise<number>}
      */
     static async runPythonScript(
         script,
@@ -511,5 +511,52 @@ export default class Utils {
             return args[index + 1];
         }
         return undefined;
+    }
+
+    /**
+     * @param {String | number} value
+     * @returns
+     */
+    static isFloat(value) {
+        const num = Number(value);
+        return !Number.isNaN(num);
+    }
+
+    /**
+     * @param {String | number} value
+     * @returns
+     */
+    static isInteger(value) {
+        const num = Number(value);
+        return Number.isInteger(num);
+    }
+
+    /**
+     * @template T
+     * @param {T} parameter
+     * @param {string[]} paramArray
+     * @param {string} parameterName
+     * @param {(value: T) => boolean} [condition]
+     * @param {boolean} [required]
+     * @returns {void}
+     */
+    static checkAndAddParameter(
+        parameter,
+        paramArray,
+        parameterName,
+        condition = undefined,
+        required = false
+    ) {
+        if (
+            parameter !== undefined &&
+            condition !== undefined &&
+            condition(parameter)
+        ) {
+            paramArray.push(parameterName, parameter.toString());
+        } else if (required) {
+            throw new Error(
+                `Parameter ${parameterName} is required and must be a valid value.`
+            );
+        }
     }
 }

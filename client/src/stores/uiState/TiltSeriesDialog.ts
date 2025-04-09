@@ -9,7 +9,13 @@ import {
 export const TiltSeriesDialog = types
   .model({
     pendingFile: types.frozen<File | null>(null),
-    volumeDepth: types.optional(types.string, ""),
+    optionsTab: types.optional(types.number, 3),
+    serverSide: types.optional(types.boolean, false),
+    showAdvancedOptions: types.optional(types.boolean, false),
+    volume_depth: types.optional(types.string, ""),
+    alignmentEnabled: types.optional(types.boolean, false),
+    ctfEnabled: types.optional(types.boolean, false),
+    motionCorrectionEnabled: types.optional(types.boolean, false),
     reconstruction: types.optional(
       types.model({
         tiled: types.optional(types.boolean, true),
@@ -29,13 +35,85 @@ export const TiltSeriesDialog = types
       }),
       {}
     ),
+    alignment: types.optional(
+      types.model({
+        peak: types.optional(types.string, ""),
+        diff: types.optional(types.string, ""),
+        grow: types.optional(types.string, ""),
+        iterations: types.optional(types.string, ""),
+        numOfPatches: types.optional(types.string, ""),
+        patchSize: types.optional(types.string, ""),
+        patchRadius: types.optional(types.string, ""),
+        rotationAngle: types.optional(types.string, ""),
+      }),
+      {}
+    ),
+    ctf: types.optional(
+      types.model({
+        highTension: types.optional(types.string, ""),
+        sphericalAberration: types.optional(types.string, ""),
+        amplitudeContrast: types.optional(types.string, ""),
+        pixelSize: types.optional(types.string, ""),
+        tileSize: types.optional(types.string, ""),
+      }),
+      {}
+    ),
+    motionCorrection: types.optional(
+      types.model({
+        patchSize: types.optional(types.string, ""),
+        iterations: types.optional(types.string, ""),
+        tolerance: types.optional(types.string, ""),
+        pixelSize: types.optional(types.string, ""),
+        fmDose: types.optional(types.string, ""),
+        highTension: types.optional(types.string, ""),
+      }),
+      {}
+    ),
   })
   .actions((self) => ({
     setPendingFile: (file: File | null) => {
       self.pendingFile = file;
     },
+    setOptionsTab: (tab: number) => {
+      self.optionsTab = tab;
+    },
+    setServerSide: (serverSide: boolean) => {
+      self.serverSide = serverSide;
+    },
+    setShowAdvancedOptions: (show: boolean) => {
+      self.showAdvancedOptions = show;
+    },
+    setAlignmentEnabled: (enabled: boolean) => {
+      self.alignmentEnabled = enabled;
+      if (!enabled && self.optionsTab === 0) {
+        if (self.ctfEnabled) {
+          self.optionsTab = 1;
+        } else if (self.motionCorrectionEnabled) {
+          self.optionsTab = 2;
+        } else {
+          self.optionsTab = 3;
+        }
+      }
+    },
+    setCtfEnabled: (enabled: boolean) => {
+      self.ctfEnabled = enabled;
+      if (!enabled && self.optionsTab === 1) {
+        self.optionsTab = 3;
+        if (self.motionCorrectionEnabled) {
+          self.optionsTab = 2;
+        } else {
+          self.optionsTab = 3;
+        }
+      }
+    },
+    setMotionCorrectionEnabled: (enabled: boolean) => {
+      self.motionCorrectionEnabled = enabled;
+      if (!enabled && self.optionsTab === 2) {
+        self.optionsTab = 3;
+      }
+    },
     setVolumeDepth: (value: string) => {
-      self.volumeDepth = value;
+      self.volume_depth = value;
     },
     setDataTermIters: (value: string) => {
       self.reconstruction.data_term_iters = value;
@@ -79,25 +157,86 @@ export const TiltSeriesDialog = types
     setDataTermEnd: (value: boolean) => {
       self.reconstruction.data_term_end = value;
     },
+    // Alignment
+    setPeak: (value: string) => {
+      self.alignment.peak = value;
+    },
+    setDiff: (value: string) => {
+      self.alignment.diff = value;
+    },
+    setGrow: (value: string) => {
+      self.alignment.grow = value;
+    },
+    setIterationsAlignment: (value: string) => {
+      self.alignment.iterations = value;
+    },
+    setNumOfPatches: (value: string) => {
+      self.alignment.numOfPatches = value;
+    },
+    setPatchSizeAlignment: (value: string) => {
+      self.alignment.patchSize = value;
+    },
+    setPatchRadius: (value: string) => {
+      self.alignment.patchRadius = value;
+    },
+    setRotationAngle: (value: string) => {
+      self.alignment.rotationAngle = value;
+    },
+    // CTF
+    setHighTensionCTF: (value: string) => {
+      self.ctf.highTension = value;
+    },
+    setSphericalAberration: (value: string) => {
+      self.ctf.sphericalAberration = value;
+    },
+    setAmplitudeContrast: (value: string) => {
+      self.ctf.amplitudeContrast = value;
+    },
+    setPixelSizeCTF: (value: string) => {
+      self.ctf.pixelSize = value;
+    },
+    setTileSize: (value: string) => {
+      self.ctf.tileSize = value;
+    },
+    // Motion Correction
+    setPatchSizeMotion: (value: string) => {
+      self.motionCorrection.patchSize = value;
+    },
+    setIterationsMotion: (value: string) => {
+      self.motionCorrection.iterations = value;
+    },
+    setTolerance: (value: string) => {
+      self.motionCorrection.tolerance = value;
+    },
+    setPixelSizeMotion: (value: string) => {
+      self.motionCorrection.pixelSize = value;
+    },
+    setFmDose: (value: string) => {
+      self.motionCorrection.fmDose = value;
+    },
+    setHighTensionMotion: (value: string) => {
+      self.motionCorrection.highTension = value;
+    },
   }))
   .volatile((self) => ({
     isBusy: false,
-    volumeDepthInput: new NumberInputField(
-      "Volume Depth",
-      () => {
-        return self.volumeDepth;
-      },
-      self.setVolumeDepth,
-      StringInputFieldType.INTEGER,
-      "Volume Depth must be a positive integer.",
-      50,
-      null,
-      (value: number) =>
-        Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
-    ),
-
+    generalInputs: {
+      volume_depth: new NumberInputField(
+        "Volume Depth",
+        () => {
+          return self.volume_depth;
+        },
+        self.setVolumeDepth,
+        StringInputFieldType.INTEGER,
+        "Volume Depth must be a positive integer.",
+        null,
+        null,
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+    },
     reconstructionInputs: {
-      tiledInput: new BooleanInputField(
+      tiled: new BooleanInputField(
         "Minimum Epochs",
         () => {
           return self.reconstruction.tiled;
@@ -106,7 +245,7 @@ export const TiltSeriesDialog = types
         true,
         "Whether the computation is done by tiles."
       ),
-      cropInput: new BooleanInputField(
+      crop: new BooleanInputField(
         "Crop",
         () => {
           return self.reconstruction.crop;
@@ -115,7 +254,7 @@ export const TiltSeriesDialog = types
         true,
         "Whether the results are cropped before saving."
       ),
-      isDataLinearizedInput: new BooleanInputField(
+      is_data_linearized: new BooleanInputField(
         "Linearized Data",
         () => {
           return self.reconstruction.is_data_linearized;
@@ -124,7 +263,7 @@ export const TiltSeriesDialog = types
         false,
         "Whether the tilt series has been linearized previously."
       ),
-      delinearizeResultInput: new BooleanInputField(
+      delinearize_result: new BooleanInputField(
         "Delinerize Result",
         () => {
           return self.reconstruction.delinearize_result;
@@ -133,7 +272,7 @@ export const TiltSeriesDialog = types
         true,
         "Whether the results are delinearized before saving."
       ),
-      dataTermEndInput: new BooleanInputField(
+      data_term_end: new BooleanInputField(
         "Run Final Data Term Operation",
         () => {
           return self.reconstruction.data_term_end;
@@ -142,7 +281,7 @@ export const TiltSeriesDialog = types
         false,
         "Whether a final data term operation is run at the end of reconstruction."
       ),
-      dataTermItersInput: new NumberInputField(
+      data_term_iters: new NumberInputField(
         "Inner Iterations",
         () => {
           return self.reconstruction.data_term_iters;
@@ -154,7 +293,7 @@ export const TiltSeriesDialog = types
         "Number of data term (inner) iterations on each proximal algorithm iteration.",
         (value: number) => Utils.isIntegerBetween(value, 1, 20)
       ),
-      proximalItersInput: new NumberInputField(
+      proximal_iters: new NumberInputField(
         "Outer Iterations",
         () => {
           return self.reconstruction.proximal_iters;
@@ -166,7 +305,7 @@ export const TiltSeriesDialog = types
         "Number of (outer) iterations of proximal algorithm.",
         (value: number) => Utils.isIntegerBetween(value, 1, 200)
       ),
-      sampleRateInput: new NumberInputField(
+      sample_rate: new NumberInputField(
         "Sample Rate",
         () => {
           return self.reconstruction.sample_rate;
@@ -178,7 +317,7 @@ export const TiltSeriesDialog = types
         "Distance between samples in forward projection.",
         (value: number) => Utils.isFloatBetween(value, 0.25, 1)
       ),
-      chillFactorInput: new NumberInputField(
+      chill_factor: new NumberInputField(
         "Chill Factor",
         () => {
           return self.reconstruction.chill_factor;
@@ -190,7 +329,7 @@ export const TiltSeriesDialog = types
         "Relaxation parameter for backprojection.",
         (value: number) => Utils.isFloatBetween(value, 0.001, 1)
       ),
-      lambdaInput: new NumberInputField(
+      lambda: new NumberInputField(
         "Lambda",
         () => {
           return self.reconstruction.lambda;
@@ -202,7 +341,7 @@ export const TiltSeriesDialog = types
         "Regularization parameter of data term proximal operator.",
         (value: number) => Utils.isFloatBetween(value, 0.1, 2000)
       ),
-      numberExtraRowsInput: new NumberInputField(
+      number_extra_rows: new NumberInputField(
         "Extra Rows",
         () => {
           return self.reconstruction.number_extra_rows;
@@ -216,7 +355,7 @@ export const TiltSeriesDialog = types
           Utils.isIntegerBetween(value, 60, Number.MAX_SAFE_INTEGER) &&
           Number(value) % 2 === 0
       ),
-      startingAngleInput: new NumberInputField(
+      starting_angle: new NumberInputField(
         "Starting Angle",
         () => {
           return self.reconstruction.starting_angle;
@@ -225,10 +364,9 @@ export const TiltSeriesDialog = types
         StringInputFieldType.FLOAT,
         "Starting Angle must be an valid number.",
         -60,
-        "Starting point of the tilt-series. E.g. if the projections are from -60 to 60 degrees, the starting point is -60.",
-        (value: number) => Utils.isFloat(value)
+        "Starting point of the tilt-series. E.g. if the projections are from -60 to 60 degrees, the starting point is -60."
       ),
-      angleStepInput: new NumberInputField(
+      angle_step: new NumberInputField(
         "Angle Step",
         () => {
           return self.reconstruction.angle_step;
@@ -237,10 +375,9 @@ export const TiltSeriesDialog = types
         StringInputFieldType.FLOAT,
         "Angle Step must be an valid number.",
         3,
-        "Angle step between projections. E.g. if 3 the projections are -60, -57..., 57, 60.",
-        (value: number) => Utils.isFloat(value)
+        "Angle step between projections. E.g. if 3 the projections are -60, -57..., 57, 60."
       ),
-      nlmSkipInput: new NumberInputField(
+      nlm_skip: new NumberInputField(
         "NLM Skip",
         () => {
           return self.reconstruction.nlm_skip;
@@ -253,19 +390,284 @@ export const TiltSeriesDialog = types
         (value: number) => Utils.isIntegerBetween(value, 1, 9)
       ),
     },
+    alignmentInputs: {
+      peak: new NumberInputField(
+        "Peak",
+        () => {
+          return self.alignment.peak;
+        },
+        self.setPeak,
+        StringInputFieldType.FLOAT,
+        "Peak must be a valid number.",
+        10,
+        "Criterion # of SDs above local mean for erasing peak based on intensity."
+      ),
+      diff: new NumberInputField(
+        "Difference",
+        () => {
+          return self.alignment.diff;
+        },
+        self.setDiff,
+        StringInputFieldType.FLOAT,
+        "Difference must be a valid number.",
+        10,
+        "Criterion # of SDs above mean pixel-to-pixel difference for erasing a peak based on differences."
+      ),
+      grow: new NumberInputField(
+        "Grow",
+        () => {
+          return self.alignment.grow;
+        },
+        self.setGrow,
+        StringInputFieldType.FLOAT,
+        "Grow must be a valid number.",
+        4,
+        "Criterion # of SDs above mean for adding points to peak."
+      ),
+      iterations: new NumberInputField(
+        "Iterations",
+        () => {
+          return self.alignment.iterations;
+        },
+        self.setIterationsAlignment,
+        StringInputFieldType.INTEGER,
+        "Iterations must be a positive integer.",
+        3,
+        "Number of times to iterate search for peaks.  For a given section, the iterations will be terminated after an iteration with no changes. Moreover, the program will keep track of which scan regions have changes on each iteration and stop redoing regions that have had no changes",
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+      numOfPatches: new NumberInputField(
+        "Number of Patches",
+        () => {
+          return self.alignment.numOfPatches;
+        },
+        self.setNumOfPatches,
+        StringInputFieldType.INTEGER,
+        "Number of Patches must be a positive integer.",
+        4,
+        "Number of patches in X and Y to track by correlation.  The given number of patches will be regularly spaced apart and fill the X and Y ranges of the trimmed image area.",
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+      patchSize: new NumberInputField(
+        "Patch Size",
+        () => {
+          return self.alignment.patchSize;
+        },
+        self.setPatchSizeAlignment,
+        StringInputFieldType.INTEGER,
+        "Patch Size must be a positive integer.",
+        680,
+        "Size in X and Y of patches to track by correlation.",
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+      patchRadius: new NumberInputField(
+        "Patch Radius",
+        () => {
+          return self.alignment.patchRadius;
+        },
+        self.setPatchRadius,
+        StringInputFieldType.FLOAT,
+        "Patch Radius must be a positive integer.",
+        0.125,
+        "Low spatial frequencies in the cross-correlation will be attenuated by a Gaussian curve that is 1 at this cutoff radius and falls off below this radius with a standard deviation.",
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+      rotationAngle: new NumberInputField(
+        "Rotation Angle",
+        () => {
+          return self.alignment.rotationAngle;
+        },
+        self.setRotationAngle,
+        StringInputFieldType.FLOAT,
+        "Rotation Angle must be a valid number.",
+        60,
+        "Angle of rotation of the tilt axis in the images; specifically, the angle from the vertical to the tilt axis (counterclockwise positive)."
+      ),
+    },
+    ctfInputs: {
+      highTension: new NumberInputField(
+        "High Tension (keV)",
+        () => {
+          return self.ctf.highTension;
+        },
+        self.setHighTensionCTF,
+        StringInputFieldType.FLOAT,
+        "High Tension must be a valid number.",
+        300,
+        null
+      ),
+      sphericalAberration: new NumberInputField(
+        "Spherical Aberration (Cs in mm)",
+        () => {
+          return self.ctf.sphericalAberration;
+        },
+        self.setSphericalAberration,
+        StringInputFieldType.FLOAT,
+        "Spherical Aberration must be a valid number.",
+        2.7,
+        null
+      ),
+      amplitudeContrast: new NumberInputField(
+        "Amplitude Contrast",
+        () => {
+          return self.ctf.amplitudeContrast;
+        },
+        self.setAmplitudeContrast,
+        StringInputFieldType.FLOAT,
+        "Amplitude Contrast must be a valid number.",
+        0.1,
+        null
+      ),
+      pixelSize: new NumberInputField(
+        "Pixel Size (Angstroms)",
+        () => {
+          return self.ctf.pixelSize;
+        },
+        self.setPixelSizeCTF,
+        StringInputFieldType.FLOAT,
+        "Pixel Size must be a valid number.",
+        1.0,
+        null
+      ),
+      tileSize: new NumberInputField(
+        "Tile Size (pixels)",
+        () => {
+          return self.ctf.tileSize;
+        },
+        self.setTileSize,
+        StringInputFieldType.INTEGER,
+        "Tile Size must be a positive integer.",
+        512,
+        null,
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+    },
+    motionCorrectionInputs: {
+      patchSize: new NumberInputField(
+        "Patch Size (pixels)",
+        () => {
+          return self.motionCorrection.patchSize;
+        },
+        self.setPatchSizeMotion,
+        StringInputFieldType.INTEGER,
+        "Patch Size must be a positive integer.",
+        32,
+        null,
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+      iterations: new NumberInputField(
+        "Iterations",
+        () => {
+          return self.motionCorrection.iterations;
+        },
+        self.setIterationsMotion,
+        StringInputFieldType.INTEGER,
+        "Iterations must be a positive integer.",
+        10,
+        "Maximum iterations for iterative alignment.",
+        (value: number) =>
+          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+      ),
+      tolerance: new NumberInputField(
+        "Tolerance",
+        () => {
+          return self.motionCorrection.tolerance;
+        },
+        self.setTolerance,
+        StringInputFieldType.FLOAT,
+        "Tolerance must be a valid number.",
+        0.1,
+        "Tolerance for iterative alignment."
+      ),
+      pixelSize: new NumberInputField(
+        "Pixel Size (Angstroms)",
+        () => {
+          return self.motionCorrection.pixelSize;
+        },
+        self.setPixelSizeMotion,
+        StringInputFieldType.FLOAT,
+        "Pixel Size must be a valid number.",
+        1.0,
+        null
+      ),
+      fmDose: new NumberInputField(
+        "Frame dose (e/A^2)",
+        () => {
+          return self.motionCorrection.fmDose;
+        },
+        self.setFmDose,
+        StringInputFieldType.FLOAT,
+        "FM Dose must be a valid number.",
+        0,
+        null
+      ),
+      highTension: new NumberInputField(
+        "High Tension (keV)",
+        () => {
+          return self.motionCorrection.highTension;
+        },
+        self.setHighTensionMotion,
+        StringInputFieldType.FLOAT,
+        "High Tension must be a valid number.",
+        300,
+        "High tension in keV needed for dose weighting."
+      ),
+    },
   }))
   .views((self) => ({
     get reconstructionValid() {
       return (
-        self.reconstructionInputs.dataTermItersInput.isValid() &&
-        self.reconstructionInputs.proximalItersInput.isValid() &&
-        self.reconstructionInputs.sampleRateInput.isValid() &&
-        self.reconstructionInputs.chillFactorInput.isValid() &&
-        self.reconstructionInputs.lambdaInput.isValid() &&
-        self.reconstructionInputs.numberExtraRowsInput.isValid() &&
-        self.reconstructionInputs.startingAngleInput.isValid() &&
-        self.reconstructionInputs.angleStepInput.isValid() &&
-        self.reconstructionInputs.nlmSkipInput.isValid()
+        self.reconstructionInputs.tiled.isValid() &&
+        self.reconstructionInputs.crop.isValid() &&
+        self.reconstructionInputs.is_data_linearized.isValid() &&
+        self.reconstructionInputs.delinearize_result.isValid() &&
+        self.reconstructionInputs.data_term_end.isValid() &&
+        self.reconstructionInputs.data_term_iters.isValid() &&
+        self.reconstructionInputs.proximal_iters.isValid() &&
+        self.reconstructionInputs.sample_rate.isValid() &&
+        self.reconstructionInputs.chill_factor.isValid() &&
+        self.reconstructionInputs.lambda.isValid() &&
+        self.reconstructionInputs.number_extra_rows.isValid() &&
+        self.reconstructionInputs.starting_angle.isValid() &&
+        self.reconstructionInputs.angle_step.isValid() &&
+        self.reconstructionInputs.nlm_skip.isValid()
+      );
+    },
+    get alignmentValid() {
+      return (
+        self.alignmentInputs.peak.isValid() &&
+        self.alignmentInputs.diff.isValid() &&
+        self.alignmentInputs.grow.isValid() &&
+        self.alignmentInputs.iterations.isValid() &&
+        self.alignmentInputs.numOfPatches.isValid() &&
+        self.alignmentInputs.patchSize.isValid() &&
+        self.alignmentInputs.patchRadius.isValid() &&
+        self.alignmentInputs.rotationAngle.isValid()
+      );
+    },
+    get ctfValid() {
+      return (
+        self.ctfInputs.highTension.isValid() &&
+        self.ctfInputs.sphericalAberration.isValid() &&
+        self.ctfInputs.amplitudeContrast.isValid() &&
+        self.ctfInputs.pixelSize.isValid() &&
+        self.ctfInputs.tileSize.isValid()
+      );
+    },
+    get motionValid() {
+      return (
+        self.motionCorrectionInputs.patchSize.isValid() &&
+        self.motionCorrectionInputs.iterations.isValid() &&
+        self.motionCorrectionInputs.tolerance.isValid() &&
+        self.motionCorrectionInputs.pixelSize.isValid() &&
+        self.motionCorrectionInputs.fmDose.isValid() &&
+        self.motionCorrectionInputs.highTension.isValid()
       );
     },
   }));

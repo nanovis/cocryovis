@@ -57,7 +57,7 @@ const CryoTools = observer(({ open, close }: Props) => {
   const [sphericalAberration, setSphericalAberration] = useState("0.7");
   const [tileSize, setTileSize] = useState("512");
 
-  //Tilt series alignment tool 
+  //Tilt series alignment tool
   const [peak, setPeak] = useState("5.0");
   const [diff, setDiff] = useState("2.0");
   const [grow, setGrow] = useState("5.0");
@@ -296,11 +296,9 @@ const CryoTools = observer(({ open, close }: Props) => {
         </div>
 
         <div className={globalClasses.siderbarBody}>
-
           {/* Motion Correction */}
           <h2>Tilt Series Alignment</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-
             <Label htmlFor="peak">Peak: [{Number(peak)}]</Label>
             <Slider
               id="peak"
@@ -331,7 +329,9 @@ const CryoTools = observer(({ open, close }: Props) => {
               onChange={(_, data) => setGrow(data.value.toString())}
             />
 
-            <Label htmlFor="iterations">Iterations: [{Number(iterationsTSA)}]</Label>
+            <Label htmlFor="iterations">
+              Iterations: [{Number(iterationsTSA)}]
+            </Label>
             <Slider
               id="iterations"
               min={1}
@@ -354,7 +354,8 @@ const CryoTools = observer(({ open, close }: Props) => {
             />
 
             <Label htmlFor="patchSizePX">
-              Patch Size in Pixels: [{Number(patchPixSize)}] x [{Number(patchPixSize)}]
+              Patch Size in Pixels: [{Number(patchPixSize)}] x [
+              {Number(patchPixSize)}]
             </Label>
             <Slider
               id="patchSize"
@@ -412,7 +413,6 @@ const CryoTools = observer(({ open, close }: Props) => {
               </Tooltip>
             </div>
           </div>
-
 
           {/* Motion Correction */}
           <h2>Motion Correction</h2>

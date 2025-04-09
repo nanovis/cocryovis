@@ -33,7 +33,7 @@ import DeleteVolumeDialog from "./elements/DeleteVolumeDialog";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import Utils from "../../../functions/Utils";
-import { toast } from "react-toastify";
+import { Id, toast } from "react-toastify";
 import DeleteDialog from "../../shared/DeleteDialog";
 import { CONFIG } from "../../../Constants";
 import "../../../App.css";
@@ -243,9 +243,9 @@ const Volume = observer(({ open, close }: Props) => {
   const tiltSeriesUpload = async (
     file: File,
     options: TiltSeriesOptions,
+    toastId: Id,
     serverSide?: boolean
   ) => {
-    let toastId = null;
     if (!selectedVolumeId) {
       return;
     }
@@ -268,30 +268,43 @@ const Volume = observer(({ open, close }: Props) => {
           "data",
           JSON.stringify({
             volumeId: selectedVolumeId,
-            options: {
-              reconstruction: options,
-              alignment: { RotationAngle: 60 },
-            },
+            options: options,
           })
         );
-        await Utils.sendRequestWithToast(
+        await Utils.sendReq(
           `tilt-series-reconstruction`,
           {
             method: "POST",
             body: formData,
           },
-          { successText: "Tilt series reconstruction successfuly queued!" }
+          false
         );
+        toast.update(toastId, {
+          render: "Tilt series reconstruction successfuly queued!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+          closeOnClick: true,
+        });
       } else {
-        toastId = toast.loading("Processing data...");
+        toast.update(toastId, {
+          render: "Performing local tilt series reconstruction...",
+          isLoading: true,
+          autoClose: false,
+        });
+        await Utils.waitForNextFrame();
         const { parsedSettings, fileData } =
-          await Utils.convertTiltSeriesToRawData(file, options.volume_depth);
+          await Utils.convertTiltSeriesToRawData(
+            file,
+            options.reconstruction.volume_depth
+          );
 
         toast.update(toastId, {
           render: "Uploading data to the server...",
           isLoading: true,
           autoClose: false,
         });
+        await Utils.waitForNextFrame();
 
         await selectedVolume?.uploadTiltSeries(parsedSettings, fileData);
 
@@ -304,7 +317,6 @@ const Volume = observer(({ open, close }: Props) => {
         });
       }
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
       console.error("Error:", error);
       throw error;
     } finally {
@@ -996,7 +1008,7 @@ const Volume = observer(({ open, close }: Props) => {
             onClose={() => setIsTiltSeriesDialogOpen(false)}
             onSubmit={tiltSeriesUpload}
             showServerVariant={true}
-            tiltSeriesDialogStore={uiState.tiltSeriesDialogServer}
+            store={uiState.tiltSeriesDialogServer}
           />
 
           <VolumeUploadDialog
