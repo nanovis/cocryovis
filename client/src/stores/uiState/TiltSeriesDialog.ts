@@ -85,32 +85,12 @@ export const TiltSeriesDialog = types
     },
     setAlignmentEnabled: (enabled: boolean) => {
       self.alignmentEnabled = enabled;
-      if (!enabled && self.optionsTab === 0) {
-        if (self.ctfEnabled) {
-          self.optionsTab = 1;
-        } else if (self.motionCorrectionEnabled) {
-          self.optionsTab = 2;
-        } else {
-          self.optionsTab = 3;
-        }
-      }
     },
     setCtfEnabled: (enabled: boolean) => {
       self.ctfEnabled = enabled;
-      if (!enabled && self.optionsTab === 1) {
-        self.optionsTab = 3;
-        if (self.motionCorrectionEnabled) {
-          self.optionsTab = 2;
-        } else {
-          self.optionsTab = 3;
-        }
-      }
     },
     setMotionCorrectionEnabled: (enabled: boolean) => {
       self.motionCorrectionEnabled = enabled;
-      if (!enabled && self.optionsTab === 2) {
-        self.optionsTab = 3;
-      }
     },
     setVolumeDepth: (value: string) => {
       self.volume_depth = value;

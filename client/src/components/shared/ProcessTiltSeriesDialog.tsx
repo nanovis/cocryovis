@@ -18,6 +18,7 @@ import {
   TabList,
   Tab,
   Checkbox,
+  mergeClasses,
 } from "@fluentui/react-components";
 import { Document20Regular } from "@fluentui/react-icons";
 import globalStyles from "../GlobalStyles";
@@ -32,13 +33,30 @@ import Utils from "../../functions/Utils";
 import { toast, Id } from "react-toastify";
 
 const useStyles = makeStyles({
-  optionsTabElement: {
-    display: "flex",
-    alignItems: "center",
+  optionsTabCheckbox: {},
+  optionsTabList: {
+    "& > button": {
+      height: "40px",
+      borderRadius: 0,
+      borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderLeft: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
+    "& > button.activeTab:first-of-type": {
+      borderLeft: "1px solid transparent",
+    },
+    "& > button:not(.activeTab)": {
+      backgroundColor: tokens.colorNeutralBackground2,
+      borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
+    "& > button:not(.activeTab):last-of-type": {
+      borderRight: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
   },
-  optionsTabCheckbox: {
-    marginLeft: "-12px",
+  checkboxOptionTab: {
+    paddingRight: "0px",
+    paddingLeft: "9px",
   },
+  nonCheckboxOptionTab: {},
 });
 
 export interface TiltSeriesOptions {
@@ -201,7 +219,10 @@ const ProcessTiltSeriesDialog = observer(
                   collapsible
                 >
                   <AccordionItem
-                    style={{ maxHeight: "400px", overflowY: "auto" }}
+                    style={{
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                    }}
                     value={"1"}
                     disabled={!store.serverSide}
                   >
@@ -215,8 +236,9 @@ const ProcessTiltSeriesDialog = observer(
                       style={{
                         display: "flex",
                         flexDirection: "column",
-                        rowGap: "10px",
+                        rowGap: "12px",
                         margin: 0,
+                        paddingRight: "4px",
                       }}
                     >
                       <TabList
@@ -224,33 +246,37 @@ const ProcessTiltSeriesDialog = observer(
                         onTabSelect={(_, data) =>
                           store.setOptionsTab(data.value as number)
                         }
+                        className={classes.optionsTabList}
                         style={{
                           display: "flex",
-                          justifyContent: "space-between",
+                          gap: "-1px",
                         }}
                       >
-                        <div className={classes.optionsTabElement}>
-                          <Tab
-                            value={OptionTabs.Alignment}
-                            disabled={!store.alignmentEnabled}
-                          >
-                            Alignment
-                          </Tab>
+                        <Tab
+                          value={OptionTabs.Alignment}
+                          className={mergeClasses(
+                            classes.checkboxOptionTab,
+                            store.optionsTab === OptionTabs.Alignment &&
+                              "activeTab"
+                          )}
+                        >
+                          Alignment
                           <Checkbox
-                            className={classes.optionsTabCheckbox}
                             checked={store.alignmentEnabled}
+                            className={classes.optionsTabCheckbox}
                             onChange={(_, data) =>
                               store.setAlignmentEnabled(data.checked as boolean)
                             }
                           />
-                        </div>
-                        <div className={classes.optionsTabElement}>
-                          <Tab
-                            value={OptionTabs.CTF}
-                            disabled={!store.ctfEnabled}
-                          >
-                            CTF Estimation
-                          </Tab>
+                        </Tab>
+                        <Tab
+                          value={OptionTabs.CTF}
+                          className={mergeClasses(
+                            classes.checkboxOptionTab,
+                            store.optionsTab === OptionTabs.CTF && "activeTab"
+                          )}
+                        >
+                          CTF Estimation
                           <Checkbox
                             className={classes.optionsTabCheckbox}
                             checked={store.ctfEnabled}
@@ -258,14 +284,16 @@ const ProcessTiltSeriesDialog = observer(
                               store.setCtfEnabled(data.checked as boolean)
                             }
                           />
-                        </div>
-                        <div className={classes.optionsTabElement}>
-                          <Tab
-                            value={OptionTabs.MotionCorrection}
-                            disabled={!store.motionCorrectionEnabled}
-                          >
-                            Motion Correction
-                          </Tab>
+                        </Tab>
+                        <Tab
+                          value={OptionTabs.MotionCorrection}
+                          className={mergeClasses(
+                            classes.checkboxOptionTab,
+                            store.optionsTab === OptionTabs.MotionCorrection &&
+                              "activeTab"
+                          )}
+                        >
+                          Motion Correction
                           <Checkbox
                             className={classes.optionsTabCheckbox}
                             checked={store.motionCorrectionEnabled}
@@ -275,21 +303,28 @@ const ProcessTiltSeriesDialog = observer(
                               )
                             }
                           />
-                        </div>
-                        <Tab value={OptionTabs.Reconstruction}>
+                        </Tab>
+                        <Tab
+                          value={OptionTabs.Reconstruction}
+                          className={mergeClasses(
+                            classes.nonCheckboxOptionTab,
+                            store.optionsTab === OptionTabs.Reconstruction &&
+                              "activeTab"
+                          )}
+                        >
                           Reconstruction
                         </Tab>
                       </TabList>
                       {store.optionsTab === OptionTabs.Alignment && (
                         <OptionsTab
                           inputList={Object.values(store.alignmentInputs)}
-                          isBusy={isBusy}
+                          disabled={isBusy || !store.alignmentEnabled}
                         />
                       )}
                       {store.optionsTab === OptionTabs.CTF && (
                         <OptionsTab
                           inputList={Object.values(store.ctfInputs)}
-                          isBusy={isBusy}
+                          disabled={isBusy || !store.ctfEnabled}
                         />
                       )}
                       {store.optionsTab === OptionTabs.MotionCorrection && (
@@ -297,13 +332,13 @@ const ProcessTiltSeriesDialog = observer(
                           inputList={Object.values(
                             store.motionCorrectionInputs
                           )}
-                          isBusy={isBusy}
+                          disabled={isBusy || !store.motionCorrectionEnabled}
                         />
                       )}
                       {store.optionsTab === OptionTabs.Reconstruction && (
                         <OptionsTab
                           inputList={Object.values(store.reconstructionInputs)}
-                          isBusy={isBusy}
+                          disabled={isBusy}
                         />
                       )}
                     </AccordionPanel>
@@ -382,10 +417,10 @@ const ProcessTiltSeriesDialog = observer(
 const OptionsTab = observer(
   ({
     inputList,
-    isBusy,
+    disabled,
   }: {
     inputList: Array<NumberInputField | BooleanInputField>;
-    isBusy: boolean;
+    disabled: boolean;
   }) => {
     return (
       <div style={{ display: "flex", flexDirection: "column", rowGap: "10px" }}>
@@ -395,13 +430,13 @@ const OptionsTab = observer(
               key={index}
               input={input}
               labelPosition="before"
-              disabled={isBusy}
+              disabled={disabled}
             />
           ) : (
             <NumberInputValidatedField
               key={index}
               input={input}
-              disabled={isBusy}
+              disabled={disabled}
             />
           )
         )}
