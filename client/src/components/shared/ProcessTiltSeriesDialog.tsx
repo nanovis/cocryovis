@@ -34,19 +34,39 @@ import { toast, Id } from "react-toastify";
 
 const useStyles = makeStyles({
   optionsTabCheckbox: {},
+  optionsPanel: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "4px",
+    margin: 0,
+    backgroundColor: tokens.colorNeutralBackground2,
+  },
   optionsTabList: {
     "& > button": {
       height: "40px",
       borderRadius: 0,
       borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
       borderLeft: `1px solid ${tokens.colorNeutralStroke2}`,
+      "&::before": {
+        display: "none",
+      },
+      "&::after": {
+        display: "none",
+      },
+      "& > span": {
+        display: "flex",
+        alignItems: "center",
+      },
     },
     "& > button.activeTab:first-of-type": {
       borderLeft: "1px solid transparent",
     },
     "& > button:not(.activeTab)": {
-      backgroundColor: tokens.colorNeutralBackground2,
+      backgroundColor: tokens.colorNeutralBackground1,
       borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
+    "& > button:last-of-type": {
+      flexGrow: 1,
     },
     "& > button:not(.activeTab):last-of-type": {
       borderRight: `1px solid ${tokens.colorNeutralStroke2}`,
@@ -232,15 +252,7 @@ const ProcessTiltSeriesDialog = observer(
                         Requires server-side processing.
                       </Text>
                     </AccordionHeader>
-                    <AccordionPanel
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        rowGap: "12px",
-                        margin: 0,
-                        paddingRight: "4px",
-                      }}
-                    >
+                    <AccordionPanel className={classes.optionsPanel}>
                       <TabList
                         selectedValue={store.optionsTab}
                         onTabSelect={(_, data) =>
@@ -423,7 +435,14 @@ const OptionsTab = observer(
     disabled: boolean;
   }) => {
     return (
-      <div style={{ display: "flex", flexDirection: "column", rowGap: "10px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          rowGap: "10px",
+          padding: "8px",
+        }}
+      >
         {inputList.map((input, index) =>
           input instanceof BooleanInputField ? (
             <BooleanInputValidatedField
