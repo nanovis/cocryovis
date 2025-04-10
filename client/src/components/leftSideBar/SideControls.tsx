@@ -24,7 +24,6 @@ import {
 } from "@fluentui/react-icons";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import DeleteDialog from "../shared/DeleteDialog";
-import CryoTools from "./widgets/CryoTools";
 
 const enum WidgetIndices {
   Volume = 0,
@@ -32,7 +31,6 @@ const enum WidgetIndices {
   NanoOtzi = 2,
   Status = 3,
   Local = 4,
-  PreProcessing = 5,
 }
 
 const SideControls = observer(() => {
@@ -93,17 +91,6 @@ const SideControls = observer(() => {
           />
 
           <WidgetToggleButton
-            title={"PreProcessing"}
-            labelPositioning={"after"}
-            LabelIcon={Toolbox24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.PreProcessing}
-            onClick={() =>
-              uiState.setOpenLeftWidget(WidgetIndices.PreProcessing)
-            }
-            disabled={activeProjectId === undefined}
-          />
-
-          <WidgetToggleButton
             title={"Status"}
             labelPositioning={"after"}
             LabelIcon={Status24Regular}
@@ -160,10 +147,6 @@ const SideControls = observer(() => {
       />
       <Local
         open={uiState.openLeftWidget === WidgetIndices.Local}
-        close={uiState.closeLeftHandWidgets}
-      />
-      <CryoTools
-        open={uiState.openLeftWidget === WidgetIndices.PreProcessing}
         close={uiState.closeLeftHandWidgets}
       />
 
