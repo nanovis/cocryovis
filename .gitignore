@@ -1,8 +1,9 @@
 node_modules
 .vs
 db.json
-/data/
-/logs/
+/database/*
+/logs/*
+/data/*
 .idea
 /cache/
 *.sqlite3
@@ -13,11 +14,10 @@ db.json
 .venv/
 /temp/
 /modules/ilastik/*
-!/modules/ilastik/.gitkeep
 !/modules/nano-oetzi
 /modules/imod/*
-!/modules/imod/.gitkeep
 python-scripts/__pycache__
+!.gitkeep
 
 sessions/*.db
 sessions/*.db-shm
