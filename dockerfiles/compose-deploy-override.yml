@@ -1,0 +1,18 @@
+services:
+  web:
+    networks:
+      - volweb-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:${NGINX_CONF_PATH:-/etc/nginx/nginx.conf}
+      - ./ssl:${CERT_PATH:-/etc/nginx/ssl}
+    environment:
+      - DOMAIN_NAME=_
+    networks:
+      - volweb-network
+    restart: unless-stopped
