@@ -64,8 +64,8 @@ RUN chown ${SETUSER}:${SETUSER} /app && \
     chown -R ${SETUSER}:${SETUSER} /app/db
 
 # Copy dependency files first for caching
-COPY --chown=${SETUSER}:${SETUSER} ../requirements.txt /app/
-COPY --chown=${SETUSER}:${SETUSER} ../package.json /app/
+COPY --chown=${SETUSER}:${SETUSER} ./requirements.txt /app/
+COPY --chown=${SETUSER}:${SETUSER} ./package.json /app/
 
 # Create conda environment and install Python dependencies
 RUN conda create -n volweb python=3.8 -y && \
@@ -81,7 +81,7 @@ RUN npm install --cache /home/${SETUSER}/.npm && \
 
 # Copy application files
 USER root
-COPY --chown=${SETUSER}:${SETUSER} ../ /app/
+COPY --chown=${SETUSER}:${SETUSER} ./ /app/
 
 # Install IMOD
 RUN chmod +x /app/install_imod.sh && \
