@@ -73,12 +73,12 @@ USER root
 COPY --chown=${SETUSER}:${SETUSER} ./ /app/
 
 # Install IMOD and run scripts with proper permissions
-RUN chmod +x /app/install_imod.sh && /app/install_imod.sh \
+RUN chmod +x /app/scripts/install_imod.sh && /app/scripts/install_imod.sh \
     && chmod +x /app/modules/imod/IMOD/IMOD-linux.sh && /app/modules/imod/IMOD/IMOD-linux.sh \
-    && chmod +x /app/build_submodules.sh && /app/build_submodules.sh
+    && chmod +x /app/scripts/build_submodules.sh && /app/scripts/build_submodules.sh
 
 USER ${SETUSER}
-RUN chmod +x /app/build_client.sh && /app/build_client.sh
+RUN chmod +x /app/scripts/build_client.sh && /app/scripts/build_client.sh
 
 # Set permissions on important directories
 USER root
