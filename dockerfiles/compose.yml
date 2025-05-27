@@ -2,7 +2,7 @@ services:
   web:
     build:
       context: ../
-      dockerfile: dockerfiles/Dockerfile2
+      dockerfile: dockerfiles/Dockerfile
     image: ${IMAGE_NAME:-cocryovis:latest}
     container_name: volweb-app
     ports:
@@ -10,7 +10,8 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NODE_ENV=production
-      - DATABASE_PATH=file:/app/database/db.sqlite
+      - DATABASE_URL=file:/app/database/db.sqlite
+      - SESSIONS_PATH=/app/database/db.sessions
       - SESSION_SECRET=${SESSION_SECRET:-notsecret}
     volumes:
       - type: bind
@@ -19,7 +20,6 @@ services:
       - app_dbdata:/app/database
       - app_filedata:/app/data
       - app_logdata:/app/logs
-      - app_sessiondata:/app/sessions
     deploy:
       resources:
         reservations:
@@ -39,4 +39,3 @@ volumes:
   app_dbdata:
   app_filedata:
   app_logdata:
-  app_sessiondata:

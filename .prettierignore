@@ -8,7 +8,6 @@ modules/
 node_modules/
 sessions/
 transfer-functions/
-uploads/
 *.json
 *.log
 *.sh

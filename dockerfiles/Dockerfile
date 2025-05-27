@@ -1,7 +1,7 @@
-# Use Ubuntu 24.04 LTS with Miniconda
-FROM continuumio/miniconda3:latest AS builder
+# Use NVIDIA CUDA base image with Ubuntu 24.04 and Miniconda pre-installed
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
-# Set environment variables
+# Set environment variables early for caching
 ENV DEBIAN_FRONTEND=noninteractive \
     NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility \
@@ -9,102 +9,83 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     SETUSER=volweb \
     UID=10001 \
-    DATABASE_PATH=file:/app/database/db.sqlite
+    PATH=/opt/conda/bin:$PATH
 
-# Add default value for DATABASE_URL
-ARG DATABASE_URL="file:/app/database/db.sqlite"
-ENV DATABASE_URL=$DATABASE_URL
-
-# Create and setup user with proper home directory
-RUN useradd -m -s /bin/bash -u ${UID} ${SETUSER} && \
-    mkdir -p /home/${SETUSER}/.npm && \
-    chown -R ${SETUSER}:${SETUSER} /home/${SETUSER}
-
-# Install system dependencies
+# Install system dependencies, Miniconda, Node.js 20.x
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libtiff-dev \
-    curl \
-    wget \
-    gnupg \
-    git \
-    build-essential \
-    libpng-dev \
-    libjpeg-dev \
-    gfortran \
-    liblapack-dev \
-    libopenblas-dev \
-    libxml2 \
-    libglpk-dev \
-    libxt-dev \
-    libcairo2-dev \
-    cmake && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+        libtiff-dev \
+        libpng-dev \
+        libjpeg-dev \
+        gfortran \
+        liblapack-dev \
+        libopenblas-dev \
+        nvidia-container-toolkit \
+        libxml2 \
+        libglpk-dev \
+        libxt-dev \
+        libcairo2-dev \
+        cmake \
+        curl \
+        wget \
+        gnupg \
+        git \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Remove conflicting packages (npm and nodejs-legacy)
-RUN apt-get purge -y npm nodejs-legacy || true && apt-get autoremove -y
+# Install Miniconda (latest Miniconda3 installer)
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/conda \
+    && rm /tmp/miniconda.sh \
+    && /opt/conda/bin/conda clean -afy
 
-# Install Node.js 20.x and npm using NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g npm@latest && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Create user with specified UID and home directory
+RUN useradd -m -s /bin/bash -u ${UID} ${SETUSER} \
+    && mkdir -p /home/${SETUSER}/.npm \
+    && chown -R ${SETUSER}:${SETUSER} /home/${SETUSER}
+    
+# Install Node.js 20.x
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install CUDA 12.4 (For Proximal_CryoET)
-RUN wget -q https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run
-RUN chmod +x cuda_12.4.0_550.54.14_linux.run && sh ./cuda_12.4.0_550.54.14_linux.run --silent --toolkit
-ENV PATH="/usr/local/cuda/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
-
-# Create app directory with proper permissions
+# Set working directory and permissions
 WORKDIR /app
-RUN chown ${SETUSER}:${SETUSER} /app && \
-    mkdir -p /app/db && \
-    chown -R ${SETUSER}:${SETUSER} /app/db
+RUN chown ${SETUSER}:${SETUSER} /app
 
-# Copy dependency files first for caching
-COPY --chown=${SETUSER}:${SETUSER} ./requirements.txt /app/
-COPY --chown=${SETUSER}:${SETUSER} ./package.json /app/
+# Copy dependency files first for better layer caching
+COPY --chown=${SETUSER}:${SETUSER} requirements.txt package.json /app/
 
 # Create conda environment and install Python dependencies
-RUN conda create -n volweb python=3.8 -y && \
-    . /opt/conda/etc/profile.d/conda.sh && \
-    conda activate volweb && \
-    pip install --no-cache-dir -r /app/requirements.txt && \
-    conda clean -afy
+RUN /opt/conda/bin/conda create -n volweb python=3.9 -y \
+    && /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate volweb && pip install --no-cache-dir -r /app/requirements.txt" \
+    && /opt/conda/bin/conda clean -afy
 
-# Install npm dependencies with updated Node.js version
+# Switch to non-root user for npm install and app build steps
 USER ${SETUSER}
-RUN npm install --cache /home/${SETUSER}/.npm && \
-    npm cache clean --force
 
-# Copy application files
+# Install npm dependencies with cache
+RUN npm install --cache /home/${SETUSER}/.npm
+
+# Copy application source code
 USER root
 COPY --chown=${SETUSER}:${SETUSER} ./ /app/
 
-# Install IMOD
-RUN chmod +x /app/install_imod.sh && \
-    /app/install_imod.sh && \
-    chmod +x /app/modules/imod/IMOD/IMOD-linux.sh && \
-    /app/modules/imod/IMOD/IMOD-linux.sh
-
-# Follow README instructions
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
-RUN chmod +x /app/build_submodules.sh && /app/build_submodules.sh
-RUN mkdir /app/database
+# Install IMOD and run scripts with proper permissions
+RUN chmod +x /app/install_imod.sh && /app/install_imod.sh \
+    && chmod +x /app/modules/imod/IMOD/IMOD-linux.sh && /app/modules/imod/IMOD/IMOD-linux.sh \
+    && chmod +x /app/build_submodules.sh && /app/build_submodules.sh
 
 USER ${SETUSER}
-RUN chmod +x /app/build_client.sh && \
-    . /opt/conda/etc/profile.d/conda.sh && \
-    conda activate volweb && \
-    /app/build_client.sh
+RUN chmod +x /app/build_client.sh && /app/build_client.sh
 
-# Set up directories and permissions
+# Set permissions on important directories
 USER root
-RUN chmod -R 770 /app/database /app/modules
+RUN chmod -R 775 /app/modules
 
-# Expose port
+# Expose application port
 EXPOSE 8080
+
+# Default user
+USER ${SETUSER}

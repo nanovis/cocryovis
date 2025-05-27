@@ -47,6 +47,8 @@ const startServer = async () => {
         appConfig.demoProjectIndex;
     appConfig.demoProjectIndex = demoProjectIndex;
 
+    const seassionsPath = process.env.SESSIONS_PATH || "./database/db.sessions";
+
     const app = express();
 
     const allowedOrigins = [
@@ -89,9 +91,13 @@ const startServer = async () => {
         })
     );
 
-    fileSystem.mkdirSync("sessions", { recursive: true });
 
-    const sessionsDB = new Database("sessions/sessions.db");
+    const sessionsDir = path.dirname(seassionsPath);
+    if (!fileSystem.existsSync(sessionsDir)) {
+        fileSystem.mkdirSync(sessionsDir, { recursive: true, mode: 0o775 });
+    }
+
+    const sessionsDB = new Database(seassionsPath);
     sessionsDB.pragma("journal_mode = WAL");
 
     const sess = {
