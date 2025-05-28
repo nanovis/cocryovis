@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Define the submodule scripts
 SUBMODULES=(
+  "./scripts/build_motioncor3.sh"
   "./scripts/build_gctffind.sh"
   "./scripts/install_ilastik.sh"
   "./scripts/install_imod.sh"

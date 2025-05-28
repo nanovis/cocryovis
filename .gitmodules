@@ -9,3 +9,7 @@
 	path = modules/gctffind
 	url = ../../Scurek/GCtfFind
 	branch = bugfixes
+[submodule "modules/motioncor3"]
+	path = modules/motioncor3
+	url = ../MotionCor3
+	branch = bugfixes
