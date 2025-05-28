@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gnupg \
         git \
         build-essential \
+        file \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Miniconda (latest Miniconda3 installer)
@@ -77,9 +78,9 @@ COPY --chown=${SETUSER}:${SETUSER} modules /app/modules
 # Set executable permissions for scripts
 RUN find /app/scripts -type f -name "*.sh" -exec chmod +x {} +
 
-# Install submodules and build the client
 USER ${SETUSER}
 
+# Install submodules and build the client
 RUN /app/scripts/install_submodules.sh
 
 COPY --exclude=scripts --exclude=modules --chown=${SETUSER}:${SETUSER} ./ /app/
@@ -87,10 +88,11 @@ COPY --exclude=scripts --exclude=modules --chown=${SETUSER}:${SETUSER} ./ /app/
 RUN /app/scripts/build_client.sh
 
 # Set permissions on important directories
-USER root
-RUN chmod -R 775 /app/modules
+# RUN chmod -R 775 /app/modules
+# RUN chown -R ${SETUSER}:${SETUSER} /app/modules
 
 # Expose application port
+USER root
 EXPOSE 8080
 
 # Default user

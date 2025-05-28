@@ -8,12 +8,11 @@ mkdir -p ./modules/imod
 cd ./modules/imod
 find ./ -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} +
 
+echo "Downloading IMOD installer from ${IMOD_URL}..."
 wget -q "${IMOD_URL}"
 
+echo "Installing IMOD..."
 chmod +x "${IMOD_INSTALLER}"
 sh "./${IMOD_INSTALLER}" -y -skip -dir ./
 
 rm -f "${IMOD_INSTALLER}"
-
-chmod +x "./IMOD/IMOD-linux.sh"
-sh "./IMOD/IMOD-linux.sh"

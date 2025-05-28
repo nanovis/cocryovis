@@ -24,12 +24,13 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    gpus: all
     restart: unless-stopped
     command:
       [
         "sh",
         "-c",
-        "npx prisma migrate deploy && npx prisma generate && conda run --no-capture-output -n volweb npm start -- --port 8080 --host 0.0.0.0 --demoProject 13",
+        ". modules/imod/IMOD/IMOD-linux.sh && npx prisma migrate deploy && npx prisma generate && conda run --no-capture-output -n volweb npm start -- --port 8080 --host 0.0.0.0 --demoProject 13"
       ]
 
 volumes:

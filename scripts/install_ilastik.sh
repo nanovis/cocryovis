@@ -22,12 +22,13 @@ fi
 pip install --upgrade pip
 pip install --upgrade gdown
 
-# Use gdown to download the file
+echo "Downloading ilastik-1.4.0b21-gpu-Linux.tar.bz2..."
 gdown 1UqbeQGYrCOoe30u0z9qMFXto9tVTPPuw -O ilastik-1.4.0b21-gpu-Linux.tar.bz2
 
 deactivate
 rm -rf ./venv
 
+echo "Extracting ilastik-1.4.0b21-gpu-Linux.tar.bz2..."
 mkdir -p ./extracted
 tar -xf ./ilastik-1.4.0b21-gpu-Linux.tar.bz2 -C ./extracted
 
