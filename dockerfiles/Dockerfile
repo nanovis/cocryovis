@@ -11,7 +11,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     SETUSER=volweb \
     UID=10001 \
-    PATH=/opt/conda/bin:$PATH
+    PATH=/opt/conda/bin:$PATH \
+    CUDA_HOME=/usr/local/cuda
 
 # Install system dependencies, Miniconda, Node.js 20.x
 RUN apt-get update && apt-get install -y --no-install-recommends \

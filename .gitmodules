@@ -5,3 +5,7 @@
 [submodule "modules/Proximal_CryoET"]
 	path = modules/Proximal_CryoET
 	url = ../../Scurek/Proximal_CryoET
+[submodule "modules/gctffind"]
+	path = modules/gctffind
+	url = ../../Scurek/GCtfFind
+	branch = bugfixes
