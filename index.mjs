@@ -28,23 +28,28 @@ import TaskHistory from "./src/models/task-history.mjs";
 import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
 import { checkCookieAge } from "./src/middleware/restrict.mjs";
 import Utils from "./src/tools/utils.mjs";
+import { program } from "commander";
 
 const SqliteStore = sqlite3SessionStore(session);
 
 const startServer = async () => {
-    const host =
-        Utils.findArgument(argv, "--host") ?? process.env.HOST ?? "localhost";
-    const useHttps =
-        Utils.hasArgument(argv, "--https") ?? process.env.HTTPS === "true";
+    program
+        .option("--port <number>", "port number")
+        .option("--host <string>", "host name")
+        .option("--https", "use HTTPS")
+        .option("--demoProject <number>", "demo project index");
+
+    program.parse(process.argv);
+
+    const options = program.opts();
+
+    const host = options.host ?? process.env.HOST ?? "localhost";
+    const useHttps = options.https ?? process.env.HTTPS === "true";
 
     const port =
-        Number(Utils.findArgument(argv, "--port")) ||
-        Number(process.env.PORT) ||
-        (useHttps ? 443 : 8080);
+        options.port || Number(process.env.PORT) || (useHttps ? 443 : 8080);
 
-    const demoProjectIndex =
-        Number(Utils.findArgument(argv, "--demoProject")) ||
-        appConfig.demoProjectIndex;
+    const demoProjectIndex = options.demoProject || appConfig.demoProjectIndex;
     appConfig.demoProjectIndex = demoProjectIndex;
 
     const seassionsPath = process.env.SESSIONS_PATH || "./database/db.sessions";
@@ -90,7 +95,6 @@ const startServer = async () => {
             tempFileDir: path.join(appConfig.tempPath, "upload"),
         })
     );
-
 
     const sessionsDir = path.dirname(seassionsPath);
     if (!fileSystem.existsSync(sessionsDir)) {

@@ -500,20 +500,6 @@ export default class Utils {
     }
 
     /**
-     * Finds the value of a command line argument by its name.
-     * @param {string[]} args - The command line arguments.
-     * @param {string} argName - The name of the argument to find (e.g., "--arg").
-     * @returns {string | undefined}
-     */
-    static findArgument(args, argName) {
-        const index = args.indexOf(argName);
-        if (index !== -1 && index + 1 < args.length) {
-            return args[index + 1];
-        }
-        return undefined;
-    }
-
-    /**
      * @param {String | number} value
      * @returns
      */
