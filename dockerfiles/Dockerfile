@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7-labs
+
 # Use NVIDIA CUDA base image with Ubuntu 24.04 and Miniconda pre-installed
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
@@ -62,23 +64,27 @@ RUN /opt/conda/bin/conda create -n volweb python=3.9 -y \
     && /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate volweb && pip install --no-cache-dir -r /app/requirements.txt" \
     && /opt/conda/bin/conda clean -afy
 
-# Switch to non-root user for npm install and app build steps
-USER ${SETUSER}
-
 # Install npm dependencies with cache
+USER ${SETUSER}
 RUN npm install --cache /home/${SETUSER}/.npm
 
 # Copy application source code
 USER root
-COPY --chown=${SETUSER}:${SETUSER} ./ /app/
 
-# Install IMOD and run scripts with proper permissions
-RUN chmod +x /app/scripts/install_imod.sh && /app/scripts/install_imod.sh \
-    && chmod +x /app/modules/imod/IMOD/IMOD-linux.sh && /app/modules/imod/IMOD/IMOD-linux.sh \
-    && chmod +x /app/scripts/build_submodules.sh && /app/scripts/build_submodules.sh
+COPY --chown=${SETUSER}:${SETUSER} scripts /app/scripts
+COPY --chown=${SETUSER}:${SETUSER} modules /app/modules
 
+# Set executable permissions for scripts
+RUN find /app/scripts -type f -name "*.sh" -exec chmod +x {} +
+
+# Install submodules and build the client
 USER ${SETUSER}
-RUN chmod +x /app/scripts/build_client.sh && /app/scripts/build_client.sh
+
+RUN /app/scripts/install_submodules.sh
+
+COPY --exclude=scripts --exclude=modules --chown=${SETUSER}:${SETUSER} ./ /app/
+
+RUN /app/scripts/build_client.sh
 
 # Set permissions on important directories
 USER root

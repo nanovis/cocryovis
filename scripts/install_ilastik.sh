@@ -1,12 +1,37 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
 mkdir -p ./modules/ilastik
-pip3 install gdown && gdown "https://drive.google.com/uc?id=1UqbeQGYrCOoe30u0z9qMFXto9tVTPPuw" -O modules/ilastik/ilastik-1.4.0b21-gpu-Linux.tar.bz2
+cd ./modules/ilastik
 
-mkdir -p ./modules/ilastik/extracted
-tar -xvf modules/ilastik/ilastik-1.4.0b21-gpu-Linux.tar.bz2 -C modules/ilastik/extracted
+# Exit early if run_ilastik.sh already exists
+if [ -f "run_ilastik.sh" ]; then
+  echo "run_ilastik.sh already exists. Skipping download and extraction."
+  exit 0
+fi
 
-mv modules/ilastik/extracted/*/* modules/ilastik/
+find ./ -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} + 2>/dev/null || true
 
-rm -rf modules/ilastik/extracted
-rm modules/ilastik/ilastik-1.4.0b21-gpu-Linux.tar.bz2
+# Create virtual environment if not exists
+if [ ! -d "./venv" ]; then
+  python3 -m venv ./venv
+fi
+
+# Activate virtual environment and install gdown if needed
+. ./venv/bin/activate
+pip install --upgrade pip
+pip install --upgrade gdown
+
+# Use gdown to download the file
+gdown 1UqbeQGYrCOoe30u0z9qMFXto9tVTPPuw -O ilastik-1.4.0b21-gpu-Linux.tar.bz2
+
+deactivate
+rm -rf ./venv
+
+mkdir -p ./extracted
+tar -xf ./ilastik-1.4.0b21-gpu-Linux.tar.bz2 -C ./extracted
+
+mv ./extracted/*/* ./
+
+rm -rf ./extracted
+rm ./ilastik-1.4.0b21-gpu-Linux.tar.bz2

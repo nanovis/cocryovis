@@ -146,7 +146,8 @@ const Main = () => {
           }, 250);
         }
       }, 250);
-    } catch {
+    } catch(e) {
+      console.log(e);
       const spinner = document.getElementById("loading-spinner");
       if (spinner) {
         spinner.innerHTML = `<div style="color: white">WebGPU not found, please refresh the page.</div>`;
