@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Define the submodule scripts
 SUBMODULES=(
-  "./scripts/install_gctffind.sh"
+  "./scripts/build_gctffind.sh"
   "./scripts/install_ilastik.sh"
   "./scripts/install_imod.sh"
   "./scripts/build_proximalCryoET.sh"
