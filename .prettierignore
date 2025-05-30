@@ -1,5 +1,4 @@
 src/routes/api/projects.mjs
-client/
 data/
 demo/
 docs-api/
