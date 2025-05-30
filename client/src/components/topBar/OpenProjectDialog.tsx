@@ -122,8 +122,8 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
                 classes.combobox
               )}
               disabled={userProjects?.projects.size === 0}
-              optionToText={({ children, value, ownerId, tooltip }) => children}
-              renderOption={({ children, value, ownerId, tooltip }) => (
+              optionToText={({ children }) => children}
+              renderOption={({ children, value, ownerId }) => (
                 <Option
                   key={value}
                   value={value}

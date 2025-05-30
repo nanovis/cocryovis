@@ -278,7 +278,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   }, [usersWithAccess]);
 
   const onOptionSelect = (
-    ev: Event | SyntheticEvent<Element, Event>,
+    _ev: Event | SyntheticEvent<Element, Event>,
     data: TagPickerOnOptionSelectData
   ) => {
     setQuery("");
@@ -527,7 +527,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                 {selectedIds.length > 0 && (
                   <Dropdown
                     value={accessLevel}
-                    onOptionSelect={(e, data) =>
+                    onOptionSelect={(_e, data) =>
                       setAccessLevel(data.optionText ?? "Read & Write")
                     }
                     style={{ height: "42px", minWidth: "150px" }}
@@ -654,7 +654,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                                       : "Read Only"}
                                   </Text>
                                 }
-                                onOptionSelect={(e, data) =>
+                                onOptionSelect={(_e, data) =>
                                   setUserAccessLevel(
                                     user.id,
                                     data.optionText === "Read & Write" ? 1 : 0

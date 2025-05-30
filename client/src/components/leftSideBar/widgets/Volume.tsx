@@ -1176,7 +1176,7 @@ const Volume = observer(({ open, close }: Props) => {
             className={globalClasses.hiddenInput}
           />
 
-          {Array.from({ length: CONFIG.maxLabels }, (v, index) => (
+          {Array.from({ length: CONFIG.maxLabels }, (_v, index) => (
             <div key={index}>
               {selectedVolume &&
               index < selectedVolume?.sparseVolumeArray.length ? (
@@ -1419,7 +1419,7 @@ const Volume = observer(({ open, close }: Props) => {
             className={globalClasses.hiddenInput}
           />
 
-          {Array.from({ length: CONFIG.maxLabels }, (v, index) => (
+          {Array.from({ length: CONFIG.maxLabels }, (_v, index) => (
             <div key={index}>
               {selectedVolume &&
               index < selectedVolume?.pseudoVolumeArray.length ? (

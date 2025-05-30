@@ -12,7 +12,7 @@ export function useServerListener(websocketUrl: string, user: UserInstance) {
     return !user.isGuest;
   };
 
-  const { lastMessage, lastJsonMessage, connectionStatus } =
+  const { lastJsonMessage, connectionStatus } =
     useWebSocketConnection(websocketUrl, shouldReconnect);
 
   useEffect(() => {

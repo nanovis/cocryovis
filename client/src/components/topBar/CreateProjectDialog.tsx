@@ -49,7 +49,7 @@ const CreateProjectDialog = ({
                 }}
                 appearance="underline"
                 value={projectName}
-                onChange={(e, data) => setProjectName(data.value)} // Update project name on change
+                onChange={(_e, data) => setProjectName(data.value)} // Update project name on change
                 placeholder="Enter project's name"
               />
             </Field>
@@ -57,7 +57,7 @@ const CreateProjectDialog = ({
             <Field label="Project Description">
               <Textarea
                 value={projectDescription}
-                onChange={(e, data) => setProjectDescription(data.value)}
+                onChange={(_e, data) => setProjectDescription(data.value)}
                 style={{ marginTop: "10px" }}
                 textarea={{ rows: 4, className: "custom-textarea" }}
                 placeholder="Enter project's description"

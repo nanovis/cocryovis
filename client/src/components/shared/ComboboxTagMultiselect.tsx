@@ -68,20 +68,15 @@ const ComboboxTagMultiselect = <
   title,
   placeholder,
   noOptionsMessage,
-  optionToText = ({
-    children,
-    value,
-  }: {
-    children: React.ReactNode;
-    value: string;
-  }) => children as string,
+  optionToText = ({ children }: { children: React.ReactNode }) =>
+    children as string,
 }: Props<T>) => {
   const classes = useStyles();
 
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleOptionSelect = (
-    event: SelectionEvents,
+    _event: SelectionEvents,
     data: OptionOnSelectData
   ) => {
     if (!data.optionValue) {
@@ -133,7 +128,7 @@ const ComboboxTagMultiselect = <
         onChange={(ev) => setSearchQuery(ev.target.value)}
         positioning={"after"}
       >
-        {selectionOptions.map((option, index) =>
+        {selectionOptions.map((option, _index) =>
           option.props.tooltip ? (
             <Tooltip
               hideDelay={0}

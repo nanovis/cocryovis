@@ -8,12 +8,8 @@ import {
   createDarkTheme,
   createLightTheme,
 } from "@fluentui/react-components";
-import { onPatch, onSnapshot } from "mobx-state-tree";
 import React from "react";
 import { loadScript } from "./utils/Helpers";
-
-// Import GPUFeatureName type
-type GPUFeatureName = "texture-compression-bc" | "timestamp-query";
 
 const customDarkTheme = {
   10: "#030402",
@@ -123,7 +119,7 @@ const Main = () => {
         setStatus: function (text: any) {
           console.log("Renderer status: " + text);
         },
-        monitorRunDependencies: function (left: any) {},
+        monitorRunDependencies: function (_left: any) {},
       });
 
       console.log("Emscripten Module Initialized with WebGPU.");

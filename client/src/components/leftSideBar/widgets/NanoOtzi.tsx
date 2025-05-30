@@ -457,7 +457,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     }
   };
 
-  const onTrainingVolumeTagClick = (option: string, index: number) => {
+  const onTrainingVolumeTagClick = (_option: string, index: number) => {
     modelTraining.removeTrainingVolumeByIndex(index);
   };
 
@@ -473,7 +473,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     }
   };
 
-  const onValidationVolumeTagClick = (option: string, index: number) => {
+  const onValidationVolumeTagClick = (_option: string, index: number) => {
     modelTraining.removeValidationVolumeByIndex(index);
   };
 
@@ -489,7 +489,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     }
   };
 
-  const onTestingVolumeTagClick = (option: string, index: number) => {
+  const onTestingVolumeTagClick = (_option: string, index: number) => {
     modelTraining.removeTestingVolumeByIndex(index);
   };
 
@@ -531,7 +531,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               onOptionSelect={handleInferenceVolumeSelect}
               placeholder="Select a volume"
               noOptionsMessage="No volumes match your search."
-              optionToText={({ children, value, tooltip }) => children}
+              optionToText={({ children }) => children}
               disabled={!volumes || volumes.size < 1}
             ></ComboboxSearch>
             <ComboboxSearch
@@ -547,7 +547,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               onOptionSelect={handleInferenceCheckpointSelect}
               placeholder="Select a checkpoint"
               noOptionsMessage="No checkpoints match your search."
-              optionToText={({ children, value, tooltip }) => children}
+              optionToText={({ children }) => children}
               disabled={!models || models.size < 1}
             ></ComboboxSearch>
           </div>
@@ -636,7 +636,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               onOptionSelect={handleTrainingModelSelect}
               placeholder="Select a model"
               noOptionsMessage="No models match your search."
-              optionToText={({ children, value, tooltip }) => children}
+              optionToText={({ children }) => children}
               disabled={!models || models.size < 0}
             />
 
@@ -665,7 +665,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                   onOptionSelect={handleTrainingCheckpointSelect}
                   placeholder="Select a checkpoint (optional)"
                   noOptionsMessage="No models match your search."
-                  optionToText={({ children, value, tooltip }) => children}
+                  optionToText={({ children }) => children}
                   disabled={!modelTraining?.model}
                   clearable={true}
                 />
@@ -752,7 +752,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               title="Training Volumes"
               placeholder="Select one or more training volumes"
               noOptionsMessage="No volumes match your search."
-              optionToText={({ children, value, tooltip }) => children}
+              optionToText={({ children }) => children}
             />
 
             <ComboboxTagMultiselect
@@ -766,7 +766,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               title="Validation Volumes"
               placeholder="Select one or more validation volumes"
               noOptionsMessage="No volumes match your search."
-              optionToText={({ children, value, tooltip }) => children}
+              optionToText={({ children }) => children}
             />
 
             <ComboboxTagMultiselect
@@ -780,7 +780,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               title="Testing Volumes"
               placeholder="Select one or more testing volumes"
               noOptionsMessage="No volumes match your search."
-              optionToText={({ children, value, tooltip }) => children}
+              optionToText={({ children }) => children}
             />
 
             <Tooltip

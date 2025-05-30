@@ -112,7 +112,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.nearPlane * 100}
                 min={1}
                 max={100}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setNearPlane(data.value / 100)
                 }
               />
@@ -129,7 +129,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.farPlane * 100}
                 min={100}
                 max={2000}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setFarPlane(data.value / 100)
                 }
               />
@@ -172,7 +172,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.sampleRate * 100}
                 min={10}
                 max={1000}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setSampleRate(data.value / 100)
                 }
               />
@@ -186,7 +186,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
             >
               <Switch
                 checked={renderSettings.earlyRayTermination}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setEarlyRayTermination(data.checked)
                 }
               />
@@ -200,7 +200,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
             >
               <Switch
                 checked={renderSettings.enableJittering}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setJittering(data.checked)
                 }
               />
@@ -227,7 +227,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
             <h3 className={classes.subtitles}>Ambient Occlusion</h3>
             <Switch
               checked={renderSettings.enableAmbientOcclusion}
-              onChange={(event, data) =>
+              onChange={(_event, data) =>
                 renderSettings.setAmbientOcclusion(data.checked)
               }
             />
@@ -244,7 +244,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.aoRadius * 1000}
                 min={1}
                 max={2000}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setAoRadius(data.value / 1000)
                 }
               />
@@ -264,7 +264,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.aoNumSamples}
                 min={1}
                 max={40}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setAoNumSamples(data.value)
                 }
               />
@@ -282,7 +282,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.aoStrength * 100}
                 min={0}
                 max={100}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setAoStrength(data.value / 100)
                 }
               />
@@ -293,7 +293,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
             <h3 className={classes.subtitles}>Soft Shadows</h3>
             <Switch
               checked={renderSettings.enableSoftShadows}
-              onChange={(event, data) =>
+              onChange={(_event, data) =>
                 renderSettings.setSoftShadows(data.checked)
               }
             />
@@ -310,7 +310,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.shadowQuality * 100}
                 min={1}
                 max={500}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setShadowQuality(data.value / 100)
                 }
               />
@@ -328,7 +328,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.shadowStrength * 100}
                 min={0}
                 max={100}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setShadowStrength(data.value / 100)
                 }
               />
@@ -346,7 +346,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
                 value={renderSettings.shadowRadius * 100}
                 min={1}
                 max={100}
-                onChange={(event, data) =>
+                onChange={(_event, data) =>
                   renderSettings.setShadowRadius(data.value / 100)
                 }
               />

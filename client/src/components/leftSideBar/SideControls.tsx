@@ -20,7 +20,6 @@ import {
   Delete24Regular,
   DesktopTower24Regular,
   Status24Regular,
-  Toolbox24Regular,
 } from "@fluentui/react-icons";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import DeleteDialog from "../shared/DeleteDialog";

@@ -6,8 +6,6 @@ import {
   HistoryFilled,
   HistoryRegular,
   HourglassHalfRegular,
-  StackFilled,
-  StackRegular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
 import globalStyles from "../../GlobalStyles";
@@ -56,7 +54,6 @@ const Status = observer(({ open, close }: Props) => {
   const { user } = useMst();
   const status = user?.status;
 
-  const StackIcon = bundleIcon(StackFilled, StackRegular);
   const HistoryIcon = bundleIcon(HistoryFilled, HistoryRegular);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -78,7 +75,7 @@ const Status = observer(({ open, close }: Props) => {
         <div className={classes.body}>
           <TabList
             selectedValue={selectedIndex}
-            onTabSelect={(event, data) => setSelectedIndex(Number(data.value))}
+            onTabSelect={(_event, data) => setSelectedIndex(Number(data.value))}
           >
             <Tab id="User Tasks" icon={<HistoryIcon />} value={0}>
               User Tasks

@@ -29,7 +29,6 @@ import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeMo
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
-import { VisualizedVolume } from "../../../stores/uiState/VisualizedVolume";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -225,14 +224,6 @@ const Visualization = observer(({ open, close }: Props) => {
     }
 
     visualizedVolume?.clearActiveAnnotationChannel();
-  };
-
-  const handleChangeTFColor = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    volVisSettings: VolVisSettingsInstance
-  ) => {
-    const color = Utils.fromHexColor(event.target.value);
-    volVisSettings.transferFunction.setColor(color.r, color.g, color.b);
   };
 
   const downloadTF = async (volVisSettings: VolVisSettingsInstance) => {

@@ -1,5 +1,4 @@
 import {
-  makeStyles,
   Tooltip,
   TableColumnDefinition,
   createTableColumn,
@@ -27,20 +26,6 @@ import React from "react";
 import globalStyles from "../../../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import { TaskQueueItem } from "../../../../stores/userState/Status";
-
-const useStyles = makeStyles({
-  dataIcon: {
-    color: tokens.colorBrandForeground1,
-    minWidth: "24px",
-  },
-  dataContainer: {
-    display: "flex",
-    alignItems: "center",
-  },
-  dataText: {
-    marginLeft: "4px",
-  },
-});
 
 const columnsDef: TableColumnDefinition<TaskQueueItem>[] = [
   createTableColumn<TaskQueueItem>({
@@ -70,7 +55,6 @@ interface Props {
 }
 
 const TaskQueueTable = observer(({ taskQueueItems }: Props) => {
-  const classes = useStyles();
   const globalClasses = globalStyles();
 
   const [columns] =

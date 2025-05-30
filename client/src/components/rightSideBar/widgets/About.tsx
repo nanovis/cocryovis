@@ -1,6 +1,5 @@
 import {
   Link,
-  makeStyles,
   Tooltip,
   Text,
   List,
@@ -9,15 +8,12 @@ import {
 import globalStyles from "../../GlobalStyles";
 import { ArrowCircleRight28Regular, Open24Filled } from "@fluentui/react-icons";
 
-const useStyles = makeStyles({});
-
 interface Props {
   open: boolean;
   close: () => void;
 }
 
 const About = ({ open, close }: Props) => {
-  const classes = useStyles();
   const globalClasses = globalStyles();
 
   return open ? (

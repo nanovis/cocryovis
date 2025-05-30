@@ -5,11 +5,9 @@ import {
   useComboboxFilter,
 } from "@fluentui/react-components";
 
-import { makeStyles, Tooltip } from "@fluentui/react-components";
+import { Tooltip } from "@fluentui/react-components";
 import { useEffect, useRef, useState } from "react";
 import TooltipWrapper from "./TooltipWrapper";
-
-const useStyles = makeStyles({});
 
 interface Props<
   T extends {
@@ -43,15 +41,13 @@ const ComboboxSearch = <
   onOptionSelect,
   placeholder,
   noOptionsMessage,
-  optionToText = ({ children, value, tooltip }) => children as string,
+  optionToText = ({ children }) => children as string,
   renderOption = undefined,
   className = undefined,
   showTooltip = true,
   disabled = false,
   clearable = false,
 }: Props<T>) => {
-  const classes = useStyles();
-
   const [searchQuery, setSearchQuery] = useState(
     selectedOption ? optionToText(selectedOption) : ""
   );
@@ -74,7 +70,7 @@ const ComboboxSearch = <
   });
 
   const handleOptionSelect = (
-    event: SelectionEvents,
+    _event: SelectionEvents,
     data: OptionOnSelectData
   ) => {
     if (!data.optionValue || data.optionValue.length === 0) {
@@ -86,7 +82,7 @@ const ComboboxSearch = <
   };
 
   const handleOpenChange = (
-    e:
+    _e:
       | React.MouseEvent<HTMLElement>
       | React.KeyboardEvent<HTMLElement>
       | React.FocusEvent<HTMLElement>,
@@ -135,7 +131,7 @@ const ComboboxSearch = <
         style={{ flex: 1 }}
         clearable={clearable}
       >
-        {selectionOptions.map((option, index) =>
+        {selectionOptions.map((option, _index) =>
           showTooltip && option.props.tooltip ? (
             <Tooltip
               hideDelay={0}

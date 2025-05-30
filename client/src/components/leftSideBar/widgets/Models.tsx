@@ -1,5 +1,4 @@
 import {
-  makeStyles,
   tokens,
   Button,
   Tooltip,
@@ -26,8 +25,6 @@ import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessToolti
 import { ModelInstance } from "../../../stores/userState/ModelModel";
 import { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
 
-const useStyles = makeStyles({});
-
 interface Props {
   open: boolean;
   close: () => void;
@@ -45,7 +42,6 @@ const Models = observer(({ open, close }: Props) => {
   const selectedCheckpointId = modelCheckpoints?.selectedCheckpointId;
   const checkpoints = modelCheckpoints?.checkpoints;
 
-  const classes = useStyles();
   const globalClasses = globalStyles();
 
   const [isCreateModelDialogOpen, setCreateModelDialogOpen] = useState(false);

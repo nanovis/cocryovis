@@ -48,7 +48,7 @@ export const NumberInputValidatedField = observer(
         <Input
           appearance="underline"
           value={input.getValue()}
-          onChange={(ev: InputChangeEvent, data: InputOnChangeData) => {
+          onChange={(_ev: InputChangeEvent, data: InputOnChangeData) => {
             input.setValue(data.value);
           }}
           placeholder={input.placeholder()}
