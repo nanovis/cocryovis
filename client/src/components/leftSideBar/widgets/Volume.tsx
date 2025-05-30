@@ -35,7 +35,7 @@ import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import Utils from "../../../functions/Utils";
 import { Id, toast } from "react-toastify";
 import DeleteDialog from "../../shared/DeleteDialog";
-import { CONFIG } from "../../../Constants";
+import { CONFIG } from "../../../Constants.mjs";
 import "../../../App.css";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";

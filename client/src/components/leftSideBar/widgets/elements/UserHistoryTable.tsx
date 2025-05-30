@@ -35,7 +35,6 @@ import React from "react";
 import globalStyles from "../../../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import { TaskHistoryItem } from "../../../../stores/userState/Status";
-import { apiUrl } from "../../../../urls";
 import Utils from "../../../../functions/Utils";
 
 const useStyles = makeStyles({
@@ -377,7 +376,7 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
                 <TableCellLayout truncate>
                   <Link
                     target="_blank"
-                    href={`${apiUrl}/logs/${item.log.path}`}
+                    href={`/logs/${item.log.path}`}
                   >
                     <Tooltip
                       content="Open Log"

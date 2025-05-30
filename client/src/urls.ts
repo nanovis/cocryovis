@@ -1,2 +1,5 @@
-export const apiUrl = process.env.REACT_APP_API_URL ?? "http://localhost:8080";
-export const websocketUrl = apiUrl ? apiUrl.replace(/^http/, "ws") : "";
+import { DEFAULT_URL } from "./Constants.mjs";
+
+const apiBase = import.meta.env.VITE_API_URL || DEFAULT_URL;
+const wsProtocol = apiBase.startsWith('https') ? 'wss' : 'ws';
+export const websocketUrl = `${wsProtocol}://${new URL(apiBase).host}/ws`;

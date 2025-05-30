@@ -1,7 +1,6 @@
 import { Id, toast, ToastPromiseParams } from "react-toastify";
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../DefaultTransferFunctions";
-import { apiUrl } from "../urls";
 
 export type FileMap = Map<string, File>;
 
@@ -23,7 +22,7 @@ export default class Utils {
 
     let errorMsg = "Error connecting to the server.";
 
-    const response = await fetch(`${apiUrl}/api/${url}`, fetchOptions);
+    const response = await fetch(`/api/${url}`, fetchOptions);
 
     if (!response.ok) {
       const contentType = response.headers.get("Content-Type");

@@ -61,60 +61,6 @@ html {
   height: auto;
 }
 
-#force {
-  height: 100% !important;
-}
-
-.signin-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  /*height: calc(100vh - 10px);  Adjust as needed */
-  margin-top: 10px;
-}
-
-/* .chatbox-container
-  {
-    position: fixed; 
-    top: 40%;
-    left: 70%;    
-    height: 55%;
-    width: 25%;  
-    z-index: 1000;   
-  } */
-.circleButton {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  position: fixed;
-  top: 82%;
-  left: 95%;
-  border: none;
-  background-color: #20262c;
-  font-size: small;
-  color: rgb(255, 255, 255);
-  text-align: center;
-  line-height: 40px;
-  cursor: pointer;
-  z-index: 1000;
-}
-.chatbox {
-  position: fixed;
-  top: 40%;
-  left: 70%;
-  width: 25%;
-  height: 50%;
-  z-index: 1000;
-}
-.rce-mbox-text {
-  color: black !important;
-}
-
-.hidden {
-  display: none;
-}
-
 .spinning-icon {
   animation: spin 2s linear infinite;
 }

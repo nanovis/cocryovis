@@ -42,7 +42,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const mouseOverCanvas = useRef(false);
 
-    const connectionStatus = useServerListener(`${websocketUrl}/ws`, user);
+    const connectionStatus = useServerListener(websocketUrl, user);
 
     const fetchAuthCookieData = () => {
       var cookieData = Cookies.get(CookieName);

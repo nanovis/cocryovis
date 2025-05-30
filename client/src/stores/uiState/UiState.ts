@@ -14,7 +14,7 @@ import {
 import { VolVisSettingsSnapshotIn } from "./VolVisSettings";
 import Utils from "../../functions/Utils";
 import { Volume } from "../userState/VolumeModel";
-import { CONFIG } from "../../Constants";
+import { CONFIG } from "../../Constants.mjs";
 import { RenderSettings } from "./RenderSettings";
 import { UploadDialog } from "./UploadDialog";
 import { Result } from "../userState/ResultModel";
