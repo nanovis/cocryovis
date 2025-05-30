@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/CirilBohak/vol-web-server#readme",
   "dependencies": {
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "^6.8.2",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "async-express-decorator": "^1.1.0",
@@ -55,6 +55,6 @@
     "@types/ws": "^8.18.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.5.3",
-    "prisma": "^5.18.0"
+    "prisma": "^6.8.2"
   }
 }
