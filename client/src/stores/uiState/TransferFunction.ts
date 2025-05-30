@@ -7,7 +7,7 @@ import {
   isAlive,
 } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 
 export const TransferFunction = types
   .model({

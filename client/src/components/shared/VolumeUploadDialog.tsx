@@ -22,13 +22,13 @@ import {
   Image,
 } from "@fluentui/react-components";
 import { useState } from "react";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 import {
   ArrowResetFilled,
   Checkmark24Filled,
   Info24Regular,
 } from "@fluentui/react-icons";
-import { VolumeSettings } from "../../functions/VolumeSettings";
+import { VolumeSettings } from "../../utils/VolumeSettings";
 import React from "react";
 import {
   endianOptions,

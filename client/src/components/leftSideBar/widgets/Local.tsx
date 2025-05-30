@@ -18,7 +18,7 @@ import ProcessTiltSeriesDialog, {
 } from "../../shared/ProcessTiltSeriesDialog";
 import { useRef, useState } from "react";
 import { Id, toast } from "react-toastify";
-import Utils from "../../../functions/Utils";
+import Utils from "../../../utils/Helpers";
 import JSZip from "jszip";
 import saveAs from "file-saver";
 import { observer } from "mobx-react-lite";

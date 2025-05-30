@@ -32,7 +32,7 @@ import { useState, useRef } from "react";
 import DeleteVolumeDialog from "./elements/DeleteVolumeDialog";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
-import Utils from "../../../functions/Utils";
+import Utils from "../../../utils/Helpers";
 import { Id, toast } from "react-toastify";
 import DeleteDialog from "../../shared/DeleteDialog";
 import { CONFIG } from "../../../Constants.mjs";
@@ -53,7 +53,7 @@ import {
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
 import { ResultInstance } from "../../../stores/userState/ResultModel";
-import { VolumeSettings } from "../../../functions/VolumeSettings";
+import { VolumeSettings } from "../../../utils/VolumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
 import { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
 import { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";

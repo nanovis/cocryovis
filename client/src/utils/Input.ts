@@ -1,4 +1,4 @@
-import Utils from "./Utils";
+import Utils from "./Helpers";
 
 export abstract class InputField<T> {
   name: string;

@@ -11,7 +11,7 @@ import SignUpPage, { SignUpCredentials } from "./components/topBar/SignUpPage";
 import Cookies from "js-cookie";
 import { Slide, toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Utils from "./functions/Utils";
+import Utils from "./utils/Helpers";
 import { useServerListener } from "./hooks/useServerListener";
 import { observer } from "mobx-react-lite";
 import { useMst } from "./stores/RootStore";

@@ -10,7 +10,7 @@ import {
 } from "@fluentui/react-components";
 import { onPatch, onSnapshot } from "mobx-state-tree";
 import React from "react";
-import { loadScript } from "./functions/Utils";
+import { loadScript } from "./utils/Helpers";
 
 // Import GPUFeatureName type
 type GPUFeatureName = "texture-compression-bc" | "timestamp-query";

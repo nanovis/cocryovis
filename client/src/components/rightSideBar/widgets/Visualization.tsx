@@ -20,7 +20,7 @@ import {
   EraserFilled,
 } from "@fluentui/react-icons";
 import { useRef, useState } from "react";
-import Utils from "../../../functions/Utils";
+import Utils from "../../../utils/Helpers";
 import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";

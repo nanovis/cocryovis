@@ -12,7 +12,7 @@ import {
   VisualizedVolumeSnapshotIn,
 } from "./VisualizedVolume";
 import { VolVisSettingsSnapshotIn } from "./VolVisSettings";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 import { Volume } from "../userState/VolumeModel";
 import { CONFIG } from "../../Constants.mjs";
 import { RenderSettings } from "./RenderSettings";

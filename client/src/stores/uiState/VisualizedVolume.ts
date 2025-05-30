@@ -3,7 +3,7 @@ import { VolVisSettings } from "./VolVisSettings";
 import { Volume, VolumeInstance } from "../userState/VolumeModel";
 import { Result, ResultInstance } from "../userState/ResultModel";
 import { flow, isAlive } from "mobx-state-tree";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 import {
   SparseLabelVolume,
   SparseVolumeInstance,

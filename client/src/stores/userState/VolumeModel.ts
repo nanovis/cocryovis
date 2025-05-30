@@ -3,9 +3,9 @@ import { RawVolume, RawVolumeSnapshotIn } from "./RawVolumeModel";
 import { SparseLabelVolume, SparseVolumeSnapshotIn } from "./SparseVolumeModel";
 import { PseudoLabelVolume, PseudoVolumeSnapshotIn } from "./PseudoVolumeModel";
 import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
-import Utils, { FileMap } from "../../functions/Utils";
+import Utils, { FileMap } from "../../utils/Helpers";
 import { toast } from "react-toastify";
-import { VolumeSettings } from "../../functions/VolumeSettings";
+import { VolumeSettings } from "../../utils/VolumeSettings";
 
 export interface VolumeDB {
   id: number;

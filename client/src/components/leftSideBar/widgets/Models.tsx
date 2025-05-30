@@ -16,7 +16,7 @@ import {
 import { useState, useRef } from "react";
 import CreateModelDialog from "./elements/CreateModelDialog";
 import DeleteDialog from "../../shared/DeleteDialog";
-import Utils from "../../../functions/Utils";
+import Utils from "../../../utils/Helpers";
 import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";

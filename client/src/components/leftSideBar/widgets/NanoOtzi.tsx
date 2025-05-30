@@ -18,7 +18,7 @@ import {
   DesktopTower20Regular,
   GlobeDesktop20Regular,
 } from "@fluentui/react-icons";
-import Utils from "../../../functions/Utils";
+import Utils from "../../../utils/Helpers";
 import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";

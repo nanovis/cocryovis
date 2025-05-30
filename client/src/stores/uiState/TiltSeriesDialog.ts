@@ -1,10 +1,10 @@
 import { Instance, SnapshotIn, types } from "mobx-state-tree";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 import {
   BooleanInputField,
   NumberInputField,
   StringInputFieldType,
-} from "../../functions/Input";
+} from "../../utils/Input";
 
 export const TiltSeriesDialog = types
   .model({

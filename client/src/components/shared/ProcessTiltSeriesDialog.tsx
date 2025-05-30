@@ -28,8 +28,8 @@ import {
   NumberInputValidatedField,
 } from "./ValidatedFields";
 import { observer } from "mobx-react-lite";
-import { BooleanInputField, NumberInputField } from "../../functions/Input";
-import Utils from "../../functions/Utils";
+import { BooleanInputField, NumberInputField } from "../../utils/Input";
+import Utils from "../../utils/Helpers";
 import { toast, Id } from "react-toastify";
 
 const useStyles = makeStyles({

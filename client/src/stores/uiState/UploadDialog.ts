@@ -6,9 +6,9 @@ import {
   SnapshotIn,
   types,
 } from "mobx-state-tree";
-import { VolumeSettings } from "../../functions/VolumeSettings";
+import { VolumeSettings } from "../../utils/VolumeSettings";
 import { toast } from "react-toastify";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 
 export enum Tabs {
   fromFile = "fromFile",

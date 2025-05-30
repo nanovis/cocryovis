@@ -9,14 +9,14 @@ import {
 import { Volume, VolumeInstance } from "./VolumeModel";
 import { User } from "./UserModel";
 import { Model, ModelInstance } from "./ModelModel";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
 import {
   BooleanInputField,
   DropdownInputField,
   NumberInputField,
   StringInputFieldType,
-} from "../../functions/Input";
+} from "../../utils/Input";
 
 export enum lossOptions {
   mse = "Mean Squared Error",

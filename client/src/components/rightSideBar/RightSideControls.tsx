@@ -12,12 +12,12 @@ import {
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import Utils from "../../functions/Utils";
-import { convertMRCToRaw } from "../../functions/MrcParser";
+import Utils from "../../utils/Helpers";
+import { convertMRCToRaw } from "../../utils/MrcParser";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
 import { toast } from "react-toastify";
-import { VolumeSettings } from "../../functions/VolumeSettings";
+import { VolumeSettings } from "../../utils/VolumeSettings";
 
 const enum WidgetIndices {
   Visualization = 0,

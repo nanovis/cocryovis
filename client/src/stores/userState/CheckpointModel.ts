@@ -1,5 +1,5 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import Utils from "../../functions/Utils";
+import Utils from "../../utils/Helpers";
 
 export const Checkpoint = types.model({
   id: types.identifierNumber,

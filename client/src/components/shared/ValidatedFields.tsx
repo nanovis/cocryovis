@@ -13,7 +13,7 @@ import {
   BooleanInputField,
   DropdownInputField,
   NumberInputField,
-} from "../../functions/Input";
+} from "../../utils/Input";
 import { observer } from "mobx-react-lite";
 
 export const NumberInputValidatedField = observer(
