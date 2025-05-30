@@ -1,6 +1,6 @@
 import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
 import { toast } from "react-toastify";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 
 async function updateSparseVolume(
   id: number,

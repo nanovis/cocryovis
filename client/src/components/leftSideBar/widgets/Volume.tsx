@@ -32,7 +32,7 @@ import { useState, useRef } from "react";
 import DeleteVolumeDialog from "./elements/DeleteVolumeDialog";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
-import Utils from "../../../utils/Helpers";
+import * as Utils from "../../../utils/Helpers";
 import { Id, toast } from "react-toastify";
 import DeleteDialog from "../../shared/DeleteDialog";
 import { CONFIG } from "../../../Constants.mjs";

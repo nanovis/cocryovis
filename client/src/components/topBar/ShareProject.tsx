@@ -32,7 +32,7 @@ import {
   Spinner,
 } from "@fluentui/react-components";
 import { useState, useEffect, useRef, SyntheticEvent } from "react";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import {
   bundleIcon,
   LinkRegular,

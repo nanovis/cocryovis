@@ -4,7 +4,7 @@ import {
   CheckpointSnapshotIn,
   ModelCheckpoints,
 } from "./CheckpointModel";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 
 export interface ModelDB {
   id: number;

@@ -1,4 +1,4 @@
-import Utils from "./Helpers";
+import * as Utils from "./Helpers";
 
 type Vector3 = { x: number; y: number; z: number };
 

@@ -1,7 +1,7 @@
 import { flow, getParent, Instance, isAlive, types } from "mobx-state-tree";
 import { ModelDB, ProjectModels } from "./ModelModel";
 import { ProjectVolumes, VolumeDB } from "./VolumeModel";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
 
 interface ProjectDB {

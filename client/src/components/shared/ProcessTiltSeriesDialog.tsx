@@ -29,7 +29,7 @@ import {
 } from "./ValidatedFields";
 import { observer } from "mobx-react-lite";
 import { BooleanInputField, NumberInputField } from "../../utils/Input";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import { toast, Id } from "react-toastify";
 
 const useStyles = makeStyles({

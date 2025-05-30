@@ -22,7 +22,7 @@ import {
   Image,
 } from "@fluentui/react-components";
 import { useState } from "react";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import {
   ArrowResetFilled,
   Checkmark24Filled,

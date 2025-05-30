@@ -35,7 +35,7 @@ import React from "react";
 import globalStyles from "../../../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import { TaskHistoryItem } from "../../../../stores/userState/Status";
-import Utils from "../../../../utils/Helpers";
+import * as Utils from "../../../../utils/Helpers";
 
 const useStyles = makeStyles({
   dataIcon: {

@@ -1,5 +1,5 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 
 export type TaskHistoryItem = {
   taskStatus: {

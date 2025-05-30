@@ -1,5 +1,5 @@
 import { Instance, SnapshotIn, types } from "mobx-state-tree";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import {
   BooleanInputField,
   NumberInputField,

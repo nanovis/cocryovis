@@ -8,7 +8,7 @@ import {
 } from "mobx-state-tree";
 import { VolumeSettings } from "../../utils/VolumeSettings";
 import { toast } from "react-toastify";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 
 export enum Tabs {
   fromFile = "fromFile",

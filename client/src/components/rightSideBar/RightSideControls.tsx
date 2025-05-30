@@ -12,7 +12,7 @@ import {
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import { convertMRCToRaw } from "../../utils/MrcParser";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";

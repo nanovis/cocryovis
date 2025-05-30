@@ -9,7 +9,7 @@ import {
 import { Volume, VolumeInstance } from "./VolumeModel";
 import { User } from "./UserModel";
 import { Model, ModelInstance } from "./ModelModel";
-import Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
 import {
   BooleanInputField,
