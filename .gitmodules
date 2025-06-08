@@ -13,3 +13,7 @@
 	path = modules/motioncor3
 	url = ../MotionCor3
 	branch = bugfixes
+[submodule "client/lib/RenderCore"]
+	path = client/lib/RenderCore
+	url = https://github.com/Scurek/RenderCore-WebGPU.git
+	branch = development

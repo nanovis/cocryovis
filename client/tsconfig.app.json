@@ -24,6 +24,10 @@
     "noUncheckedSideEffectImports": false,
     "allowJs": true,
     "checkJs": true,
+    
+    "paths": {
+      "rendercore": ["./lib/RenderCore/src/RenderCore.js"],
+    },
   },
   "include": ["src"]
 }
