@@ -78,14 +78,11 @@ const useStyles = makeStyles({
   },
 });
 
-interface Credential {
-  id: string;
-  value: string;
-}
+
 
 export interface SignInCredentials {
-  username: Credential;
-  password: Credential;
+  username: string;
+  password: string;
 }
 
 interface Props {
@@ -100,8 +97,8 @@ const SignInPage = ({ onSignIn }: Props) => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const credentials: SignInCredentials = {
-      username: { id: "username", value: username },
-      password: { id: "password", value: password },
+      username: username,
+      password: password,
     };
     onSignIn(credentials);
   };

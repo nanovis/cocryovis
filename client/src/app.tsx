@@ -138,8 +138,8 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              username: credentials.username.value,
-              password: credentials.password.value,
+              username: credentials.username,
+              password: credentials.password,
             }),
           },
           { successText: "Sign-In successful!" }
