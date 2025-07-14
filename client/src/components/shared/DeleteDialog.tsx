@@ -7,6 +7,7 @@ import {
   DialogContent,
   Button,
 } from "@fluentui/react-components";
+import { CSSProperties } from "react";
 
 interface Props {
   open: boolean;
@@ -14,6 +15,7 @@ interface Props {
   onConfirm: () => void;
   TitleText: string;
   BodyText: string;
+  style?: CSSProperties;
 }
 
 const DeleteDialog = ({
@@ -22,10 +24,11 @@ const DeleteDialog = ({
   onConfirm,
   TitleText,
   BodyText,
+  style = {},
 }: Props) => {
   return (
     <Dialog open={open}>
-      <DialogSurface>
+      <DialogSurface style={style}>
         <DialogBody>
           <DialogTitle>{TitleText}</DialogTitle>
           <DialogContent style={{ paddingTop: "15px", paddingBottom: "15px" }}>

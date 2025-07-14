@@ -8,6 +8,7 @@ import RightSideControls from "./components/rightSideBar/RightSideControls";
 import { makeStyles } from "@fluentui/react-components";
 import SignInPage, { SignInCredentials } from "./components/topBar/SignInPage";
 import SignUpPage, { SignUpCredentials } from "./components/topBar/SignUpPage";
+import ProfilePage from "./components/topBar/ProfilePage";
 import Cookies from "js-cookie";
 import { Slide, toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -127,6 +128,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const [showSignIn, setShowSignIn] = useState(false);
     const [showSignUp, setShowSignUp] = useState(false);
+    const [showProfilePage, setShowProfilePage] = useState(false);
     const classes = useStyles();
 
     const handleSignIn = async (credentials: SignInCredentials) => {
@@ -183,15 +185,18 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const toggleSignClick = (id: number) => {
       if (id === 0) {
-        setShowSignIn(!showSignIn || user.isGuest); // Use camelCase here
-        setShowSignUp(false); // Use camelCase here
+        setShowSignIn(!showSignIn);
+        setShowSignUp(false);
       } else if (id === 1) {
-        setShowSignUp(!showSignUp || user.isGuest); // Use camelCase here
-        setShowSignIn(false); // Use camelCase here
+        setShowSignUp(!showSignUp);
+        setShowSignIn(false);
       } else {
-        setShowSignUp(false); // Use camelCase here
-        setShowSignIn(false); // Use camelCase here
+        setShowSignUp(false);
+        setShowSignIn(false);
       }
+    };
+    const toggleShowProfilePage = () => {
+      setShowProfilePage(!showProfilePage);
     };
 
     useEffect(() => {
@@ -256,6 +261,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         />
         <MenuBar
           toggleSignClick={toggleSignClick}
+          toggleShowProfilePage={toggleShowProfilePage}
           toggleTheme={toggleTheme}
           connectionStatus={connectionStatus}
         />
@@ -269,6 +275,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           >
             {showSignIn && <SignInPage onSignIn={handleSignIn} />}
             {showSignUp && <SignUpPage onSignUp={handleSignUp} />}
+            {showProfilePage && <ProfilePage />}
             <canvas id="canvas" tabIndex={0} />
           </div>
           {!showSignIn && !showSignUp && <RightSideControls />}

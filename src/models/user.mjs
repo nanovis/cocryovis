@@ -121,7 +121,7 @@ export default class User extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @param {import("@prisma/client").Prisma.UserUpdateInput & {password: String}} changes
+     * @param {import("@prisma/client").Prisma.UserUpdateInput & {password?: String}} changes
      * @returns {Promise<UserDB>}
      */
     static async update(id, changes) {
@@ -130,9 +130,8 @@ export default class User extends DatabaseModel {
                 User.hasher(
                     { password: changes.password },
                     function (err, pass, salt, hash) {
-                        if (err)
-                            throw new Error("Error hashing user password.");
-                        return { salt: salt, hash: hash };
+                        if (err) reject("Error hashing user password.");
+                        resolve({ salt: salt, hash: hash });
                     }
                 );
             });

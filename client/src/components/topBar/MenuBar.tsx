@@ -44,12 +44,18 @@ const useStyles = makeStyles({
 
 interface Props {
   toggleSignClick: (id: number) => void;
+  toggleShowProfilePage: () => void;
   toggleTheme: () => void;
   connectionStatus: string;
 }
 
 const MenuBar = observer(
-  ({ toggleSignClick, toggleTheme, connectionStatus }: Props) => {
+  ({
+    toggleSignClick,
+    toggleTheme,
+    toggleShowProfilePage,
+    connectionStatus,
+  }: Props) => {
     const { user, logout } = useMst();
 
     const classes = useStyles();
@@ -184,6 +190,9 @@ const MenuBar = observer(
               </div>
               <Button appearance="subtle" onClick={() => logout()}>
                 Logout
+              </Button>
+              <Button appearance="subtle" onClick={toggleShowProfilePage}>
+                Profile
               </Button>
             </div>
           ) : (

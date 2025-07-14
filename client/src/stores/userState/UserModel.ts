@@ -26,8 +26,17 @@ export const User = types
     },
   }))
   .actions((self) => ({
-    async setUserProjects(userProjects: UserProjectsInstance) {
+    setUserProjects(userProjects: UserProjectsInstance) {
       self.userProjects = userProjects;
+    },
+    setName(name: string) {
+      self.name = name;
+    },
+    setUsername(username: string) {
+      self.username = username;
+    },
+    setEmail(email: string) {
+      self.email = email;
     },
   }));
 

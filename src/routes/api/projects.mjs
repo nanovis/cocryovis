@@ -36,10 +36,10 @@ projectsApi.post('/login', UserController.login);
 projectsApi.post('/logout', UserController.logout);
 projectsApi.post('/register', UserController.register);
 projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserData);
-
 projectsApi.get('/users', restrictApi, UserController.getAllUsers);
-
 projectsApi.get(`/status`, restrictApi, UserController.getStatus);
+projectsApi.put(`/user`, restrictApi, UserController.updateUser);
+
 
 ///////////////////////
 /////// PROJECTS
