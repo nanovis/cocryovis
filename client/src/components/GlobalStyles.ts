@@ -9,6 +9,7 @@ const globalStyles = makeStyles({
     left: "52px",
     backgroundColor: tokens.colorNeutralBackground1,
     overflowY: "auto", // Add overflow-y to enable scrolling if content overflows
+    zIndex: 1,
   },
   rightSidebar: {
     width: "420px",
@@ -18,6 +19,7 @@ const globalStyles = makeStyles({
     right: "52px",
     backgroundColor: tokens.colorNeutralBackground1,
     overflowY: "auto",
+    zIndex: 1,
   },
   sidebarContents: {
     display: "flex",
@@ -216,6 +218,7 @@ const globalStyles = makeStyles({
     flexDirection: "column",
     paddingTop: "16px",
     overflowY: "auto",
+    position: "relative",
   },
   invisible: {
     display: "none",

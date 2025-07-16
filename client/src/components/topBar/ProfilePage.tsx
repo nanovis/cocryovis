@@ -25,6 +25,7 @@ const useStyles = makeStyles({
     alignItems: "center",
     height: "100%",
     gap: "10px",
+    zIndex: 0,
   },
   profilePageHeader: {
     marginTop: "50px",
