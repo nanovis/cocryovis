@@ -44,19 +44,13 @@ const useStyles = makeStyles({
 
 interface Props {
   toggleSignClick: (id: number) => void;
-  toggleShowProfilePage: () => void;
   toggleTheme: () => void;
   connectionStatus: string;
 }
 
 const MenuBar = observer(
-  ({
-    toggleSignClick,
-    toggleTheme,
-    toggleShowProfilePage,
-    connectionStatus,
-  }: Props) => {
-    const { user, logout } = useMst();
+  ({ toggleSignClick, toggleTheme, connectionStatus }: Props) => {
+    const { user, logout, uiState } = useMst();
 
     const classes = useStyles();
     const [isShareProjectOpen, setIsShareProjectOpen] = useState(false);
@@ -191,7 +185,10 @@ const MenuBar = observer(
               <Button appearance="subtle" onClick={() => logout()}>
                 Logout
               </Button>
-              <Button appearance="subtle" onClick={toggleShowProfilePage}>
+              <Button
+                appearance="subtle"
+                onClick={() => uiState.toggleOpenProfilePage()}
+              >
                 Profile
               </Button>
             </div>

@@ -128,7 +128,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const [showSignIn, setShowSignIn] = useState(false);
     const [showSignUp, setShowSignUp] = useState(false);
-    const [showProfilePage, setShowProfilePage] = useState(false);
     const classes = useStyles();
 
     const handleSignIn = async (credentials: SignInCredentials) => {
@@ -195,9 +194,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         setShowSignIn(false);
       }
     };
-    const toggleShowProfilePage = () => {
-      setShowProfilePage(!showProfilePage);
-    };
 
     useEffect(() => {
       getIsUserAuth();
@@ -261,7 +257,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         />
         <MenuBar
           toggleSignClick={toggleSignClick}
-          toggleShowProfilePage={toggleShowProfilePage}
           toggleTheme={toggleTheme}
           connectionStatus={connectionStatus}
         />
@@ -275,7 +270,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           >
             {showSignIn && <SignInPage onSignIn={handleSignIn} />}
             {showSignUp && <SignUpPage onSignUp={handleSignUp} />}
-            {showProfilePage && <ProfilePage />}
+            {uiState.openProfilePage && <ProfilePage />}
             <canvas id="canvas" tabIndex={0} />
           </div>
           {!showSignIn && !showSignUp && <RightSideControls />}
