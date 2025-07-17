@@ -24,6 +24,7 @@ const useStyles = makeStyles({
     paddingTop: "8px",
     paddingLeft: "8px",
     minHeight: "32px",
+    zIndex: "2",
   },
   button: { border: "0px", fontWeight: tokens.fontWeightRegular },
   logoIcon: {
@@ -190,6 +191,12 @@ const MenuBar = observer(
                 onClick={() => uiState.toggleOpenProfilePage()}
               >
                 Profile
+              </Button>
+              <Button
+                appearance="subtle"
+                onClick={() => uiState.toggleOpenAdminPage()}
+              >
+                Admin
               </Button>
             </div>
           ) : (

@@ -77,11 +77,13 @@ export default class User extends DatabaseModel {
         return user;
     }
 
-    /**
-     * @return {Promise<UserDB[]>}
-     */
     static async getAllUsers() {
-        return await prismaManager.db.user.findMany();
+        return await prismaManager.db.user.findMany({
+            omit: {
+                passwordSalt: true,
+                passwordHash: true,
+            },
+        });
     }
 
     /**

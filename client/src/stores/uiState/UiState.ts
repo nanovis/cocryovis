@@ -27,6 +27,7 @@ export const UiState = types
     openLeftWidget: types.optional(types.number, -1),
     openRightWidget: types.optional(types.number, -1),
     openProfilePage: types.optional(types.boolean, false),
+    openAdminPanel: types.optional(types.boolean, false),
     kernelSize: types.optional(types.integer, 25),
     visualizedVolume: types.maybe(VisualizedVolume),
     renderSettings: types.optional(RenderSettings, {}),
@@ -49,9 +50,27 @@ export const UiState = types
     },
     setOpenProfilePage(open: boolean) {
       self.openProfilePage = open;
+      if (self.openProfilePage) {
+        self.openAdminPanel = false;
+      }
     },
     toggleOpenProfilePage() {
       self.openProfilePage = !self.openProfilePage;
+      if (self.openProfilePage) {
+        self.openAdminPanel = false;
+      }
+    },
+    setOpenAdminPage(open: boolean) {
+      self.openAdminPanel = open;
+      if (self.openAdminPanel) {
+        self.openProfilePage = false;
+      }
+    },
+    toggleOpenAdminPage() {
+      self.openAdminPanel = !self.openAdminPanel;
+      if (self.openAdminPanel) {
+        self.openProfilePage = false;
+      }
     },
     setKernelSize(kernalSize: number) {
       self.kernelSize = kernalSize;

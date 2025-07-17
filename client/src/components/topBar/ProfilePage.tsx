@@ -260,10 +260,12 @@ const ProfilePage = observer(({}: Props) => {
         onClose={function (): void {
           setShowDialogPage(false);
         }}
-        style={{ width: "400px" }}
+        style={{ width: "500px" }}
         onConfirm={deleteUser}
         TitleText={"Are you sure you want to delete your account?"}
-        BodyText={"This account will be permanently deleted."}
+        BodyText={
+          "This account will be permanently deleted and cannot be recovered!"
+        }
       />
       <ChangePasswordDialog
         open={showChangePasswordPage}

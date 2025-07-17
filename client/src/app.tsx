@@ -18,6 +18,7 @@ import { observer } from "mobx-react-lite";
 import { useMst } from "./stores/RootStore";
 import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
+import AdminPanel from "./components/topBar/AdminPanel";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height
@@ -271,6 +272,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
             {showSignIn && <SignInPage onSignIn={handleSignIn} />}
             {showSignUp && <SignUpPage onSignUp={handleSignUp} />}
             {uiState.openProfilePage && <ProfilePage />}
+            {uiState.openAdminPanel && <AdminPanel />}
             <canvas id="canvas" tabIndex={0} />
           </div>
           {!showSignIn && !showSignUp && <RightSideControls />}

@@ -109,7 +109,7 @@ export default class UserController {
      */
     static async getAllUsers(req, res) {
         const users = await User.getAllUsers();
-
+        
         res.json(users);
     }
 

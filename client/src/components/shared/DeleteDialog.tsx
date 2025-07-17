@@ -13,8 +13,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  TitleText: string;
-  BodyText: string;
+  TitleText: string | JSX.Element;
+  BodyText: string | JSX.Element;
   style?: CSSProperties;
 }
 
