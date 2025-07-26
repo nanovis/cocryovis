@@ -42,8 +42,13 @@
     "express-session": "^1.18.1",
     "helmet": "^8.0.0",
     "pbkdf2-password": "^1.2.1",
+    "swagger-ui-express": "^5.0.1",
     "util": "^0.12.4",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "yaml": "^2.8.0",
+    "zod": "^4.0.5",
+    "zod-openapi": "^5.2.0",
+    "zod-validation-error": "^4.0.1"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
@@ -52,6 +57,7 @@
     "@types/express-fileupload": "^1.5.1",
     "@types/express-session": "^1.18.1",
     "@types/node": "^22.7.5",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/ws": "^8.18.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.5.3",

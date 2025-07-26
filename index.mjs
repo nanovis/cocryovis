@@ -27,8 +27,10 @@ import https from "https";
 import TaskHistory from "./src/models/task-history.mjs";
 import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
 import { checkCookieAge } from "./src/middleware/restrict.mjs";
-import Utils from "./src/tools/utils.mjs";
 import { program } from "commander";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yaml";
+import { writeOpenApi } from "./src/schemas/mainSchema.mjs";
 
 const SqliteStore = sqlite3SessionStore(session);
 
@@ -144,6 +146,11 @@ const startServer = async () => {
             })
         );
     }
+    console.log("Writing OpenAPI");
+    writeOpenApi();
+    const file = fileSystem.readFileSync("./openapi.yaml", "utf8");
+    const swaggerDocument = YAML.parse(file);
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     app.use(sessionParser);
 

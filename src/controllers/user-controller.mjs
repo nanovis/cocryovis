@@ -4,6 +4,13 @@ import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "../tools/config.mjs";
+import {
+    loginSchemaReq,
+    registerSchema,
+    updateUserSchema,
+} from "../schemas/userSchema.mjs";
+
+import { formatUserError } from "../schemas/errorSchema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -17,6 +24,8 @@ export default class UserController {
      * @param {import("express").NextFunction} next
      */
     static async register(req, res, next) {
+        const validation = registerSchema.safeParse(req.body);
+        formatUserError(validation);
         const user = await User.create(
             req.body.username,
             req.body.password,
@@ -39,6 +48,8 @@ export default class UserController {
      * @param {import("express").NextFunction} next
      */
     static async login(req, res, next) {
+        const validation = loginSchemaReq.safeParse(req.body);
+        formatUserError(validation);
         try {
             const user = await User.authenticate(
                 req.body.username,
@@ -109,7 +120,7 @@ export default class UserController {
      */
     static async getAllUsers(req, res) {
         const users = await User.getAllUsers();
-        
+
         res.json(users);
     }
 
@@ -135,39 +146,14 @@ export default class UserController {
      */
     static async updateUser(req, res) {
         const id = req.session.user.id;
-
-        if (
-            Object.hasOwn(req.body, "name") &&
-            typeof req.body.name !== "string"
-        ) {
-            throw new ApiError(400, "Invalid name");
-        }
-        if (
-            Object.hasOwn(req.body, "username") &&
-            typeof req.body.username !== "string"
-        ) {
-            throw new ApiError(400, "Invalid username");
-        }
-        if (
-            Object.hasOwn(req.body, "email") &&
-            typeof req.body.email !== "string"
-        ) {
-            throw new ApiError(400, "Invalid email");
-        }
-        if (
-            Object.hasOwn(req.body, "password") &&
-            typeof req.body.password !== "string"
-        ) {
-            throw new ApiError(400, "Invalid password");
-        }
-
+        const validation = updateUserSchema.safeParse(req.body);
+        formatUserError(validation);
         const user = await User.update(id, req.body);
         const userData = User.toPublic(user);
 
         await UserController.#regenerateSession(req);
         req.session.user = userData;
         await UserController.#saveSession(req);
-
         res.json(userData);
     }
 }

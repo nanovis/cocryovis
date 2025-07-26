@@ -71,7 +71,6 @@ export function clientErrorHandler(error, req, res, next) {
         res.status(error.statusCode).json({
             name: error.name,
             message: error.message,
-            status: error.statusCode,
         });
     } else {
         res.status(500).json({ name: error.name, message: error.message });
