@@ -46,7 +46,8 @@ projectsApi.put(`/user`, restrictApi, UserController.updateUser);
 ///////////////////////
 
 // Get Project List
-projectsApi.get(`/projects`, restrictApi, ProjectController.getAllUserProjects);
+// complex version of getAllUserProjectsDeep
+// projectsApi.get(`/projects`, restrictApi, ProjectController.getAllUserProjects);
 projectsApi.get(`/projects-deep`, restrictApi, ProjectController.getAllUserProjectsDeep);
 
 // Create New Project
