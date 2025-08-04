@@ -5,6 +5,8 @@ import { createDocument } from "zod-openapi";
 import { userPath } from "./userSchema.mjs";
 import { createErrorMap } from "zod-validation-error";
 import zod from "zod";
+import { projectPath } from "./projectMainSchema.mjs";
+import { volumePath } from "./volumeMainSchema.mjs";
 
 // Makes errors readable
 zod.config({
@@ -23,7 +25,11 @@ const document = createDocument(
                 url: "http://localhost:8080/api",
             },
         ],
-        paths: userPath,
+        paths: {
+            ...userPath,
+            ...projectPath,
+            ...volumePath,
+        },
     },
     { reused: "inline" }
 );

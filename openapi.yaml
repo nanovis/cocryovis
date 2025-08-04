@@ -480,3 +480,615 @@ paths:
                 additionalProperties: false
         "404": *a1
         "500": *a1
+  /projects-deep:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  ownerId:
+                    type: number
+                  publicAccess:
+                    type: number
+                  volumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawDataId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                      required:
+                        - id
+                        - name
+                        - description
+                        - creatorId
+                        - rawDataId
+                      additionalProperties: false
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        checkpoints:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: number
+                              filePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              folderPath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                            required:
+                              - id
+                              - filePath
+                              - folderPath
+                              - creatorId
+                            additionalProperties: false
+                      required:
+                        - id
+                        - name
+                        - description
+                        - creatorId
+                        - checkpoints
+                      additionalProperties: false
+                  projectAccess:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId:
+                          type: number
+                        projectId:
+                          type: number
+                        accessLevel:
+                          type: number
+                      required:
+                        - userId
+                        - projectId
+                        - accessLevel
+                      additionalProperties: false
+                required:
+                  - id
+                  - name
+                  - description
+                  - ownerId
+                  - publicAccess
+                  - volumes
+                  - models
+                  - projectAccess
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /createProject:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+              required:
+                - name
+                - description
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  ownerId:
+                    type: number
+                  publicAccess:
+                    type: number
+                required:
+                  - id
+                  - name
+                  - description
+                  - ownerId
+                  - publicAccess
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /project/{idProject}/deep:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  ownerId:
+                    type: number
+                  publicAccess:
+                    type: number
+                required:
+                  - id
+                  - name
+                  - description
+                  - ownerId
+                  - publicAccess
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /project/{idProject}/access:
+    get:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projectAccess:
+                    type: object
+                    properties:
+                      projectId:
+                        type: number
+                      accessLevel:
+                        type: number
+                    required:
+                      - projectId
+                      - accessLevel
+                    additionalProperties: false
+                  userAccess:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        accessLevel:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                      required:
+                        - userId
+                        - accessLevel
+                      additionalProperties: false
+                required:
+                  - projectAccess
+                  - userAccess
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+    post:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projectAccess:
+                    type: object
+                    properties:
+                      accessLevel:
+                        type: number
+                    required:
+                      - accessLevel
+                    additionalProperties: false
+                  userAccess:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        accessLevel:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                      required:
+                        - userId
+                        - accessLevel
+                      additionalProperties: false
+                required:
+                  - projectAccess
+                  - userAccess
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /project/:idProject:
+    delete:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+      responses:
+        "204": {}
+        "404": *a1
+        "500": *a1
+  /project/{idProject}/volumes/deep:
+    get:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawDataId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawData:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      mrcFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - mrcFilePath
+                    additionalProperties: false
+                  sparseVolumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        color:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - color
+                      additionalProperties: false
+                  pseudoVolumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        originalLabelId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - originalLabelId
+                      additionalProperties: false
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        folderPath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        rawVolumeChannel:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        logFile:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        checkpointId:
+                          type: number
+                        volumeDataId:
+                          type: number
+                        checkpoint:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                      required:
+                        - id
+                        - folderPath
+                        - rawVolumeChannel
+                        - logFile
+                        - checkpointId
+                        - volumeDataId
+                        - checkpoint
+                      additionalProperties: false
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                  - rawDataId
+                  - rawData
+                  - sparseVolumes
+                  - pseudoVolumes
+                  - results
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /project/{idProject}/volumes:
+    post:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+              required:
+                - name
+                - description
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawDataId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                  - rawDataId
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /volume/{idVolume}:
+    get:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: query
+          name: rawData
+          schema:
+            type: boolean
+        - in: query
+          name: sparseVolumes
+          schema:
+            type: boolean
+        - in: query
+          name: pseudoVolumes
+          schema:
+            type: boolean
+        - in: query
+          name: results
+          schema:
+            type: boolean
+        - in: query
+          name: projects
+          schema:
+            type: boolean
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawDataId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                  - rawDataId
+                additionalProperties: false
+        "404": *a1
+        "500": *a1

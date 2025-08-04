@@ -53,8 +53,10 @@ projectsApi.get(`/projects-deep`, restrictApi, ProjectController.getAllUserProje
 // Create New Project
 projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 
+
 // Get Project
-projectsApi.get(`/project/:idProject`, restrictReadProjectAccess, ProjectController.getProject);
+// complex version of getProjectDeep
+// projectsApi.get(`/project/:idProject`, restrictReadProjectAccess, ProjectController.getProject);
 // Get Project
 projectsApi.get(`/project/:idProject/deep`, restrictReadProjectAccess, ProjectController.getProjectDeep);
 
@@ -65,7 +67,7 @@ projectsApi.get(`/project/:idProject/access`, restrictReadProjectAccess, Project
 projectsApi.post(`/project/:idProject/access`, restrictApi, ProjectController.setAccess);
 
 // Deep Clone Project
-projectsApi.post(`/project/:idProject/deep-clone`, restrictApi, ProjectController.deepCloneProject);
+// projectsApi.post(`/project/:idProject/deep-clone`, restrictApi, ProjectController.deepCloneProject);
 
 // Delete Project
 projectsApi.delete(`/project/:idProject`, restrictApi, ProjectController.deleteProject);
@@ -96,14 +98,14 @@ projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
 /////// VOLUMES
 
 // Get Volumes from project
-projectsApi.get(`/project/:idProject/volumes`, restrictReadProjectAccess, VolumeController.getVolumesFromProject);
+// projectsApi.get(`/project/:idProject/volumes`, restrictReadProjectAccess, VolumeController.getVolumesFromProject);
 projectsApi.get(`/project/:idProject/volumes/deep`, restrictReadProjectAccess, VolumeController.getVolumesFromProjectDeep);
 
 // Create New Volume
 projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);
 
 // Clone Volume
-projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, VolumeController.cloneVolume);
+// projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, VolumeController.cloneVolume);
 
 // Get Volume
 projectsApi.get(`/volume/:idVolume`, restrictReadVolumeAccess, VolumeController.getVolume);

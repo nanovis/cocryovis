@@ -1,6 +1,12 @@
 // @ts-check
 
 import Project from "../models/project.mjs";
+import { idProject } from "../schemas/componentSchemas/idProjectParamSchema.mjs";
+import { formatUserError } from "../schemas/errorSchema.mjs";
+import {
+    projectCreateSchemaReq,
+} from "../schemas/projectMainSchema.mjs";
+
 
 /**
  * @typedef { import("express").Request } Request
@@ -101,6 +107,8 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async getAccessInfo(req, res) {
+        const validation = idProject.safeParse(req.body);
+        formatUserError(validation);
         const accessInfo = await Project.getAccessInfo(
             Number(req.params.idProject)
         );
@@ -113,6 +121,8 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async setAccess(req, res) {
+        const validation = idProject.safeParse(req.body);
+        formatUserError(validation);
         const accessInfo = await Project.setAccess(
             Number(req.params.idProject),
             req.body
@@ -126,6 +136,8 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async createProject(req, res) {
+        const validation = projectCreateSchemaReq.safeParse(req.body);
+        formatUserError(validation);
         const project = await Project.create(
             req.body.name,
             req.body.description,
@@ -153,6 +165,8 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async deleteProject(req, res) {
+        const validation = idProject.safeParse(req.body);
+        formatUserError(validation);
         const project = await Project.del(Number(req.params.idProject));
 
         res.sendStatus(204);
