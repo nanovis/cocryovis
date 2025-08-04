@@ -7,14 +7,7 @@ import { projectAccessSchema } from "./componentSchemas/projectAccessSchema.mjs"
 import { userAccessSchema } from "./componentSchemas/userAccessSchema.mjs";
 import { idProject } from "./componentSchemas/idProjectParamSchema.mjs";
 import { volumeSchema } from "./volumeMainSchema.mjs";
-
-export const projectSchema = z.object({
-    id: z.number(),
-    name: z.string(),
-    description: z.string(),
-    ownerId: z.number(),
-    publicAccess: z.number(),
-});
+import { projectSchema } from "./componentSchemas/ProjectSchema.mjs";
 
 export const projectDeepSchemaRes = projectSchema.extend({
     volumes: z.array(volumeSchema),

@@ -608,13 +608,22 @@ paths:
             schema:
               type: object
               properties:
+                id:
+                  type: number
                 name:
                   type: string
                 description:
                   type: string
+                ownerId:
+                  type: number
+                publicAccess:
+                  type: number
               required:
+                - id
                 - name
                 - description
+                - ownerId
+                - publicAccess
       responses:
         "201":
           content:
@@ -809,38 +818,40 @@ paths:
                       - type: number
                       - type: "null"
                   rawData:
-                    type: object
-                    properties:
-                      id:
-                        type: number
-                      path:
-                        anyOf:
-                          - type: string
-                          - type: "null"
-                      creatorId:
-                        anyOf:
-                          - type: number
-                          - type: "null"
-                      rawFilePath:
-                        anyOf:
-                          - type: string
-                          - type: "null"
-                      settings:
-                        anyOf:
-                          - type: string
-                          - type: "null"
-                      mrcFilePath:
-                        anyOf:
-                          - type: string
-                          - type: "null"
-                    required:
-                      - id
-                      - path
-                      - creatorId
-                      - rawFilePath
-                      - settings
-                      - mrcFilePath
-                    additionalProperties: false
+                    anyOf:
+                      - type: object
+                        properties:
+                          id:
+                            type: number
+                          path:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          settings:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          mrcFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                        required:
+                          - id
+                          - path
+                          - creatorId
+                          - rawFilePath
+                          - settings
+                          - mrcFilePath
+                        additionalProperties: false
+                      - type: "null"
                   sparseVolumes:
                     type: array
                     items:
@@ -1083,12 +1094,449 @@ paths:
                     anyOf:
                       - type: number
                       - type: "null"
+                  rawData:
+                    anyOf:
+                      - type: object
+                        properties:
+                          id:
+                            type: number
+                          path:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          settings:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          mrcFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                        required:
+                          - id
+                          - path
+                          - creatorId
+                          - rawFilePath
+                          - settings
+                          - mrcFilePath
+                        additionalProperties: false
+                      - type: "null"
+                  sparseVolumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        color:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - color
+                      additionalProperties: false
+                  pseudoVolumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        originalLabelId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - originalLabelId
+                      additionalProperties: false
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        folderPath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        rawVolumeChannel:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        logFile:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        checkpointId:
+                          type: number
+                        volumeDataId:
+                          type: number
+                        checkpoint:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                      required:
+                        - id
+                        - folderPath
+                        - rawVolumeChannel
+                        - logFile
+                        - checkpointId
+                        - volumeDataId
+                        - checkpoint
+                      additionalProperties: false
+                  projects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        ownerId:
+                          type: number
+                        publicAccess:
+                          type: number
+                      required:
+                        - id
+                        - name
+                        - description
+                        - ownerId
+                        - publicAccess
+                      additionalProperties: false
                 required:
                   - id
                   - name
                   - description
                   - creatorId
                   - rawDataId
+                  - rawData
+                  - sparseVolumes
+                  - pseudoVolumes
+                  - results
+                  - projects
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
+  /project/{idProject}/volume/{idVolume}:
+    get:
+      parameters:
+        - in: path
+          name: idProject
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: query
+          name: rawData
+          schema:
+            type: boolean
+        - in: query
+          name: sparseVolumes
+          schema:
+            type: boolean
+        - in: query
+          name: pseudoVolumes
+          schema:
+            type: boolean
+        - in: query
+          name: results
+          schema:
+            type: boolean
+        - in: query
+          name: projects
+          schema:
+            type: boolean
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawDataId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawData:
+                    anyOf:
+                      - type: object
+                        properties:
+                          id:
+                            type: number
+                          path:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          settings:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          mrcFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                        required:
+                          - id
+                          - path
+                          - creatorId
+                          - rawFilePath
+                          - settings
+                          - mrcFilePath
+                        additionalProperties: false
+                      - type: "null"
+                  sparseVolumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        color:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - color
+                      additionalProperties: false
+                  pseudoVolumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        originalLabelId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - originalLabelId
+                      additionalProperties: false
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        folderPath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        rawVolumeChannel:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        logFile:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        checkpointId:
+                          type: number
+                        volumeDataId:
+                          type: number
+                        checkpoint:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                      required:
+                        - id
+                        - folderPath
+                        - rawVolumeChannel
+                        - logFile
+                        - checkpointId
+                        - volumeDataId
+                        - checkpoint
+                      additionalProperties: false
+                  projects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        ownerId:
+                          type: number
+                        publicAccess:
+                          type: number
+                      required:
+                        - id
+                        - name
+                        - description
+                        - ownerId
+                        - publicAccess
+                      additionalProperties: false
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                  - rawDataId
+                  - rawData
+                  - sparseVolumes
+                  - pseudoVolumes
+                  - results
+                  - projects
                 additionalProperties: false
         "404": *a1
         "500": *a1

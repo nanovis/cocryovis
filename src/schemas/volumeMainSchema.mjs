@@ -8,7 +8,7 @@ import { sparseLabelVolumeDataSchema } from "./componentSchemas/sparseLabelVolum
 import { pseudoLabelVolumeDataSchema } from "./componentSchemas/pseudoLabelVolumeDataSchema.mjs";
 import { resultSchemaWithCheckpoint } from "./componentSchemas/resultSchema.mjs";
 import { defaultError } from "./errorSchema.mjs";
-import { projectSchema } from "./projectMainSchema.mjs";
+import { projectSchema } from "./componentSchemas/ProjectSchema.mjs";
 
 export const volumeSchema = z.object({
     id: z.number(),
