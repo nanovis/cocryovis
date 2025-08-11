@@ -2,21 +2,14 @@
 
 import z from "zod";
 
-import { idProject } from "./componentSchemas/idProjectParamSchema.mjs";
 import { rawVolumeDataSchema } from "./componentSchemas/rawVolumeDataSchema.mjs";
 import { sparseLabelVolumeDataSchema } from "./componentSchemas/sparseLabelVolumeDataSchema.mjs";
 import { pseudoLabelVolumeDataSchema } from "./componentSchemas/pseudoLabelVolumeDataSchema.mjs";
 import { resultSchemaWithCheckpoint } from "./componentSchemas/resultSchema.mjs";
 import { defaultError } from "./errorSchema.mjs";
-import { projectSchema } from "./componentSchemas/ProjectSchema.mjs";
-
-export const volumeSchema = z.object({
-    id: z.number(),
-    name: z.string(),
-    description: z.string(),
-    creatorId: z.number().nullable(),
-    rawDataId: z.number().nullable(),
-});
+import { idVolume, volumeSchema } from "./componentSchemas/volumeSchema.mjs";
+import { idProject, projectSchema } from "./componentSchemas/projectSchema.mjs";
+import { idSchema } from "./componentSchemas/idParamSchema.mjs";
 
 export const volumeQuerySchema = z.object({
     rawData: z.boolean().optional(),
@@ -33,7 +26,7 @@ export const deepVolumeSchema = volumeSchema.extend({
     results: z.array(resultSchemaWithCheckpoint),
 });
 
-const createVolumeReq = z.object({
+export const createVolumeReq = z.object({
     name: z.string(),
     description: z.string(),
 });
@@ -45,6 +38,35 @@ export const getVolumeSchema = volumeSchema.extend({
     results: z.array(resultSchemaWithCheckpoint),
     projects: z.array(projectSchema),
 });
+
+export const idProjectAndVolume = z
+    .object({
+        idProject: idSchema,
+        idVolume: idSchema,
+    })
+    .meta({
+        param: {
+            name: "idProject,idVolume",
+            in: "path",
+            required: true,
+        },
+        example: { idProject: "1", idVolume: "1" },
+    });
+
+export const xyz = z.object({
+    x: z.number(),
+    y: z.number(),
+    z: z.number(),
+});
+export const annotationsEntry = z.object({
+    add: z.boolean(),
+    dimensions: xyz,
+    kernelSize: xyz,
+    positions: z.array(xyz),
+    volumeName: z.string(),
+});
+
+export const annotations = z.array(annotationsEntry);
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject
@@ -94,7 +116,7 @@ export const volumePath = {
     "/volume/{idVolume}": {
         get: {
             requestParams: {
-                path: idProject,
+                path: idVolume,
                 query: volumeQuerySchema,
             },
             responses: {
@@ -110,16 +132,33 @@ export const volumePath = {
         },
     },
     "/project/{idProject}/volume/{idVolume}": {
-        get: {
+        delete: {
             requestParams: {
-                path: idProject,
-                query: volumeQuerySchema,
+                path: idProjectAndVolume,
+            },
+            responses: {
+                204: {},
+                ...defaultError,
+            },
+        },
+    },
+    "/volume/{idVolume}/add-annotations": {
+        put: {
+            requestParams: {
+                path: idVolume,
+            },
+            requestBody: {
+                content: {
+                    "application/json": {
+                        schema: annotations,
+                    },
+                },
             },
             responses: {
                 201: {
                     content: {
                         "application/json": {
-                            schema: getVolumeSchema,
+                            schema: sparseLabelVolumeDataSchema,
                         },
                     },
                 },

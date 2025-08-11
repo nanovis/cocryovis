@@ -8,3 +8,7 @@ export const checkpointSchema = z.object({
     folderPath: z.string().nullable(),
     creatorId: z.number().nullable(),
 });
+
+export const checkpointSchemaArray = z.object({
+    checkpointSchemaArray: z.array(checkpointSchema),
+});

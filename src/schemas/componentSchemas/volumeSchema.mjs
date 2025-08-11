@@ -3,23 +3,23 @@
 import z from "zod";
 import { idSchema } from "./idParamSchema.mjs";
 
-export const projectSchema = z.object({
+export const volumeSchema = z.object({
     id: z.number(),
     name: z.string(),
     description: z.string(),
-    ownerId: z.number(),
-    publicAccess: z.number(),
+    creatorId: z.number().nullable(),
+    rawDataId: z.number().nullable(),
 });
 
-export const idProject = z
+export const idVolume = z
     .object({
-        idProject: idSchema,
+        idVolume: idSchema,
     })
     .meta({
         param: {
-            name: "idProject",
+            name: "idVolume",
             in: "path",
             required: true,
         },
-        example: { idProject: "1" },
+        example: { idVolume: "123" },
     });

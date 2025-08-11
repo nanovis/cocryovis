@@ -1,0 +1,161 @@
+// @ts-check
+
+import z from "zod";
+import { idResult } from "./componentSchemas/idResultSchema.mjs";
+import { resultSchema } from "./componentSchemas/resultSchema.mjs";
+import { defaultError, generateErrors } from "./errorSchema.mjs";
+import { idVolume, volumeSchema } from "./componentSchemas/volumeSchema.mjs";
+import { checkpointSchema } from "./componentSchemas/checkpointSchema.mjs";
+import { rawVolumeDataSchema } from "./componentSchemas/rawVolumeDataSchema.mjs";
+import {
+    multipleFileSchema,
+    singleFileSchema,
+} from "./componentSchemas/fileSchema.mjs";
+import { idSchema } from "./componentSchemas/idParamSchema.mjs";
+
+export const idVolumeAndIdResultParams = z
+    .object({
+        idVolume: idSchema,
+        idResult: idSchema,
+    })
+    .meta({
+        param: [
+            {
+                name: "idVolume",
+                in: "path",
+                required: true,
+                example: "1",
+            },
+            {
+                name: "idResult",
+                in: "path",
+                required: true,
+                example: "1",
+            },
+        ],
+    });
+
+export const resultFilesSchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    rawFileName: z.string(),
+    settingsFileName: z.string(),
+    index: z.number(),
+    resultId: z.number(),
+});
+
+export const getResultSchema = resultSchema.extend({
+    checkpoints: checkpointSchema.optional(),
+    volumedata: rawVolumeDataSchema.optional(),
+    volumes: z.array(volumeSchema).optional(),
+    files: z.array(resultFilesSchema).optional(),
+});
+
+/**
+ * @type import("zod-openapi").ZodOpenApiPathsObject
+ */
+export const resultPath = {
+    "/result/{idResult}": {
+        get: {
+            requestParams: {
+                path: idResult,
+            },
+            responses: {
+                200: {
+                    content: {
+                        "application/json": {
+                            schema: resultSchema,
+                        },
+                    },
+                },
+                ...defaultError,
+            },
+        },
+    },
+    "/result/{idResult}/details": {
+        get: {
+            requestParams: {
+                path: idResult,
+            },
+            responses: {
+                200: {
+                    content: {
+                        "application/json": {
+                            schema: resultSchema,
+                        },
+                    },
+                },
+                ...defaultError,
+            },
+        },
+    },
+    "/volume/{idVolume}/results": {
+        get: {
+            requestParams: {
+                path: idVolume,
+            },
+            responses: {
+                200: {
+                    content: {
+                        "application/json": {
+                            schema: getResultSchema,
+                        },
+                    },
+                },
+                ...defaultError,
+            },
+        },
+
+        post: {
+            requestParams: {
+                path: idVolume,
+            },
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        schema: multipleFileSchema,
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    content: {
+                        "application/json": {
+                            schema: resultFilesSchema,
+                        },
+                    },
+                },
+                ...defaultError,
+            },
+        },
+    },
+    "/volume/{idVolume}/result/{idResult}": {
+        delete: {
+            requestParams: {
+                path: idVolumeAndIdResultParams,
+            },
+            responses: {
+                204: {},
+                ...defaultError,
+            },
+        },
+    },
+    "/result/{idResult}/data": {
+        get: {
+            requestParams: {
+                path: idResult,
+            },
+            responses: {
+                200: {
+                    content: {
+                        "application/zip": {
+                            schema: singleFileSchema,
+                        },
+                    },
+                },
+                ...defaultError,
+                ...generateErrors([400]),
+            },
+        },
+    },
+};

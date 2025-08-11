@@ -10,3 +10,7 @@ export const rawVolumeDataSchema = z.object({
     settings: z.string().nullable(),
     mrcFilePath: z.string().nullable(),
 });
+
+export const rawVolumeDataUpdateSchema = z.object({
+    settings: z.string().nullable().optional(),
+});

@@ -10,3 +10,8 @@ export const sparseLabelVolumeDataSchema = z.object({
     settings: z.string().nullable(),
     color: z.string().nullable(),
 });
+
+export const sparseLabelVolumeDataUpdateSchema = z.object({
+    settings: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+});

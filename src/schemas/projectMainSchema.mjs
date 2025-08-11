@@ -1,13 +1,12 @@
 // @ts-check
 
 import z from "zod";
-import { defaultError } from "./errorSchema.mjs";
+import { idProject, projectSchema } from "./componentSchemas/projectSchema.mjs";
+import { volumeSchema } from "./componentSchemas/volumeSchema.mjs";
 import { modelSchema } from "./componentSchemas/modelSchema.mjs";
 import { projectAccessSchema } from "./componentSchemas/projectAccessSchema.mjs";
 import { userAccessSchema } from "./componentSchemas/userAccessSchema.mjs";
-import { idProject } from "./componentSchemas/idProjectParamSchema.mjs";
-import { volumeSchema } from "./volumeMainSchema.mjs";
-import { projectSchema } from "./componentSchemas/ProjectSchema.mjs";
+import { defaultError } from "./errorSchema.mjs";
 
 export const projectDeepSchemaRes = projectSchema.extend({
     volumes: z.array(volumeSchema),
@@ -36,6 +35,14 @@ export const setAccessSchemaRes = z.object({
     userAccess: z.array(userAccessSchema),
 });
 
+export const setAccessSchemaReq = z.object({
+    publicAccess: z.number(),
+    userAccess: z.array(userAccessSchema),
+});
+
+/**
+ * @type import("zod-openapi").ZodOpenApiPathsObject
+ */
 export const projectPath = {
     "/projects-deep": {
         get: {
@@ -74,6 +81,9 @@ export const projectPath = {
     },
     "/project/{idProject}/deep": {
         get: {
+            requestParams: {
+                path: idProject,
+            },
             responses: {
                 200: {
                     content: {
@@ -91,6 +101,7 @@ export const projectPath = {
             requestParams: {
                 path: idProject,
             },
+
             responses: {
                 200: {
                     content: {
@@ -107,6 +118,13 @@ export const projectPath = {
             requestParams: {
                 path: idProject,
             },
+            requestBody: {
+                content: {
+                    "application/json": {
+                        schema: setAccessSchemaReq,
+                    },
+                },
+            },
             responses: {
                 200: {
                     content: {
@@ -119,7 +137,7 @@ export const projectPath = {
             },
         },
     },
-    "/project/:idProject": {
+    "/project/{idProject}": {
         delete: {
             requestParams: {
                 path: idProject,

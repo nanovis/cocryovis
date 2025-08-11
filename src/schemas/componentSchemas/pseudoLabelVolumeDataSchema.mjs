@@ -10,3 +10,7 @@ export const pseudoLabelVolumeDataSchema = z.object({
     settings: z.string().nullable(),
     originalLabelId: z.number().nullable(),
 });
+
+export const pseudoLabelVolumeDataUpdateSchema = z.object({
+    settings: z.string().nullable().optional(),
+});

@@ -13,7 +13,6 @@ import fileSystem from "fs";
 import session from "express-session";
 import { projectsApi } from "./src/routes/api/projects.mjs";
 import bodyParser from "body-parser";
-import { argv } from "process";
 import cors from "cors";
 import fileUpload from "express-fileupload";
 import Database from "better-sqlite3";
@@ -149,7 +148,7 @@ const startServer = async () => {
     console.log("Writing OpenAPI");
     writeOpenApi();
     const file = fileSystem.readFileSync("./openapi.yaml", "utf8");
-    const swaggerDocument = YAML.parse(file);
+    const swaggerDocument = YAML.parse(file, { maxAliasCount: -1 });
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     app.use(sessionParser);

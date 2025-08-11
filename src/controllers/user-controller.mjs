@@ -4,13 +4,6 @@ import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "../tools/config.mjs";
-import {
-    loginSchemaReq,
-    registerSchema,
-    updateUserSchema,
-} from "../schemas/userSchema.mjs";
-
-import { formatUserError } from "../schemas/errorSchema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -24,8 +17,6 @@ export default class UserController {
      * @param {import("express").NextFunction} next
      */
     static async register(req, res, next) {
-        const validation = registerSchema.safeParse(req.body);
-        formatUserError(validation);
         const user = await User.create(
             req.body.username,
             req.body.password,
@@ -48,8 +39,6 @@ export default class UserController {
      * @param {import("express").NextFunction} next
      */
     static async login(req, res, next) {
-        const validation = loginSchemaReq.safeParse(req.body);
-        formatUserError(validation);
         try {
             const user = await User.authenticate(
                 req.body.username,
@@ -146,8 +135,6 @@ export default class UserController {
      */
     static async updateUser(req, res) {
         const id = req.session.user.id;
-        const validation = updateUserSchema.safeParse(req.body);
-        formatUserError(validation);
         const user = await User.update(id, req.body);
         const userData = User.toPublic(user);
 
