@@ -20,11 +20,11 @@ interface TrainingOptions {
 
 interface ReconstructionOptions {
     volume_depth?: number;
-    tiled?: number;
-    crop?: number;
-    is_data_linearized?: number;
-    delinearize_result?: number;
-    data_term_end?: number;
+    tiled?: boolean;
+    crop?: boolean;
+    is_data_linearized?: boolean;
+    delinearize_result?: boolean;
+    data_term_end?: boolean;
     data_term_iters?: number;
     proximal_iters?: number;
     sample_rate?: number;

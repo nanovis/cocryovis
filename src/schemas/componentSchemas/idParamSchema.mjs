@@ -1,8 +1,5 @@
 // @ts-check
 
-import z from "zod";
+import { stringToInt } from "./stringToint.mjs";
 
-export const idSchema = z
-    .string()
-    .regex(/^\d+$/, "Must be numeric")
-    .transform((val) => Number(val));
+export const idSchema = stringToInt;

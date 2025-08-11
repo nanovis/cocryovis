@@ -12,6 +12,9 @@ import { modelsPath } from "./modelsMainSchema.mjs";
 import { checkPointPath } from "./checkpointMainSchema.mjs";
 import { resultPath } from "./resultMainSchema.mjs";
 import { demoPath } from "./demoSchema.mjs";
+import { IlastikPath } from "./IlastikSchema.mjs";
+import { nanoOetziPath } from "./nanoOetziSchema.mjs";
+import { cryoEtPath } from "./cryoEtSchema.mjs";
 
 // Makes errors readable
 zod.config({
@@ -39,6 +42,9 @@ const document = createDocument(
             ...checkPointPath,
             ...resultPath,
             ...demoPath,
+            ...IlastikPath,
+            ...nanoOetziPath,
+            ...cryoEtPath,
         },
     },
     { reused: "ref" }

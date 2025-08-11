@@ -217,7 +217,7 @@ export const TiltSeriesDialog = types
     },
     reconstructionInputs: {
       tiled: new BooleanInputField(
-        "Minimum Epochs",
+        "Tiled",
         () => {
           return self.reconstruction.tiled;
         },
@@ -450,11 +450,11 @@ export const TiltSeriesDialog = types
         },
         self.setPatchRadius,
         StringInputFieldType.FLOAT,
-        "Patch Radius must be a positive integer.",
+        "Patch Radius must be between 0 and 0.5.",
         0.125,
         "Low spatial frequencies in the cross-correlation will be attenuated by a Gaussian curve that is 1 at this cutoff radius and falls off below this radius with a standard deviation.",
         (value: number) =>
-          Utils.isIntegerBetween(value, 1, Number.MAX_SAFE_INTEGER)
+          Utils.isFloatBetween(value, 0, 0.5)
       ),
       rotationAngle: new NumberInputField(
         "Rotation Angle",

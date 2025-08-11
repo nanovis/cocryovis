@@ -238,7 +238,7 @@ export const volumeDataPath = {
             },
         },
     },
-    "/volume/{idVolume}/volumeData/:type/from-mrc-file": {
+    "/volume/{idVolume}/volumeData/{type}/from-mrc-file": {
         post: {
             requestParams: {
                 path: idVolumeAndType,

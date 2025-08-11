@@ -30,6 +30,8 @@ import { idModelAndidcheckpointParam } from '../../schemas/checkpointMainSchema.
 import { idModel } from '../../schemas/componentSchemas/idModelSchema.mjs';
 import { idResult } from '../../schemas/componentSchemas/idResultSchema.mjs';
 import { idCheckpoint } from '../../schemas/componentSchemas/idCheckpointSchema.mjs';
+import { inferenceIds, trainingReq } from '../../schemas/nanoOetziSchema.mjs';
+import { tiltSeriesValidation } from '../../schemas/cryoEtSchema.mjs';
 
 // Config
 const config = appConfig;
@@ -87,26 +89,26 @@ projectsApi.delete(`/project/:idProject`, restrictApi, validateSchema({paramsSch
 /////// ILASTIK
 
 // Run Ilastik inference
-projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi,
+projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi, validateSchema({paramsSchema: idVolume}),
     async (req, res) => IlastikController.queuePseudoLabelsGeneration(ilastikHandler, req, res));
 
 /////// NANO OETZI
 
 // Inference
-projectsApi.post(`/queue-inference`, restrictApi,
+projectsApi.post(`/queue-inference`, restrictApi, validateSchema({bodySchema: inferenceIds}),
     async (req, res) => NanoOetziController.queueInference(gpuTaskHandler, req, res));
 
 // Run training
-projectsApi.post(`/queue-training`, restrictApi, 
+projectsApi.post(`/queue-training`, restrictApi, validateSchema({bodySchema: trainingReq}),
     async (req, res) => NanoOetziController.queueTraining(gpuTaskHandler, req, res));
 
 
 /////// CRYO-ET
 
-projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
+projectsApi.post(`/tilt-series-reconstruction`, restrictApi, validateSchema({bodySchema: tiltSeriesValidation}),
     async (req, res) => PreProcessingController.queueTiltSeriesReconstruction(gpuTaskHandler, req, res));
 
-
+    
 /////// VOLUMES
 
 // Get Volumes from project

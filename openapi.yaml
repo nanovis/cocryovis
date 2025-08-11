@@ -51,12 +51,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": &a1
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "500": *a1
   /login:
     post:
@@ -78,12 +78,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /logout:
@@ -101,12 +101,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /users:
@@ -119,7 +119,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/__schema10"
+                  $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /status:
@@ -134,15 +134,15 @@ paths:
                   taskHistory:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema11"
+                      $ref: "#/components/schemas/__schema12"
                   cpuTaskQueue:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema11"
+                      $ref: "#/components/schemas/__schema12"
                   gpuTaskQueue:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema11"
+                      $ref: "#/components/schemas/__schema12"
                 required:
                   - taskHistory
                   - cpuTaskQueue
@@ -177,12 +177,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /projects-deep:
@@ -195,36 +195,36 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema12"
-                  name:
                     $ref: "#/components/schemas/__schema13"
-                  description:
+                  name:
                     $ref: "#/components/schemas/__schema14"
-                  ownerId:
+                  description:
                     $ref: "#/components/schemas/__schema15"
-                  publicAccess:
+                  ownerId:
                     $ref: "#/components/schemas/__schema16"
+                  publicAccess:
+                    $ref: "#/components/schemas/__schema17"
                   volumes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema17"
+                      $ref: "#/components/schemas/__schema18"
                   models:
                     type: array
                     items:
                       type: object
                       properties:
                         id:
-                          $ref: "#/components/schemas/__schema23"
-                        name:
                           $ref: "#/components/schemas/__schema24"
-                        description:
+                        name:
                           $ref: "#/components/schemas/__schema25"
-                        creatorId:
+                        description:
                           $ref: "#/components/schemas/__schema26"
+                        creatorId:
+                          $ref: "#/components/schemas/__schema27"
                         checkpoints:
                           type: array
                           items:
-                            $ref: "#/components/schemas/__schema27"
+                            $ref: "#/components/schemas/__schema28"
                       required:
                         - id
                         - name
@@ -235,7 +235,7 @@ paths:
                   projectAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema28"
+                      $ref: "#/components/schemas/__schema29"
                 required:
                   - id
                   - name
@@ -277,7 +277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema31"
+                $ref: "#/components/schemas/__schema32"
         "404": *a1
         "500": *a1
   /project/{idProject}/deep:
@@ -293,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema31"
+                $ref: "#/components/schemas/__schema32"
         "404": *a1
         "500": *a1
   /project/{idProject}/access:
@@ -315,9 +315,9 @@ paths:
                     type: object
                     properties:
                       projectId:
-                        $ref: "#/components/schemas/__schema29"
-                      accessLevel:
                         $ref: "#/components/schemas/__schema30"
+                      accessLevel:
+                        $ref: "#/components/schemas/__schema31"
                     required:
                       - projectId
                       - accessLevel
@@ -325,7 +325,7 @@ paths:
                   userAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema32"
+                      $ref: "#/components/schemas/__schema33"
                 required:
                   - projectAccess
                   - userAccess
@@ -377,14 +377,14 @@ paths:
                     type: object
                     properties:
                       accessLevel:
-                        $ref: "#/components/schemas/__schema30"
+                        $ref: "#/components/schemas/__schema31"
                     required:
                       - accessLevel
                     additionalProperties: false
                   userAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema32"
+                      $ref: "#/components/schemas/__schema33"
                 required:
                   - projectAccess
                   - userAccess
@@ -419,31 +419,31 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema18"
-                  name:
                     $ref: "#/components/schemas/__schema19"
-                  description:
+                  name:
                     $ref: "#/components/schemas/__schema20"
-                  creatorId:
+                  description:
                     $ref: "#/components/schemas/__schema21"
-                  rawDataId:
+                  creatorId:
                     $ref: "#/components/schemas/__schema22"
+                  rawDataId:
+                    $ref: "#/components/schemas/__schema23"
                   rawData:
                     anyOf:
-                      - $ref: "#/components/schemas/__schema33"
+                      - $ref: "#/components/schemas/__schema34"
                       - type: "null"
                   sparseVolumes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema34"
+                      $ref: "#/components/schemas/__schema35"
                   pseudoVolumes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema35"
+                      $ref: "#/components/schemas/__schema36"
                   results:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema36"
+                      $ref: "#/components/schemas/__schema37"
                 required:
                   - id
                   - name
@@ -483,7 +483,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema17"
+                $ref: "#/components/schemas/__schema18"
         "404": *a1
         "500": *a1
   /volume/{idVolume}:
@@ -522,27 +522,27 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema18"
-                  name:
                     $ref: "#/components/schemas/__schema19"
-                  description:
+                  name:
                     $ref: "#/components/schemas/__schema20"
-                  creatorId:
+                  description:
                     $ref: "#/components/schemas/__schema21"
-                  rawDataId:
+                  creatorId:
                     $ref: "#/components/schemas/__schema22"
+                  rawDataId:
+                    $ref: "#/components/schemas/__schema23"
                   rawData:
-                    $ref: "#/components/schemas/__schema43"
-                  sparseVolumes:
                     $ref: "#/components/schemas/__schema44"
-                  pseudoVolumes:
+                  sparseVolumes:
                     $ref: "#/components/schemas/__schema45"
-                  results:
+                  pseudoVolumes:
                     $ref: "#/components/schemas/__schema46"
+                  results:
+                    $ref: "#/components/schemas/__schema47"
                   projects:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema31"
+                      $ref: "#/components/schemas/__schema32"
                 required:
                   - id
                   - name
@@ -592,7 +592,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema34"
+                $ref: "#/components/schemas/__schema35"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}:
@@ -613,7 +613,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema47"
+                $ref: "#/components/schemas/__schema48"
         "404": *a1
         "500": *a1
     put:
@@ -679,7 +679,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema47"
+                $ref: "#/components/schemas/__schema48"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/visualization-data:
@@ -724,10 +724,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema47"
+                $ref: "#/components/schemas/__schema48"
         "404": *a1
         "500": *a1
-  /volume/{idVolume}/volumeData/:type/from-mrc-file:
+  /volume/{idVolume}/volumeData/{type}/from-mrc-file:
     post:
       parameters:
         - in: path
@@ -750,7 +750,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema33"
+                $ref: "#/components/schemas/__schema34"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/from-url:
@@ -788,7 +788,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema33"
+                $ref: "#/components/schemas/__schema34"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/{idVolumeData}/update-annotations:
@@ -827,7 +827,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema34"
+                $ref: "#/components/schemas/__schema35"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/download-full:
@@ -848,7 +848,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/download-raw-file:
@@ -869,7 +869,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData/download-settings-file:
@@ -890,7 +890,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData/download-mrc-file:
@@ -911,7 +911,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/{idVolumeData}:
@@ -980,7 +980,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema50"
         "404": *a1
         "500": *a1
     post:
@@ -1008,7 +1008,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema51"
+                $ref: "#/components/schemas/__schema52"
         "404": *a1
         "500": *a1
   /project/{idProject}/model/{idModel}/clone:
@@ -1029,7 +1029,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema51"
+                $ref: "#/components/schemas/__schema52"
         "404": *a1
         "500": *a1
   /model/{idModel}:
@@ -1053,7 +1053,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema50"
         "404": *a1
         "500": *a1
   /project/{idProject}/model/{idModel:
@@ -1086,7 +1086,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema27"
+                $ref: "#/components/schemas/__schema28"
         "404": *a1
         "500": *a1
   /model/{idModel}/checkpoint/{idCheckpoint}:
@@ -1124,7 +1124,7 @@ paths:
                   checkpointSchemaArray:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema27"
+                      $ref: "#/components/schemas/__schema28"
                 required:
                   - checkpointSchemaArray
                 additionalProperties: false
@@ -1147,7 +1147,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema27"
+                $ref: "#/components/schemas/__schema28"
         "404": *a1
         "500": *a1
   /checkpoint/{idCheckpoint}/download:
@@ -1168,7 +1168,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /checkpoint/{idCheckpoint}/as-text:
@@ -1184,12 +1184,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema52"
+                $ref: "#/components/schemas/__schema53"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /checkpoint/to-text:
@@ -1204,12 +1204,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema52"
+                $ref: "#/components/schemas/__schema53"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /result/{idResult}:
@@ -1225,7 +1225,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema53"
+                $ref: "#/components/schemas/__schema54"
         "404": *a1
         "500": *a1
   /result/{idResult}/details:
@@ -1241,7 +1241,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema53"
+                $ref: "#/components/schemas/__schema54"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/results:
@@ -1260,29 +1260,29 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema37"
-                  folderPath:
                     $ref: "#/components/schemas/__schema38"
-                  rawVolumeChannel:
+                  folderPath:
                     $ref: "#/components/schemas/__schema39"
-                  logFile:
+                  rawVolumeChannel:
                     $ref: "#/components/schemas/__schema40"
-                  checkpointId:
+                  logFile:
                     $ref: "#/components/schemas/__schema41"
-                  volumeDataId:
+                  checkpointId:
                     $ref: "#/components/schemas/__schema42"
+                  volumeDataId:
+                    $ref: "#/components/schemas/__schema43"
                   checkpoints:
-                    $ref: "#/components/schemas/__schema27"
+                    $ref: "#/components/schemas/__schema28"
                   volumedata:
-                    $ref: "#/components/schemas/__schema33"
+                    $ref: "#/components/schemas/__schema34"
                   volumes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema17"
+                      $ref: "#/components/schemas/__schema18"
                   files:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema54"
+                      $ref: "#/components/schemas/__schema55"
                 required:
                   - id
                   - folderPath
@@ -1310,7 +1310,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema54"
+                $ref: "#/components/schemas/__schema55"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/result/{idResult}:
@@ -1343,12 +1343,12 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema49"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema9"
+                $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /demo:
@@ -1361,38 +1361,38 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema12"
-                  name:
                     $ref: "#/components/schemas/__schema13"
-                  description:
+                  name:
                     $ref: "#/components/schemas/__schema14"
-                  ownerId:
+                  description:
                     $ref: "#/components/schemas/__schema15"
-                  publicAccess:
+                  ownerId:
                     $ref: "#/components/schemas/__schema16"
+                  publicAccess:
+                    $ref: "#/components/schemas/__schema17"
                   accessLevel:
                     type: number
                   volumes:
                     type: object
                     properties:
                       id:
-                        $ref: "#/components/schemas/__schema18"
-                      name:
                         $ref: "#/components/schemas/__schema19"
-                      description:
+                      name:
                         $ref: "#/components/schemas/__schema20"
-                      creatorId:
+                      description:
                         $ref: "#/components/schemas/__schema21"
-                      rawDataId:
+                      creatorId:
                         $ref: "#/components/schemas/__schema22"
+                      rawDataId:
+                        $ref: "#/components/schemas/__schema23"
                       rawData:
-                        $ref: "#/components/schemas/__schema43"
-                      sparseVolumes:
                         $ref: "#/components/schemas/__schema44"
-                      pseudoVolumes:
+                      sparseVolumes:
                         $ref: "#/components/schemas/__schema45"
-                      results:
+                      pseudoVolumes:
                         $ref: "#/components/schemas/__schema46"
+                      results:
+                        $ref: "#/components/schemas/__schema47"
                     required:
                       - id
                       - name
@@ -1408,15 +1408,15 @@ paths:
                     type: object
                     properties:
                       id:
-                        $ref: "#/components/schemas/__schema23"
-                      name:
                         $ref: "#/components/schemas/__schema24"
-                      description:
+                      name:
                         $ref: "#/components/schemas/__schema25"
-                      creatorId:
+                      description:
                         $ref: "#/components/schemas/__schema26"
+                      creatorId:
+                        $ref: "#/components/schemas/__schema27"
                       checkpoints:
-                        $ref: "#/components/schemas/__schema50"
+                        $ref: "#/components/schemas/__schema51"
                     required:
                       - id
                       - name
@@ -1424,7 +1424,7 @@ paths:
                       - creatorId
                     additionalProperties: false
                   projectAccess:
-                    $ref: "#/components/schemas/__schema28"
+                    $ref: "#/components/schemas/__schema29"
                 required:
                   - id
                   - name
@@ -1438,11 +1438,283 @@ paths:
                 additionalProperties: false
         "404": *a1
         "500": *a1
+  /volume/{idVolume}/queue-pseudo-label-generation:
+    get:
+      parameters:
+        - in: path
+          name: idVolume
+          schema:
+            $ref: "#/components/schemas/__schema0"
+          required: true
+      responses:
+        "201": {}
+        "404": *a1
+        "500": *a1
+  /queue-inference:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                checkpointId:
+                  type: number
+                volumeId:
+                  type: number
+              required:
+                - checkpointId
+                - volumeId
+      responses:
+        "204": {}
+        "404": *a1
+        "500": *a1
+  /queue-training:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trainingVolumesIds:
+                  $ref: "#/components/schemas/__schema9"
+                validationVolumesIds:
+                  $ref: "#/components/schemas/__schema9"
+                testingVolumesIds:
+                  $ref: "#/components/schemas/__schema9"
+                modelId:
+                  type: number
+                minEpochs:
+                  type: integer
+                  minimum: 1
+                  maximum: 9007199254740991
+                maxEpochs:
+                  type: integer
+                  minimum: 1
+                  maximum: 9007199254740991
+                findLearningRate:
+                  type: boolean
+                learningRate:
+                  type: number
+                  minimum: 0
+                batchSize:
+                  type: integer
+                  minimum: 1
+                  maximum: 9007199254740991
+                loss:
+                  type: string
+                optimizer:
+                  type: string
+                accumulateGradients:
+                  type: integer
+                  minimum: 1
+                  maximum: 9007199254740991
+                checkpointId:
+                  type: integer
+                  minimum: -9007199254740991
+                  maximum: 9007199254740991
+              required:
+                - trainingVolumesIds
+                - validationVolumesIds
+                - testingVolumesIds
+                - modelId
+                - minEpochs
+                - maxEpochs
+                - findLearningRate
+                - learningRate
+                - batchSize
+                - loss
+                - optimizer
+                - accumulateGradients
+                - checkpointId
+      responses:
+        "204": {}
+        "404": *a1
+        "500": *a1
+  /tilt-series-reconstruction:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                tiltSeries:
+                  type: string
+                  format: binary
+                  contentEncoding: binary
+                data:
+                  type: object
+                  properties:
+                    volumeId:
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    options:
+                      type: object
+                      properties:
+                        reconstruction:
+                          type: object
+                          properties:
+                            volume_depth:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                            tiled:
+                              default: true
+                              type: boolean
+                            crop:
+                              default: true
+                              type: boolean
+                            is_data_linearized:
+                              default: false
+                              type: boolean
+                            delinearize_result:
+                              default: true
+                              type: boolean
+                            data_term_end:
+                              default: false
+                              type: boolean
+                            data_term_iters:
+                              default: 2
+                              type: integer
+                              minimum: 1
+                              maximum: 20
+                            proximal_iters:
+                              default: 80
+                              type: integer
+                              minimum: 1
+                              maximum: 200
+                            sample_rate:
+                              default: 0.5
+                              type: number
+                              minimum: 0.25
+                              maximum: 1
+                            chill_factor:
+                              default: 0.2
+                              type: number
+                              minimum: 0.001
+                              maximum: 1
+                            lambda:
+                              default: 1000
+                              type: number
+                              minimum: 0.1
+                              maximum: 2000
+                            number_extra_rows:
+                              default: 80
+                              type: integer
+                              minimum: 60
+                              maximum: 9007199254740991
+                            starting_angle:
+                              default: -60
+                              type: number
+                            angle_step:
+                              default: 3
+                              type: number
+                            nlm_skip:
+                              default: 3
+                              type: integer
+                              minimum: 1
+                              maximum: 9
+                          required:
+                            - volume_depth
+                        alignment:
+                          type: object
+                          properties:
+                            peak:
+                              default: 10
+                              type: number
+                            diff:
+                              default: 10
+                              type: number
+                            grow:
+                              default: 4
+                              type: number
+                            iterations:
+                              default: 3
+                              type: integer
+                              minimum: 1
+                              maximum: 9007199254740991
+                            numOfPatches:
+                              default: 4
+                              type: integer
+                              minimum: 1
+                              maximum: 9007199254740991
+                            patchSize:
+                              default: 680
+                              type: integer
+                              minimum: 1
+                              maximum: 9007199254740991
+                            patchRadius:
+                              default: 0.125
+                              type: number
+                              minimum: 0
+                              maximum: 0.5
+                            rotationAngle:
+                              default: 60
+                              type: number
+                        ctf:
+                          type: object
+                          properties:
+                            highTension:
+                              default: 300
+                              type: number
+                            sphericalAberration:
+                              default: 2.7
+                              type: number
+                            amplitudeContrast:
+                              default: 0.1
+                              type: number
+                            pixelSize:
+                              default: 1
+                              type: number
+                            tileSize:
+                              default: 512
+                              type: integer
+                              minimum: 1
+                              maximum: 9007199254740991
+                        motionCorrection:
+                          type: object
+                          properties:
+                            patchSize:
+                              default: 32
+                              type: integer
+                              minimum: 1
+                              maximum: 9007199254740991
+                            iterations:
+                              default: 10
+                              type: integer
+                              minimum: 1
+                              maximum: 9007199254740991
+                            tolerance:
+                              default: 0.1
+                              type: number
+                            pixelSize:
+                              default: 1
+                              type: number
+                            fmDose:
+                              default: 0
+                              type: number
+                            highTension:
+                              default: 300
+                              type: number
+                      required:
+                        - reconstruction
+                  required:
+                    - volumeId
+                    - options
+              required:
+                - tiltSeries
+                - data
+      responses:
+        "201": {}
+        "404": *a1
+        "500": *a1
 components:
   schemas:
     __schema0:
       type: string
-      pattern: ^\d+$
     __schema1:
       type: array
       items:
@@ -1511,6 +1783,11 @@ components:
     __schema8:
       type: boolean
     __schema9:
+      minItems: 1
+      type: array
+      items:
+        $ref: "#/components/schemas/__schema0"
+    __schema10:
       type: object
       properties:
         name:
@@ -1521,7 +1798,7 @@ components:
         - name
         - message
       additionalProperties: false
-    __schema10:
+    __schema11:
       type: object
       properties:
         id:
@@ -1542,7 +1819,7 @@ components:
         - name
         - email
       additionalProperties: false
-    __schema11:
+    __schema12:
       type: object
       properties:
         enqueuedTime:
@@ -1602,29 +1879,29 @@ components:
         - modelId
         - checkpointId
       additionalProperties: false
-    __schema12:
-      type: number
     __schema13:
-      type: string
+      type: number
     __schema14:
       type: string
     __schema15:
-      type: number
+      type: string
     __schema16:
       type: number
     __schema17:
+      type: number
+    __schema18:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema18"
-        name:
           $ref: "#/components/schemas/__schema19"
-        description:
+        name:
           $ref: "#/components/schemas/__schema20"
-        creatorId:
+        description:
           $ref: "#/components/schemas/__schema21"
-        rawDataId:
+        creatorId:
           $ref: "#/components/schemas/__schema22"
+        rawDataId:
+          $ref: "#/components/schemas/__schema23"
       required:
         - id
         - name
@@ -1632,31 +1909,31 @@ components:
         - creatorId
         - rawDataId
       additionalProperties: false
-    __schema18:
-      type: number
     __schema19:
-      type: string
+      type: number
     __schema20:
       type: string
     __schema21:
-      anyOf:
-        - type: number
-        - type: "null"
+      type: string
     __schema22:
       anyOf:
         - type: number
         - type: "null"
     __schema23:
-      type: number
-    __schema24:
-      type: string
-    __schema25:
-      type: string
-    __schema26:
       anyOf:
         - type: number
         - type: "null"
+    __schema24:
+      type: number
+    __schema25:
+      type: string
+    __schema26:
+      type: string
     __schema27:
+      anyOf:
+        - type: number
+        - type: "null"
+    __schema28:
       type: object
       properties:
         id:
@@ -1679,37 +1956,37 @@ components:
         - folderPath
         - creatorId
       additionalProperties: false
-    __schema28:
+    __schema29:
       type: object
       properties:
         userId:
           type: number
         projectId:
-          $ref: "#/components/schemas/__schema29"
-        accessLevel:
           $ref: "#/components/schemas/__schema30"
+        accessLevel:
+          $ref: "#/components/schemas/__schema31"
       required:
         - userId
         - projectId
         - accessLevel
       additionalProperties: false
-    __schema29:
-      type: number
     __schema30:
       type: number
     __schema31:
+      type: number
+    __schema32:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema12"
-        name:
           $ref: "#/components/schemas/__schema13"
-        description:
+        name:
           $ref: "#/components/schemas/__schema14"
-        ownerId:
+        description:
           $ref: "#/components/schemas/__schema15"
-        publicAccess:
+        ownerId:
           $ref: "#/components/schemas/__schema16"
+        publicAccess:
+          $ref: "#/components/schemas/__schema17"
       required:
         - id
         - name
@@ -1717,7 +1994,7 @@ components:
         - ownerId
         - publicAccess
       additionalProperties: false
-    __schema32:
+    __schema33:
       type: object
       properties:
         userId:
@@ -1732,7 +2009,7 @@ components:
         - userId
         - accessLevel
       additionalProperties: false
-    __schema33:
+    __schema34:
       type: object
       properties:
         id:
@@ -1765,7 +2042,7 @@ components:
         - settings
         - mrcFilePath
       additionalProperties: false
-    __schema34:
+    __schema35:
       type: object
       properties:
         id:
@@ -1798,7 +2075,7 @@ components:
         - settings
         - color
       additionalProperties: false
-    __schema35:
+    __schema36:
       type: object
       properties:
         id:
@@ -1831,24 +2108,24 @@ components:
         - settings
         - originalLabelId
       additionalProperties: false
-    __schema36:
+    __schema37:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema37"
-        folderPath:
           $ref: "#/components/schemas/__schema38"
-        rawVolumeChannel:
+        folderPath:
           $ref: "#/components/schemas/__schema39"
-        logFile:
+        rawVolumeChannel:
           $ref: "#/components/schemas/__schema40"
-        checkpointId:
+        logFile:
           $ref: "#/components/schemas/__schema41"
-        volumeDataId:
+        checkpointId:
           $ref: "#/components/schemas/__schema42"
+        volumeDataId:
+          $ref: "#/components/schemas/__schema43"
         checkpoint:
           anyOf:
-            - $ref: "#/components/schemas/__schema27"
+            - $ref: "#/components/schemas/__schema28"
             - type: "null"
       required:
         - id
@@ -1859,32 +2136,28 @@ components:
         - volumeDataId
         - checkpoint
       additionalProperties: false
-    __schema37:
-      type: number
     __schema38:
-      anyOf:
-        - type: string
-        - type: "null"
+      type: number
     __schema39:
       anyOf:
-        - type: number
+        - type: string
         - type: "null"
     __schema40:
       anyOf:
-        - type: string
+        - type: number
         - type: "null"
     __schema41:
-      type: number
+      anyOf:
+        - type: string
+        - type: "null"
     __schema42:
       type: number
     __schema43:
-      anyOf:
-        - $ref: "#/components/schemas/__schema33"
-        - type: "null"
+      type: number
     __schema44:
-      type: array
-      items:
-        $ref: "#/components/schemas/__schema34"
+      anyOf:
+        - $ref: "#/components/schemas/__schema34"
+        - type: "null"
     __schema45:
       type: array
       items:
@@ -1894,11 +2167,15 @@ components:
       items:
         $ref: "#/components/schemas/__schema36"
     __schema47:
-      anyOf:
-        - $ref: "#/components/schemas/__schema34"
-        - $ref: "#/components/schemas/__schema35"
-        - $ref: "#/components/schemas/__schema33"
+      type: array
+      items:
+        $ref: "#/components/schemas/__schema37"
     __schema48:
+      anyOf:
+        - $ref: "#/components/schemas/__schema35"
+        - $ref: "#/components/schemas/__schema36"
+        - $ref: "#/components/schemas/__schema34"
+    __schema49:
       type: object
       properties:
         files:
@@ -1909,34 +2186,34 @@ components:
       required:
         - files
       additionalProperties: false
-    __schema49:
+    __schema50:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema23"
-        name:
           $ref: "#/components/schemas/__schema24"
-        description:
+        name:
           $ref: "#/components/schemas/__schema25"
-        creatorId:
+        description:
           $ref: "#/components/schemas/__schema26"
+        creatorId:
+          $ref: "#/components/schemas/__schema27"
         checkpoints:
-          $ref: "#/components/schemas/__schema50"
+          $ref: "#/components/schemas/__schema51"
         projects:
           type: array
           items:
-            $ref: "#/components/schemas/__schema31"
+            $ref: "#/components/schemas/__schema32"
       required:
         - id
         - name
         - description
         - creatorId
       additionalProperties: false
-    __schema50:
+    __schema51:
       type: array
       items:
-        $ref: "#/components/schemas/__schema27"
-    __schema51:
+        $ref: "#/components/schemas/__schema28"
+    __schema52:
       type: object
       properties:
         name:
@@ -1947,7 +2224,7 @@ components:
         - name
         - description
       additionalProperties: false
-    __schema52:
+    __schema53:
       type: object
       properties:
         checkpointTxt:
@@ -1955,21 +2232,21 @@ components:
       required:
         - checkpointTxt
       additionalProperties: false
-    __schema53:
+    __schema54:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema37"
-        folderPath:
           $ref: "#/components/schemas/__schema38"
-        rawVolumeChannel:
+        folderPath:
           $ref: "#/components/schemas/__schema39"
-        logFile:
+        rawVolumeChannel:
           $ref: "#/components/schemas/__schema40"
-        checkpointId:
+        logFile:
           $ref: "#/components/schemas/__schema41"
-        volumeDataId:
+        checkpointId:
           $ref: "#/components/schemas/__schema42"
+        volumeDataId:
+          $ref: "#/components/schemas/__schema43"
       required:
         - id
         - folderPath
@@ -1978,7 +2255,7 @@ components:
         - checkpointId
         - volumeDataId
       additionalProperties: false
-    __schema54:
+    __schema55:
       type: object
       properties:
         id:
