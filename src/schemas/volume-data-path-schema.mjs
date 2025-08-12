@@ -1,26 +1,26 @@
 // @ts-check
 
 import z from "zod";
-import { idSchema } from "./componentSchemas/idParamSchema.mjs";
-import { typeSchema } from "./componentSchemas/idVolumeDataSchema.mjs";
-import { defaultError } from "./errorSchema.mjs";
+import { idSchema } from "./componentSchemas/id-param-schema.mjs";
+import { typeSchema } from "./componentSchemas/volume-data-schema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
 import {
     sparseLabelVolumeDataSchema,
     sparseLabelVolumeDataUpdateSchema,
-} from "./componentSchemas/sparseLabelVolumeDataSchema.mjs";
+} from "./componentSchemas/sparse-label-volume-data-schema.mjs";
 import {
     pseudoLabelVolumeDataSchema,
     pseudoLabelVolumeDataUpdateSchema,
-} from "./componentSchemas/pseudoLabelVolumeDataSchema.mjs";
+} from "./componentSchemas/pseudo-label-volume-data-schema.mjs";
 import {
     rawVolumeDataSchema,
     rawVolumeDataUpdateSchema,
-} from "./componentSchemas/rawVolumeDataSchema.mjs";
+} from "./componentSchemas/raw-volume-data-schema.mjs";
 import {
     multipleFileSchema,
     singleFileSchema,
-} from "./componentSchemas/fileSchema.mjs";
-import { annotations } from "./volumeMainSchema.mjs";
+} from "./componentSchemas/file-schema.mjs";
+import { annotations } from "./volume-path-schema.mjs";
 
 export const volumeData = z.union([
     sparseLabelVolumeDataSchema,

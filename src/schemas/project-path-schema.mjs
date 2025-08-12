@@ -1,12 +1,12 @@
 // @ts-check
 
 import z from "zod";
-import { idProject, projectSchema } from "./componentSchemas/projectSchema.mjs";
-import { volumeSchema } from "./componentSchemas/volumeSchema.mjs";
-import { modelSchema } from "./componentSchemas/modelSchema.mjs";
-import { projectAccessSchema } from "./componentSchemas/projectAccessSchema.mjs";
-import { userAccessSchema } from "./componentSchemas/userAccessSchema.mjs";
-import { defaultError } from "./errorSchema.mjs";
+import { idProject, projectSchema } from "./componentSchemas/project-schema.mjs";
+import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
+import { modelSchema } from "./componentSchemas/model-schema.mjs";
+import { projectAccessSchema } from "./componentSchemas/project-access-schema.mjs";
+import { userAccessSchema } from "./componentSchemas/user-access-schema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
 
 export const projectDeepSchemaRes = projectSchema.extend({
     volumes: z.array(volumeSchema),

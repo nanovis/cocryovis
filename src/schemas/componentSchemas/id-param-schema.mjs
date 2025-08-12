@@ -1,5 +1,6 @@
 // @ts-check
 
-import { stringToInt } from "./stringToint.mjs";
+import { stringToInt } from "./string-to-int.mjs";
+
 
 export const idSchema = stringToInt;

@@ -1,7 +1,7 @@
 // @ts-check
 
-import { idVolume } from "./componentSchemas/volumeSchema.mjs";
-import { defaultError } from "./errorSchema.mjs";
+import { idVolume } from "./componentSchemas/volume-schema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject

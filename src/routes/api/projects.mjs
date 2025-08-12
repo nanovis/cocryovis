@@ -19,19 +19,19 @@ import toAsyncRouter from 'async-express-decorator'
 import PreProcessingController from '../../controllers/preprocessing-controller.mjs';
 import DemoController from '../../controllers/demo-controller.mjs';
 import validateSchema from '../../middleware/zodValidation.mjs';
-import { loginSchemaReq, registerSchema, updateUserSchema } from '../../schemas/userMainSchema.mjs';
-import { idProject, projectSchema } from '../../schemas/componentSchemas/projectSchema.mjs';
-import { setAccessSchemaReq } from '../../schemas/projectMainSchema.mjs';
-import { annotations, createVolumeReq, idProjectAndVolume, volumeQuerySchema } from '../../schemas/volumeMainSchema.mjs';
-import { idVolume } from '../../schemas/componentSchemas/volumeSchema.mjs';
-import { fromUrlSchema, idVolumeDataAndType, updateAnnotations, idVolumeVolumeDataTypeParams, volumeDataUpdate, idTomogram } from '../../schemas/volumeDataMainSchema.mjs';
-import { createModelSchemaReq, getModelQuerySchema, idModelAndidProject, idModelAndTypeSchema } from '../../schemas/modelsMainSchema.mjs';
-import { idModelAndidcheckpointParam } from '../../schemas/checkpointMainSchema.mjs';
-import { idModel } from '../../schemas/componentSchemas/idModelSchema.mjs';
-import { idResult } from '../../schemas/componentSchemas/idResultSchema.mjs';
-import { idCheckpoint } from '../../schemas/componentSchemas/idCheckpointSchema.mjs';
-import { inferenceIds, trainingReq } from '../../schemas/nanoOetziSchema.mjs';
-import { tiltSeriesValidation } from '../../schemas/cryoEtSchema.mjs';
+import { loginSchemaReq, registerSchema, updateUserSchema } from '../../schemas/user-path-schema.mjs';
+import { idProject, projectSchema } from '../../schemas/componentSchemas/project-schema.mjs';
+import { setAccessSchemaReq } from '../../schemas/project-path-schema.mjs';
+import { annotations, createVolumeReq, idProjectAndVolume, volumeQuerySchema } from '../../schemas/volume-path-schema.mjs';
+import { idVolume } from '../../schemas/componentSchemas/volume-schema.mjs';
+import { fromUrlSchema, idVolumeDataAndType, updateAnnotations, idVolumeVolumeDataTypeParams, volumeDataUpdate, idTomogram } from '../../schemas/volume-data-path-schema.mjs';
+import { createModelSchemaReq, getModelQuerySchema, idModelAndidProject, idModelAndTypeSchema } from '../../schemas/models-path-schema.mjs';
+import { idModelAndidcheckpointParam } from '../../schemas/checkpoint-path-schema.mjs';
+import { inferenceIds, trainingReq } from '../../schemas/nano-oetzi-path-schema.mjs';
+import { tiltSeriesValidation } from '../../schemas/cryoEt-path-schema.mjs';
+import { idCheckpoint } from '../../schemas/componentSchemas/checkpoint-schema.mjs';
+import { idModel } from '../../schemas/componentSchemas/model-schema.mjs';
+import { idResult } from '../../schemas/componentSchemas/result-schema.mjs';
 
 // Config
 const config = appConfig;

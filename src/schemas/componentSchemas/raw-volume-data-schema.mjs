@@ -14,3 +14,4 @@ export const rawVolumeDataSchema = z.object({
 export const rawVolumeDataUpdateSchema = z.object({
     settings: z.string().nullable().optional(),
 });
+

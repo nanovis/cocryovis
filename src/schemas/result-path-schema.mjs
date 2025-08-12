@@ -1,17 +1,16 @@
 // @ts-check
 
 import z from "zod";
-import { idResult } from "./componentSchemas/idResultSchema.mjs";
-import { resultSchema } from "./componentSchemas/resultSchema.mjs";
-import { defaultError, generateErrors } from "./errorSchema.mjs";
-import { idVolume, volumeSchema } from "./componentSchemas/volumeSchema.mjs";
-import { checkpointSchema } from "./componentSchemas/checkpointSchema.mjs";
-import { rawVolumeDataSchema } from "./componentSchemas/rawVolumeDataSchema.mjs";
+import { idResult, resultSchema } from "./componentSchemas/result-schema.mjs";
+import { defaultError, generateErrors } from "./error-path-schema.mjs";
+import { idVolume, volumeSchema } from "./componentSchemas/volume-schema.mjs";
+import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
+import { rawVolumeDataSchema } from "./componentSchemas/raw-volume-data-schema.mjs";
 import {
     multipleFileSchema,
     singleFileSchema,
-} from "./componentSchemas/fileSchema.mjs";
-import { idSchema } from "./componentSchemas/idParamSchema.mjs";
+} from "./componentSchemas/file-schema.mjs";
+import { idSchema } from "./componentSchemas/id-param-schema.mjs";
 
 export const idVolumeAndIdResultParams = z
     .object({

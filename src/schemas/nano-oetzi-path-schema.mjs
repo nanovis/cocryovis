@@ -1,8 +1,8 @@
 // @ts-check
 
 import z from "zod";
-import { defaultError } from "./errorSchema.mjs";
-import { stringToInt } from "./componentSchemas/stringToint.mjs";
+import { defaultError } from "./error-path-schema.mjs";
+import { stringToInt } from "./componentSchemas/string-to-int.mjs";
 
 export const inferenceIds = z.object({
     checkpointId: z.number(),

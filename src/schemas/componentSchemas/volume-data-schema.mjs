@@ -1,7 +1,7 @@
 // @ts-check
 
 import z from "zod";
-import { idSchema } from "./idParamSchema.mjs";
+import { idSchema } from "./id-param-schema.mjs";
 
 export const typeSchema = z.enum([
     "RawVolumeData",

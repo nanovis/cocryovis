@@ -1,7 +1,7 @@
 // @ts-check
 
 import z from "zod";
-import { defaultError } from "./errorSchema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
 
 export const reconstructionOptions = z.object({
     volume_depth: z.int().positive(),

@@ -1,11 +1,11 @@
 // @ts-check
 
 import { z } from "zod";
-import { defaultError } from "./errorSchema.mjs";
-import { projectSchema } from "./componentSchemas/projectSchema.mjs";
-import { projectAccessSchema } from "./componentSchemas/projectAccessSchema.mjs";
-import { getVolumeSchema } from "./volumeMainSchema.mjs";
-import { getModelsSchema } from "./modelsMainSchema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
+import { projectSchema } from "./componentSchemas/project-schema.mjs";
+import { projectAccessSchema } from "./componentSchemas/project-access-schema.mjs";
+import { getVolumeSchema } from "./volume-path-schema.mjs";
+import { getModelsSchema } from "./models-path-schema.mjs";
 
 export const demoSchema = projectSchema.extend({
     accessLevel: z.number(),

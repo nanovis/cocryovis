@@ -1,13 +1,12 @@
 // @ts-check
 
 import z from "zod";
-import { defaultError } from "./errorSchema.mjs";
-import { idProject, projectSchema } from "./componentSchemas/projectSchema.mjs";
-import { modelSchema } from "./componentSchemas/modelSchema.mjs";
-import { checkpointSchema } from "./componentSchemas/checkpointSchema.mjs";
-import { typeSchema } from "./componentSchemas/idVolumeDataSchema.mjs";
-import { idSchema } from "./componentSchemas/idParamSchema.mjs";
-import { idModel } from "./componentSchemas/idModelSchema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
+import { idProject, projectSchema } from "./componentSchemas/project-schema.mjs";
+import { idModel, modelSchema } from "./componentSchemas/model-schema.mjs";
+import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
+import { typeSchema } from "./componentSchemas/volume-data-schema.mjs";
+import { idSchema } from "./componentSchemas/id-param-schema.mjs";
 
 export const getModelQuerySchema = z.object({
     checkpoints: z.boolean().optional(),

@@ -1,7 +1,7 @@
 // @ts-check
 
 import z from "zod";
-import { idSchema } from "./idParamSchema.mjs";
+import { idSchema } from "./id-param-schema.mjs";
 
 export const volumeSchema = z.object({
     id: z.number(),
@@ -23,3 +23,4 @@ export const idVolume = z
         },
         example: { idVolume: "123" },
     });
+

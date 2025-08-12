@@ -2,14 +2,17 @@
 
 import z from "zod";
 
-import { rawVolumeDataSchema } from "./componentSchemas/rawVolumeDataSchema.mjs";
-import { sparseLabelVolumeDataSchema } from "./componentSchemas/sparseLabelVolumeDataSchema.mjs";
-import { pseudoLabelVolumeDataSchema } from "./componentSchemas/pseudoLabelVolumeDataSchema.mjs";
-import { resultSchemaWithCheckpoint } from "./componentSchemas/resultSchema.mjs";
-import { defaultError } from "./errorSchema.mjs";
-import { idVolume, volumeSchema } from "./componentSchemas/volumeSchema.mjs";
-import { idProject, projectSchema } from "./componentSchemas/projectSchema.mjs";
-import { idSchema } from "./componentSchemas/idParamSchema.mjs";
+import { rawVolumeDataSchema } from "./componentSchemas/raw-volume-data-schema.mjs";
+import { sparseLabelVolumeDataSchema } from "./componentSchemas/sparse-label-volume-data-schema.mjs";
+import { pseudoLabelVolumeDataSchema } from "./componentSchemas/pseudo-label-volume-data-schema.mjs";
+import { resultSchemaWithCheckpoint } from "./componentSchemas/result-schema.mjs";
+import { defaultError } from "./error-path-schema.mjs";
+import { idVolume, volumeSchema } from "./componentSchemas/volume-schema.mjs";
+import {
+    idProject,
+    projectSchema,
+} from "./componentSchemas/project-schema.mjs";
+import { idSchema } from "./componentSchemas/id-param-schema.mjs";
 
 export const volumeQuerySchema = z.object({
     rawData: z.boolean().optional(),

@@ -1,7 +1,7 @@
 // @ts-check
 
 import { z } from "zod";
-import { defaultError, generateErrors } from "./errorSchema.mjs";
+import { defaultError, generateErrors } from "./error-path-schema.mjs";
 
 export const registerSchema = z.object({
     username: z.string().min(1),

@@ -29,7 +29,7 @@ import { checkCookieAge } from "./src/middleware/restrict.mjs";
 import { program } from "commander";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yaml";
-import { writeOpenApi } from "./src/schemas/mainSchema.mjs";
+import { writeOpenApi } from "./src/schemas/main-schema.mjs";
 
 const SqliteStore = sqlite3SessionStore(session);
 

@@ -1,18 +1,18 @@
 // @ts-check
 
 import z from "zod";
-import { idCheckpoint } from "./componentSchemas/idCheckpointSchema.mjs";
-import { defaultError, generateErrors } from "./errorSchema.mjs";
+import { defaultError, generateErrors } from "./error-path-schema.mjs";
 import {
     checkpointSchema,
     checkpointSchemaArray,
-} from "./componentSchemas/checkpointSchema.mjs";
-import { idSchema } from "./componentSchemas/idParamSchema.mjs";
-import { idModel } from "./componentSchemas/idModelSchema.mjs";
+    idCheckpoint,
+} from "./componentSchemas/checkpoint-schema.mjs";
+import { idSchema } from "./componentSchemas/id-param-schema.mjs";
 import {
     multipleFileSchema,
     singleFileSchema,
-} from "./componentSchemas/fileSchema.mjs";
+} from "./componentSchemas/file-schema.mjs";
+import { idModel } from "./componentSchemas/model-schema.mjs";
 
 export const idModelAndidcheckpointParam = z
     .object({
