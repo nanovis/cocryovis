@@ -26,8 +26,7 @@ export default class ModelController {
             querySchema: getModelQuerySchema,
         });
 
-        const options = this.#parseOptionQuery(query);
-        const model = await Model.getById(params.idModel, options);
+        const model = await Model.getById(params.idModel, query);
 
         res.status(200).json(model);
     }
@@ -42,24 +41,12 @@ export default class ModelController {
             querySchema: getModelQuerySchema,
         });
 
-        const options = ModelController.#parseOptionQuery(query);
         const models = await Model.getModelsFromProject(
             params.idProject,
-            options
+            query
         );
 
         res.status(200).json(models);
-    }
-
-    /**
-     * @param {z.infer<getModelQuerySchema>} query
-     * @returns {import("../models/model.mjs").Options}
-     */
-    static #parseOptionQuery(query) {
-        return {
-            checkpoints: !!query?.checkpoints,
-            projects: !!query?.projects,
-        };
     }
 
     /**

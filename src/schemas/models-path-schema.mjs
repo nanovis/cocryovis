@@ -12,8 +12,8 @@ import { typeSchema } from "./componentSchemas/volume-data-schema.mjs";
 import { idSchema } from "./componentSchemas/id-param-schema.mjs";
 
 export const getModelQuerySchema = z.object({
-    checkpoints: z.boolean().optional(),
-    projects: z.boolean().optional(),
+    checkpoints: z.coerce.boolean().optional(),
+    projects: z.coerce.boolean().optional(),
 });
 
 export const getModelsSchema = modelSchema.extend({
