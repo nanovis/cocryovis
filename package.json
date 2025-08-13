@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.mjs",
+  "type": "module",
+  "imports": {
+    "#schemas/*": "./schemas/*"
+  },
   "prisma": {
     "seed": "node prisma/seed.mjs"
   },

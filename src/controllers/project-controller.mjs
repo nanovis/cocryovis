@@ -1,12 +1,12 @@
 // @ts-check
 
 import Project from "../models/project.mjs";
-import { idProject } from "../schemas/componentSchemas/project-schema.mjs";
+import { idProject } from "#schemas/componentSchemas/project-schema.mjs";
 import {
     projectCreateSchemaReq,
     setAccessSchemaReq,
-} from "../schemas/project-path-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
+} from "#schemas/project-path-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

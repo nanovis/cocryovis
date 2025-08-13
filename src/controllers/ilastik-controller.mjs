@@ -1,7 +1,7 @@
 // @ts-check
 
-import { idVolume } from "../schemas/componentSchemas/volume-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
+import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
 import IlastikHandler from "../tools/ilastik-handler.mjs";
 
 /**

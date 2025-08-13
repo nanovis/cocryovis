@@ -6,10 +6,10 @@ import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
 import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
-import { idCheckpoint } from "../schemas/componentSchemas/checkpoint-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
-import { idModelAndidcheckpointParam } from "../schemas/checkpoint-path-schema.mjs";
-import { idModel } from "../schemas/componentSchemas/model-schema.mjs";
+import { idCheckpoint } from "#schemas/componentSchemas/checkpoint-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
+import { idModelAndidcheckpointParam } from "#schemas/checkpoint-path-schema.mjs";
+import { idModel } from "#schemas/componentSchemas/model-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

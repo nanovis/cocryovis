@@ -17,8 +17,8 @@ import {
     CTFOptions,
     tiltSeriesOptions,
     motionCorrectionOptions,
-} from "../schemas/cryoEt-path-schema.mjs";
-import { trainingOptions } from "../schemas/nano-oetzi-path-schema.mjs";
+} from "#schemas/cryoEt-path-schema.mjs";
+import { trainingOptions } from "#schemas/nano-oetzi-path-schema.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";

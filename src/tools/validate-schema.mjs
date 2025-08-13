@@ -2,7 +2,7 @@
 
 import z from "zod";
 import { fromError } from "zod-validation-error";
-import { ApiError } from "../tools/error-handler.mjs";
+import { ApiError } from "./error-handler.mjs";
 
 /**
  * @typedef { import("express").Request } Request

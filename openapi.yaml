@@ -37,26 +37,17 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  username:
-                    type: string
-                  password:
-                    type: string
-                required:
-                  - username
-                  - password
-                additionalProperties: false
+                $ref: "#/components/schemas/__schema10"
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": &a1
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "500": *a1
   /login:
     post:
@@ -78,12 +69,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                $ref: "#/components/schemas/__schema10"
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /logout:
@@ -101,12 +92,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                $ref: "#/components/schemas/__schema10"
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /users:
@@ -119,7 +110,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/__schema11"
+                  $ref: "#/components/schemas/__schema10"
         "404": *a1
         "500": *a1
   /status:
@@ -177,12 +168,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                $ref: "#/components/schemas/__schema10"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /projects-deep:
@@ -248,7 +239,7 @@ paths:
                 additionalProperties: false
         "404": *a1
         "500": *a1
-  /createProject:
+  /projects:
     post:
       requestBody:
         content:
@@ -256,22 +247,13 @@ paths:
             schema:
               type: object
               properties:
-                id:
-                  type: number
                 name:
                   type: string
                 description:
                   type: string
-                ownerId:
-                  type: number
-                publicAccess:
-                  type: number
               required:
-                - id
                 - name
                 - description
-                - ownerId
-                - publicAccess
       responses:
         "201":
           content:
@@ -772,7 +754,7 @@ paths:
             schema:
               type: object
               properties:
-                DownloadFullFile:
+                fileType:
                   type: string
                   enum:
                     - mrc
@@ -780,8 +762,80 @@ paths:
                 url:
                   type: string
                   format: uri
+                volumeSettings:
+                  type: object
+                  properties:
+                    file:
+                      type: string
+                    size:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          exclusiveMinimum: 0
+                        y:
+                          type: number
+                          exclusiveMinimum: 0
+                        z:
+                          type: number
+                          exclusiveMinimum: 0
+                      required:
+                        - x
+                        - y
+                        - z
+                    ratio:
+                      type: object
+                      properties:
+                        x:
+                          type: integer
+                          exclusiveMinimum: 0
+                          maximum: 9007199254740991
+                        y:
+                          type: integer
+                          exclusiveMinimum: 0
+                          maximum: 9007199254740991
+                        z:
+                          type: integer
+                          exclusiveMinimum: 0
+                          maximum: 9007199254740991
+                      required:
+                        - x
+                        - y
+                        - z
+                    bytesPerVoxel:
+                      type: number
+                      enum:
+                        - 1
+                        - 2
+                        - 4
+                        - 8
+                    usedBits:
+                      type: number
+                      enum:
+                        - 8
+                        - 16
+                        - 32
+                        - 64
+                    skipBytes:
+                      default: 0
+                      type: number
+                    isLittleEndian:
+                      type: boolean
+                    isSigned:
+                      type: boolean
+                    addValue:
+                      default: 0
+                      type: number
+                  required:
+                    - file
+                    - size
+                    - ratio
+                    - bytesPerVoxel
+                    - usedBits
+                    - isLittleEndian
+                    - isSigned
               required:
-                - DownloadFullFile
+                - fileType
                 - url
       responses:
         "201":
@@ -815,13 +869,13 @@ paths:
             schema:
               type: object
               properties:
-                annotations:
+                annotation:
                   $ref: "#/components/schemas/__schema1"
                 saveAsNew:
                   default: false
                   type: boolean
               required:
-                - annotations
+                - annotation
       responses:
         "200":
           content:
@@ -1008,7 +1062,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema52"
+                type: object
+                properties:
+                  id:
+                    $ref: "#/components/schemas/__schema24"
+                  name:
+                    $ref: "#/components/schemas/__schema25"
+                  description:
+                    $ref: "#/components/schemas/__schema26"
+                  creatorId:
+                    $ref: "#/components/schemas/__schema27"
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /project/{idProject}/model/{idModel}/clone:
@@ -1029,7 +1098,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema52"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+                required:
+                  - name
+                  - description
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /model/{idModel}:
@@ -1056,7 +1134,7 @@ paths:
                 $ref: "#/components/schemas/__schema50"
         "404": *a1
         "500": *a1
-  /project/{idProject}/model/{idModel:
+  /project/{idProject}/model/{idModel}params:
     delete:
       parameters:
         - in: path
@@ -1065,7 +1143,7 @@ paths:
             $ref: "#/components/schemas/__schema0"
           required: true
         - in: path
-          name: idSchema
+          name: idProject
           schema:
             $ref: "#/components/schemas/__schema0"
           required: true
@@ -1093,7 +1171,7 @@ paths:
     delete:
       parameters:
         - in: path
-          name: idcheckpoint
+          name: idCheckpoint
           schema:
             $ref: "#/components/schemas/__schema0"
           required: true
@@ -1184,12 +1262,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema53"
+                $ref: "#/components/schemas/__schema52"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /checkpoint/to-text:
@@ -1204,12 +1282,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema53"
+                $ref: "#/components/schemas/__schema52"
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /result/{idResult}:
@@ -1225,7 +1303,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema54"
+                $ref: "#/components/schemas/__schema53"
         "404": *a1
         "500": *a1
   /result/{idResult}/details:
@@ -1241,7 +1319,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema54"
+                $ref: "#/components/schemas/__schema53"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/results:
@@ -1282,7 +1360,7 @@ paths:
                   files:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema55"
+                      $ref: "#/components/schemas/__schema54"
                 required:
                   - id
                   - folderPath
@@ -1310,7 +1388,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema55"
+                $ref: "#/components/schemas/__schema54"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/result/{idResult}:
@@ -1348,7 +1426,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                $ref: "#/components/schemas/__schema11"
         "404": *a1
         "500": *a1
   /demo:
@@ -1790,17 +1868,6 @@ components:
     __schema10:
       type: object
       properties:
-        name:
-          type: string
-        message:
-          type: string
-      required:
-        - name
-        - message
-      additionalProperties: false
-    __schema11:
-      type: object
-      properties:
         id:
           type: integer
           minimum: -9007199254740991
@@ -1818,6 +1885,17 @@ components:
         - username
         - name
         - email
+      additionalProperties: false
+    __schema11:
+      type: object
+      properties:
+        name:
+          type: string
+        message:
+          type: string
+      required:
+        - name
+        - message
       additionalProperties: false
     __schema12:
       type: object
@@ -2216,23 +2294,12 @@ components:
     __schema52:
       type: object
       properties:
-        name:
-          type: string
-        description:
-          type: string
-      required:
-        - name
-        - description
-      additionalProperties: false
-    __schema53:
-      type: object
-      properties:
         checkpointTxt:
           type: string
       required:
         - checkpointTxt
       additionalProperties: false
-    __schema54:
+    __schema53:
       type: object
       properties:
         id:
@@ -2255,7 +2322,7 @@ components:
         - checkpointId
         - volumeDataId
       additionalProperties: false
-    __schema55:
+    __schema54:
       type: object
       properties:
         id:

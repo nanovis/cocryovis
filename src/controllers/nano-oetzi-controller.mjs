@@ -1,10 +1,7 @@
 // @ts-check
 
-import {
-    inferenceIds,
-    trainingReq,
-} from "../schemas/nano-oetzi-path-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
+import { inferenceIds, trainingReq } from "#schemas/nano-oetzi-path-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
 import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 
 /**

@@ -19,7 +19,7 @@ import fsPromises from "node:fs/promises";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
 import {
     fromUrlSchema,
     idTomogram,
@@ -28,7 +28,7 @@ import {
     idVolumeVolumeDataTypeParams,
     updateAnnotations,
     volumeDataUpdate,
-} from "../schemas/volume-data-path-schema.mjs";
+} from "#schemas/volume-data-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

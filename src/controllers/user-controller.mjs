@@ -4,12 +4,12 @@ import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "../tools/config.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
 import {
     loginSchemaReq,
     registerSchema,
     updateUserSchema,
-} from "../schemas/user-path-schema.mjs";
+} from "#schemas/user-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

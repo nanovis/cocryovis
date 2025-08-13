@@ -11,7 +11,7 @@ import Checkpoint from "./checkpoint.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
-import { volumeQuerySchema } from "../schemas/volume-path-schema.mjs";
+import { volumeQuerySchema } from "#schemas/volume-path-schema.mjs";
 import z from "zod";
 
 /**

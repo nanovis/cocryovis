@@ -2,15 +2,15 @@
 
 import z from "zod";
 import Volume from "../models/volume.mjs";
-import { annotationsSchema } from "../schemas/volume-path-schema.mjs";
-import { idProject } from "../schemas/componentSchemas/project-schema.mjs";
-import { idVolume } from "../schemas/componentSchemas/volume-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
+import { annotationsSchema } from "#schemas/volume-path-schema.mjs";
+import { idProject } from "#schemas/componentSchemas/project-schema.mjs";
+import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
 import {
     createVolumeReq,
     idProjectAndVolume,
     volumeQuerySchema,
-} from "../schemas/volume-path-schema.mjs";
+} from "#schemas/volume-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

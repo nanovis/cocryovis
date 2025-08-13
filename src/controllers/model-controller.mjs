@@ -2,14 +2,14 @@
 
 import z from "zod";
 import Model from "../models/model.mjs";
-import { idProject } from "../schemas/componentSchemas/project-schema.mjs";
+import { idProject } from "#schemas/componentSchemas/project-schema.mjs";
 import {
     createModelSchema,
     getModelQuerySchema,
     idModelAndidProject,
-} from "../schemas/models-path-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
-import { idModel } from "../schemas/componentSchemas/model-schema.mjs";
+} from "#schemas/models-path-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
+import { idModel } from "#schemas/componentSchemas/model-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

@@ -14,7 +14,7 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
-import { volumeQuerySchema } from "../schemas/volume-path-schema.mjs";
+import { volumeQuerySchema } from "#schemas/volume-path-schema.mjs";
 import z from "zod";
 
 /**

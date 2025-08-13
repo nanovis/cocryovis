@@ -1,7 +1,10 @@
 {
-    "compilerOptions": {
-      "module": "CommonJS",
-      "target": "ES2022"
-    },
-    "exclude": ["node_modules"],
-  }
+  "compilerOptions": {
+      "paths": {
+    "#schemas/*": ["./schemas/*"]
+  },
+    "module": "CommonJS",
+    "target": "ES2022"
+  },
+  "exclude": ["node_modules"],
+}

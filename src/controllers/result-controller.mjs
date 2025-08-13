@@ -7,10 +7,10 @@ import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import appConfig from "../tools/config.mjs";
-import { idResult } from "../schemas/componentSchemas/result-schema.mjs";
-import validateSchema from "../schemas/validate-schema.mjs";
-import { idVolume } from "../schemas/componentSchemas/volume-schema.mjs";
-import { idVolumeAndIdResultParams } from "../schemas/result-path-schema.mjs";
+import { idResult } from "#schemas/componentSchemas/result-schema.mjs";
+import validateSchema from "../tools/validate-schema.mjs";
+import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
+import { idVolumeAndIdResultParams } from "#schemas/result-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
