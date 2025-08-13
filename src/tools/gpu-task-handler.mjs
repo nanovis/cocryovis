@@ -9,10 +9,16 @@ import Checkpoint from "../models/checkpoint.mjs";
 import Result from "../models/result.mjs";
 import LogFile from "./log-manager.mjs";
 import Volume from "../models/volume.mjs";
-import User from "../models/user.mjs";
 import Model from "../models/model.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
+import {
+    IMODOptions,
+    CTFOptions,
+    tiltSeriesOptions,
+    motionCorrectionOptions,
+} from "../schemas/cryoEt-path-schema.mjs";
+import { trainingOptions } from "../schemas/nano-oetzi-path-schema.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
@@ -20,6 +26,7 @@ import fileUpload from "express-fileupload";
 import { PendingLocalFile } from "./file-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "./config.mjs";
+import z from "zod";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -272,7 +279,7 @@ export default class GPUTaskHandler {
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
-     * @param {import("../../types").TrainingOptions} params
+     * @param {z.infer<trainingOptions>} params
      * @param {String?} outputPath
      * @returns {Promise<Void>}
      */
@@ -419,7 +426,7 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {import("../../types").TrainingOptions} params
+     * @param {z.infer<trainingOptions>} params
      * @returns {void}
      */
     #checkTrainingInput(params) {
@@ -479,7 +486,7 @@ export default class GPUTaskHandler {
      * @param {Number[]} trainingVolumesIds
      * @param {Number[]} validationVolumesIds
      * @param {Number[]} testingVolumesIds
-     * @param {import("../../types").TrainingOptions} params
+     * @param {z.infer<trainingOptions>} params
      * @param {String} outputPath
      * @param {Number} taskHistoryId
      * @returns {Promise<CheckpointDB>}
@@ -909,7 +916,7 @@ export default class GPUTaskHandler {
 
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
-     * @param {import("../../types").TiltSeriesOptions | undefined} options
+     * @param {z.infer<tiltSeriesOptions>} options
      * @param {Number} volumeId
      * @param {Number} userId
      * @returns {Promise<void>}
@@ -971,7 +978,7 @@ export default class GPUTaskHandler {
 
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
-     * @param {import("../../types").TiltSeriesOptions | undefined} options
+     * @param {z.infer<tiltSeriesOptions>} options
      * @param {Number} volumeId
      * @returns {Promise<void>}
      */
@@ -1009,7 +1016,7 @@ export default class GPUTaskHandler {
 
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
-     * @param {import("../../types").TiltSeriesOptions} options
+     * @param {z.infer<tiltSeriesOptions>} options
      * @param {Number} volumeId
      * @param {Number} userId
      * @param {String} outputPath
@@ -1187,7 +1194,7 @@ export default class GPUTaskHandler {
     /**
      * @param {String} inputPath
      * @param {String} outputFolder
-     * @param {import("../../types").IMODOptions}  options
+     * @param {z.infer<IMODOptions>}  options
      * @param {LogFile} logFile
      * @returns {Promise<String>}
      */
@@ -1389,7 +1396,7 @@ export default class GPUTaskHandler {
     /**
      * @param {String} inputPath
      * @param {String} outputFolder
-     * @param {import("../../types").CTFOptions}  options
+     * @param {z.infer<CTFOptions>} options
      * @param {LogFile} logFile
      * @returns {Promise<String>}
      */
@@ -1458,7 +1465,7 @@ export default class GPUTaskHandler {
     /**
      * @param {String} inputPath
      * @param {String} outputFolder
-     * @param {import("../../types").MotionCorrectionOptions} options
+     * @param {z.infer<motionCorrectionOptions>} options
      * @param {LogFile} logFile
      * @returns {Promise<String>}
      */

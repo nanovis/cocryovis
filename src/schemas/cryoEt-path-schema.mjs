@@ -55,7 +55,7 @@ export const motionCorrectionOptions = z.object({
     highTension: z.number().default(300),
 });
 
-export const options = z.object({
+export const tiltSeriesOptions = z.object({
     reconstruction: reconstructionOptions,
     alignment: IMODOptions.optional(),
     ctf: CTFOptions.optional(),
@@ -64,7 +64,7 @@ export const options = z.object({
 
 export const data = z.object({
     volumeId: z.int(),
-    options,
+    options: tiltSeriesOptions,
 });
 
 export const tiltSeries = z.object({

@@ -9,7 +9,6 @@ import TaskQueue from "./task-queue.mjs";
 import Volume from "../models/volume.mjs";
 import appConfig from "./config.mjs";
 import LogFile from "./log-manager.mjs";
-import User from "../models/user.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
