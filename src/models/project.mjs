@@ -11,11 +11,13 @@ import Checkpoint from "./checkpoint.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
+import { volumeQuerySchema } from "../schemas/volume-path-schema.mjs";
+import z from "zod";
 
 /**
  * @typedef { import("@prisma/client").Project } ProjectDB
  * @typedef { import("@prisma/client").ProjectAccess } ProjectAccess
- * @typedef { { volumes?: boolean | { include: import("./volume.mjs").Options }, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options
+ * @typedef { { volumes?: boolean | { include: z.infer<volumeQuerySchema> }, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options
  * @typedef { {userId: Number, accessLevel: Number} } UserAccessInfo
  */
 

@@ -27,9 +27,7 @@ export default class VolumeController {
             querySchema: volumeQuerySchema,
             paramsSchema: idVolume,
         });
-
-        const options = VolumeController.#parseOptionQuery(query);
-        const volume = await Volume.getById(Number(params.idVolume), options);
+        const volume = await Volume.getById(params.idVolume, query);
 
         res.status(200).json(volume);
     }
@@ -60,22 +58,6 @@ export default class VolumeController {
         );
 
         res.status(200).json(volumes);
-    }
-
-    /**
-     * @param {z.infer<volumeQuerySchema>} query
-     * @returns {import("../models/volume.mjs").Options}
-     */
-    static #parseOptionQuery(query) {
-        const options = {
-            rawData: !!query?.rawData,
-            sparseVolumes: !!query?.sparseVolumes,
-            pseudoVolumes: !!query?.pseudoVolumes,
-            results: !!query?.results,
-            projects: !!query?.projects,
-        };
-
-        return options;
     }
 
     /**

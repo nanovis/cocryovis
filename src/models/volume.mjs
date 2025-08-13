@@ -14,12 +14,13 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
+import { volumeQuerySchema } from "../schemas/volume-path-schema.mjs";
+import z from "zod";
 
 /**
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
- * @typedef {{rawData?: boolean, sparseVolumes?: boolean, pseudoVolumes?: boolean, results?: boolean, projects?: boolean }} Options
  */
 
 export default class Volume extends DatabaseModel {
@@ -36,7 +37,7 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {Number} id
-     * @param {Options} options
+     * @param {z.infer<volumeQuerySchema>} options
      */
     static async getById(
         id,
@@ -66,7 +67,7 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {Number} projectId
-     * @param {Options} options
+     * @param {z.infer<volumeQuerySchema>} options
      */
     static async getVolumesFromProject(
         projectId,

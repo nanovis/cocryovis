@@ -15,11 +15,11 @@ import {
 import { idSchema } from "./componentSchemas/id-param-schema.mjs";
 
 export const volumeQuerySchema = z.object({
-    rawData: z.boolean().optional(),
-    sparseVolumes: z.boolean().optional(),
-    pseudoVolumes: z.boolean().optional(),
-    results: z.boolean().optional(),
-    projects: z.boolean().optional(),
+    rawData: z.coerce.boolean().optional(),
+    sparseVolumes: z.coerce.boolean().optional(),
+    pseudoVolumes: z.coerce.boolean().optional(),
+    results: z.coerce.boolean().optional(),
+    projects: z.coerce.boolean().optional(),
 });
 
 export const deepVolumeSchema = volumeSchema.extend({
