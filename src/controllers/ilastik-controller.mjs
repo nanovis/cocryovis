@@ -1,5 +1,7 @@
 // @ts-check
 
+import { idVolume } from "../schemas/componentSchemas/volume-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
 import IlastikHandler from "../tools/ilastik-handler.mjs";
 
 /**
@@ -13,8 +15,10 @@ export default class IlastikController {
      * @param {Response} res
      */
     static async queuePseudoLabelsGeneration(ilastik, req, res) {
+        const { params } = validateSchema(req, { paramsSchema: idVolume });
+
         await ilastik.queueLabelGeneration(
-            Number(req.params.idVolume),
+            params.idVolume,
             Number(req.session.user.id)
         );
 

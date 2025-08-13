@@ -19,6 +19,16 @@ import fsPromises from "node:fs/promises";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
+import {
+    fromUrlSchema,
+    idTomogram,
+    idVolumeAndType,
+    idVolumeDataAndType,
+    idVolumeVolumeDataTypeParams,
+    updateAnnotations,
+    volumeDataUpdate,
+} from "../schemas/volume-data-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -27,47 +37,49 @@ import appConfig from "../tools/config.mjs";
 
 export default class VolumeDataController {
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async getById(type, req, res) {
-        const volumeData = await VolumeDataFactory.getClass(type).getById(
-            Number(req.params.idVolumeData)
-        );
+    static async getById(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+
+        const volumeData = await VolumeDataFactory.getClass(
+            VolumeDataType.mapName(params.type)
+        ).getById(params.idVolumeData);
 
         res.json(volumeData);
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async update(type, req, res) {
-        if (!req.body) {
-            throw new ApiError(400, "No data provided.");
-        }
+    static async update(req, res) {
+        const { params, body } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+            bodySchema: volumeDataUpdate,
+        });
 
-        delete req.body.path;
-        delete req.body.rawFilePath;
-
-        const volumeData = await VolumeDataFactory.getClass(type).update(
-            Number(req.params.idVolumeData),
-            req.body
-        );
+        const volumeData = await VolumeDataFactory.getClass(
+            VolumeDataType.mapName(params.type)
+        ).update(params.idVolumeData, body);
         res.status(200).json(volumeData);
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async getData(type, req, res) {
-        const volumeData = await VolumeDataFactory.getClass(type).getById(
-            Number(req.params.idVolumeData)
-        );
+    static async getData(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+        const volumeData = await VolumeDataFactory.getClass(
+            VolumeDataType.mapName(params.type)
+        ).getById(params.idVolumeData);
+
         if (!volumeData.rawFilePath) {
             throw new ApiError(400, "Volume Data is missing a raw file.");
         }
@@ -87,14 +99,17 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async getVolumeVisualizationFiles(type, req, res) {
-        const volumeData = await VolumeDataFactory.getClass(type).getById(
-            Number(req.params.idVolumeData)
-        );
+    static async getVolumeVisualizationFiles(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+
+        const volumeData = await VolumeDataFactory.getClass(
+            VolumeDataType.mapName(params.type)
+        ).getById(params.idVolumeData);
         if (!volumeData.rawFilePath) {
             throw new ApiError(
                 400,
@@ -130,11 +145,14 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async createFromFiles(type, req, res) {
+    static async createFromFiles(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeAndType,
+        });
+
         if (!req.files || !req.files.files) {
             throw new ApiError(400, "No file uploaded");
         }
@@ -144,7 +162,9 @@ export default class VolumeDataController {
             files = [files];
         }
 
-        const VolumeDataClass = VolumeDataFactory.getClass(type);
+        const VolumeDataClass = VolumeDataFactory.getClass(
+            VolumeDataType.mapName(params.type)
+        );
 
         const unpackedFiles = await unpackFiles(
             files,
@@ -153,7 +173,7 @@ export default class VolumeDataController {
 
         const volumeData = await VolumeDataClass.createFromFiles(
             req.session.user.id,
-            Number(req.params.idVolume),
+            params.idVolume,
             unpackedFiles
         );
 
@@ -161,12 +181,17 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async createFromMrcFile(type, req, res) {
-        if (type != VolumeDataType.RawVolumeData) {
+    static async createFromMrcFile(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeAndType,
+        });
+
+        if (
+            VolumeDataType.mapName(params.type) != VolumeDataType.RawVolumeData
+        ) {
             throw new ApiError(
                 400,
                 "This operation is only avaliable on Raw Volumes."
@@ -188,7 +213,7 @@ export default class VolumeDataController {
 
         const volumeData = await RawVolumeData.createFromMrcFile(
             req.session.user.id,
-            Number(req.params.idVolume),
+            params.idVolume,
             unpackedFiles[0]
         );
 
@@ -198,33 +223,23 @@ export default class VolumeDataController {
     /**
      * @param {Request} req
      * @param {Response} res
-     * @param {VolumeDataType} type
      */
-    static async createFromUrl(type, req, res) {
-        if (type != VolumeDataType.RawVolumeData) {
+    static async createFromUrl(req, res) {
+        const { params, body } = validateSchema(req, {
+            paramsSchema: idVolumeAndType,
+            bodySchema: fromUrlSchema,
+        });
+
+        if (
+            VolumeDataType.mapName(params.type) != VolumeDataType.RawVolumeData
+        ) {
             throw new ApiError(
                 400,
                 "This operation is only avaliable on Raw Volumes."
             );
         }
 
-        if (!req.body.url || !Utils.isValidHttpUrl(req.body.url)) {
-            throw new ApiError(400, "Invalid URL.");
-        }
-
-        if (!req.body.fileType) {
-            throw new ApiError(400, "Missing file type.");
-        }
-
-        if (!["mrc", "raw"].includes(req.body.fileType)) {
-            throw new ApiError(400, "Invalid file type.");
-        }
-
-        if (req.body.fileType === "raw" && !req.body.volumeSettings) {
-            throw new ApiError(400, "Raw files require volume settings.");
-        }
-
-        const filePath = await Utils.downloadAndSaveFile(req.body.url);
+        const filePath = await Utils.downloadAndSaveFile(body.url);
 
         try {
             const file = new PendingLocalFile(filePath);
@@ -233,18 +248,18 @@ export default class VolumeDataController {
             if (req.body.fileType === "mrc") {
                 volumeData = await RawVolumeData.createFromMrcFile(
                     req.session.user.id,
-                    Number(req.params.idVolume),
+                    params.idVolume,
                     file
                 );
             } else {
                 const settingsFile = new PendingData(
-                    Buffer.from(req.body.volumeSettings),
+                    Buffer.from(JSON.stringify(body.volumeSettings)),
                     "volume-settings.json"
                 );
 
                 volumeData = await RawVolumeData.createFromFiles(
                     req.session.user.id,
-                    Number(req.params.idVolume),
+                    params.idVolume,
                     [file, settingsFile]
                 );
             }
@@ -261,14 +276,17 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async downloadFullVolumeData(type, req, res) {
+    static async downloadFullVolumeData(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+
         const data = await VolumeDataFactory.getClass(
-            type
-        ).prepareDataForDownload(Number(req.params.idVolumeData));
+            VolumeDataType.mapName(params.type)
+        ).prepareDataForDownload(params.idVolumeData);
 
         res.type("application/zip");
         res.setHeader(
@@ -281,19 +299,17 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async downloadRawFile(type, req, res) {
+    static async downloadRawFile(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+
         const data = await VolumeDataFactory.getClass(
-            type
-        ).prepareDataForDownload(
-            Number(req.params.idVolumeData),
-            true,
-            false,
-            false
-        );
+            VolumeDataType.mapName(params.type)
+        ).prepareDataForDownload(params.idVolumeData, true, false, false);
 
         res.type("application/zip");
         res.setHeader(
@@ -306,19 +322,17 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async downloadSettingsFile(type, req, res) {
+    static async downloadSettingsFile(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+
         const data = await VolumeDataFactory.getClass(
-            type
-        ).prepareDataForDownload(
-            Number(req.params.idVolumeData),
-            false,
-            true,
-            false
-        );
+            VolumeDataType.mapName(params.type)
+        ).prepareDataForDownload(params.idVolumeData, false, true, false);
 
         res.type("application/zip");
         res.setHeader(
@@ -331,19 +345,24 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async downloadMrcFile(type, req, res) {
-        if (type != VolumeDataType.RawVolumeData) {
+    static async downloadMrcFile(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeDataAndType,
+        });
+
+        if (
+            VolumeDataType.mapName(params.type) != VolumeDataType.RawVolumeData
+        ) {
             throw new ApiError(
                 400,
                 "This operation is only avaliable on Raw Volumes."
             );
         }
         const data = await RawVolumeData.prepareDataForDownload(
-            Number(req.params.idVolumeData),
+            params.idVolumeData,
             false,
             false,
             true
@@ -360,15 +379,17 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async removeFromVolume(type, req, res) {
-        await VolumeDataFactory.getClass(type).removeFromVolume(
-            Number(req.params.idVolumeData),
-            Number(req.params.idVolume)
-        );
+    static async removeFromVolume(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeVolumeDataTypeParams,
+        });
+
+        await VolumeDataFactory.getClass(
+            VolumeDataType.mapName(params.type)
+        ).removeFromVolume(params.idVolumeData, params.idVolume);
 
         res.sendStatus(204);
     }
@@ -378,8 +399,10 @@ export default class VolumeDataController {
      * @param {Response} res
      */
     static async getTomographyMetadataFromCryoETId(req, res) {
+        const { params } = validateSchema(req, { paramsSchema: idTomogram });
+
         const metadata = await fetchCtyoETTomogramMetadata(
-            Number(req.params.idTomogram)
+            Number(params.idTomogram)
         );
 
         res.status(200).json(metadata);
@@ -418,23 +441,30 @@ export default class VolumeDataController {
     }
 
     /**
-     * @param {VolumeDataType} type
      * @param {Request} req
      * @param {Response} res
      */
-    static async updateAnnotations(type, req, res) {
-        if (type != VolumeDataType.SparseLabeledVolumeData) {
+    static async updateAnnotations(req, res) {
+        const { params, body } = validateSchema(req, {
+            paramsSchema: idVolumeVolumeDataTypeParams,
+            bodySchema: updateAnnotations,
+        });
+
+        if (
+            VolumeDataType.mapName(params.type) !=
+            VolumeDataType.SparseLabeledVolumeData
+        ) {
             throw new ApiError(
                 400,
                 "This operation is only avaliable on Manual Label Volumes."
             );
         }
-        const saveAsNew = req.body.saveAsNew ?? false;
+        const saveAsNew = body.saveAsNew ?? false;
 
         const sparseLabel = await SparseLabeledVolumeData.updateAnnotations(
-            Number(req.params.idVolumeData),
-            Number(req.params.idVolume),
-            req.body.annotation,
+            params.idVolumeData,
+            params.idVolume,
+            body.annotation,
             saveAsNew
         );
 

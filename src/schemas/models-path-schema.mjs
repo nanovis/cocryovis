@@ -2,7 +2,10 @@
 
 import z from "zod";
 import { defaultError } from "./error-path-schema.mjs";
-import { idProject, projectSchema } from "./componentSchemas/project-schema.mjs";
+import {
+    idProject,
+    projectSchema,
+} from "./componentSchemas/project-schema.mjs";
 import { idModel, modelSchema } from "./componentSchemas/model-schema.mjs";
 import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
 import { typeSchema } from "./componentSchemas/volume-data-schema.mjs";
@@ -18,7 +21,7 @@ export const getModelsSchema = modelSchema.extend({
     projects: z.array(projectSchema).optional(),
 });
 
-export const createModelSchemaReq = z.object({
+export const createModelSchema = z.object({
     name: z.string(),
     description: z.string(),
 });
@@ -52,7 +55,7 @@ export const idModelAndTypeSchema = z
 export const idModelAndidProject = z
     .object({
         idModel: idSchema,
-        idSchema: idSchema,
+        idProject: idSchema,
     })
     .meta({
         param: [
@@ -63,7 +66,7 @@ export const idModelAndidProject = z
                 example: "1",
             },
             {
-                name: "idSchema",
+                name: "Project",
                 in: "path",
                 required: true,
                 example: "1",
@@ -101,7 +104,7 @@ export const modelsPath = {
             requestBody: {
                 content: {
                     "application/json": {
-                        schema: createModelSchemaReq,
+                        schema: createModelSchema,
                     },
                 },
             },
@@ -109,7 +112,7 @@ export const modelsPath = {
                 201: {
                     content: {
                         "application/json": {
-                            schema: createModelSchemaReq,
+                            schema: CreateModelSchemaRes,
                         },
                     },
                 },
@@ -127,7 +130,7 @@ export const modelsPath = {
                 201: {
                     content: {
                         "application/json": {
-                            schema: createModelSchemaReq,
+                            schema: createModelSchema,
                         },
                     },
                 },
@@ -154,7 +157,7 @@ export const modelsPath = {
             },
         },
     },
-    "/project/{idProject}/model/{idModel": {
+    "/project/{idProject}/model/{idModel}params": {
         delete: {
             requestParams: {
                 path: idModelAndidProject,

@@ -1,7 +1,10 @@
 // @ts-check
 
 import z from "zod";
-import { idProject, projectSchema } from "./componentSchemas/project-schema.mjs";
+import {
+    idProject,
+    projectSchema,
+} from "./componentSchemas/project-schema.mjs";
 import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
 import { modelSchema } from "./componentSchemas/model-schema.mjs";
 import { projectAccessSchema } from "./componentSchemas/project-access-schema.mjs";
@@ -58,12 +61,12 @@ export const projectPath = {
             },
         },
     },
-    "/createProject": {
+    "/projects": {
         post: {
             requestBody: {
                 content: {
                     "application/json": {
-                        schema: projectSchema,
+                        schema: projectCreateSchemaReq,
                     },
                 },
             },

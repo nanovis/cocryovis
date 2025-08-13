@@ -1,6 +1,15 @@
 // @ts-check
 
+import z from "zod";
 import Model from "../models/model.mjs";
+import { idProject } from "../schemas/componentSchemas/project-schema.mjs";
+import {
+    createModelSchema,
+    getModelQuerySchema,
+    idModelAndidProject,
+} from "../schemas/models-path-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
+import { idModel } from "../schemas/componentSchemas/model-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -12,8 +21,13 @@ export default class ModelController {
      * @param {Response} res
      */
     static async getModel(req, res) {
-        const options = this.#parseOptionQuery(req);
-        const model = await Model.getById(Number(req.params.idModel), options);
+        const { params, query } = validateSchema(req, {
+            paramsSchema: idModel,
+            querySchema: getModelQuerySchema,
+        });
+
+        const options = this.#parseOptionQuery(query);
+        const model = await Model.getById(params.idModel, options);
 
         res.status(200).json(model);
     }
@@ -23,9 +37,14 @@ export default class ModelController {
      * @param {Response} res
      */
     static async getModelsFromProject(req, res) {
-        const options = ModelController.#parseOptionQuery(req);
+        const { params, query } = validateSchema(req, {
+            paramsSchema: idProject,
+            querySchema: getModelQuerySchema,
+        });
+
+        const options = ModelController.#parseOptionQuery(query);
         const models = await Model.getModelsFromProject(
-            Number(req.params.idProject),
+            params.idProject,
             options
         );
 
@@ -33,13 +52,13 @@ export default class ModelController {
     }
 
     /**
-     * @param {Request} req
+     * @param {z.infer<getModelQuerySchema>} query
      * @returns {import("../models/model.mjs").Options}
      */
-    static #parseOptionQuery(req) {
+    static #parseOptionQuery(query) {
         return {
-            checkpoints: !!req?.query?.checkpoints,
-            projects: !!req?.query?.projects,
+            checkpoints: !!query?.checkpoints,
+            projects: !!query?.projects,
         };
     }
 
@@ -48,11 +67,16 @@ export default class ModelController {
      * @param {Response} res
      */
     static async createModel(req, res) {
+        const { params, body } = validateSchema(req, {
+            paramsSchema: idProject,
+            bodySchema: createModelSchema,
+        });
+
         const model = await Model.create(
-            req.body.name,
-            req.body.description,
+            body.name,
+            body.description,
             Number(req.session.user.id),
-            Number(req.params.idProject)
+            params.idProject
         );
 
         res.status(201).json(model);
@@ -63,10 +87,14 @@ export default class ModelController {
      * @param {Response} res
      */
     static async cloneModel(req, res) {
+        const { params } = validateSchema(req, {
+            paramsSchema: idModelAndidProject,
+        });
+
         const model = await Model.clone(
-            Number(req.params.idModel),
+            params.idModel,
             req.session.user.id,
-            Number(req.params.idProject)
+            params.idProject
         );
 
         res.status(201).json(model);
@@ -77,12 +105,13 @@ export default class ModelController {
      * @param {Response} res
      */
     static async removeFromProject(req, res) {
-        const projectId = Number(req.params.idProject);
+        const { params } = validateSchema(req, {
+            paramsSchema: idModelAndidProject,
+        });
 
-        const model = await Model.removeFromProject(
-            Number(req.params.idModel),
-            projectId
-        );
+        const projectId = params.idProject;
+
+        const model = await Model.removeFromProject(params.idModel, projectId);
 
         res.sendStatus(204);
     }

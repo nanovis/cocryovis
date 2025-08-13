@@ -69,7 +69,7 @@ export const annotationsEntry = z.object({
     volumeName: z.string(),
 });
 
-export const annotations = z.array(annotationsEntry);
+export const annotationsSchema = z.array(annotationsEntry);
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject
@@ -153,7 +153,7 @@ export const volumePath = {
             requestBody: {
                 content: {
                     "application/json": {
-                        schema: annotations,
+                        schema: annotationsSchema,
                     },
                 },
             },

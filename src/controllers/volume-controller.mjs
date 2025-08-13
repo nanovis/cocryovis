@@ -1,8 +1,16 @@
 // @ts-check
 
+import z from "zod";
 import Volume from "../models/volume.mjs";
-import { ApiError } from "../tools/error-handler.mjs";
-import fsPromises from "fs/promises";
+import { annotationsSchema } from "../schemas/volume-path-schema.mjs";
+import { idProject } from "../schemas/componentSchemas/project-schema.mjs";
+import { idVolume } from "../schemas/componentSchemas/volume-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
+import {
+    createVolumeReq,
+    idProjectAndVolume,
+    volumeQuerySchema,
+} from "../schemas/volume-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -15,11 +23,13 @@ export default class VolumeController {
      * @param {Response} res
      */
     static async getVolume(req, res) {
-        const options = VolumeController.#parseOptionQuery(req);
-        const volume = await Volume.getById(
-            Number(req.params.idVolume),
-            options
-        );
+        const { query, params } = validateSchema(req, {
+            querySchema: volumeQuerySchema,
+            paramsSchema: idVolume,
+        });
+
+        const options = VolumeController.#parseOptionQuery(query);
+        const volume = await Volume.getById(Number(params.idVolume), options);
 
         res.status(200).json(volume);
     }
@@ -28,38 +38,41 @@ export default class VolumeController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async getVolumesFromProject(req, res) {
-        const options = VolumeController.#parseOptionQuery(req);
-        const volumes = await Volume.getVolumesFromProject(
-            Number(req.params.idProject),
-            options
-        );
+    // static async getVolumesFromProject(req, res) {
+    //     const options = VolumeController.#parseOptionQuery(req);
+    //     const volumes = await Volume.getVolumesFromProject(
+    //         Number(req.params.idProject),
+    //         options
+    //     );
 
-        res.status(200).json(volumes);
-    }
+    //     res.status(200).json(volumes);
+    // }
 
     /**
      * @param {Request} req
      * @param {Response} res
      */
     static async getVolumesFromProjectDeep(req, res) {
+        const { params } = validateSchema(req, { paramsSchema: idProject });
+
         const volumes = await Volume.getVolumesFromProjectDeep(
-            Number(req.params.idProject)
+            params.idProject
         );
 
         res.status(200).json(volumes);
     }
 
     /**
+     * @param {z.infer<volumeQuerySchema>} query
      * @returns {import("../models/volume.mjs").Options}
      */
-    static #parseOptionQuery(req) {
+    static #parseOptionQuery(query) {
         const options = {
-            rawData: !!req?.query?.rawData,
-            sparseVolumes: !!req?.query?.sparseVolumes,
-            pseudoVolumes: !!req?.query?.pseudoVolumes,
-            results: !!req?.query?.results,
-            projects: !!req?.query?.projects,
+            rawData: !!query?.rawData,
+            sparseVolumes: !!query?.sparseVolumes,
+            pseudoVolumes: !!query?.pseudoVolumes,
+            results: !!query?.results,
+            projects: !!query?.projects,
         };
 
         return options;
@@ -70,11 +83,16 @@ export default class VolumeController {
      * @param {Response} res
      */
     static async createVolume(req, res) {
+        const { body, params } = validateSchema(req, {
+            bodySchema: createVolumeReq,
+            paramsSchema: idProject,
+        });
+
         const volume = await Volume.create(
-            req.body.name,
-            req.body.description,
+            body.name,
+            body.description,
             req.session.user.id,
-            Number(req.params.idProject)
+            params.idProject
         );
 
         res.status(201).json(volume);
@@ -98,10 +116,11 @@ export default class VolumeController {
      * @param {Response} res
      */
     static async removeFromProject(req, res) {
-        await Volume.removeFromProject(
-            Number(req.params.idVolume),
-            Number(req.params.idProject)
-        );
+        const { params } = validateSchema(req, {
+            paramsSchema: idProjectAndVolume,
+        });
+
+        await Volume.removeFromProject(params.idVolume, params.idProject);
 
         res.sendStatus(204);
     }
@@ -111,20 +130,15 @@ export default class VolumeController {
      * @param {Response} res
      */
     static async addAnnotations(req, res) {
-        if (!req.body) {
-            throw new ApiError(400, "No annotations file found.");
-        }
-
-        const annotations = req.body;
-
-        if (!Array.isArray(annotations)) {
-            throw new ApiError(400, "Unknown annotations format.");
-        }
+        const { params, body } = validateSchema(req, {
+            paramsSchema: idVolume,
+            bodySchema: annotationsSchema,
+        });
 
         const sparseLabel = await Volume.addAnnotations(
-            Number(req.params.idVolume),
+            params.idVolume,
             Number(req.session.user.id),
-            annotations
+            body
         );
 
         res.json(sparseLabel);

@@ -70,7 +70,7 @@ export const userPath = {
                 201: {
                     content: {
                         "application/json": {
-                            schema: loginSchemaReq,
+                            schema: publicUser,
                         },
                     },
                 },

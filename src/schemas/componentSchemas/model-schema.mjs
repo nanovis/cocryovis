@@ -1,8 +1,8 @@
 // @ts-check
 
 import z from "zod";
-import { checkpointSchema } from "./checkpoint-schema.mjs";
 import { idSchema } from "./id-param-schema.mjs";
+import { checkpointSchema } from "./checkpoint-schema.mjs";
 
 export const modelSchema = z.object({
     id: z.number(),

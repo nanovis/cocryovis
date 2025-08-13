@@ -1,19 +1,14 @@
-import RawVolumeData from "../models/raw-volume-data.mjs";
-import { VolumeDataFactory } from "../models/volume-data-factory.mjs";
-import path from "path";
+// @ts-check
+
 import { ApiError } from "../tools/error-handler.mjs";
-import fileSystem from "fs";
-import Utils from "../tools/utils.mjs";
-import fsPromises from "node:fs/promises";
-import MotionCorHandler from "../tools/motioncor-handler.mjs";
-import GCTFFindHandler from "../tools/gctffind-handler.mjs";
-import archiver from "archiver";
-import fs from "fs";
+import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 
 /**
  * @typedef { import("express").Request } Request
  * @typedef { import("express").Response } Response
  */
+
+
 
 export default class PreProcessingController {
     /**
@@ -22,6 +17,11 @@ export default class PreProcessingController {
      * @param {Response} res
      */
     static async queueTiltSeriesReconstruction(gpuTaskHandler, req, res) {
+        // TODO make validateSchema work with multipart/form-data
+        // const { body } = validateSchema(req, {
+        //     bodySchema: tiltSeriesValidation,
+        // });
+
         if (!req.files || !req.files.tiltSeries) {
             throw new ApiError(400, "No files uploaded.");
         }
@@ -32,13 +32,13 @@ export default class PreProcessingController {
                 "Only one tilt series can be added to volume."
             );
         }
-
+        // Check if zod parses json
         const data = JSON.parse(req.body.data);
 
         await gpuTaskHandler.queueTiltSeriesReconstruction(
             req.files.tiltSeries,
             data.options,
-            Number(data.volumeId),
+            data.volumeId,
             req.session.user.id
         );
 

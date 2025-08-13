@@ -18,20 +18,6 @@ import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'
 import PreProcessingController from '../../controllers/preprocessing-controller.mjs';
 import DemoController from '../../controllers/demo-controller.mjs';
-import validateSchema from '../../middleware/zodValidation.mjs';
-import { loginSchemaReq, registerSchema, updateUserSchema } from '../../schemas/user-path-schema.mjs';
-import { idProject, projectSchema } from '../../schemas/componentSchemas/project-schema.mjs';
-import { setAccessSchemaReq } from '../../schemas/project-path-schema.mjs';
-import { annotations, createVolumeReq, idProjectAndVolume, volumeQuerySchema } from '../../schemas/volume-path-schema.mjs';
-import { idVolume } from '../../schemas/componentSchemas/volume-schema.mjs';
-import { fromUrlSchema, idVolumeDataAndType, updateAnnotations, idVolumeVolumeDataTypeParams, volumeDataUpdate, idTomogram } from '../../schemas/volume-data-path-schema.mjs';
-import { createModelSchemaReq, getModelQuerySchema, idModelAndidProject, idModelAndTypeSchema } from '../../schemas/models-path-schema.mjs';
-import { idModelAndidcheckpointParam } from '../../schemas/checkpoint-path-schema.mjs';
-import { inferenceIds, trainingReq } from '../../schemas/nano-oetzi-path-schema.mjs';
-import { tiltSeriesValidation } from '../../schemas/cryoEt-path-schema.mjs';
-import { idCheckpoint } from '../../schemas/componentSchemas/checkpoint-schema.mjs';
-import { idModel } from '../../schemas/componentSchemas/model-schema.mjs';
-import { idResult } from '../../schemas/componentSchemas/result-schema.mjs';
 
 // Config
 const config = appConfig;
@@ -46,13 +32,13 @@ export const projectsApi = toAsyncRouter(express.Router());
 /////// USER
 ///////////////////////
 
-projectsApi.post('/login', validateSchema({bodySchema: loginSchemaReq}), UserController.login);
+projectsApi.post('/login',  UserController.login);
 projectsApi.post('/logout', UserController.logout);
-projectsApi.post('/register',validateSchema({bodySchema: registerSchema}), UserController.register);
+projectsApi.post('/register', UserController.register);
 projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserData);
 projectsApi.get('/users', restrictApi, UserController.getAllUsers);
 projectsApi.get(`/status`, restrictApi, UserController.getStatus);
-projectsApi.put(`/user`, restrictApi, validateSchema({bodySchema: updateUserSchema}), UserController.updateUser);
+projectsApi.put(`/user`, restrictApi, UserController.updateUser);
 
 
 ///////////////////////
@@ -65,47 +51,48 @@ projectsApi.put(`/user`, restrictApi, validateSchema({bodySchema: updateUserSche
 projectsApi.get(`/projects-deep`, restrictApi, ProjectController.getAllUserProjectsDeep);
 
 // Create New Project
-projectsApi.post(`/projects`, restrictApi,validateSchema({bodySchema: projectSchema}), ProjectController.createProject);
+projectsApi.post(`/projects`, restrictApi, ProjectController.createProject);
 
 
 // Get Project
 // complex version of getProjectDeep
 // projectsApi.get(`/project/:idProject`, restrictReadProjectAccess, ProjectController.getProject);
 // Get Project
-projectsApi.get(`/project/:idProject/deep`, restrictReadProjectAccess, validateSchema({paramsSchema: idProject}), ProjectController.getProjectDeep);
+projectsApi.get(`/project/:idProject/deep`, restrictReadProjectAccess,
+ProjectController.getProjectDeep);
 
 // Get Project Access Info
-projectsApi.get(`/project/:idProject/access`, restrictReadProjectAccess, validateSchema({paramsSchema: idProject}), ProjectController.getAccessInfo);
+projectsApi.get(`/project/:idProject/access`, restrictReadProjectAccess, ProjectController.getAccessInfo);
 
 // Set Project Access Info
-projectsApi.post(`/project/:idProject/access`, restrictApi, validateSchema({bodySchema: setAccessSchemaReq, paramsSchema: idProject}), ProjectController.setAccess);
+projectsApi.post(`/project/:idProject/access`, restrictApi, ProjectController.setAccess);
 
 // Deep Clone Project
 // projectsApi.post(`/project/:idProject/deep-clone`, restrictApi, ProjectController.deepCloneProject);
 
 // Delete Project
-projectsApi.delete(`/project/:idProject`, restrictApi, validateSchema({paramsSchema: idProject}), ProjectController.deleteProject);
+projectsApi.delete(`/project/:idProject`, restrictApi, ProjectController.deleteProject);
 
 /////// ILASTIK
 
 // Run Ilastik inference
-projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi, validateSchema({paramsSchema: idVolume}),
+projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi, 
     async (req, res) => IlastikController.queuePseudoLabelsGeneration(ilastikHandler, req, res));
 
 /////// NANO OETZI
 
 // Inference
-projectsApi.post(`/queue-inference`, restrictApi, validateSchema({bodySchema: inferenceIds}),
+projectsApi.post(`/queue-inference`, restrictApi,
     async (req, res) => NanoOetziController.queueInference(gpuTaskHandler, req, res));
 
 // Run training
-projectsApi.post(`/queue-training`, restrictApi, validateSchema({bodySchema: trainingReq}),
+projectsApi.post(`/queue-training`, restrictApi,
     async (req, res) => NanoOetziController.queueTraining(gpuTaskHandler, req, res));
 
 
 /////// CRYO-ET
 
-projectsApi.post(`/tilt-series-reconstruction`, restrictApi, validateSchema({bodySchema: tiltSeriesValidation}),
+projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
     async (req, res) => PreProcessingController.queueTiltSeriesReconstruction(gpuTaskHandler, req, res));
 
     
@@ -113,142 +100,129 @@ projectsApi.post(`/tilt-series-reconstruction`, restrictApi, validateSchema({bod
 
 // Get Volumes from project
 // projectsApi.get(`/project/:idProject/volumes`, restrictReadProjectAccess, VolumeController.getVolumesFromProject);
-projectsApi.get(`/project/:idProject/volumes/deep`, restrictReadProjectAccess, validateSchema({paramsSchema: idProject}), VolumeController.getVolumesFromProjectDeep);
+projectsApi.get(`/project/:idProject/volumes/deep`, restrictReadProjectAccess, VolumeController.getVolumesFromProjectDeep);
 
 // Create New Volume
-projectsApi.post(`/project/:idProject/volumes`, restrictApi, validateSchema({bodySchema: createVolumeReq, paramsSchema: idProject}), VolumeController.createVolume);
+projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);
 
 // Clone Volume
 // projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, VolumeController.cloneVolume);
 
 // Get Volume
-projectsApi.get(`/volume/:idVolume`, restrictReadVolumeAccess, validateSchema({querySchema: volumeQuerySchema, paramsSchema: idProject}), VolumeController.getVolume);
+projectsApi.get(`/volume/:idVolume`, restrictReadVolumeAccess, VolumeController.getVolume);
 
 // Remove Volume
-projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi,validateSchema({paramsSchema: idProjectAndVolume}), VolumeController.removeFromProject);
+projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.removeFromProject);
 
 // Process Manual Labels
-projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, validateSchema({paramsSchema: idVolume, bodySchema: annotations}), 
-    async (req, res) => VolumeController.addAnnotations(req, res));
+projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, VolumeController.addAnnotations);
 
 /////// VOLUME DATA
 
 const readVolumeDataPrefix = "/volumeData/:type/:idVolumeData";
 
 // Get Raw Data
-projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess,
-    validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => VolumeDataController.getById(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess,   VolumeDataController.getById);
 
 // Get Raw Data Files
-projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess,validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => VolumeDataController.getData(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess,VolumeDataController.getData);
 
 // Update Raw Data
-projectsApi.put(`${readVolumeDataPrefix}`, restrictApi, validateSchema({paramsSchema: idVolumeDataAndType, bodySchema: volumeDataUpdate}), 
-    async (req, res) => VolumeDataController.update(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.put(`${readVolumeDataPrefix}`, restrictApi, VolumeDataController.update);
 
 // Visualize
-projectsApi.get(`${readVolumeDataPrefix}/visualization-data`, restrictReadVolumeDataAccess, validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => VolumeDataController.getVolumeVisualizationFiles(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}/visualization-data`, restrictReadVolumeDataAccess, VolumeDataController.getVolumeVisualizationFiles);
 
 // Create from Files
-projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi, validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => (VolumeDataController.createFromFiles(VolumeDataType.mapName(req.params.type), req, res)));
+projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi,VolumeDataController.createFromFiles);
 
 // Create from Mrc File
-projectsApi.post(`/volume/:idVolume/volumeData/:type/from-mrc-file`, restrictApi, validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => (VolumeDataController.createFromMrcFile(VolumeDataType.mapName(req.params.type), req, res)));
+projectsApi.post(`/volume/:idVolume/volumeData/:type/from-mrc-file`, restrictApi, VolumeDataController.createFromMrcFile);
 
 // Create from URL
-projectsApi.post(`/volume/:idVolume/volumeData/:type/from-url`, restrictApi, validateSchema({paramsSchema: idVolumeDataAndType, bodySchema: fromUrlSchema}),
-    async (req, res) => (VolumeDataController.createFromUrl(VolumeDataType.mapName(req.params.type), req, res)));
+projectsApi.post(`/volume/:idVolume/volumeData/:type/from-url`, restrictApi, VolumeDataController.createFromUrl);
 
 // Update Annotations
-projectsApi.put(`/volume/:idVolume/volumeData/:type/:idVolumeData/update-annotations`, restrictApi, validateSchema({paramsSchema: idVolumeVolumeDataTypeParams, bodySchema: updateAnnotations}), 
-    async (req, res) => (VolumeDataController.updateAnnotations(VolumeDataType.mapName(req.params.type), req, res)));
+projectsApi.put(`/volume/:idVolume/volumeData/:type/:idVolumeData/update-annotations`, restrictApi, VolumeDataController.updateAnnotations);
 
     
 // Download Raw Volume Data
-projectsApi.get(`${readVolumeDataPrefix}/download-full`, restrictReadVolumeDataAccess, validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => VolumeDataController.downloadFullVolumeData(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}/download-full`, 
+VolumeDataController.downloadFullVolumeData);
 
-projectsApi.get(`${readVolumeDataPrefix}/download-raw-file`,  validateSchema({paramsSchema: idVolumeDataAndType}), restrictReadVolumeDataAccess,
-    async (req, res) => VolumeDataController.downloadRawFile(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}/download-raw-file`, restrictReadVolumeDataAccess, VolumeDataController.downloadRawFile);
 
-projectsApi.get(`${readVolumeDataPrefix}/download-settings-file`, restrictReadVolumeDataAccess, validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => VolumeDataController.downloadSettingsFile(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}/download-settings-file`, restrictReadVolumeDataAccess, VolumeDataController.downloadSettingsFile);
 
-projectsApi.get(`${readVolumeDataPrefix}/download-mrc-file`, restrictReadVolumeDataAccess, validateSchema({paramsSchema: idVolumeDataAndType}),
-    async (req, res) => VolumeDataController.downloadMrcFile(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.get(`${readVolumeDataPrefix}/download-mrc-file`, restrictReadVolumeDataAccess, VolumeDataController.downloadMrcFile);
 
 // Delete Volume Data
-projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi, validateSchema({paramsSchema: idVolumeVolumeDataTypeParams}),
-    async (req, res) => VolumeDataController.removeFromVolume(VolumeDataType.mapName(req.params.type), req, res));
+projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi,
+VolumeDataController.removeFromVolume);
   
 // CryoET Tomogram Metadata
-projectsApi.get(`/cryoet/:idTomogram/`, validateSchema({paramsSchema: idTomogram}), 
+projectsApi.get(`/cryoet/:idTomogram/`, 
     async (req, res) => VolumeDataController.getTomographyMetadataFromCryoETId(req, res));
     
 
 /////// MODELS
 
 // Get Models from Project
-projectsApi.get(`/project/:idProject/models`, restrictApi,  validateSchema({paramsSchema: idProject, querySchema: getModelQuerySchema}), ModelController.getModelsFromProject);
+projectsApi.get(`/project/:idProject/models`, restrictApi, ModelController.getModelsFromProject);
 
 // Create New Model
-projectsApi.post(`/project/:idProject/models`, restrictApi, validateSchema({paramsSchema: idModelAndTypeSchema}), ModelController.createModel);
+projectsApi.post(`/project/:idProject/models`, restrictApi, ModelController.createModel);
 
 // Clone Model
-projectsApi.post(`/project/:idProject/model/:idModel/clone`, validateSchema({paramsSchema: idProject, bodySchema: createModelSchemaReq}), restrictApi, ModelController.cloneModel);
+projectsApi.post(`/project/:idProject/model/:idModel/clone`, restrictApi, ModelController.cloneModel);
 
 // Get Model
-projectsApi.get(`/model/:idModel`, restrictReadModelAccess,  validateSchema({paramsSchema: idProject, querySchema: getModelQuerySchema}), ModelController.getModel);
+projectsApi.get(`/model/:idModel`, restrictReadModelAccess, ModelController.getModel);
 
 // Remove Model
-projectsApi.delete(`/project/:idProject/model/:idModel`, validateSchema({paramsSchema: idModelAndidProject}), restrictApi, ModelController.removeFromProject);
+projectsApi.delete(`/project/:idProject/model/:idModel`, restrictApi, ModelController.removeFromProject);
 
 /////// CHECKPOINTS
 
 // Get checkpoint info
-projectsApi.get(`/checkpoint/:idCheckpoint`, restrictReadCheckpointAccess, validateSchema({paramsSchema: idCheckpoint}), CheckpointController.getCheckpoint);
+projectsApi.get(`/checkpoint/:idCheckpoint`, restrictReadCheckpointAccess,CheckpointController.getCheckpoint);
 
 // Delete checkpoint
-projectsApi.delete(`/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, validateSchema({paramsSchema: idModelAndidcheckpointParam}), CheckpointController.removeFromModel);
+projectsApi.delete(`/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
 
 // Get checkpoints from model
-projectsApi.get(`/model/:idModel/checkpoints`, restrictReadModelAccess, validateSchema({paramsSchema: idModel}), CheckpointController.getCheckpointsFromModel);
+projectsApi.get(`/model/:idModel/checkpoints`, restrictReadModelAccess, CheckpointController.getCheckpointsFromModel);
 
 // Upload new checkpoints
-projectsApi.post(`/model/:idModel/checkpoints`, restrictApi, validateSchema({paramsSchema: idModel}), CheckpointController.uploadCheckpoints);
+projectsApi.post(`/model/:idModel/checkpoints`, restrictApi,CheckpointController.uploadCheckpoints);
 
 // Download checkpoint
-projectsApi.get(`/checkpoint/:idCheckpoint/download`, restrictReadCheckpointAccess, validateSchema({paramsSchema: idCheckpoint}), CheckpointController.downloadCheckpoint);
+projectsApi.get(`/checkpoint/:idCheckpoint/download`, restrictReadCheckpointAccess, CheckpointController.downloadCheckpoint);
 
 // Download checkpoint
-projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, restrictReadCheckpointAccess, validateSchema({paramsSchema: idCheckpoint}), CheckpointController.checkpointToText);
+projectsApi.get(`/checkpoint/:idCheckpoint/as-text`, restrictReadCheckpointAccess, CheckpointController.checkpointToText);
 
 // Convert checkpoint to text
 projectsApi.post(`/checkpoint/to-text`, CheckpointController.checkpointFileToText);
 
 /////// RESULTS
 // Get Result
-projectsApi.get(`/result/:idResult`, restrictReadResultAccess, validateSchema({paramsSchema: idResult}), ResultController.getById);
+projectsApi.get(`/result/:idResult`, restrictReadResultAccess, ResultController.getById);
 
 // Get Result Details
 // projectsApi.get(`/result/:idResult/details`, restrictReadResultAccess, ResultController.getDetails);
 
 // Get Results From Volume
-projectsApi.get(`/volume/:idVolume/results`, restrictReadVolumeAccess, validateSchema({paramsSchema: idVolume}),ResultController.getFromVolume);
+projectsApi.get(`/volume/:idVolume/results`, restrictReadVolumeAccess,ResultController.getFromVolume);
 
 // Create Result from Fules
-projectsApi.post(`/volume/:idVolume/results`, restrictApi, validateSchema({paramsSchema: idVolume}), ResultController.createFromFiles);
+projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
 
 // Remove Result
-projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi, validateSchema({paramsSchema: idVolume}), ResultController.removeFromVolume);
+projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi,ResultController.removeFromVolume);
 
 // Result vizualization data
-projectsApi.get(`/result/:idResult/data`, restrictReadResultAccess, validateSchema({paramsSchema: idResult}),ResultController.getResultData);
+projectsApi.get(`/result/:idResult/data`, restrictReadResultAccess,ResultController.getResultData);
 
 
 /////// DEMO

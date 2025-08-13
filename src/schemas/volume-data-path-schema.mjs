@@ -20,7 +20,8 @@ import {
     multipleFileSchema,
     singleFileSchema,
 } from "./componentSchemas/file-schema.mjs";
-import { annotations } from "./volume-path-schema.mjs";
+import { annotationsSchema } from "./volume-path-schema.mjs";
+import { volumeSettings } from "./componentSchemas/volume-settings-schema.mjs";
 
 export const volumeData = z.union([
     sparseLabelVolumeDataSchema,
@@ -40,15 +41,20 @@ export const volumeDataUpdate = z.union([
 //   protocol: /^https?$/,
 // });
 
-export const fromUrlSchema = z.object({
-    DownloadFullFile: z.enum(["mrc", "raw"]),
-    url: z.url({
-        protocol: /^https?$/,
-    }),
-});
+export const fromUrlSchema = z
+    .object({
+        fileType: z.enum(["mrc", "raw"]),
+        url: z.url({
+            protocol: /^https?$/,
+        }),
+        volumeSettings: volumeSettings.optional(),
+    })
+    .refine((f) => f.fileType !== "raw" || f.volumeSettings, {
+        message: "Raw files require volume settings.",
+    });
 
 export const updateAnnotations = z.object({
-    annotations,
+    annotation: annotationsSchema,
     saveAsNew: z.boolean().default(false),
 });
 

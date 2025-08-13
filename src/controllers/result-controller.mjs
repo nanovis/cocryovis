@@ -7,6 +7,10 @@ import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import appConfig from "../tools/config.mjs";
+import { idResult } from "../schemas/componentSchemas/result-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
+import { idVolume } from "../schemas/componentSchemas/volume-schema.mjs";
+import { idVolumeAndIdResultParams } from "../schemas/result-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -19,7 +23,9 @@ export default class ResultController {
      * @param {Response} res
      */
     static async getById(req, res) {
-        const result = await Result.getById(Number(req.params.idResult));
+        const { params } = validateSchema(req, { paramsSchema: idResult });
+
+        const result = await Result.getById(params.idResult);
 
         res.json(result);
     }
@@ -42,7 +48,9 @@ export default class ResultController {
      * @param {Response} res
      */
     static async getFromVolume(req, res) {
-        const result = await Result.getFromVolume(Number(req.params.idVolume), {
+        const { params } = validateSchema(req, { paramsSchema: idVolume });
+
+        const result = await Result.getFromVolume(params.idVolume, {
             checkpoint: true,
         });
 
@@ -54,12 +62,11 @@ export default class ResultController {
      * @param {Response} res
      */
     static async removeFromVolume(req, res) {
-        const volumeId = Number(req.params.idVolume);
+        const { params } = validateSchema(req, {
+            paramsSchema: idVolumeAndIdResultParams,
+        });
 
-        const result = await Result.removeFromVolume(
-            Number(req.params.idResult),
-            volumeId
-        );
+        await Result.removeFromVolume(params.idResult, params.idVolume);
 
         res.sendStatus(204);
     }
@@ -69,7 +76,9 @@ export default class ResultController {
      * @param {Response} res
      */
     static async getResultData(req, res) {
-        const result = await Result.getByIdDeep(Number(req.params.idResult), {
+        const { params } = validateSchema(req, { paramsSchema: idResult });
+
+        const result = await Result.getByIdDeep(params.idResult, {
             files: true,
         });
         if (result.files.length === 0) {
@@ -122,6 +131,8 @@ export default class ResultController {
      * @param {Response} res
      */
     static async createFromFiles(req, res) {
+        const { params } = validateSchema(req, { paramsSchema: idVolume });
+
         if (!req.files || !req.files.files) {
             throw new ApiError(400, "No file uploaded");
         }
@@ -137,7 +148,7 @@ export default class ResultController {
             req.session.user.id,
             data.idCheckpoint,
             data.idVolumeData,
-            Number(req.params.idVolume),
+            params.idVolume,
             data.volumeDescriptors,
             files
         );

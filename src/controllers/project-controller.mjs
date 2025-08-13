@@ -1,6 +1,12 @@
 // @ts-check
 
 import Project from "../models/project.mjs";
+import { idProject } from "../schemas/componentSchemas/project-schema.mjs";
+import {
+    projectCreateSchemaReq,
+    setAccessSchemaReq,
+} from "../schemas/project-path-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -48,9 +54,11 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async getProjectDeep(req, res) {
+        const { params } = validateSchema(req, { paramsSchema: idProject });
+
         const userId = req.session?.user?.id;
         const project = await Project.getByIdDeep(
-            Number(req.params.idProject),
+            Number(params.idProject),
             userId
         );
 
@@ -101,9 +109,11 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async getAccessInfo(req, res) {
-        const accessInfo = await Project.getAccessInfo(
-            Number(req.params.idProject)
-        );
+        const { params } = validateSchema(req, {
+            paramsSchema: idProject,
+        });
+
+        const accessInfo = await Project.getAccessInfo(params.idProject);
 
         res.json(accessInfo);
     }
@@ -113,10 +123,12 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async setAccess(req, res) {
-        const accessInfo = await Project.setAccess(
-            Number(req.params.idProject),
-            req.body
-        );
+        const { body, params } = validateSchema(req, {
+            bodySchema: setAccessSchemaReq,
+            paramsSchema: idProject,
+        });
+
+        const accessInfo = await Project.setAccess(params.idProject, body);
 
         res.json(accessInfo);
     }
@@ -126,9 +138,13 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async createProject(req, res) {
+        const { body } = validateSchema(req, {
+            bodySchema: projectCreateSchemaReq,
+        });
+
         const project = await Project.create(
-            req.body.name,
-            req.body.description,
+            body.name,
+            body.description,
             req.session.user.id
         );
 
@@ -153,7 +169,9 @@ export default class ProjectController {
      * @param {Response} res
      */
     static async deleteProject(req, res) {
-        const project = await Project.del(Number(req.params.idProject));
+        const { params } = validateSchema(req, { paramsSchema: idProject });
+
+        await Project.del(params.idProject);
 
         res.sendStatus(204);
     }

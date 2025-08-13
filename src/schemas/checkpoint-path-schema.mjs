@@ -16,7 +16,7 @@ import { idModel } from "./componentSchemas/model-schema.mjs";
 
 export const idModelAndidcheckpointParam = z
     .object({
-        idcheckpoint: idSchema,
+        idCheckpoint: idSchema,
         idModel: idSchema,
     })
     .meta({

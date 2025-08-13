@@ -4,6 +4,12 @@ import User from "../models/user.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "../tools/config.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
+import {
+    loginSchemaReq,
+    registerSchema,
+    updateUserSchema,
+} from "../schemas/user-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -17,11 +23,13 @@ export default class UserController {
      * @param {import("express").NextFunction} next
      */
     static async register(req, res, next) {
+        const { body } = validateSchema(req, { bodySchema: registerSchema });
+
         const user = await User.create(
-            req.body.username,
-            req.body.password,
-            req.body.name,
-            req.body.email
+            body.username,
+            body.password,
+            body.name,
+            body.email
         );
 
         const userData = User.toPublic(user);
@@ -39,18 +47,17 @@ export default class UserController {
      * @param {import("express").NextFunction} next
      */
     static async login(req, res, next) {
+        const { body } = validateSchema(req, { bodySchema: loginSchemaReq });
+
         try {
-            const user = await User.authenticate(
-                req.body.username,
-                req.body.password
-            );
+            const user = await User.authenticate(body.username, body.password);
 
             const userData = User.toPublic(user);
 
             await UserController.#regenerateSession(req);
             req.session.user = userData;
             await UserController.#saveSession(req);
-            console.log("User " + req.body.username + " just logged in.");
+            console.log("User " + body.username + " just logged in.");
 
             res.json(userData);
         } catch {
@@ -134,8 +141,10 @@ export default class UserController {
      * @param {Response} res
      */
     static async updateUser(req, res) {
+        const { body } = validateSchema(req, { bodySchema: updateUserSchema });
+
         const id = req.session.user.id;
-        const user = await User.update(id, req.body);
+        const user = await User.update(id, body);
         const userData = User.toPublic(user);
 
         await UserController.#regenerateSession(req);

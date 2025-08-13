@@ -1,8 +1,11 @@
 // @ts-check
 
-import { ApiError } from "../tools/error-handler.mjs";
+import {
+    inferenceIds,
+    trainingReq,
+} from "../schemas/nano-oetzi-path-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
 import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
-import Utils from "../tools/utils.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -16,8 +19,10 @@ export default class NanoOetziController {
      * @param {Response} res
      */
     static async queueInference(gpuTaskHandler, req, res) {
-        const checkpointId = Number(req.body.checkpointId);
-        const volumeId = Number(req.body.volumeId);
+        const { body } = validateSchema(req, { bodySchema: inferenceIds });
+
+        const checkpointId = body.checkpointId;
+        const volumeId = body.volumeId;
 
         await gpuTaskHandler.queueInference(
             checkpointId,
@@ -34,26 +39,15 @@ export default class NanoOetziController {
      * @param {Response} res
      */
     static async queueTraining(gpuTaskHandler, req, res) {
-        const trainingVolumesIds = Utils.parseStringArray(
-            req.body.trainingVolumes
-        );
-        delete req.body.trainingVolumes;
-        const validationVolumesIds = Utils.parseStringArray(
-            req.body.validationVolumes
-        );
-        delete req.body.validationVolumes;
-        const testingVolumesIds = Utils.parseStringArray(
-            req.body.testingVolumes
-        );
-        delete req.body.testingVolumes;
+        const { body } = validateSchema(req, { bodySchema: trainingReq });
 
         await gpuTaskHandler.queueTraining(
-            Number(req.body.modelId),
+            body.modelId,
             Number(req.session.user.id),
-            trainingVolumesIds,
-            validationVolumesIds,
-            testingVolumesIds,
-            req.body
+            body.trainingVolumesIds,
+            body.validationVolumesIds,
+            body.testingVolumesIds,
+            body
         );
 
         res.sendStatus(204);

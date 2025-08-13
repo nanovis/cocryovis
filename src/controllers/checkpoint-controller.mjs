@@ -6,6 +6,10 @@ import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
 import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
+import { idCheckpoint } from "../schemas/componentSchemas/checkpoint-schema.mjs";
+import validateSchema from "../schemas/validate-schema.mjs";
+import { idModelAndidcheckpointParam } from "../schemas/checkpoint-path-schema.mjs";
+import { idModel } from "../schemas/componentSchemas/model-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -18,9 +22,9 @@ export default class CheckpointController {
      * @param {Response} res
      */
     static async getCheckpoint(req, res) {
-        const checkpoint = await Checkpoint.getById(
-            Number(req.params.idCheckpoint)
-        );
+        const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
+
+        const checkpoint = await Checkpoint.getById(params.idCheckpoint);
         res.json(checkpoint);
     }
 
@@ -29,9 +33,9 @@ export default class CheckpointController {
      * @param {Response} res
      */
     static async getCheckpointsFromModel(req, res) {
-        const checkpoints = await Checkpoint.getFromModel(
-            Number(req.params.idModel)
-        );
+        const { params } = validateSchema(req, { paramsSchema: idModel });
+
+        const checkpoints = await Checkpoint.getFromModel(params.idModel);
         res.json(checkpoints);
     }
 
@@ -40,13 +44,15 @@ export default class CheckpointController {
      * @param {Response} res
      */
     static async uploadCheckpoints(req, res) {
+        const { params } = validateSchema(req, { paramsSchema: idModel });
+
         if (!req.files || !req.files.files) {
             throw new ApiError(400, "No files uploaded.");
         }
 
         const checkpoints = await Checkpoint.createFromFiles(
             Number(req.session.user.id),
-            Number(req.params.idModel),
+            params.idModel,
             Array.isArray(req.files.files) ? req.files.files : [req.files.files]
         );
 
@@ -58,9 +64,9 @@ export default class CheckpointController {
      * @param {Response} res
      */
     static async downloadCheckpoint(req, res) {
-        const checkpoint = await Checkpoint.getById(
-            Number(req.params.idCheckpoint)
-        );
+        const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
+
+        const checkpoint = await Checkpoint.getById(params.idCheckpoint);
         let data = prepareDataForDownload(
             [checkpoint.filePath],
             path.basename(checkpoint.filePath)
@@ -75,12 +81,11 @@ export default class CheckpointController {
      * @param {Response} res
      */
     static async removeFromModel(req, res) {
-        const modelId = Number(req.params.idModel);
+        const { params } = validateSchema(req, {
+            paramsSchema: idModelAndidcheckpointParam,
+        });
 
-        const checkpoint = await Checkpoint.removeFromModel(
-            Number(req.params.idCheckpoint),
-            modelId
-        );
+        await Checkpoint.removeFromModel(params.idCheckpoint, params.idModel);
 
         res.sendStatus(204);
     }
@@ -90,9 +95,9 @@ export default class CheckpointController {
      * @param {Response} res
      */
     static async checkpointToText(req, res) {
-        const checkpoint = await Checkpoint.getById(
-            Number(req.params.idCheckpoint)
-        );
+        const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
+
+        const checkpoint = await Checkpoint.getById(params.idCheckpoint);
 
         if (!checkpoint.filePath) {
             throw new ApiError(400, "Checkpoint is missing a file.");
