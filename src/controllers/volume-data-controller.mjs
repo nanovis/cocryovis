@@ -394,21 +394,6 @@ export default class VolumeDataController {
         res.sendStatus(204);
     }
 
-    //TODO move to different controller
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async getTomographyMetadataFromCryoETId(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idTomogram });
-
-        const metadata = await fetchCtyoETTomogramMetadata(
-            Number(params.idTomogram)
-        );
-
-        res.status(200).json(metadata);
-    }
-
     /**
      * @param {VolumeDataType} type
      * @param {Request} req

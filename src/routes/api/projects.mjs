@@ -17,6 +17,7 @@ import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'
 import PreProcessingController from '../../controllers/preprocessing-controller.mjs';
 import DemoController from '../../controllers/demo-controller.mjs';
+import CryoETController from '../../controllers/cryo-et-controller.mjs';
 
 // Config
 const config = appConfig;
@@ -161,7 +162,7 @@ VolumeDataController.removeFromVolume);
   
 // CryoET Tomogram Metadata
 projectsApi.get(`/cryoet/:idTomogram/`, 
-    async (req, res) => VolumeDataController.getTomographyMetadataFromCryoETId(req, res));
+    async (req, res) => CryoETController.getTomographyMetadataFromCryoETId(req, res));
     
 
 /////// MODELS
