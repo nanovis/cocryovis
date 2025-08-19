@@ -3,8 +3,9 @@ import { ModelDB, ProjectModels } from "./ModelModel";
 import { ProjectVolumes, VolumeDB } from "./VolumeModel";
 import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
-import { projectSchema, projectSchemaDeepRes } from "../../../../schemas/componentSchemas/project-schema.mjs";
+import { projectSchema } from "../../../../schemas/componentSchemas/project-schema.mjs";
 import z from "zod";
+import { projectSchemaDeepRes, projectsSchemaDeepRes } from "../../../../schemas/project-path-schema.mjs";
 
 
 interface ProjectDB {
@@ -112,7 +113,7 @@ export const UserProjects = types
           return;
         }
 
-        const projects: z.infer<typeof projectSchemaDeepRes>[] = yield response.json();
+        const projects: z.infer<typeof projectsSchemaDeepRes> = yield response.json();
         if (!isAlive(self)) {
           return;
         }

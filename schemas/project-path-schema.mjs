@@ -4,13 +4,13 @@ import z from "zod";
 import {
     idProject,
     projectSchema,
-    projectSchemaDeepRes,
 } from "./componentSchemas/project-schema.mjs";
 import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
 import { modelSchemaWithCheckpoint } from "./componentSchemas/model-schema.mjs";
 import { projectAccessSchema } from "./componentSchemas/project-access-schema.mjs";
 import { userAccessSchema } from "./componentSchemas/user-access-schema.mjs";
 import { defaultError } from "./error-path-schema.mjs";
+import { deepVolumeSchema, volumesDeepSchemaRes } from "./volume-path-schema.mjs";
 
 export const projectDeepSchemaRes = projectSchema.extend({
     volumes: z.array(volumeSchema),
@@ -55,6 +55,14 @@ export const setAccessSchemaReq = z.object({
     userAccess: z.array(userAccessSchema),
 });
 
+export const projectSchemaDeepRes = projectSchema.extend({
+    accessLevel: z.int(),
+    volumes: z.array(deepVolumeSchema),
+    models: z.array(modelSchemaWithCheckpoint),
+});
+
+export const projectsSchemaDeepRes = z.array(projectSchemaDeepRes)
+
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject
  */
@@ -65,7 +73,7 @@ export const projectPath = {
                 200: {
                     content: {
                         "application/json": {
-                            schema: z.array(projectSchemaDeepRes),
+                            schema: projectsSchemaDeepRes,
                         },
                     },
                 },

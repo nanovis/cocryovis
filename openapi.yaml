@@ -183,60 +183,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    $ref: "#/components/schemas/__schema13"
-                  name:
-                    $ref: "#/components/schemas/__schema14"
-                  description:
-                    $ref: "#/components/schemas/__schema15"
-                  ownerId:
-                    $ref: "#/components/schemas/__schema16"
-                  publicAccess:
-                    $ref: "#/components/schemas/__schema17"
-                  volumes:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema18"
-                  models:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          $ref: "#/components/schemas/__schema24"
-                        name:
-                          $ref: "#/components/schemas/__schema25"
-                        description:
-                          $ref: "#/components/schemas/__schema26"
-                        creatorId:
-                          $ref: "#/components/schemas/__schema27"
-                        checkpoints:
-                          type: array
-                          items:
-                            $ref: "#/components/schemas/__schema28"
-                      required:
-                        - id
-                        - name
-                        - description
-                        - creatorId
-                        - checkpoints
-                      additionalProperties: false
-                  projectAccess:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema29"
-                required:
-                  - id
-                  - name
-                  - description
-                  - ownerId
-                  - publicAccess
-                  - volumes
-                  - models
-                  - projectAccess
-                additionalProperties: false
+                type: array
+                items:
+                  $ref: "#/components/schemas/__schema25"
         "404": *a1
         "500": *a1
   /projects:
@@ -259,7 +208,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema32"
+                $ref: "#/components/schemas/__schema43"
         "404": *a1
         "500": *a1
   /project/{idProject}/deep:
@@ -275,7 +224,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema32"
+                $ref: "#/components/schemas/__schema25"
         "404": *a1
         "500": *a1
   /project/{idProject}/access:
@@ -296,18 +245,22 @@ paths:
                   projectAccess:
                     type: object
                     properties:
-                      projectId:
-                        $ref: "#/components/schemas/__schema30"
-                      accessLevel:
-                        $ref: "#/components/schemas/__schema31"
+                      ownerId:
+                        type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      publicAccess:
+                        type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
                     required:
-                      - projectId
-                      - accessLevel
+                      - ownerId
+                      - publicAccess
                     additionalProperties: false
                   userAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema33"
+                      $ref: "#/components/schemas/__schema44"
                 required:
                   - projectAccess
                   - userAccess
@@ -328,7 +281,9 @@ paths:
               type: object
               properties:
                 publicAccess:
-                  type: number
+                  type: integer
+                  minimum: -9007199254740991
+                  maximum: 9007199254740991
                 userAccess:
                   type: array
                   items:
@@ -355,20 +310,16 @@ paths:
               schema:
                 type: object
                 properties:
-                  projectAccess:
-                    type: object
-                    properties:
-                      accessLevel:
-                        $ref: "#/components/schemas/__schema31"
-                    required:
-                      - accessLevel
-                    additionalProperties: false
+                  publicAccess:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
                   userAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema33"
+                      $ref: "#/components/schemas/__schema44"
                 required:
-                  - projectAccess
+                  - publicAccess
                   - userAccess
                 additionalProperties: false
         "404": *a1
@@ -398,45 +349,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    $ref: "#/components/schemas/__schema19"
-                  name:
-                    $ref: "#/components/schemas/__schema20"
-                  description:
-                    $ref: "#/components/schemas/__schema21"
-                  creatorId:
-                    $ref: "#/components/schemas/__schema22"
-                  rawDataId:
-                    $ref: "#/components/schemas/__schema23"
-                  rawData:
-                    anyOf:
-                      - $ref: "#/components/schemas/__schema34"
-                      - type: "null"
-                  sparseVolumes:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema35"
-                  pseudoVolumes:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema36"
-                  results:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema37"
-                required:
-                  - id
-                  - name
-                  - description
-                  - creatorId
-                  - rawDataId
-                  - rawData
-                  - sparseVolumes
-                  - pseudoVolumes
-                  - results
-                additionalProperties: false
+                type: array
+                items:
+                  $ref: "#/components/schemas/__schema31"
         "404": *a1
         "500": *a1
   /project/{idProject}/volumes:
@@ -465,7 +380,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema18"
+                $ref: "#/components/schemas/__schema13"
         "404": *a1
         "500": *a1
   /volume/{idVolume}:
@@ -504,27 +419,35 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema19"
+                    $ref: "#/components/schemas/__schema14"
                   name:
-                    $ref: "#/components/schemas/__schema20"
+                    $ref: "#/components/schemas/__schema15"
                   description:
-                    $ref: "#/components/schemas/__schema21"
+                    $ref: "#/components/schemas/__schema16"
                   creatorId:
-                    $ref: "#/components/schemas/__schema22"
+                    $ref: "#/components/schemas/__schema17"
                   rawDataId:
-                    $ref: "#/components/schemas/__schema23"
+                    $ref: "#/components/schemas/__schema18"
                   rawData:
-                    $ref: "#/components/schemas/__schema44"
+                    anyOf:
+                      - $ref: "#/components/schemas/__schema32"
+                      - type: "null"
                   sparseVolumes:
-                    $ref: "#/components/schemas/__schema45"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/__schema33"
                   pseudoVolumes:
-                    $ref: "#/components/schemas/__schema46"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/__schema34"
                   results:
-                    $ref: "#/components/schemas/__schema47"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/__schema35"
                   projects:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema32"
+                      $ref: "#/components/schemas/__schema43"
                 required:
                   - id
                   - name
@@ -574,7 +497,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema35"
+                $ref: "#/components/schemas/__schema33"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}:
@@ -595,7 +518,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema45"
         "404": *a1
         "500": *a1
     put:
@@ -659,9 +582,7 @@ paths:
       responses:
         "200":
           content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/__schema48"
+            application/octet-stream: {}
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/visualization-data:
@@ -706,7 +627,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                $ref: "#/components/schemas/__schema45"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/from-mrc-file:
@@ -732,7 +653,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema34"
+                $ref: "#/components/schemas/__schema32"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/from-url:
@@ -842,7 +763,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema34"
+                $ref: "#/components/schemas/__schema32"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/{idVolumeData}/update-annotations:
@@ -881,7 +802,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema35"
+                $ref: "#/components/schemas/__schema33"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/download-full:
@@ -902,7 +823,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema46"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/download-raw-file:
@@ -923,7 +844,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema46"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData/download-settings-file:
@@ -944,7 +865,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema46"
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData/download-mrc-file:
@@ -965,7 +886,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema46"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/{idVolumeData}:
@@ -990,29 +911,6 @@ paths:
         "204": {}
         "404": *a1
         "500": *a1
-  /cryoet/:idTomogram/:
-    get:
-      parameters:
-        - in: path
-          name: idTomogram
-          schema:
-            $ref: "#/components/schemas/__schema0"
-          required: true
-      responses:
-        "200":
-          content:
-            application/zip:
-              schema:
-                type: object
-                properties:
-                  metadata:
-                    type: string
-                    format: uri
-                required:
-                  - metadata
-                additionalProperties: false
-        "404": *a1
-        "500": *a1
   /project/{idProject}/models:
     get:
       parameters:
@@ -1034,7 +932,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema50"
+                $ref: "#/components/schemas/__schema47"
         "404": *a1
         "500": *a1
     post:
@@ -1062,22 +960,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    $ref: "#/components/schemas/__schema24"
-                  name:
-                    $ref: "#/components/schemas/__schema25"
-                  description:
-                    $ref: "#/components/schemas/__schema26"
-                  creatorId:
-                    $ref: "#/components/schemas/__schema27"
-                required:
-                  - id
-                  - name
-                  - description
-                  - creatorId
-                additionalProperties: false
+                $ref: "#/components/schemas/__schema19"
         "404": *a1
         "500": *a1
   /project/{idProject}/model/{idModel}/clone:
@@ -1131,7 +1014,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema50"
+                $ref: "#/components/schemas/__schema47"
         "404": *a1
         "500": *a1
   /project/{idProject}/model/{idModel}params:
@@ -1164,7 +1047,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema28"
+                $ref: "#/components/schemas/__schema24"
         "404": *a1
         "500": *a1
   /model/{idModel}/checkpoint/{idCheckpoint}:
@@ -1197,15 +1080,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  checkpointSchemaArray:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema28"
-                required:
-                  - checkpointSchemaArray
-                additionalProperties: false
+                $ref: "#/components/schemas/__schema48"
         "404": *a1
         "500": *a1
     post:
@@ -1225,7 +1100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema28"
+                $ref: "#/components/schemas/__schema48"
         "404": *a1
         "500": *a1
   /checkpoint/{idCheckpoint}/download:
@@ -1246,7 +1121,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema46"
         "404": *a1
         "500": *a1
   /checkpoint/{idCheckpoint}/as-text:
@@ -1260,9 +1135,9 @@ paths:
       responses:
         "200":
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: "#/components/schemas/__schema52"
+                type: string
         "400":
           content:
             application/json:
@@ -1280,9 +1155,9 @@ paths:
       responses:
         "200":
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: "#/components/schemas/__schema52"
+                type: string
         "400":
           content:
             application/json:
@@ -1303,7 +1178,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema53"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /result/{idResult}/details:
@@ -1319,7 +1194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema53"
+                $ref: "#/components/schemas/__schema49"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/results:
@@ -1335,40 +1210,36 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    $ref: "#/components/schemas/__schema38"
-                  folderPath:
-                    $ref: "#/components/schemas/__schema39"
-                  rawVolumeChannel:
-                    $ref: "#/components/schemas/__schema40"
-                  logFile:
-                    $ref: "#/components/schemas/__schema41"
-                  checkpointId:
-                    $ref: "#/components/schemas/__schema42"
-                  volumeDataId:
-                    $ref: "#/components/schemas/__schema43"
-                  checkpoints:
-                    $ref: "#/components/schemas/__schema28"
-                  volumedata:
-                    $ref: "#/components/schemas/__schema34"
-                  volumes:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema18"
-                  files:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/__schema54"
-                required:
-                  - id
-                  - folderPath
-                  - rawVolumeChannel
-                  - logFile
-                  - checkpointId
-                  - volumeDataId
-                additionalProperties: false
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: "#/components/schemas/__schema36"
+                    folderPath:
+                      $ref: "#/components/schemas/__schema37"
+                    rawVolumeChannel:
+                      $ref: "#/components/schemas/__schema38"
+                    logFile:
+                      $ref: "#/components/schemas/__schema39"
+                    checkpointId:
+                      $ref: "#/components/schemas/__schema40"
+                    creatorId:
+                      $ref: "#/components/schemas/__schema41"
+                    volumeDataId:
+                      $ref: "#/components/schemas/__schema42"
+                    checkpoints:
+                      $ref: "#/components/schemas/__schema24"
+                  required:
+                    - id
+                    - folderPath
+                    - rawVolumeChannel
+                    - logFile
+                    - checkpointId
+                    - creatorId
+                    - volumeDataId
+                    - checkpoints
+                  additionalProperties: false
         "404": *a1
         "500": *a1
     post:
@@ -1388,7 +1259,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema54"
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  rawFileName:
+                    type: string
+                  settingsFileName:
+                    type: string
+                  index:
+                    type: number
+                  resultId:
+                    type: number
+                required:
+                  - id
+                  - name
+                  - rawFileName
+                  - settingsFileName
+                  - index
+                  - resultId
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/result/{idResult}:
@@ -1421,7 +1313,7 @@ paths:
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema49"
+                $ref: "#/components/schemas/__schema46"
         "400":
           content:
             application/json:
@@ -1436,84 +1328,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    $ref: "#/components/schemas/__schema13"
-                  name:
-                    $ref: "#/components/schemas/__schema14"
-                  description:
-                    $ref: "#/components/schemas/__schema15"
-                  ownerId:
-                    $ref: "#/components/schemas/__schema16"
-                  publicAccess:
-                    $ref: "#/components/schemas/__schema17"
-                  accessLevel:
-                    type: number
-                  volumes:
-                    type: object
-                    properties:
-                      id:
-                        $ref: "#/components/schemas/__schema19"
-                      name:
-                        $ref: "#/components/schemas/__schema20"
-                      description:
-                        $ref: "#/components/schemas/__schema21"
-                      creatorId:
-                        $ref: "#/components/schemas/__schema22"
-                      rawDataId:
-                        $ref: "#/components/schemas/__schema23"
-                      rawData:
-                        $ref: "#/components/schemas/__schema44"
-                      sparseVolumes:
-                        $ref: "#/components/schemas/__schema45"
-                      pseudoVolumes:
-                        $ref: "#/components/schemas/__schema46"
-                      results:
-                        $ref: "#/components/schemas/__schema47"
-                    required:
-                      - id
-                      - name
-                      - description
-                      - creatorId
-                      - rawDataId
-                      - rawData
-                      - sparseVolumes
-                      - pseudoVolumes
-                      - results
-                    additionalProperties: false
-                  models:
-                    type: object
-                    properties:
-                      id:
-                        $ref: "#/components/schemas/__schema24"
-                      name:
-                        $ref: "#/components/schemas/__schema25"
-                      description:
-                        $ref: "#/components/schemas/__schema26"
-                      creatorId:
-                        $ref: "#/components/schemas/__schema27"
-                      checkpoints:
-                        $ref: "#/components/schemas/__schema51"
-                    required:
-                      - id
-                      - name
-                      - description
-                      - creatorId
-                    additionalProperties: false
-                  projectAccess:
-                    $ref: "#/components/schemas/__schema29"
-                required:
-                  - id
-                  - name
-                  - description
-                  - ownerId
-                  - publicAccess
-                  - accessLevel
-                  - volumes
-                  - models
-                  - projectAccess
-                additionalProperties: false
+                $ref: "#/components/schemas/__schema25"
         "404": *a1
         "500": *a1
   /volume/{idVolume}/queue-pseudo-label-generation:
@@ -1789,6 +1604,164 @@ paths:
         "201": {}
         "404": *a1
         "500": *a1
+  /cryoet/:idTomogram/:
+    get:
+      parameters:
+        - in: path
+          name: idTomogram
+          schema:
+            $ref: "#/components/schemas/__schema0"
+          required: true
+      responses:
+        "200":
+          content:
+            application/zip:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  alignment_id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  deposition_id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  run_id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  tomogram_voxel_spacing_id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  name:
+                    type: string
+                  size_x:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  size_y:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  size_z:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  voxel_spacing:
+                    type: number
+                  fiducial_alignment_status:
+                    type: string
+                  reconstruction_method:
+                    type: string
+                  processing:
+                    type: string
+                  tomogram_version:
+                    type: number
+                  processing_software:
+                    type: string
+                  reconstruction_software:
+                    type: string
+                  is_portal_standard:
+                    type: boolean
+                  is_author_submitted:
+                    type: boolean
+                  is_visualization_default:
+                    type: boolean
+                  s3_omezarr_dir:
+                    type: string
+                  https_omezarr_dir:
+                    type: string
+                  file_size_omezarr:
+                    type: number
+                  s3_mrc_file:
+                    type: string
+                  https_mrc_file:
+                    type: string
+                  file_size_mrc:
+                    type: number
+                  scale_0_dimensions:
+                    type: string
+                  scale_1_dimensions:
+                    type: string
+                  scale_2_dimensions:
+                    type: string
+                  ctf_corrected:
+                    type: boolean
+                  offset_x:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  offset_y:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  offset_z:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  key_photo_url:
+                    type: string
+                  key_photo_thumbnail_url:
+                    type: string
+                  neuroglancer_config:
+                    type: string
+                  publications:
+                    type: string
+                  related_database_entries:
+                    type: string
+                  release_date:
+                    type: string
+                  last_modified_date:
+                    type: string
+                required:
+                  - id
+                  - alignment_id
+                  - deposition_id
+                  - run_id
+                  - tomogram_voxel_spacing_id
+                  - name
+                  - size_x
+                  - size_y
+                  - size_z
+                  - voxel_spacing
+                  - fiducial_alignment_status
+                  - reconstruction_method
+                  - processing
+                  - tomogram_version
+                  - processing_software
+                  - reconstruction_software
+                  - is_portal_standard
+                  - is_author_submitted
+                  - is_visualization_default
+                  - s3_omezarr_dir
+                  - https_omezarr_dir
+                  - file_size_omezarr
+                  - s3_mrc_file
+                  - https_mrc_file
+                  - file_size_mrc
+                  - scale_0_dimensions
+                  - scale_1_dimensions
+                  - scale_2_dimensions
+                  - ctf_corrected
+                  - offset_x
+                  - offset_y
+                  - offset_z
+                  - key_photo_url
+                  - key_photo_thumbnail_url
+                  - neuroglancer_config
+                  - publications
+                  - related_database_entries
+                  - release_date
+                  - last_modified_date
+                additionalProperties: false
+        "404": *a1
+        "500": *a1
 components:
   schemas:
     __schema0:
@@ -1903,9 +1876,13 @@ components:
         enqueuedTime:
           type: string
         startTime:
-          type: string
+          anyOf:
+            - type: string
+            - type: "null"
         endTime:
-          type: string
+          anyOf:
+            - type: string
+            - type: "null"
         id:
           type: integer
           minimum: -9007199254740991
@@ -1944,6 +1921,18 @@ components:
               minimum: -9007199254740991
               maximum: 9007199254740991
             - type: "null"
+        volume:
+          anyOf:
+            - $ref: "#/components/schemas/__schema13"
+            - type: "null"
+        model:
+          anyOf:
+            - $ref: "#/components/schemas/__schema19"
+            - type: "null"
+        checkpoint:
+          anyOf:
+            - $ref: "#/components/schemas/__schema24"
+            - type: "null"
       required:
         - enqueuedTime
         - startTime
@@ -1956,30 +1945,23 @@ components:
         - volumeId
         - modelId
         - checkpointId
+        - volume
+        - model
+        - checkpoint
       additionalProperties: false
     __schema13:
-      type: number
-    __schema14:
-      type: string
-    __schema15:
-      type: string
-    __schema16:
-      type: number
-    __schema17:
-      type: number
-    __schema18:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema19"
+          $ref: "#/components/schemas/__schema14"
         name:
-          $ref: "#/components/schemas/__schema20"
+          $ref: "#/components/schemas/__schema15"
         description:
-          $ref: "#/components/schemas/__schema21"
+          $ref: "#/components/schemas/__schema16"
         creatorId:
-          $ref: "#/components/schemas/__schema22"
+          $ref: "#/components/schemas/__schema17"
         rawDataId:
-          $ref: "#/components/schemas/__schema23"
+          $ref: "#/components/schemas/__schema18"
       required:
         - id
         - name
@@ -1987,31 +1969,48 @@ components:
         - creatorId
         - rawDataId
       additionalProperties: false
-    __schema19:
+    __schema14:
       type: number
-    __schema20:
+    __schema15:
       type: string
-    __schema21:
+    __schema16:
       type: string
-    __schema22:
+    __schema17:
       anyOf:
         - type: number
         - type: "null"
+    __schema18:
+      anyOf:
+        - type: number
+        - type: "null"
+    __schema19:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/__schema20"
+        name:
+          $ref: "#/components/schemas/__schema21"
+        description:
+          $ref: "#/components/schemas/__schema22"
+        creatorId:
+          $ref: "#/components/schemas/__schema23"
+      required:
+        - id
+        - name
+        - description
+        - creatorId
+      additionalProperties: false
+    __schema20:
+      type: number
+    __schema21:
+      type: string
+    __schema22:
+      type: string
     __schema23:
       anyOf:
         - type: number
         - type: "null"
     __schema24:
-      type: number
-    __schema25:
-      type: string
-    __schema26:
-      type: string
-    __schema27:
-      anyOf:
-        - type: number
-        - type: "null"
-    __schema28:
       type: object
       properties:
         id:
@@ -2034,60 +2033,118 @@ components:
         - folderPath
         - creatorId
       additionalProperties: false
-    __schema29:
-      type: object
-      properties:
-        userId:
-          type: number
-        projectId:
-          $ref: "#/components/schemas/__schema30"
-        accessLevel:
-          $ref: "#/components/schemas/__schema31"
-      required:
-        - userId
-        - projectId
-        - accessLevel
-      additionalProperties: false
-    __schema30:
-      type: number
-    __schema31:
-      type: number
-    __schema32:
+    __schema25:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema13"
+          $ref: "#/components/schemas/__schema26"
         name:
-          $ref: "#/components/schemas/__schema14"
+          $ref: "#/components/schemas/__schema27"
         description:
-          $ref: "#/components/schemas/__schema15"
+          $ref: "#/components/schemas/__schema28"
         ownerId:
-          $ref: "#/components/schemas/__schema16"
+          $ref: "#/components/schemas/__schema29"
         publicAccess:
-          $ref: "#/components/schemas/__schema17"
+          $ref: "#/components/schemas/__schema30"
+        accessLevel:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        volumes:
+          type: array
+          items:
+            $ref: "#/components/schemas/__schema31"
+        models:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                $ref: "#/components/schemas/__schema20"
+              name:
+                $ref: "#/components/schemas/__schema21"
+              description:
+                $ref: "#/components/schemas/__schema22"
+              creatorId:
+                $ref: "#/components/schemas/__schema23"
+              checkpoints:
+                type: array
+                items:
+                  $ref: "#/components/schemas/__schema24"
+            required:
+              - id
+              - name
+              - description
+              - creatorId
+              - checkpoints
+            additionalProperties: false
       required:
         - id
         - name
         - description
         - ownerId
         - publicAccess
+        - accessLevel
+        - volumes
+        - models
       additionalProperties: false
-    __schema33:
+    __schema26:
+      type: integer
+      minimum: -9007199254740991
+      maximum: 9007199254740991
+    __schema27:
+      type: string
+    __schema28:
+      type: string
+    __schema29:
+      type: integer
+      minimum: -9007199254740991
+      maximum: 9007199254740991
+    __schema30:
+      type: integer
+      minimum: -9007199254740991
+      maximum: 9007199254740991
+    __schema31:
       type: object
       properties:
-        userId:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        accessLevel:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
+        id:
+          $ref: "#/components/schemas/__schema14"
+        name:
+          $ref: "#/components/schemas/__schema15"
+        description:
+          $ref: "#/components/schemas/__schema16"
+        creatorId:
+          $ref: "#/components/schemas/__schema17"
+        rawDataId:
+          $ref: "#/components/schemas/__schema18"
+        rawData:
+          anyOf:
+            - $ref: "#/components/schemas/__schema32"
+            - type: "null"
+        sparseVolumes:
+          type: array
+          items:
+            $ref: "#/components/schemas/__schema33"
+        pseudoVolumes:
+          type: array
+          items:
+            $ref: "#/components/schemas/__schema34"
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/__schema35"
       required:
-        - userId
-        - accessLevel
+        - id
+        - name
+        - description
+        - creatorId
+        - rawDataId
+        - rawData
+        - sparseVolumes
+        - pseudoVolumes
+        - results
       additionalProperties: false
-    __schema34:
+    __schema32:
       type: object
       properties:
         id:
@@ -2120,18 +2177,22 @@ components:
         - settings
         - mrcFilePath
       additionalProperties: false
-    __schema35:
+    __schema33:
       type: object
       properties:
         id:
-          type: number
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
         path:
           anyOf:
             - type: string
             - type: "null"
         creatorId:
           anyOf:
-            - type: number
+            - type: integer
+              minimum: -9007199254740991
+              maximum: 9007199254740991
             - type: "null"
         rawFilePath:
           anyOf:
@@ -2153,7 +2214,7 @@ components:
         - settings
         - color
       additionalProperties: false
-    __schema36:
+    __schema34:
       type: object
       properties:
         id:
@@ -2186,24 +2247,26 @@ components:
         - settings
         - originalLabelId
       additionalProperties: false
-    __schema37:
+    __schema35:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema38"
+          $ref: "#/components/schemas/__schema36"
         folderPath:
-          $ref: "#/components/schemas/__schema39"
+          $ref: "#/components/schemas/__schema37"
         rawVolumeChannel:
-          $ref: "#/components/schemas/__schema40"
+          $ref: "#/components/schemas/__schema38"
         logFile:
-          $ref: "#/components/schemas/__schema41"
+          $ref: "#/components/schemas/__schema39"
         checkpointId:
-          $ref: "#/components/schemas/__schema42"
+          $ref: "#/components/schemas/__schema40"
+        creatorId:
+          $ref: "#/components/schemas/__schema41"
         volumeDataId:
-          $ref: "#/components/schemas/__schema43"
+          $ref: "#/components/schemas/__schema42"
         checkpoint:
           anyOf:
-            - $ref: "#/components/schemas/__schema28"
+            - $ref: "#/components/schemas/__schema24"
             - type: "null"
       required:
         - id
@@ -2211,49 +2274,79 @@ components:
         - rawVolumeChannel
         - logFile
         - checkpointId
+        - creatorId
         - volumeDataId
         - checkpoint
       additionalProperties: false
+    __schema36:
+      type: integer
+      minimum: -9007199254740991
+      maximum: 9007199254740991
+    __schema37:
+      anyOf:
+        - type: string
+        - type: "null"
     __schema38:
-      type: number
+      anyOf:
+        - type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        - type: "null"
     __schema39:
       anyOf:
         - type: string
         - type: "null"
     __schema40:
-      anyOf:
-        - type: number
-        - type: "null"
+      type: number
     __schema41:
       anyOf:
-        - type: string
+        - type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
         - type: "null"
     __schema42:
       type: number
     __schema43:
-      type: number
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/__schema26"
+        name:
+          $ref: "#/components/schemas/__schema27"
+        description:
+          $ref: "#/components/schemas/__schema28"
+        ownerId:
+          $ref: "#/components/schemas/__schema29"
+        publicAccess:
+          $ref: "#/components/schemas/__schema30"
+      required:
+        - id
+        - name
+        - description
+        - ownerId
+        - publicAccess
+      additionalProperties: false
     __schema44:
-      anyOf:
-        - $ref: "#/components/schemas/__schema34"
-        - type: "null"
+      type: object
+      properties:
+        userId:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        accessLevel:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+      required:
+        - userId
+        - accessLevel
+      additionalProperties: false
     __schema45:
-      type: array
-      items:
-        $ref: "#/components/schemas/__schema35"
-    __schema46:
-      type: array
-      items:
-        $ref: "#/components/schemas/__schema36"
-    __schema47:
-      type: array
-      items:
-        $ref: "#/components/schemas/__schema37"
-    __schema48:
       anyOf:
-        - $ref: "#/components/schemas/__schema35"
-        - $ref: "#/components/schemas/__schema36"
+        - $ref: "#/components/schemas/__schema33"
         - $ref: "#/components/schemas/__schema34"
-    __schema49:
+        - $ref: "#/components/schemas/__schema32"
+    __schema46:
       type: object
       properties:
         files:
@@ -2264,84 +2357,60 @@ components:
       required:
         - files
       additionalProperties: false
-    __schema50:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema24"
-        name:
-          $ref: "#/components/schemas/__schema25"
-        description:
-          $ref: "#/components/schemas/__schema26"
-        creatorId:
-          $ref: "#/components/schemas/__schema27"
-        checkpoints:
-          $ref: "#/components/schemas/__schema51"
-        projects:
-          type: array
-          items:
-            $ref: "#/components/schemas/__schema32"
-      required:
-        - id
-        - name
-        - description
-        - creatorId
-      additionalProperties: false
-    __schema51:
+    __schema47:
       type: array
       items:
-        $ref: "#/components/schemas/__schema28"
-    __schema52:
-      type: object
-      properties:
-        checkpointTxt:
-          type: string
-      required:
-        - checkpointTxt
-      additionalProperties: false
-    __schema53:
+        type: object
+        properties:
+          id:
+            $ref: "#/components/schemas/__schema20"
+          name:
+            $ref: "#/components/schemas/__schema21"
+          description:
+            $ref: "#/components/schemas/__schema22"
+          creatorId:
+            $ref: "#/components/schemas/__schema23"
+          checkpoints:
+            type: array
+            items:
+              $ref: "#/components/schemas/__schema24"
+          projects:
+            type: array
+            items:
+              $ref: "#/components/schemas/__schema43"
+        required:
+          - id
+          - name
+          - description
+          - creatorId
+        additionalProperties: false
+    __schema48:
+      type: array
+      items:
+        $ref: "#/components/schemas/__schema24"
+    __schema49:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/__schema38"
+          $ref: "#/components/schemas/__schema36"
         folderPath:
-          $ref: "#/components/schemas/__schema39"
+          $ref: "#/components/schemas/__schema37"
         rawVolumeChannel:
-          $ref: "#/components/schemas/__schema40"
+          $ref: "#/components/schemas/__schema38"
         logFile:
-          $ref: "#/components/schemas/__schema41"
+          $ref: "#/components/schemas/__schema39"
         checkpointId:
-          $ref: "#/components/schemas/__schema42"
+          $ref: "#/components/schemas/__schema40"
+        creatorId:
+          $ref: "#/components/schemas/__schema41"
         volumeDataId:
-          $ref: "#/components/schemas/__schema43"
+          $ref: "#/components/schemas/__schema42"
       required:
         - id
         - folderPath
         - rawVolumeChannel
         - logFile
         - checkpointId
+        - creatorId
         - volumeDataId
-      additionalProperties: false
-    __schema54:
-      type: object
-      properties:
-        id:
-          type: number
-        name:
-          type: string
-        rawFileName:
-          type: string
-        settingsFileName:
-          type: string
-        index:
-          type: number
-        resultId:
-          type: number
-      required:
-        - id
-        - name
-        - rawFileName
-        - settingsFileName
-        - index
-        - resultId
       additionalProperties: false

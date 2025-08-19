@@ -1,7 +1,7 @@
 // @ts-check
 
 import { defaultError } from "./error-path-schema.mjs";
-import { projectSchemaDeepRes } from "./componentSchemas/project-schema.mjs";
+import { projectSchemaDeepRes } from "./project-path-schema.mjs";
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject

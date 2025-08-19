@@ -2,19 +2,20 @@
 import fs from "fs";
 import YAML from "yaml";
 import { createDocument } from "zod-openapi";
-import { userPath } from "./user-path-schema.mjs";
 import { createErrorMap } from "zod-validation-error";
 import zod from "zod";
-import { projectPath } from "./project-path-schema.mjs";
-import { volumePath } from "./volume-path-schema.mjs";
-import { volumeDataPath } from "./volume-data-path-schema.mjs";
-import { modelsPath } from "./models-path-schema.mjs";
-import { checkPointPath } from "./checkpoint-path-schema.mjs";
-import { resultPath } from "./result-path-schema.mjs";
-import { demoPath } from "./demo-path-schema.mjs";
-import { IlastikPath } from "./Ilastik-path-schema.mjs";
-import { nanoOetziPath } from "./nano-oetzi-path-schema.mjs";
-import { cryoEtPath } from "./cryoEt-path-schema.mjs";
+import { userPath } from "#schemas/user-path-schema.mjs";
+import { projectPath } from "#schemas/project-path-schema.mjs";
+import { volumePath } from "#schemas/volume-path-schema.mjs";
+import { volumeDataPath } from "#schemas/volume-data-path-schema.mjs";
+import { modelsPath } from "#schemas/models-path-schema.mjs";
+import { checkPointPath } from "#schemas/checkpoint-path-schema.mjs";
+import { resultPath } from "#schemas/result-path-schema.mjs";
+import { demoPath } from "#schemas/demo-path-schema.mjs";
+import { IlastikPath } from "#schemas/Ilastik-path-schema.mjs";
+import { nanoOetziPath } from "#schemas/nano-oetzi-path-schema.mjs";
+import { cryoEtPath } from "#schemas/cryoEt-path-schema.mjs";
+
 
 // Makes errors readable
 zod.config({
