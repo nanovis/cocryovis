@@ -15,7 +15,7 @@ import DeleteDialog from "../shared/DeleteDialog";
 import { sendRequestWithToast } from "../../utils/Helpers";
 import GlobalStyles from "../GlobalStyles";
 import ChangePasswordDialog from "./ChangePasswordDialog";
-import { publicUser } from "../../../../schemas/user-path-schema.mjs";
+import { publicUser } from "#schemas/user-path-schema.mjs";
 import z from "zod";
 
 const useStyles = makeStyles({

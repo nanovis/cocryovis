@@ -1,7 +1,7 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { Checkpoint } from "./CheckpointModel";
 import * as Utils from "../../utils/Helpers";
-import { getResultSchema } from "../../../../schemas/result-path-schema.mjs";
+import { getResultSchema } from "#schemas/result-path-schema.mjs";
 import z from "zod";
 
 

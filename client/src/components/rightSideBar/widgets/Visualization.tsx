@@ -25,11 +25,10 @@ import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
-import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeModel";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
-import { sparseLabelVolumeDataSchema } from "../../../../../schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import z from "zod";
 
 const useStyles = makeStyles({

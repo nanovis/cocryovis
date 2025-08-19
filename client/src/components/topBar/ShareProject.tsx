@@ -44,11 +44,11 @@ import { useMst } from "../../stores/RootStore";
 import { UserDB } from "../../stores/userState/UserModel";
 import { toast } from "react-toastify";
 import z from "zod";
-import { usersArray } from "../../../../schemas/user-path-schema.mjs";
+import { usersArray } from "#schemas/user-path-schema.mjs";
 import {
   projectAccessInfoSchema,
   setAccessSchemaRes,
-} from "../../../../schemas/project-path-schema.mjs";
+} from "#schemas/project-path-schema.mjs";
 
 const useStyles = makeStyles({
   userSelection: {

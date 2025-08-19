@@ -1,7 +1,7 @@
 import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
 import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
-import { sparseLabelVolumeDataSchema } from "../../../../schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import z from "zod";
 
 async function updateSparseVolume(

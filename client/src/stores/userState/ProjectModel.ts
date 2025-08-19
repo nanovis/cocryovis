@@ -3,9 +3,9 @@ import { ModelDB, ProjectModels } from "./ModelModel";
 import { ProjectVolumes, VolumeDB } from "./VolumeModel";
 import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
-import { projectSchema } from "../../../../schemas/componentSchemas/project-schema.mjs";
+import { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
 import z from "zod";
-import { projectSchemaDeepRes, projectsSchemaDeepRes } from "../../../../schemas/project-path-schema.mjs";
+import { projectSchemaDeepRes, projectsSchemaDeepRes } from "#schemas/project-path-schema.mjs";
 
 
 interface ProjectDB {

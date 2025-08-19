@@ -10,7 +10,7 @@ import {
   modelSchema,
   modelSchemaWithCheckpoint,
   modelSchemaWithOptionalCheckpoint,
-} from "../../../../schemas/componentSchemas/model-schema.mjs";
+} from "#schemas/componentSchemas/model-schema.mjs";
 
 export type ModelDB = z.infer<typeof modelSchemaWithOptionalCheckpoint>;
 

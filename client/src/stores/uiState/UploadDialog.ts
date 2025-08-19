@@ -9,7 +9,7 @@ import {
 import { VolumeSettings } from "../../utils/VolumeSettings";
 import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
-import { tomogramSchema } from "../../../../schemas/cryoEt-path-schema.mjs";
+import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 import z from "zod";
 
 export enum Tabs {

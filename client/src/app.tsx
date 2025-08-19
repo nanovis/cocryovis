@@ -20,7 +20,7 @@ import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import z from "zod";
-import { publicUser } from "../../schemas/user-path-schema.mjs";
+import { publicUser } from "#schemas/user-path-schema.mjs";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height

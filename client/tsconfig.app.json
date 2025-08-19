@@ -24,6 +24,10 @@
     "noUncheckedSideEffectImports": false,
     "allowJs": true,
     "checkJs": true,
+
+    "paths": {
+      "#schemas/*": ["../schemas/*"]
+    },
   },
   "include": ["src", "../schemas"]
 }

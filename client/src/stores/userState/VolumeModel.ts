@@ -6,12 +6,12 @@ import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
 import { VolumeSettings } from "../../utils/VolumeSettings";
-import { rawVolumeDataSchema } from "../../../../schemas/componentSchemas/raw-volume-data-schema.mjs";
+import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import z from "zod";
-import { volumeSchema } from "../../../../schemas/componentSchemas/volume-schema.mjs";
-import { volumesDeepSchemaRes } from "../../../../schemas/volume-path-schema.mjs";
-import { sparseLabelVolumeDataSchema } from "../../../../schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
-import { pseudoLabelVolumeDataSchema } from "../../../../schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
+import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
+import { volumesDeepSchemaRes } from "#schemas/volume-path-schema.mjs";
+import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
 
 export interface VolumeDB {
   id: number;

@@ -14,7 +14,7 @@ import {
 } from "../userState/PseudoVolumeModel";
 import { Id, toast } from "react-toastify";
 import z from "zod";
-import { getVolumeSchema } from "../../../../schemas/volume-path-schema.mjs";
+import { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
 
 export type visualizedObjectInstances =
   | VolumeInstance

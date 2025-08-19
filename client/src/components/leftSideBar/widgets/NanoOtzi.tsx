@@ -35,7 +35,7 @@ import {
   NumberInputValidatedField,
 } from "../../shared/ValidatedFields";
 import z from "zod";
-import { rawVolumeDataSchema } from "../../../../../schemas/componentSchemas/raw-volume-data-schema.mjs";
+import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {

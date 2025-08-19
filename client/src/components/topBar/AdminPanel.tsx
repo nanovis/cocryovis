@@ -28,7 +28,7 @@ import { sendReq, sendRequestWithToast } from "../../utils/Helpers";
 import { useEffect, useState } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
-import { usersArray } from "../../../../schemas/user-path-schema.mjs";
+import { usersArray } from "#schemas/user-path-schema.mjs";
 import z from "zod";
 
 const useStyles = makeStyles({

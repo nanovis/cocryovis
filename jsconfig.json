@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-      "paths": {
-    "#schemas/*": ["./schemas/*"]
-  },
+    "paths": {
+      "#schemas/*": ["./schemas/*"]
+    },
     "module": "CommonJS",
     "target": "ES2022"
   },
