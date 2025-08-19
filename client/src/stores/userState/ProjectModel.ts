@@ -3,6 +3,9 @@ import { ModelDB, ProjectModels } from "./ModelModel";
 import { ProjectVolumes, VolumeDB } from "./VolumeModel";
 import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
+import { projectSchema, projectSchemaDeepRes } from "../../../../schemas/componentSchemas/project-schema.mjs";
+import z from "zod";
+
 
 interface ProjectDB {
   id: number;
@@ -75,7 +78,7 @@ export const UserProjects = types
           return;
         }
 
-        const project = yield response.json();
+        const project: z.infer<typeof projectSchemaDeepRes> = yield response.json();
         if (!isAlive(self)) {
           return;
         }
@@ -109,7 +112,7 @@ export const UserProjects = types
           return;
         }
 
-        const projects = yield response.json();
+        const projects: z.infer<typeof projectSchemaDeepRes>[] = yield response.json();
         if (!isAlive(self)) {
           return;
         }
@@ -158,7 +161,7 @@ export const UserProjects = types
           return;
         }
 
-        const project = yield response.json();
+        const project: z.infer<typeof projectSchema> = yield response.json();
         if (!isAlive(self)) {
           return;
         }
@@ -219,7 +222,7 @@ export const UserProjects = types
           return;
         }
 
-        const project = yield response.json();
+        const project: z.infer<typeof projectSchemaDeepRes> = yield response.json();
         if (!isAlive(self)) {
           return;
         }

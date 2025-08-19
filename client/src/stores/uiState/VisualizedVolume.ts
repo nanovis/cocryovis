@@ -13,6 +13,8 @@ import {
   PseudoVolumeInstance,
 } from "../userState/PseudoVolumeModel";
 import { Id, toast } from "react-toastify";
+import z from "zod";
+import { getVolumeSchema } from "../../../../schemas/volume-path-schema.mjs";
 
 export type visualizedObjectInstances =
   | VolumeInstance
@@ -238,7 +240,7 @@ export const VisualizedVolume = types
         if (!isAlive(self)) {
           return;
         }
-        const volume = yield response.json();
+        const volume: z.infer<typeof getVolumeSchema> = yield response.json();
         if (!isAlive(self)) {
           return;
         }

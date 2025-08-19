@@ -10,9 +10,7 @@ export const checkpointSchema = z.object({
     creatorId: z.number().nullable(),
 });
 
-export const checkpointSchemaArray = z.object({
-    checkpointSchemaArray: z.array(checkpointSchema),
-});
+export const checkpointSchemaArray = z.array(checkpointSchema);
 
 export const idCheckpoint = z
     .object({

@@ -1,6 +1,8 @@
 import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
 import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
+import { sparseLabelVolumeDataSchema } from "../../../../schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import z from "zod";
 
 async function updateSparseVolume(
   id: number,
@@ -16,18 +18,19 @@ async function updateSparseVolume(
     },
     false
   );
-  return await response.json();
+  const update: z.infer<typeof sparseLabelVolumeDataSchema> =
+    await response.json();
+  return update;
 }
 
 export const SparseLabelVolume = types
   .model({
     id: types.identifierNumber,
     path: types.maybeNull(types.string),
-    folderPath: types.maybeNull(types.string),
     creatorId: types.maybeNull(types.integer),
     rawFilePath: types.maybeNull(types.string),
     settings: types.maybeNull(types.string),
-    color: types.optional(types.string, "#ffffff"),
+    color: types.maybeNull(types.string),
   })
   .actions((self) => ({
     setColor: flow(function* setColor(

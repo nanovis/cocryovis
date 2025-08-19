@@ -29,6 +29,8 @@ export const deepVolumeSchema = volumeSchema.extend({
     results: z.array(resultSchemaWithCheckpoint),
 });
 
+export const volumesDeepSchemaRes = z.array(deepVolumeSchema);
+
 export const createVolumeReq = z.object({
     name: z.string(),
     description: z.string(),
@@ -84,7 +86,7 @@ export const volumePath = {
                 200: {
                     content: {
                         "application/json": {
-                            schema: deepVolumeSchema,
+                            schema: volumesDeepSchemaRes,
                         },
                     },
                 },

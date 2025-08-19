@@ -1,11 +1,13 @@
 // @ts-check
 
+import z from "zod";
 import Utils from "./utils.mjs";
+import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 
 /**
  * Fetch cryoET tomogram metadata by id
  * @param {number} id
- * @returns {Promise<Object>}
+ * @returns {Promise<z.infer<tomogramSchema>>}
  */
 export async function fetchCtyoETTomogramMetadata(id) {
     let errOutput = "";

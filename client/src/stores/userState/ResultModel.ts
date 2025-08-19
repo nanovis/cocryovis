@@ -1,6 +1,9 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { Checkpoint } from "./CheckpointModel";
 import * as Utils from "../../utils/Helpers";
+import { getResultSchema } from "../../../../schemas/result-path-schema.mjs";
+import z from "zod";
+
 
 export const Result = types.model({
   id: types.identifierNumber,
@@ -74,7 +77,8 @@ export const VolumeResults = types
       if (!isAlive(self)) {
         return;
       }
-      const results: ResultSnapshotIn[] = yield response.json();
+      
+      const results: z.infer<typeof getResultSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }

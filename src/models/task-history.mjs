@@ -116,7 +116,8 @@ export default class TaskHistory extends DatabaseModel {
     }
 
     /**
-     * @param {TaskHistoryDB} taskHistory
+     * @template T
+     * @param {T & {enqueuedTime: Date | null, startTime: Date | null, endTime: Date | null}} taskHistory
      */
     static parseTaskHistory(taskHistory) {
         return {

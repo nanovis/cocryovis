@@ -9,6 +9,8 @@ import {
 import { VolumeSettings } from "../../utils/VolumeSettings";
 import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
+import { tomogramSchema } from "../../../../schemas/cryoEt-path-schema.mjs";
+import z from "zod";
 
 export enum Tabs {
   fromFile = "fromFile",
@@ -322,21 +324,9 @@ export const CryoETUploadInputs = types
         if (!isAlive(self)) {
           return;
         }
-        const metadata = yield response.json();
+        const metadata: z.infer<typeof tomogramSchema> = yield response.json();
         if (!isAlive(self)) {
           return;
-        }
-
-        if (
-          !metadata ||
-          !metadata.https_mrc_file ||
-          !metadata.size_x ||
-          !metadata.size_y ||
-          !metadata.size_z
-        ) {
-          throw new Error(
-            "CryoET metadata does not contain all required fields"
-          );
         }
 
         self.setUrl(metadata.https_mrc_file);

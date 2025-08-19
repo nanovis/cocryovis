@@ -5,11 +5,12 @@ import { checkpointSchema } from "./checkpoint-schema.mjs";
 import { idSchema } from "./id-param-schema.mjs";
 
 export const resultSchema = z.object({
-    id: z.number(),
+    id: z.int(),
     folderPath: z.string().nullable(),
-    rawVolumeChannel: z.number().nullable(),
+    rawVolumeChannel: z.int().nullable(),
     logFile: z.string().nullable(),
     checkpointId: z.number(),
+    creatorId: z.int().nullable(),
     volumeDataId: z.number(),
 });
 

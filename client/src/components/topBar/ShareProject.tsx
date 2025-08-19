@@ -43,6 +43,12 @@ import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
 import { UserDB } from "../../stores/userState/UserModel";
 import { toast } from "react-toastify";
+import z from "zod";
+import { usersArray } from "../../../../schemas/user-path-schema.mjs";
+import {
+  projectAccessInfoSchema,
+  setAccessSchemaRes,
+} from "../../../../schemas/project-path-schema.mjs";
 
 const useStyles = makeStyles({
   userSelection: {
@@ -88,11 +94,6 @@ const useStyles = makeStyles({
 interface UserAccessInfo {
   userId: number;
   accessLevel: number;
-}
-
-interface AccessInfoChanges {
-  publicAccess: number;
-  userAccess: UserAccessInfo[];
 }
 
 interface Props {
@@ -169,13 +170,9 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       if (!activeProject) {
         throw new Error("No active project");
       }
-
       setIsFetchingData(true);
-      let allUsers;
-      let accessInfo: {
-        projectAccess: { ownerId: number; publicAccess: number };
-        userAccess: Array<{ userId: number; accessLevel: number }>;
-      };
+      let allUsers: z.infer<typeof usersArray>;
+      let accessInfo: z.infer<typeof projectAccessInfoSchema>;
 
       try {
         let response = await Utils.sendReq(
@@ -342,7 +339,8 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
         },
         false
       );
-      const accessInfoChanges: AccessInfoChanges = await response.json();
+      const accessInfoChanges: z.infer<typeof setAccessSchemaRes> =
+        await response.json();
 
       resetChanges();
 
@@ -363,7 +361,6 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       setIsModifyingAccess(false);
     }
   };
-
   const updateAccessInfoMap = (userAccessInfo: UserAccessInfo[]) => {
     const accessMap = new Map(
       userAccessInfo.map(({ userId, accessLevel }) => [userId, accessLevel])

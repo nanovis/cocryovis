@@ -19,6 +19,8 @@ import { useMst } from "./stores/RootStore";
 import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
+import z from "zod";
+import { publicUser } from "../../schemas/user-path-schema.mjs";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height
@@ -54,7 +56,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       return JSON.parse(cookieData);
     };
 
-    const getLoggedUserData = async () => {
+    const getLoggedUserData = async (): Promise<z.infer<typeof publicUser>> => {
       const response = await Utils.sendReq("getLoggedUserData", {
         method: "GET",
       });
@@ -146,7 +148,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           },
           { successText: "Sign-In successful!" }
         );
-        const userData = await response.json();
+        const userData: z.infer<typeof publicUser> = await response.json();
         await setupUser(userData);
       } catch (error) {
         console.error(error);
@@ -175,7 +177,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           },
           { successText: "Sign-Up successful!" }
         );
-        const contents = await response.json();
+        const contents: z.infer<typeof publicUser> = await response.json();
 
         await setupUser(contents);
       } catch (error) {

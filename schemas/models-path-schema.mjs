@@ -16,18 +16,16 @@ export const getModelQuerySchema = z.object({
     projects: z.coerce.boolean().optional(),
 });
 
-export const getModelsSchema = modelSchema.extend({
-    checkpoints: z.array(checkpointSchema).optional(),
-    projects: z.array(projectSchema).optional(),
-});
+export const getModelsSchema = z.array(
+    modelSchema.extend({
+        checkpoints: z.array(checkpointSchema).optional(),
+        projects: z.array(projectSchema).optional(),
+    })
+);
 
 export const createModelSchema = z.object({
     name: z.string(),
     description: z.string(),
-});
-
-export const CreateModelSchemaRes = modelSchema.omit({
-    checkpoints: true,
 });
 
 export const idModelAndTypeSchema = z
@@ -112,7 +110,7 @@ export const modelsPath = {
                 201: {
                     content: {
                         "application/json": {
-                            schema: CreateModelSchemaRes,
+                            schema: modelSchema,
                         },
                     },
                 },

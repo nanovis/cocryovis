@@ -8,7 +8,6 @@ import appConfig from "../../tools/config.mjs";
 import ProjectController from '../../controllers/project-controller.mjs';
 import VolumeController from '../../controllers/volume-controller.mjs';
 import VolumeDataController from '../../controllers/volume-data-controller.mjs';
-import { VolumeDataType } from '../../models/volume-data-factory.mjs';
 import ModelController from '../../controllers/model-controller.mjs';
 import CheckpointController from '../../controllers/checkpoint-controller.mjs';
 import ResultController from '../../controllers/result-controller.mjs';

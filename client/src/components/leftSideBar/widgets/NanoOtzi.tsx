@@ -34,6 +34,8 @@ import {
   DropdownInputValidatedField,
   NumberInputValidatedField,
 } from "../../shared/ValidatedFields";
+import z from "zod";
+import { rawVolumeDataSchema } from "../../../../../schemas/componentSchemas/raw-volume-data-schema.mjs";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {
@@ -136,7 +138,11 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         }
       );
 
-      const rawData = await response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> =
+        await response.json();
+      if (!rawData.settings) {
+        throw new Error("Settings missing in raw data!");
+      }
 
       response = await Utils.sendReq(
         `volumeData/RawVolumeData/${rawData.id}/data`,

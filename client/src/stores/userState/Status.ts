@@ -1,5 +1,7 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
+import z from "zod";
+import { statusSchema } from "../../../../schemas/user-path-schema.mjs";
 
 export type TaskHistoryItem = {
   taskStatus: {
@@ -11,7 +13,7 @@ export type TaskHistoryItem = {
   data: {
     volume: { id: number; name: string } | null | "deleted";
     model: { id: number; name: string } | null | "deleted";
-    checkpoint?: { id: number; filePath: string } | null | "deleted";
+    checkpoint?: { id: number; filePath: string | null } | null | "deleted";
   };
   enqueuedTime: {
     date: Date;
@@ -49,10 +51,10 @@ export const TaskHistory = types.model({
   id: types.identifierNumber,
   taskType: types.integer,
   taskStatus: types.integer,
-  logFile: types.optional(types.maybeNull(types.string), null),
+  logFile: types.maybeNull(types.string),
   enqueuedTime: types.Date,
-  startTime: types.optional(types.maybeNull(types.Date), null),
-  endTime: types.optional(types.maybeNull(types.Date), null),
+  startTime: types.maybeNull(types.Date),
+  endTime: types.maybeNull(types.Date),
   volume: types.optional(
     types.maybeNull(
       types.model({
@@ -75,7 +77,7 @@ export const TaskHistory = types.model({
     types.maybeNull(
       types.model({
         id: types.integer,
-        filePath: types.string,
+        filePath: types.maybeNull(types.string),
       })
     ),
     null
@@ -237,12 +239,7 @@ export const Status = types
         if (!isAlive(self)) {
           return;
         }
-
-        const contents: {
-          taskHistory: TaskHistorySnapshotIn[];
-          cpuTaskQueue: TaskHistorySnapshotIn[];
-          gpuTaskQueue: TaskHistorySnapshotIn[];
-        } = yield response.json();
+        const contents: z.infer<typeof statusSchema> = yield response.json();
 
         if (!isAlive(self)) {
           return;

@@ -6,17 +6,23 @@ import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
 import { VolumeSettings } from "../../utils/VolumeSettings";
+import { rawVolumeDataSchema } from "../../../../schemas/componentSchemas/raw-volume-data-schema.mjs";
+import z from "zod";
+import { volumeSchema } from "../../../../schemas/componentSchemas/volume-schema.mjs";
+import { volumesDeepSchemaRes } from "../../../../schemas/volume-path-schema.mjs";
+import { sparseLabelVolumeDataSchema } from "../../../../schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import { pseudoLabelVolumeDataSchema } from "../../../../schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
 
 export interface VolumeDB {
   id: number;
   name: string;
   description: string;
   creatorId: number | null;
-  rawData: RawVolumeSnapshotIn | null | undefined;
+  rawData?: RawVolumeSnapshotIn | null;
   rawDataId: number | null;
-  sparseVolumes: SparseVolumeSnapshotIn[] | undefined;
-  pseudoVolumes: PseudoVolumeSnapshotIn[] | undefined;
-  results: ResultSnapshotIn[] | undefined;
+  sparseVolumes?: SparseVolumeSnapshotIn[];
+  pseudoVolumes?: PseudoVolumeSnapshotIn[];
+  results?: ResultSnapshotIn[];
 }
 
 export type LabeledVolumeTypes =
@@ -126,7 +132,7 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const rawData: RawVolumeSnapshotIn = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -153,7 +159,7 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const rawData: RawVolumeSnapshotIn = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -187,7 +193,7 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const rawData: RawVolumeSnapshotIn = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -214,7 +220,7 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const rawData: RawVolumeSnapshotIn = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -255,7 +261,7 @@ export const Volume = types
         return;
       }
 
-      const rawData: RawVolumeSnapshotIn = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -289,7 +295,7 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const volume: SparseVolumeSnapshotIn = yield response.json();
+      const volume: z.infer<typeof sparseLabelVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -323,7 +329,7 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const volume: PseudoVolumeSnapshotIn = yield response.json();
+      const volume: z.infer<typeof pseudoLabelVolumeDataSchema> = yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -437,7 +443,7 @@ export const ProjectVolumes = types
         if (!isAlive(self)) {
           return;
         }
-        const volume: VolumeDB = yield response.json();
+        const volume: z.infer<typeof volumeSchema> = yield response.json();
         if (!isAlive(self)) {
           return;
         }
@@ -486,7 +492,7 @@ export const ProjectVolumes = types
         if (!isAlive(self)) {
           return;
         }
-        const volumes: VolumeDB[] = yield response.json();
+        const volumes: z.infer<typeof volumesDeepSchemaRes> = yield response.json();
         if (!isAlive(self)) {
           return;
         }

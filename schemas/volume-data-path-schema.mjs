@@ -58,10 +58,6 @@ export const updateAnnotations = z.object({
     saveAsNew: z.boolean().default(false),
 });
 
-export const cryoetUrl = z.object({
-    metadata: z.url(),
-});
-
 export const idVolumeAndType = z
     .object({
         idVolume: idSchema,
@@ -106,18 +102,6 @@ export const idVolumeDataAndType = z
         ],
     });
 
-export const idTomogram = z
-    .object({
-        idTomogram: idSchema,
-    })
-    .meta({
-        param: {
-            name: "idTomogram",
-            in: "path",
-            required: true,
-        },
-        example: { idVolume: "1" },
-    });
 
 export const idVolumeVolumeDataTypeParams = z
     .object({
@@ -195,9 +179,7 @@ export const volumeDataPath = {
             responses: {
                 200: {
                     content: {
-                        "application/json": {
-                            schema: volumeData,
-                        },
+                        "application/octet-stream": {},
                     },
                 },
                 ...defaultError,
@@ -395,21 +377,5 @@ export const volumeDataPath = {
             },
         },
     },
-    "/cryoet/:idTomogram/": {
-        get: {
-            requestParams: {
-                path: idTomogram,
-            },
-            responses: {
-                200: {
-                    content: {
-                        "application/zip": {
-                            schema: cryoetUrl,
-                        },
-                    },
-                },
-                ...defaultError,
-            },
-        },
-    },
+
 };

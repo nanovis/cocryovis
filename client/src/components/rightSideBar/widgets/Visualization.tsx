@@ -29,6 +29,8 @@ import { SparseVolumeSnapshotIn } from "../../../stores/userState/SparseVolumeMo
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
+import { sparseLabelVolumeDataSchema } from "../../../../../schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import z from "zod";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -164,7 +166,8 @@ const Visualization = observer(({ open, close }: Props) => {
           false
         );
 
-        let sparseLabel: SparseVolumeSnapshotIn = await response.json();
+        let sparseLabel: z.infer<typeof sparseLabelVolumeDataSchema> =
+          await response.json();
 
         response = await Utils.sendReq(
           `/volumeData/SparseLabeledVolumeData/${sparseLabel.id}`,

@@ -28,6 +28,8 @@ import { sendReq, sendRequestWithToast } from "../../utils/Helpers";
 import { useEffect, useState } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
+import { usersArray } from "../../../../schemas/user-path-schema.mjs";
+import z from "zod";
 
 const useStyles = makeStyles({
   container: {
@@ -85,7 +87,7 @@ const AdminPanel = observer(() => {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
-      const usersData = await response.json();
+      const usersData: z.infer<typeof usersArray> = await response.json();
       setUsers(usersData);
     } catch (error) {
       console.error(error);

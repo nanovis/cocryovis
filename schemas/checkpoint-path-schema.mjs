@@ -105,7 +105,7 @@ export const checkPointPath = {
                 201: {
                     content: {
                         "application/json": {
-                            schema: checkpointSchema,
+                            schema: checkpointSchemaArray,
                         },
                     },
                 },
@@ -147,8 +147,8 @@ export const checkPointPath = {
             responses: {
                 200: {
                     content: {
-                        "application/json": {
-                            schema: checkpointTxt,
+                        "text/plain": {
+                            schema: z.string(),
                         },
                     },
                 },
@@ -169,8 +169,8 @@ export const checkPointPath = {
             responses: {
                 200: {
                     content: {
-                        "application/json": {
-                            schema: checkpointTxt,
+                        "text/plain": {
+                            schema: z.string(),
                         },
                     },
                 },

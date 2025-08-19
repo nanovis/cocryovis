@@ -3,9 +3,9 @@
 import z from "zod";
 
 export const sparseLabelVolumeDataSchema = z.object({
-    id: z.number(),
+    id: z.int(),
     path: z.string().nullable(),
-    creatorId: z.number().nullable(),
+    creatorId: z.int().nullable(),
     rawFilePath: z.string().nullable(),
     settings: z.string().nullable(),
     color: z.string().nullable(),

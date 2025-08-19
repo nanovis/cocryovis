@@ -4,16 +4,17 @@ import z from "zod";
 import {
     idProject,
     projectSchema,
+    projectSchemaDeepRes,
 } from "./componentSchemas/project-schema.mjs";
 import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
-import { modelSchema } from "./componentSchemas/model-schema.mjs";
+import { modelSchemaWithCheckpoint } from "./componentSchemas/model-schema.mjs";
 import { projectAccessSchema } from "./componentSchemas/project-access-schema.mjs";
 import { userAccessSchema } from "./componentSchemas/user-access-schema.mjs";
 import { defaultError } from "./error-path-schema.mjs";
 
 export const projectDeepSchemaRes = projectSchema.extend({
     volumes: z.array(volumeSchema),
-    models: z.array(modelSchema),
+    models: z.array(modelSchemaWithCheckpoint),
     projectAccess: z.array(projectAccessSchema),
 });
 
@@ -22,10 +23,21 @@ export const projectCreateSchemaReq = z.object({
     description: z.string(),
 });
 
-export const getProjectDeepRes = projectSchema.extend({
-    volumes: z.array(volumeSchema),
-    models: z.array(modelSchema),
-    projectAccess: z.array(projectAccessSchema),
+// export const getProjectDeepRes = projectSchema.extend({
+//     accessLevel: z.number(),
+//     volumes: z.array(volumeSchema),
+//     models: z.array(modelSchemaWithCheckpoint),
+//     projectAccess: z.array(projectAccessSchema),
+// });
+
+export const projectAccess = z.object({
+    ownerId: z.int(),
+    publicAccess: z.int(),
+});
+
+export const projectAccessInfoSchema = z.object({
+    projectAccess,
+    userAccess: z.array(userAccessSchema),
 });
 
 export const accessInfoSchemaRes = z.object({
@@ -34,12 +46,12 @@ export const accessInfoSchemaRes = z.object({
 });
 
 export const setAccessSchemaRes = z.object({
-    projectAccess: projectAccessSchema.omit({ userId: true, projectId: true }),
+    publicAccess: z.int(),
     userAccess: z.array(userAccessSchema),
 });
 
 export const setAccessSchemaReq = z.object({
-    publicAccess: z.number(),
+    publicAccess: z.int(),
     userAccess: z.array(userAccessSchema),
 });
 
@@ -53,7 +65,7 @@ export const projectPath = {
                 200: {
                     content: {
                         "application/json": {
-                            schema: projectDeepSchemaRes,
+                            schema: z.array(projectSchemaDeepRes),
                         },
                     },
                 },
@@ -91,7 +103,7 @@ export const projectPath = {
                 200: {
                     content: {
                         "application/json": {
-                            schema: projectSchema,
+                            schema: projectSchemaDeepRes,
                         },
                     },
                 },
@@ -109,7 +121,7 @@ export const projectPath = {
                 200: {
                     content: {
                         "application/json": {
-                            schema: accessInfoSchemaRes,
+                            schema: projectAccessInfoSchema,
                         },
                     },
                 },

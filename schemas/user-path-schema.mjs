@@ -2,6 +2,9 @@
 
 import { z } from "zod";
 import { defaultError, generateErrors } from "./error-path-schema.mjs";
+import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
+import { modelSchema } from "./componentSchemas/model-schema.mjs";
+import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
 
 export const registerSchema = z.object({
     username: z.string().min(1),
@@ -19,9 +22,9 @@ export const loginSchemaReq = z.object({
 });
 
 export const taskHistorySchema = z.object({
-    enqueuedTime: z.string(),
-    startTime: z.string(),
-    endTime: z.string(),
+    enqueuedTime: z.date(),
+    startTime: z.date().nullable(),
+    endTime: z.date().nullable(),
     id: z.int(),
     taskType: z.int(),
     taskStatus: z.int(),
@@ -30,6 +33,9 @@ export const taskHistorySchema = z.object({
     volumeId: z.int().nullable(),
     modelId: z.int().nullable(),
     checkpointId: z.int().nullable(),
+    volume: volumeSchema.nullable(),
+    model: modelSchema.nullable(),
+    checkpoint: checkpointSchema.nullable(),
 });
 
 export const statusSchema = z.object({
@@ -51,6 +57,8 @@ export const publicUser = z.object({
     name: z.string(),
     email: z.email(),
 });
+
+export const usersArray = z.array(publicUser);
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject
@@ -135,7 +143,7 @@ export const userPath = {
                     description: "List of users",
                     content: {
                         "application/json": {
-                            schema: z.array(publicUser),
+                            schema: usersArray,
                         },
                     },
                 },

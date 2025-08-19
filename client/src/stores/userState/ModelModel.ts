@@ -5,14 +5,14 @@ import {
   ModelCheckpoints,
 } from "./CheckpointModel";
 import * as Utils from "../../utils/Helpers";
+import z from "zod";
+import {
+  modelSchema,
+  modelSchemaWithCheckpoint,
+  modelSchemaWithOptionalCheckpoint,
+} from "../../../../schemas/componentSchemas/model-schema.mjs";
 
-export interface ModelDB {
-  id: number;
-  name: string;
-  description: string;
-  creatorId: number | null;
-  checkpoints: CheckpointSnapshotIn[] | undefined;
-}
+export type ModelDB = z.infer<typeof modelSchemaWithOptionalCheckpoint>;
 
 export const Model = types.model({
   id: types.identifierNumber,
@@ -88,7 +88,9 @@ export const ProjectModels = types
       if (!isAlive(self)) {
         return;
       }
-      const model: ModelDB = yield response.json();
+
+      const model: z.infer<typeof modelSchema> = yield response.json();
+
       if (!isAlive(self)) {
         return;
       }
@@ -129,7 +131,7 @@ export const ProjectModels = types
       if (!isAlive(self)) {
         return;
       }
-      const models: ModelDB[] = yield response.json();
+      const models: z.infer<typeof modelSchemaWithCheckpoint>[] = yield response.json();
       if (!isAlive(self)) {
         return;
       }

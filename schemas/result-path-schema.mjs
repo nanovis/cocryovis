@@ -43,12 +43,9 @@ export const resultFilesSchema = z.object({
     resultId: z.number(),
 });
 
-export const getResultSchema = resultSchema.extend({
-    checkpoints: checkpointSchema.optional(),
-    volumedata: rawVolumeDataSchema.optional(),
-    volumes: z.array(volumeSchema).optional(),
-    files: z.array(resultFilesSchema).optional(),
-});
+export const getResultSchema = z.array(resultSchema.extend({
+    checkpoints: checkpointSchema,
+}));
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject

@@ -22,13 +22,13 @@ import appConfig from "../tools/config.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
     fromUrlSchema,
-    idTomogram,
     idVolumeAndType,
     idVolumeDataAndType,
     idVolumeVolumeDataTypeParams,
     updateAnnotations,
     volumeDataUpdate,
 } from "#schemas/volume-data-path-schema.mjs";
+import { idTomogram } from "#schemas/cryoEt-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -394,6 +394,7 @@ export default class VolumeDataController {
         res.sendStatus(204);
     }
 
+    //TODO move to different controller
     /**
      * @param {Request} req
      * @param {Response} res

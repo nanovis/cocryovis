@@ -1215,7 +1215,9 @@ const Volume = observer(({ open, close }: Props) => {
                   )}
                   deleteTitle={"Remove Sparse Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
-                  color={selectedVolume.sparseVolumeArray[index].color}
+                  color={
+                    selectedVolume.sparseVolumeArray[index].color ?? undefined
+                  }
                   onColorChange={async (color) => {
                     await selectedVolume.sparseVolumeArray[index].setColor(
                       color,

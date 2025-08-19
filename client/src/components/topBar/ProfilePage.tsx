@@ -15,6 +15,8 @@ import DeleteDialog from "../shared/DeleteDialog";
 import { sendRequestWithToast } from "../../utils/Helpers";
 import GlobalStyles from "../GlobalStyles";
 import ChangePasswordDialog from "./ChangePasswordDialog";
+import { publicUser } from "../../../../schemas/user-path-schema.mjs";
+import z from "zod";
 
 const useStyles = makeStyles({
   container: {
@@ -123,7 +125,7 @@ const ProfilePage = observer(({}: Props) => {
         },
         { successText: "Change successful!" }
       );
-      const userData = await response.json();
+      const userData: z.infer<typeof publicUser> = await response.json();
       user.setName(userData.name);
       user.setUsername(userData.username);
       user.setEmail(userData.email);

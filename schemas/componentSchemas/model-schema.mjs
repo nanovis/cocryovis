@@ -9,6 +9,13 @@ export const modelSchema = z.object({
     name: z.string(),
     description: z.string(),
     creatorId: z.number().nullable(),
+});
+
+export const modelSchemaWithOptionalCheckpoint = modelSchema.extend({
+    checkpoints: z.array(checkpointSchema).optional(),
+});
+
+export const modelSchemaWithCheckpoint = modelSchema.extend({
     checkpoints: z.array(checkpointSchema),
 });
 
