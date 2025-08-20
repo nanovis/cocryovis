@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { DEFAULT_URL } from "./src/Constants.mjs";
 
 export default defineConfig(({ mode }) => {
+  // eslint-disable-next-line no-undef
   const env = loadEnv(mode, process.cwd());
 
   const proxyTarget = env.VITE_API_URL || DEFAULT_URL;

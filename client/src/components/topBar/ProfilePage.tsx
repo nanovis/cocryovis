@@ -80,8 +80,7 @@ const useStyles = makeStyles({
   },
 });
 
-interface Props {}
-const ProfilePage = observer(({}: Props) => {
+const ProfilePage = observer(() => {
   const { user, logout } = useMst();
   const classes = useStyles();
   const globalClasses = GlobalStyles();

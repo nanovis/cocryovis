@@ -49,7 +49,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
     const connectionStatus = useServerListener(websocketUrl, user);
 
     const fetchAuthCookieData = () => {
-      var cookieData = Cookies.get(CookieName);
+      const cookieData = Cookies.get(CookieName);
       if (!cookieData) {
         return null;
       }

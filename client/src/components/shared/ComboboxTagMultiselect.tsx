@@ -128,7 +128,7 @@ const ComboboxTagMultiselect = <
         onChange={(ev) => setSearchQuery(ev.target.value)}
         positioning={"after"}
       >
-        {selectionOptions.map((option, _index) =>
+        {selectionOptions.map((option) =>
           option.props.tooltip ? (
             <Tooltip
               hideDelay={0}

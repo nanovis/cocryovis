@@ -159,7 +159,7 @@ const VolumeUploadDialog = observer(
             return;
           }
         }
-      } catch (error) {
+      } catch {
         fileUploadInputs.reset();
       }
     };
@@ -255,7 +255,6 @@ const VolumeUploadDialog = observer(
         } else {
           await confirmFile();
         }
-      } catch {
       } finally {
         uploadDialogStore.setIsBusy(false);
         onClose();

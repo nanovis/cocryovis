@@ -198,7 +198,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const volumeDescriptors = [];
 
-      var formData = new FormData();
+      const formData = new FormData();
       for (const [i, volume] of volumeData.entries()) {
         const blob = new Blob([volume], {
           type: "application/octet-stream",

@@ -312,9 +312,10 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
                         </Text>
                       ) : (
                         <Text className={classes.dataText}>
-                          {Utils.shortFileNameFromPath(
-                            item.data.checkpoint.filePath
-                          )}
+                          {item.data.checkpoint.filePath &&
+                            Utils.shortFileNameFromPath(
+                              item.data.checkpoint.filePath
+                            )}
                         </Text>
                       )}
                     </div>
@@ -374,10 +375,7 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
                 {...columnSizing_unstable.getTableCellProps("endTime")}
               >
                 <TableCellLayout truncate>
-                  <Link
-                    target="_blank"
-                    href={`/logs/${item.log.path}`}
-                  >
+                  <Link target="_blank" href={`/logs/${item.log.path}`}>
                     <Tooltip
                       content="Open Log"
                       relationship="label"

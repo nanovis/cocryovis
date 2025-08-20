@@ -326,7 +326,7 @@ const Volume = observer(({ open, close }: Props) => {
 
   const handleVisualisationRequest = async (
     dataType: RawDataTypes,
-    id: Number | undefined,
+    id: number | undefined,
     volumeInstance:
       | VolumeInstance
       | SparseVolumeInstance

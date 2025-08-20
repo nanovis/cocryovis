@@ -119,7 +119,7 @@ const Main = () => {
         setStatus: function (text: any) {
           console.log("Renderer status: " + text);
         },
-        monitorRunDependencies: function (_left: any) {},
+        monitorRunDependencies: function () {},
       });
 
       console.log("Emscripten Module Initialized with WebGPU.");

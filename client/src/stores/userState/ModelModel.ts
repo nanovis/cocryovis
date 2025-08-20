@@ -1,9 +1,5 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import {
-  CheckpointInstance,
-  CheckpointSnapshotIn,
-  ModelCheckpoints,
-} from "./CheckpointModel";
+import { CheckpointInstance, ModelCheckpoints } from "./CheckpointModel";
 import * as Utils from "../../utils/Helpers";
 import z from "zod";
 import {
@@ -131,7 +127,8 @@ export const ProjectModels = types
       if (!isAlive(self)) {
         return;
       }
-      const models: z.infer<typeof modelSchemaWithCheckpoint>[] = yield response.json();
+      const models: z.infer<typeof modelSchemaWithCheckpoint>[] =
+        yield response.json();
       if (!isAlive(self)) {
         return;
       }
