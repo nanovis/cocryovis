@@ -2,7 +2,7 @@
 
 export default class TaskQueue {
     /**
-     * @typedef {{action: function, resolve: function, reject: function}} Task
+     * @typedef {{action: Function, resolve: Function, reject: Function}} Task
      */
 
     /** @type {Task[]} */
@@ -12,7 +12,7 @@ export default class TaskQueue {
     constructor() {}
 
     /**
-     * @returns {Number}
+     * @returns {number}
      */
     get size() {
         return this.#queue.length;
@@ -26,7 +26,7 @@ export default class TaskQueue {
     }
 
     /**
-     * @param {function} action
+     * @param {Function} action
      */
     enqueue(action) {
         return new Promise((resolve, reject) => {

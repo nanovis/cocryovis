@@ -3,12 +3,12 @@
 import { Prisma } from "@prisma/client";
 
 export class ApiError extends Error {
-    /** @type {Number} */
+    /** @type {number} */
     statusCode = 500;
 
     /**
-     * @param {String} message
-     * @param {Number} statusCode
+     * @param {number} statusCode
+     * @param {string} message
      */
     constructor(statusCode, message) {
         super(message);
@@ -17,8 +17,8 @@ export class ApiError extends Error {
     }
 
     /**
-     * @param {Number} instanceId
-     * @param {String} modelName
+     * @param {number} instanceId
+     * @param {string} modelName
      * @returns {MissingResourceError}
      */
     static fromId(instanceId, modelName) {
@@ -37,7 +37,7 @@ export class ApiError extends Error {
 
 export class MissingResourceError extends ApiError {
     /**
-     * @param {String} message
+     * @param {string} message
      */
     constructor(message) {
         super(404, message);
@@ -45,8 +45,8 @@ export class MissingResourceError extends ApiError {
     }
 
     /**
-     * @param {Number} instanceId
-     * @param {String} modelName
+     * @param {number} instanceId
+     * @param {string} modelName
      * @returns {MissingResourceError}
      */
     static fromId(instanceId, modelName) {

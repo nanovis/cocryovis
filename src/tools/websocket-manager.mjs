@@ -45,8 +45,8 @@ export default class WebSocketManager {
     }
 
     /**
-     * @param {Number[]} userIds
-     * @param {String[]} ignoreSessionIds
+     * @param {number[]} userIds
+     * @param {string[]} ignoreSessionIds
      * @param {string | number | readonly any[] | ArrayBuffer | SharedArrayBuffer | Uint8Array | Buffer<ArrayBufferLike> | DataView | ArrayBufferView | readonly number[] | { valueOf(): ArrayBuffer; } | { valueOf(): SharedArrayBuffer; } | { valueOf(): Uint8Array; } | { valueOf(): readonly number[]; } | { valueOf(): string; } | { [Symbol.toPrimitive](hint: string): string; }} message
      */
     static broadcastMessage(userIds, ignoreSessionIds, message) {
@@ -58,10 +58,10 @@ export default class WebSocketManager {
     }
 
     /**
-     * @param {Number[]} userIds
-     * @param {String[]} ignoreSessionIds
-     * @param {String} actionType
-     * @param {Object} actionContent
+     * @param {number[]} userIds
+     * @param {string[]} ignoreSessionIds
+     * @param {string} actionType
+     * @param {object} actionContent
      */
     static broadcastAction(
         userIds,
@@ -84,9 +84,9 @@ export default class WebSocketManager {
 
 export class WebSocketInstance {
     // TODO: Use some sort of database.
-    /** @type {Map<Number, Map<String, WebSocket>>}} */
+    /** @type {Map<number, Map<string, WebSocket>>}} */
     #connections = new Map();
-    /** @type {Map<WebSocket, {userId: Number, sessionId: String}>} */
+    /** @type {Map<WebSocket, {userId: number, sessionId: string}>} */
     #websocketToUserSession = new Map();
 
     /**
@@ -191,8 +191,8 @@ export class WebSocketInstance {
     }
 
     /**
-     * @param {Number[]} userIds
-     * @param {String[]} ignoreSessionIds
+     * @param {number[]} userIds
+     * @param {string[]} ignoreSessionIds
      * @param {string | number | readonly any[] | ArrayBuffer | SharedArrayBuffer | Uint8Array | Buffer<ArrayBufferLike> | DataView | ArrayBufferView | readonly number[] | { valueOf(): ArrayBuffer; } | { valueOf(): SharedArrayBuffer; } | { valueOf(): Uint8Array; } | { valueOf(): readonly number[]; } | { valueOf(): string; } | { [Symbol.toPrimitive](hint: string): string; }} message
      */
     broadcastMessage(userIds, ignoreSessionIds, message) {
@@ -214,8 +214,8 @@ export class WebSocketInstance {
     }
 
     /**
-     * @param {Number} userId
-     * @param {String} sessionId
+     * @param {number} userId
+     * @param {string} sessionId
      * @param {WebSocket} websocket
      */
     #registerUser(userId, sessionId, websocket) {

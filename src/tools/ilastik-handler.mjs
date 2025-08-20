@@ -43,9 +43,9 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {Number} volumeId
-     * @param {Number} userId
-     * @param {String?} outputPath
+     * @param {number} volumeId
+     * @param {number} userId
+     * @param {string?} outputPath
      * @returns {Promise<void>}
      */
     async queueLabelGeneration(volumeId, userId, outputPath = null) {
@@ -103,11 +103,11 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {String} rawDataPath
-     * @param {String} modelPath
-     * @param {String} labelsOutputPath
+     * @param {string} rawDataPath
+     * @param {string} modelPath
+     * @param {string} labelsOutputPath
      * @param {LogFile} logFile
-     * @returns {Promise<String>}
+     * @returns {Promise<string>}
      */
     async #runIlastikInference(
         rawDataPath,
@@ -148,11 +148,11 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {String} rawDataPath
-     * @param {String} sparseLabelPath
-     * @param {String} outputPath
+     * @param {string} rawDataPath
+     * @param {string} sparseLabelPath
+     * @param {string} outputPath
      * @param {LogFile} logFile
-     * @returns {Promise<String>}
+     * @returns {Promise<string>}
      */
     async #createIlastikProject(
         rawDataPath,
@@ -192,10 +192,10 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {Number} volumeId
-     * @param {Number} userId
-     * @param {String} outputPath
-     * @param {Number} taskHistoryId
+     * @param {number} volumeId
+     * @param {number} userId
+     * @param {string} outputPath
+     * @param {number} taskHistoryId
      * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
     async #generateLabels(volumeId, userId, outputPath, taskHistoryId) {
@@ -315,8 +315,8 @@ export default class IlastikHandler {
      * @param {RawVolumeDataDB} rawData
      * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
      * @param {import("../models/volume-data.mjs").VolumeDataSettings} settings
-     * @param {String} rawOutputPath
-     * @param {String} labelsOutputPath
+     * @param {string} rawOutputPath
+     * @param {string} labelsOutputPath
      * @param {LogFile} logFile
      */
     async #convertDataToH5(

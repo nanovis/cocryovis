@@ -30,7 +30,7 @@ export default class TaskHistory extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      */
     static async getById(id) {
         const task = await super.getById(id);
@@ -39,7 +39,7 @@ export default class TaskHistory extends DatabaseModel {
     }
 
     /**
-     * @param {Number} userId
+     * @param {number} userId
      */
     static async getFromUser(userId) {
         const taskHistory = await this.db.findMany({
@@ -160,7 +160,7 @@ export default class TaskHistory extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.TaskHistoryUpdateInput} changes
      */
     static async update(id, changes) {
@@ -190,7 +190,7 @@ export default class TaskHistory extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      */
     static async del(id) {
         const taskHistory = await super.del(id);

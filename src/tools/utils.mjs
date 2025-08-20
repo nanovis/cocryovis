@@ -11,15 +11,15 @@ const execPromise = promisify(exec);
 
 export default class Utils {
     /**
-     * @param {String} name
+     * @param {string} name
      */
     static fileNameFilter(name) {
         return name.replace(/\s+/g, "_").replace(/[^\da-zA-Z_.-]+/g, "");
     }
 
     /**
-     * @param {String} filename
-     * @param {String[]} acceptedFileExtensions
+     * @param {string} filename
+     * @param {string[]} acceptedFileExtensions
      */
     static isFileExtensionAccepted(filename, acceptedFileExtensions) {
         return (
@@ -31,16 +31,16 @@ export default class Utils {
     }
 
     /**
-     * @param {String} fileName
-     * @returns {String}
+     * @param {string} fileName
+     * @returns {string}
      */
     static stripExtension(fileName) {
         return path.parse(fileName).name;
     }
 
     /**
-     * @param {String} inputFile
-     * @param {String} outputPath
+     * @param {string} inputFile
+     * @param {string} outputPath
      */
     static async mrcToRaw(inputFile, outputPath) {
         const command = `${appConfig.nanoOetzi.python} "${path.join(
@@ -60,8 +60,8 @@ export default class Utils {
     }
 
     /**
-     * @param {String} inputFile
-     * @param {String} outputPath
+     * @param {string} inputFile
+     * @param {string} outputPath
      */
     static async analyzeToRaw(inputFile, outputPath) {
         const command = `${appConfig.nanoOetzi.python} "${path.join(
@@ -95,7 +95,7 @@ export default class Utils {
     }
 
     /**
-     * @param {String} filePath
+     * @param {string} filePath
      */
     static generateUniqueFileName(filePath) {
         const folder = path.dirname(filePath);
@@ -112,7 +112,7 @@ export default class Utils {
     }
 
     /**
-     * @param {String[]} array
+     * @param {string[]} array
      */
     static parseStringArray(array) {
         if (!Array.isArray(array)) {
@@ -123,8 +123,8 @@ export default class Utils {
     }
 
     /**
-     * @param {String} basePath
-     * @returns {String}
+     * @param {string} basePath
+     * @returns {string}
      */
     static createTemporaryFolder(basePath) {
         let tempFolderPath = path.join(basePath, Utils.getInverseDateString());
@@ -160,13 +160,13 @@ export default class Utils {
     }
 
     /**
-     * @param {String} rawFilePath
-     * @param {Number} width
-     * @param {Number} height
-     * @param {Number} depth
-     * @param {String} outputPath
-     * @param {Number} filterSize
-     * @returns {Promise<String>}
+     * @param {string} rawFilePath
+     * @param {number} width
+     * @param {number} height
+     * @param {number} depth
+     * @param {string} outputPath
+     * @param {number} filterSize
+     * @returns {Promise<string>}
      */
     static async meanFilter(
         rawFilePath,
@@ -179,7 +179,7 @@ export default class Utils {
         const rawFileAbsolutePath = path.resolve(rawFilePath);
         const outputAbsolutePath = path.resolve(outputPath);
 
-        /** @type {Array<Number | String>} */
+        /** @type {Array<number | string>} */
         const params = [
             `"${rawFileAbsolutePath}"`,
             width,
@@ -202,8 +202,8 @@ export default class Utils {
     }
 
     /**
-     * @param {String} checkpointPath
-     * @returns {Promise<String>}
+     * @param {string} checkpointPath
+     * @returns {Promise<string>}
      */
     static async ckptToText(checkpointPath) {
         return new Promise((resolve, reject) => {
@@ -236,8 +236,8 @@ export default class Utils {
     /**
      * @param {import("archiver").Archiver} archive
      * @param {import("../models/volume-data.mjs").VolumeDataSettings[]} settings
-     * @param {String[]} rawFilePaths
-     * @param {Number?} rawVolumeChannel
+     * @param {string[]} rawFilePaths
+     * @param {number?} rawVolumeChannel
      * @returns {Promise<any>}
      */
     static async packVisualizationArchive(
@@ -293,9 +293,9 @@ export default class Utils {
     }
 
     /**
-     * @param {Object} obj
-     * @param {Object} template
-     * @returns {Boolean}
+     * @param {object} obj
+     * @param {object} template
+     * @returns {boolean}
      */
     static matchesTemplate(obj, template) {
         return Object.keys(template).every((key) => {
@@ -321,7 +321,7 @@ export default class Utils {
 
     /**
      * @param {string} string
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     static isValidHttpUrl(string) {
         let url;
@@ -405,6 +405,7 @@ export default class Utils {
      * @param {string} cwd - Optional working directory. Defaults to current directory.
      * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
      * @param {(value: string) => void?} stderrCallback - Callback for stderr.
+     * @param {number[]} allowSoftFailCodes
      * @returns {Promise<number>}
      */
     static async runScript(
@@ -496,8 +497,7 @@ export default class Utils {
     }
 
     /**
-     * @param {String | number} value
-     * @returns
+     * @param {string | number} value
      */
     static isFloat(value) {
         const num = Number(value);
@@ -505,8 +505,7 @@ export default class Utils {
     }
 
     /**
-     * @param {String | number} value
-     * @returns
+     * @param {string | number} value
      */
     static isInteger(value) {
         const num = Number(value);

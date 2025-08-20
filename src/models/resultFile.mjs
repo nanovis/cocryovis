@@ -15,19 +15,19 @@ export default class ResultFile extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<ResultFileDB>}
+     * @param {number} id
+     * @returns {Promise<ResultFileDB>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {String} name
-     * @param {String} rawFileName
-     * @param {String} settingsFileName
-     * @param {Number} index
-     * @param {Number} resultId
+     * @param {string} name
+     * @param {string} rawFileName
+     * @param {string} settingsFileName
+     * @param {number} index
+     * @param {number} resultId
      * @param {import("@prisma/client").Prisma.TransactionClient} client
      * @returns {Promise<ResultFileDB>}
      */
@@ -51,7 +51,7 @@ export default class ResultFile extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @returns {Promise<ResultFileDB>}
      */
     static async del(id) {

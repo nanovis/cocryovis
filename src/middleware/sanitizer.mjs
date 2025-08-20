@@ -1,8 +1,8 @@
 // @ts-check
 
 /**
- * @param {Object} obj
- * @return {Object}
+ * @param {object} obj
+ * @returns {object}
  */
 export function sanitize(obj) {
     if (Array.isArray(obj)) {

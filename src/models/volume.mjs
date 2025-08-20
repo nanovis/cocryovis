@@ -36,7 +36,7 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {z.infer<volumeQuerySchema>} options
      */
     static async getById(
@@ -66,7 +66,7 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number} projectId
+     * @param {number} projectId
      * @param {z.infer<volumeQuerySchema>} options
      */
     static async getVolumesFromProject(
@@ -98,7 +98,7 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number} projectId
+     * @param {number} projectId
      */
     static async getVolumesFromProjectDeep(projectId) {
         return await this.db.findMany({
@@ -123,15 +123,19 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
-     * @return {Promise<VolumeDB[]>}
+     * @param {number[]} ids
+     * @returns {Promise<VolumeDB[]>}
      */
     static async getByIds(ids) {
         return await super.getByIds(ids);
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
+     * @param {object} options
+     * @param {boolean} [options.rawData]
+     * @param {boolean} [options.sparseVolumes]
+     * @param {boolean} [options.pseudoVolumes]
      */
     static async getMultipleByIdDeep(
         ids,
@@ -149,11 +153,11 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {String} name
-     * @param {String} description
-     * @param {Number} creatorId
-     * @param {Number} projectId
-     * @return {Promise<VolumeDB>}
+     * @param {string} name
+     * @param {string} description
+     * @param {number} creatorId
+     * @param {number} projectId
+     * @returns {Promise<VolumeDB>}
      */
     static async create(name, description, creatorId, projectId) {
         return Project.withWriteLock(projectId, [this.modelName], () => {
@@ -171,10 +175,10 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number} sourceId
-     * @param {Number} creatorId
-     * @param {Number} projectId
-     * @return {Promise<VolumeDB>}
+     * @param {number} sourceId
+     * @param {number} creatorId
+     * @param {number} projectId
+     * @returns {Promise<VolumeDB>}
      */
     static async clone(sourceId, creatorId, projectId) {
         return await prismaManager.db.$transaction(async (tx) => {
@@ -184,10 +188,10 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @param {Number} sourceId
-     * @param {Number} creatorId
-     * @param {Number?} projectId
-     * @return {Promise<VolumeDB>}
+     * @param {number} sourceId
+     * @param {number} creatorId
+     * @param {number?} projectId
+     * @returns {Promise<VolumeDB>}
      */
     static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
         const sourceVolume = await tx.volume.findUnique({
@@ -245,26 +249,26 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.VolumeUpdateInput} changes
-     * @return {Promise<VolumeDB>}
+     * @returns {Promise<VolumeDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<VolumeDB>}
+     * @param {number} id
+     * @returns {Promise<VolumeDB>}
      */
     static async del(id) {
         return this.#del(id);
     }
 
     /**
-     * @param {Number} id
-     * @param {Number} projectId
-     * @return {Promise<VolumeDB>}
+     * @param {number} id
+     * @param {number} projectId
+     * @returns {Promise<VolumeDB>}
      */
     static async removeFromProject(id, projectId) {
         return Project.withWriteLock(projectId, [this.modelName], () => {
@@ -275,8 +279,8 @@ export default class Volume extends DatabaseModel {
     // @param { import("@prisma/client").Prisma.VolumeDelegate } db
 
     /**
-     * @param { Number } volumeId
-     * @param { Number? } projectId
+     * @param {number} volumeId
+     * @param {number?} projectId
      * @returns { Promise<VolumeDB> }
      */
     static async #del(volumeId, projectId = null) {
@@ -372,9 +376,9 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<void>}
+     * @returns {Promise<void>}
      */
     static async deleteZombies(ids, tx) {
         if (ids.length === 0) {
@@ -412,12 +416,12 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @param {Number} creatorId
-     * @typedef {Object} xyz
-     * @property {Number} x
-     * @property {Number} y
-     * @property {Number} z
+     * @param {number} id
+     * @param {number} creatorId
+     * @typedef {object} xyz
+     * @property {number} x
+     * @property {number} y
+     * @property {number} z
      * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
@@ -497,9 +501,9 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {String} folderPath
-     * @param {Number} creatorId
-     * @param {Number} volumeId
+     * @param {string} folderPath
+     * @param {number} creatorId
+     * @param {number} volumeId
      * @param {SparseLabelVolumeDataDB[]} originalLabels
      * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */

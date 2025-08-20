@@ -16,16 +16,16 @@ export default class DatabaseModel {
     /** @type {WriteLockManager?} */ static lockManager = null;
 
     /**
-     * @return {any}
+     * @returns {any}
      */
     static get db() {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {any} options
-     * @return {Promise<Object>}
+     * @returns {Promise<object>}
      */
     static async getById(id, options) {
         const entry = await this.db.findUniqueOrThrow({
@@ -38,8 +38,8 @@ export default class DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
-     * @return {Promise<Object[]>}
+     * @param {number[]} ids
+     * @returns {Promise<object[]>}
      */
     static async getByIds(ids) {
         if (ids.length === 0) {
@@ -57,17 +57,17 @@ export default class DatabaseModel {
 
     /**
      * @param {...*} var_args
-     * @return {Promise<Object>}
+     * @returns {Promise<object>}
      */
     static async create(...var_args) {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @param {Number} id
-     * @param {Object} changes
-     * @param {Object} include
-     * @return {Promise<Object>}
+     * @param {number} id
+     * @param {object} changes
+     * @param {object} include
+     * @returns {Promise<object>}
      */
     static async update(id, changes, include = null) {
         return this.withWriteLock(id, null, () => {
@@ -87,8 +87,8 @@ export default class DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<Object>}
+     * @param {number} id
+     * @returns {Promise<object>}
      */
     static async del(id) {
         return this.withWriteLock(id, null, () => {
@@ -107,10 +107,10 @@ export default class DatabaseModel {
 
     /**
      * @template T
-     * @param {Number} id
-     * @param {String[]?} connections
+     * @param {number} id
+     * @param {string[]?} connections
      * @param {() => T} operation
-     * @param {Boolean?} ignore
+     * @param {boolean?} ignore
      * @returns {Promise<T>}
      */
     static async withWriteLock(id, connections, operation, ignore = false) {
@@ -128,8 +128,8 @@ export default class DatabaseModel {
 
     /**
      * @template T
-     * @param {Number[]} ids
-     * @param {String[]?} connections
+     * @param {number[]} ids
+     * @param {string[]?} connections
      * @param {() => T} operation
      * @returns {Promise<T>}
      */

@@ -23,7 +23,7 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {Options} options
      */
     static async getById(id, { checkpoints = false, projects = false } = {}) {
@@ -41,15 +41,15 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
-     * @return {Promise<ModelDB[]>}
+     * @param {number[]} ids
+     * @returns {Promise<ModelDB[]>}
      */
     static async getByIds(ids) {
         return await super.getByIds(ids);
     }
 
     /**
-     * @param {Number} projectId
+     * @param {number} projectId
      * @param {Options} options
      */
     static async getModelsFromProject(
@@ -72,11 +72,11 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {String} name
-     * @param {String} description
-     * @param {Number} creatorId
-     * @param {Number} projectId
-     * @return {Promise<ModelDB>}
+     * @param {string} name
+     * @param {string} description
+     * @param {number} creatorId
+     * @param {number} projectId
+     * @returns {Promise<ModelDB>}
      */
     static async create(name, description, creatorId, projectId) {
         return Project.withWriteLock(projectId, [this.modelName], () => {
@@ -94,10 +94,10 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {Number} sourceId
-     * @param {Number} creatorId
-     * @param {Number} projectId
-     * @return {Promise<ModelDB>}
+     * @param {number} sourceId
+     * @param {number} creatorId
+     * @param {number} projectId
+     * @returns {Promise<ModelDB>}
      */
     static async clone(sourceId, creatorId, projectId) {
         return await prismaManager.db.$transaction(async (tx) => {
@@ -107,10 +107,10 @@ export default class Model extends DatabaseModel {
 
     /**
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @param {Number} sourceId
-     * @param {Number} creatorId
-     * @param {Number?} projectId
-     * @return {Promise<ModelDB>}
+     * @param {number} sourceId
+     * @param {number} creatorId
+     * @param {number?} projectId
+     * @returns {Promise<ModelDB>}
      */
     static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
         const sourceModel = await tx.model.findUnique({
@@ -151,26 +151,26 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.ModelUpdateInput} changes
-     * @return {Promise<ModelDB>}
+     * @returns {Promise<ModelDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<ModelDB>}
+     * @param {number} id
+     * @returns {Promise<ModelDB>}
      */
     static async del(id) {
         return this.#del(id);
     }
 
     /**
-     * @param {Number} id
-     * @param {Number} projectId
-     * @return {Promise<ModelDB>}
+     * @param {number} id
+     * @param {number} projectId
+     * @returns {Promise<ModelDB>}
      */
     static async removeFromProject(id, projectId) {
         return Project.withWriteLock(projectId, [this.modelName], () => {
@@ -179,8 +179,8 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param { Number } modelId
-     * @param { Number? } projectId
+     * @param {number} modelId
+     * @param {number?} projectId
      * @returns { Promise<ModelDB> }
      */
     static async #del(modelId, projectId = null) {
@@ -268,9 +268,9 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<void>}
+     * @returns {Promise<void>}
      */
     static async deleteZombies(ids, tx) {
         if (ids.length === 0) {

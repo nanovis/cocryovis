@@ -32,16 +32,16 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<ResultDB>}
+     * @param {number} id
+     * @returns {Promise<ResultDB>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<import("./volume.mjs").VolumeDB[]>}
+     * @param {number} id
+     * @returns {Promise<import("./volume.mjs").VolumeDB[]>}
      */
     static async getVolumes(id) {
         const result = await this.db.findUnique({
@@ -59,7 +59,12 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} volumeId
+     * @param {number} volumeId
+     * @param {object} options
+     * @param {boolean} [options.checkpoint]
+     * @param {boolean} [options.volumeData]
+     * @param {boolean} [options.volumes]
+     * @param {boolean} [options.files]
      */
     static async getFromVolume(
         volumeId,
@@ -90,7 +95,12 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
+     * @param {object} options
+     * @param {boolean} [options.checkpoint]
+     * @param {boolean} [options.volumeData]
+     * @param {boolean} [options.volumes]
+     * @param {boolean} [options.files]
      */
     static async getByIdDeep(
         id,
@@ -119,10 +129,10 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} checkpointId
-     * @param {Number} volumeDataId
-     * @param {Number} volumeId
+     * @param {number} creatorId
+     * @param {number} checkpointId
+     * @param {number} volumeDataId
+     * @param {number} volumeId
      */
     static async create(creatorId, checkpointId, volumeDataId, volumeId) {
         return await this.db.create({
@@ -140,19 +150,19 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} checkpointId
-     * @param {Number} volumeDataId
-     * @param {Number} volumeId
-     * @typedef {Object} Config
-     * @property {String} name
-     * @property {String} rawFileName
-     * @property {String} settingsFileName
-     * @property {Number} index
-     * @property {Boolean?} rawVolumeChannel
+     * @param {number} creatorId
+     * @param {number} checkpointId
+     * @param {number} volumeDataId
+     * @param {number} volumeId
+     * @typedef {object} Config
+     * @property {string} name
+     * @property {string} rawFileName
+     * @property {string} settingsFileName
+     * @property {number} index
+     * @property {boolean?} rawVolumeChannel
      * @param {Config[]} config
-     * @param {String} folderPath
-     * @param {String?} logFile
+     * @param {string} folderPath
+     * @param {string?} logFile
      */
     static async createFromFolder(
         creatorId,
@@ -281,11 +291,11 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} checkpointId
-     * @param {Number} volumeDataId
-     * @param {Number} volumeId
-     * @param {{name: String, index: Number, rawVolumeChannel: Boolean?}[]} volumeDescriptors,
+     * @param {number} creatorId
+     * @param {number} checkpointId
+     * @param {number} volumeDataId
+     * @param {number} volumeId
+     * @param {{name: string, index: number, rawVolumeChannel: boolean?}[]} volumeDescriptors
      * @param {fileUpload.UploadedFile[]} files
      */
     static async createFromFiles(
@@ -505,8 +515,8 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {String} volumeName
-     * @returns {String}
+     * @param {string} volumeName
+     * @returns {string}
      */
     static #getTFName(volumeName) {
         switch (volumeName) {
@@ -526,26 +536,26 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.ResultUpdateInput} changes
-     * @return {Promise<ResultDB>}
+     * @returns {Promise<ResultDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<ResultDB>}
+     * @param {number} id
+     * @returns {Promise<ResultDB>}
      */
     static async del(id) {
         return this.#del(id);
     }
 
     /**
-     * @param {Number} resultId
-     * @param {Number} volumeId
-     * @return {Promise<ResultDB>}
+     * @param {number} resultId
+     * @param {number} volumeId
+     * @returns {Promise<ResultDB>}
      */
     static async removeFromVolume(resultId, volumeId) {
         return Volume.withWriteLock(volumeId, [this.modelName], () => {
@@ -554,9 +564,9 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number} resultId
-     * @param {Number?} volumeId
-     * @return {Promise<ResultDB>}
+     * @param {number} resultId
+     * @param {number?} volumeId
+     * @returns {Promise<ResultDB>}
      */
     static async #del(resultId, volumeId = null) {
         const fileDeleteStack = [];
@@ -658,16 +668,16 @@ export default class Result extends DatabaseModel {
 
     /**
      * @param {ResultDB} result
-     * @return {String[]}
+     * @returns {string[]}
      */
     static getFilePaths(result) {
         return [result.folderPath];
     }
 
     /**
-     * @param {Number} id
-     * @param {Boolean} create
-     * @return {Promise<String>}
+     * @param {number} id
+     * @param {boolean} create
+     * @returns {Promise<string>}
      */
     static async reserveFolderName(id, create = false) {
         const resultsFolderPath = path.join(
@@ -695,9 +705,9 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<String[]>}
+     * @returns {Promise<string[]>}
      */
     static async deleteZombies(ids, tx) {
         if (ids.length === 0) {
@@ -732,7 +742,7 @@ export default class Result extends DatabaseModel {
                 },
             });
 
-            /** @type {String[]} */
+            /** @type {string[]} */
             const fileDeleteStack = [];
 
             results.forEach((r) =>
