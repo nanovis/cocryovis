@@ -13,3 +13,9 @@ transfer-functions/
 *.yaml
 *.yml
 *.md
+
+!package.json
+!tsconfig*.json
+!nodemon.json
+!jsconfig.json
+!config.json
