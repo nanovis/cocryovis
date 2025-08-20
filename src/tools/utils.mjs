@@ -43,10 +43,10 @@ export default class Utils {
      * @param {String} outputPath
      */
     static async mrcToRaw(inputFile, outputPath) {
-        const command = `${appConfig.nanoOetzi.python} \"${path.join(
+        const command = `${appConfig.nanoOetzi.python} "${path.join(
             "./python-scripts",
             "mrc-to-raw.py"
-        )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
+        )}" -i "${inputFile}" -o "${outputPath}"`;
         const { stdout, stderr } = await execPromise(command);
         // fs.writeFileSync(
         //     path.join(outputPath, "mrc-to-raw.log"),
@@ -64,10 +64,10 @@ export default class Utils {
      * @param {String} outputPath
      */
     static async analyzeToRaw(inputFile, outputPath) {
-        const command = `${appConfig.nanoOetzi.python} \"${path.join(
+        const command = `${appConfig.nanoOetzi.python} "${path.join(
             "./python-scripts",
             "analyze-to-raw.py"
-        )}\" -i \"${inputFile}\" -o \"${outputPath}\"`;
+        )}" -i "${inputFile}" -o "${outputPath}"`;
         const { stdout, stderr } = await execPromise(command);
         const data = JSON.parse(stdout);
         return {
@@ -181,21 +181,21 @@ export default class Utils {
 
         /** @type {Array<Number | String>} */
         const params = [
-            `\"${rawFileAbsolutePath}\"`,
+            `"${rawFileAbsolutePath}"`,
             width,
             height,
             depth,
-            `\"${outputAbsolutePath}\"`,
+            `"${outputAbsolutePath}"`,
         ];
 
         if (filterSize != null) {
             params.push(filterSize);
         }
 
-        const command = `${appConfig.nanoOetzi.python} \"${path.join(
+        const command = `${appConfig.nanoOetzi.python} "${path.join(
             "./python-scripts",
             "mean-filter.py"
-        )}\" ${params.join(" ")}`;
+        )}" ${params.join(" ")}`;
 
         await execPromise(command);
         return outputPath;
@@ -382,24 +382,20 @@ export default class Utils {
      * @returns {Promise<string>}
      */
     static async downloadAndSaveFile(url) {
-        try {
-            const tempDir = path.join(appConfig.tempPath, "downloads");
+        const tempDir = path.join(appConfig.tempPath, "downloads");
 
-            const originalFileName = path.basename(new URL(url).pathname);
-            const ext = path.extname(originalFileName);
-            const baseName = path.basename(originalFileName, ext);
-            const uniqueName = `${baseName}_${Date.now()}${ext}`;
-            const filePath = path.join(tempDir, uniqueName);
-            if (fs.existsSync(filePath)) {
-                throw new Error("File already exists.");
-            }
-
-            await Utils.downloadFile(url, filePath);
-
-            return filePath;
-        } catch (error) {
-            throw error;
+        const originalFileName = path.basename(new URL(url).pathname);
+        const ext = path.extname(originalFileName);
+        const baseName = path.basename(originalFileName, ext);
+        const uniqueName = `${baseName}_${Date.now()}${ext}`;
+        const filePath = path.join(tempDir, uniqueName);
+        if (fs.existsSync(filePath)) {
+            throw new Error("File already exists.");
         }
+
+        await Utils.downloadFile(url, filePath);
+
+        return filePath;
     }
 
     /**

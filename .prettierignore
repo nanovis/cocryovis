@@ -1,7 +1,6 @@
 src/routes/api/projects.mjs
 data/
 demo/
-docs-api/
 logs/
 modules/
 node_modules/

@@ -3,9 +3,8 @@
 import z from "zod";
 import { idResult, resultSchema } from "./componentSchemas/result-schema.mjs";
 import { defaultError, generateErrors } from "./error-path-schema.mjs";
-import { idVolume, volumeSchema } from "./componentSchemas/volume-schema.mjs";
+import { idVolume } from "./componentSchemas/volume-schema.mjs";
 import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
-import { rawVolumeDataSchema } from "./componentSchemas/raw-volume-data-schema.mjs";
 import {
     multipleFileSchema,
     singleFileSchema,
@@ -43,9 +42,11 @@ export const resultFilesSchema = z.object({
     resultId: z.number(),
 });
 
-export const getResultSchema = z.array(resultSchema.extend({
-    checkpoints: checkpointSchema,
-}));
+export const getResultSchema = z.array(
+    resultSchema.extend({
+        checkpoints: checkpointSchema,
+    })
+);
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject

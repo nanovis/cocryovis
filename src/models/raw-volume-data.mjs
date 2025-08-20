@@ -148,8 +148,6 @@ export default class RawVolumeData extends VolumeData {
                             timeout: 60000,
                         }
                     );
-                } catch (error) {
-                    throw error;
                 } finally {
                     await fsPromises.rm(tempDirectory, {
                         recursive: true,
