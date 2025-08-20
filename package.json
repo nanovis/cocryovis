@@ -16,7 +16,7 @@
     "prisma:db": "npx prisma studio",
     "start": "node index.mjs",
     "start:dev": "nodemon index.mjs",
-    "format": "prettier --write ."
+    "format": "prettier --write . '!client/**'"
   },
   "repository": {
     "type": "git",
