@@ -19,7 +19,7 @@ export async function getVolumesFromProjectDeep(id: number) {
 
 export async function createVolume(
   id: number,
-  request: z.infer<typeof createVolumeReq>
+  request: z.input<typeof createVolumeReq>
 ) {
   const response = await Utils.sendReq(`project/${id}/volumes`, {
     method: "POST",

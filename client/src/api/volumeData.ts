@@ -35,7 +35,7 @@ export async function getVolumeDataById<T extends keyof VolumeDataMap>(
 export async function updateVolumeData<T extends keyof VolumeDataMap>(
   type: T,
   id: number,
-  request: z.infer<typeof volumeDataUpdate>
+  request: z.input<typeof volumeDataUpdate>
 ) {
   const response = await Utils.sendReq(
     `/volumeData/${type}/${id}`,
@@ -53,7 +53,7 @@ export async function updateVolumeData<T extends keyof VolumeDataMap>(
 }
 
 export async function getVolumeData(
-  type: z.infer<typeof typeSchema>,
+  type: z.input<typeof typeSchema>,
   id: number
 ) {
   const response = await Utils.sendReq(
@@ -117,7 +117,7 @@ export async function createFromMrcFile(id: number, request: FormData) {
 
 export async function createFromUrl(
   id: number,
-  request: z.infer<typeof fromUrlSchema>
+  request: z.input<typeof fromUrlSchema>
 ) {
   const response = await Utils.sendReq(
     `volume/${id}/volumeData/RawVolumeData/from-url`,
@@ -136,7 +136,7 @@ export async function createFromUrl(
 export async function updateAnnotations(
   idVolume: number,
   idVolumeData: number,
-  request: z.infer<typeof updateAnnotationsSchema>
+  request: z.input<typeof updateAnnotationsSchema>
 ) {
   const response = await Utils.sendReq(
     `volume/${idVolume}/volumeData/SparseLabeledVolumeData/${idVolumeData}/update-annotations`,

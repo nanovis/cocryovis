@@ -32,6 +32,7 @@ import { VolumeSettings } from "../../utils/VolumeSettings";
 import React from "react";
 import {
   endianOptions,
+  FileTypeOptions,
   fileTypeOptions,
   formatOptions,
   Tabs,
@@ -88,7 +89,7 @@ interface Props {
   onFileConfirm: (file: File, volumeSettings?: VolumeSettings) => Promise<void>;
   onUrlConfirm: (
     url: string,
-    fileType: "mrc" | "raw",
+    fileType: FileTypeOptions,
     volumeSettings?: VolumeSettings
   ) => Promise<void>;
   titleText: string;
@@ -282,12 +283,14 @@ const VolumeUploadDialog = observer(
         const settings = urlUploadInputs.toVolumeSettings();
         await onUrlConfirm(
           urlUploadInputs.url,
-          //TODO
-          urlUploadInputs.fileType,
+          urlUploadInputs.fileType as FileTypeOptions,
           settings
         );
       } else {
-        await onUrlConfirm(urlUploadInputs.url, urlUploadInputs.fileType);
+        await onUrlConfirm(
+          urlUploadInputs.url,
+          urlUploadInputs.fileType as FileTypeOptions
+        );
       }
     };
 

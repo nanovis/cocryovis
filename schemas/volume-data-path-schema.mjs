@@ -41,9 +41,11 @@ export const volumeDataUpdate = z.union([
 //   protocol: /^https?$/,
 // });
 
+export const fileTypeSchema = z.enum(["mrc", "raw"]);
+
 export const fromUrlSchema = z
     .object({
-        fileType: z.enum(["mrc", "raw"]),
+        fileType: fileTypeSchema,
         url: z.url({
             protocol: /^https?$/,
         }),

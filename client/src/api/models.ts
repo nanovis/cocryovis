@@ -21,7 +21,7 @@ export async function getModelsFromProjectWithCheckpoints(id: number) {
 
 export async function createModel(
   id: number,
-  request: z.infer<typeof createModelSchema>
+  request: z.input<typeof createModelSchema>
 ) {
   const response = await Utils.sendReq(`project/${id}/models`, {
     method: "POST",

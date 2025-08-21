@@ -9,7 +9,7 @@ import {
 import * as Utils from "../utils/Helpers";
 import z from "zod";
 
-export async function login(request: z.infer<typeof loginSchemaReq>) {
+export async function login(request: z.input<typeof loginSchemaReq>) {
   const response = await Utils.sendRequestWithToast(
     "login",
     {
@@ -30,7 +30,7 @@ export async function logout() {
   });
 }
 
-export async function register(request: z.infer<typeof registerSchema>) {
+export async function register(request: z.input<typeof registerSchema>) {
   const response = await Utils.sendRequestWithToast(
     "register",
     {
@@ -74,7 +74,7 @@ export async function getStatus() {
   return contents;
 }
 
-export async function updateUser(request: z.infer<typeof updateUserSchema>) {
+export async function updateUser(request: z.input<typeof updateUserSchema>) {
   const response = await Utils.sendRequestWithToast(
     "user",
     {

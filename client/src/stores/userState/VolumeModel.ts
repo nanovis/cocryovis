@@ -14,7 +14,13 @@ import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-la
 import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
 import { getVolumesFromProjectDeep } from "../../api/volume";
 import * as volumeApi from "../../api/volume";
-import { createFromFiles, createFromMrcFile, createFromUrl, removeFromVolume } from "../../api/volumeData";
+import {
+  createFromFiles,
+  createFromMrcFile,
+  createFromUrl,
+  removeFromVolume,
+} from "../../api/volumeData";
+import { FileTypeOptions } from "../uiState/UploadDialog";
 
 export interface VolumeDB {
   id: number;
@@ -150,50 +156,37 @@ export const Volume = types
     }),
     uploadFromUrl: flow(function* uploadFromUrl(
       url: string,
-      fileType: "mrc" | "raw",
+      fileType: FileTypeOptions,
       volumeSettings?: VolumeSettings
     ) {
       if (!Utils.isValidHttpUrl(url)) {
         toast.error(`Invalid URL.`);
         throw new Error("Invalid URL.");
       }
-      if (volumeSettings !== undefined && volumeSettings.file === undefined) {
-        toast.error(`Invalid URL.`);
-        throw new Error("Missing VolumeSettings");
-      }
-      //TODO uros fix
+
+      volumeSettings?.checkValidity();
+
+      // TODO better unify server and client setting types
       const rawData: z.infer<typeof rawVolumeDataSchema> = yield createFromUrl(
         self.id,
-        { url: url, fileType: fileType, volumeSettings: volumeSettings }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-
-      self.setRawVolume(rawData);
-    }),
-    uploadMrcUrl: flow(function* uploadMrcVolume(url: string) {
-      if (!Utils.isValidHttpUrl(url)) {
-        toast.error(`Invalid URL.`);
-        throw new Error("Invalid URL.");
-      }
-      //TODO fix
-      const response = yield Utils.sendRequestWithToast(
-        `volume/${self.id}/volumeData/RawVolumeData/from-mrc-url`,
         {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: url,
-          }),
+          url: url,
+          fileType: fileType,
+          volumeSettings: volumeSettings
+            ? {
+                file: volumeSettings.file!,
+                size: volumeSettings.size!,
+                ratio: volumeSettings.ratio!,
+                bytesPerVoxel: volumeSettings.bytesPerVoxel! as 1 | 2 | 4 | 8,
+                usedBits: volumeSettings.usedBits! as 8 | 16 | 32 | 64,
+                skipBytes: volumeSettings.skipBytes,
+                isLittleEndian: volumeSettings.isLittleEndian!,
+                isSigned: volumeSettings.isSigned!,
+                addValue: volumeSettings.addValue,
+              }
+            : undefined,
         }
       );
-      if (!isAlive(self)) {
-        return;
-      }
-      const rawData: z.infer<typeof rawVolumeDataSchema> =
-        yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -279,8 +272,8 @@ export const Volume = types
       dataType: LabeledVolumeTypes,
       dataId: number
     ) {
-      removeFromVolume(dataType, self.id, dataId)
-      
+      removeFromVolume(dataType, self.id, dataId);
+
       if (dataType == "SparseLabeledVolumeData") {
         self.sparseVolumes.delete(dataId.toString());
       } else if (dataType == "PseudoLabeledVolumeData") {

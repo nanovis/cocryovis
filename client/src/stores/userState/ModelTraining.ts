@@ -304,6 +304,10 @@ export const ModelTraining = types
         toastId = toast.loading("Training in progress...");
         self.isBusy = true;
 
+        if (!self.model) {
+          throw new Error("No model selected");
+        }
+
         if (
           self.checkpointId === undefined &&
           self.model &&
@@ -315,26 +319,23 @@ export const ModelTraining = types
         }
 
         //prettier-ignore
-        const trainData: Record<string, any> = {
-          modelId: self.model?.id,
+        const trainData = {
+          modelId: self.model.id,
           trainingVolumes: self.trainingVolumeIds,
           validationVolumes: self.validationVolumeIds,
           testingVolumes: self.testingVolumeIds,
           minEpochs: self.minEpochsInput.convertToValue(),
           maxEpochs: self.maxEpochsInput.convertToValue(),
-          findLearningRate: self.findLearningRateInput.convertToValue(),
+          findLearningRate: self.findLearningRateInput.getValue(),
           learningRate: self.learningRateInput.convertToValue(),
           batchSize: self.batchSizeInput.convertToValue(),
-          loss: self.lossInput.convertToValue(),
-          optimizer: self.optimizerInput.convertToValue(),
+          loss: self.lossInput.convertToValue() as "mse" | "bce" | "awl",
+          optimizer: self.optimizerInput.convertToValue() as "adam" | "ranger",
           accumulateGradients: self.accumulateGradientsInput.convertToValue(),
+          checkpointId: self.checkpointId !== undefined ? self.checkpointId : undefined,
         };
 
-        if (self.checkpointId !== undefined) {
-          trainData.checkpointId = self.checkpointId;
-        }
-        //TODO uros shema not maching trainData
-        queueTraining(trainData)
+        queueTraining(trainData);
         if (!isAlive(self)) {
           return;
         }

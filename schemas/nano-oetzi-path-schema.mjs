@@ -25,7 +25,7 @@ export const trainingOptions = z
             .toLowerCase()
             .pipe(z.enum(["adam", "ranger"])),
         accumulateGradients: z.int().min(1),
-        checkpointId: z.int(),
+        checkpointId: z.int().optional(),
     })
     .refine(({ minEpochs, maxEpochs }) => minEpochs <= maxEpochs, {
         error: "Training error: Maximum epochs must be greater than minimum epochs.",
@@ -33,9 +33,9 @@ export const trainingOptions = z
 export const idArray = z.array(stringToInt).nonempty();
 
 export const trainingReq = z.object({
-    trainingVolumesIds: idArray,
-    validationVolumesIds: idArray,
-    testingVolumesIds: idArray,
+    trainingVolumes: idArray,
+    validationVolumes: idArray,
+    testingVolumes: idArray,
     modelId: z.number(),
     ...trainingOptions.shape,
 });

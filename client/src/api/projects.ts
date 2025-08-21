@@ -19,7 +19,7 @@ export async function getAllUserProjectsDeep() {
 }
 
 export async function createProject(
-  request: z.infer<typeof projectCreateSchemaReq>
+  request: z.input<typeof projectCreateSchemaReq>
 ) {
   const response = await Utils.sendRequestWithToast("projects", {
     method: "POST",
@@ -55,7 +55,7 @@ export async function getProjectDeep(id: number) {
 
 export async function setAccess(
   id: number,
-  request: z.infer<typeof setAccessSchemaReq>
+  request: z.input<typeof setAccessSchemaReq>
 ) {
   const response = await Utils.sendReq(
     `project/${id}/access`,

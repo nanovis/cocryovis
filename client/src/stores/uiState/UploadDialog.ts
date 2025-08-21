@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
 import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 import z from "zod";
+import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
 
 export enum Tabs {
   fromFile = "fromFile",
@@ -32,7 +33,8 @@ export const endianOptions = [
   "Big Endian",
 ] as readonly string[];
 
-export const fileTypeOptions = ["raw", "mrc"] as readonly string[];
+export type FileTypeOptions = z.infer<typeof fileTypeSchema>;
+export const fileTypeOptions = fileTypeSchema.options as readonly FileTypeOptions[];
 
 function stringToPositiveInteger(value: string) {
   const parsedValue = parseInt(value);
@@ -195,7 +197,9 @@ export const UrlUploadInputs = types
       self.url = url;
     },
     setFileType(fileType: string) {
-      self.fileType = fileTypeOptions.includes(fileType) ? fileType : "mrc";
+      if (fileType && (fileTypeOptions as readonly string[]).includes(fileType)) {
+        self.fileType = fileType as FileTypeOptions;
+      }
     },
     setWidth(width: string) {
       self.width = stringToPositiveInteger(width);

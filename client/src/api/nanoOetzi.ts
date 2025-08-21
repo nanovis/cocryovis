@@ -2,7 +2,7 @@ import z from "zod";
 import * as Utils from "../utils/Helpers";
 import { inferenceIds, trainingReq } from "#schemas/nano-oetzi-path-schema.mjs";
 
-export async function queueInference(request: z.infer<typeof inferenceIds>) {
+export async function queueInference(request: z.input<typeof inferenceIds>) {
   await Utils.sendRequestWithToast(
     `queue-inference`,
     {
@@ -15,7 +15,7 @@ export async function queueInference(request: z.infer<typeof inferenceIds>) {
   );
 }
 
-export async function queueTraining(request: z.infer<typeof trainingReq>) {
+export async function queueTraining(request: z.input<typeof trainingReq>) {
   await Utils.sendReq(
     `queue-training`,
     {

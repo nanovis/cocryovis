@@ -41,9 +41,9 @@ export default class NanoOetziController {
         await gpuTaskHandler.queueTraining(
             body.modelId,
             Number(req.session.user.id),
-            body.trainingVolumesIds,
-            body.validationVolumesIds,
-            body.testingVolumesIds,
+            body.trainingVolumes,
+            body.validationVolumes,
+            body.testingVolumes,
             body
         );
 

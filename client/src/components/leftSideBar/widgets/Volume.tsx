@@ -67,6 +67,7 @@ import {
   getVolumeVisualizationFiles,
 } from "../../../api/volumeData";
 import { getResultData } from "../../../api/results";
+import { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -227,7 +228,7 @@ const Volume = observer(({ open, close }: Props) => {
 
   const uploadUrl = async (
     url: string,
-    fileType: "mrc" | "raw",
+    fileType: FileTypeOptions,
     volumeSettings?: VolumeSettings
   ) => {
     let toastId = null;
