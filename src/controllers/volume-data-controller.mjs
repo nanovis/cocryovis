@@ -16,7 +16,6 @@ import {
     unpackFiles,
 } from "../tools/file-handler.mjs";
 import fsPromises from "node:fs/promises";
-import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
@@ -28,7 +27,6 @@ import {
     updateAnnotationsSchema,
     volumeDataUpdate,
 } from "#schemas/volume-data-path-schema.mjs";
-import { idTomogram } from "#schemas/cryoEt-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request

@@ -27,7 +27,7 @@
 
     "paths": {
       "#schemas/*": ["../schemas/*"]
-    },
+    }
   },
   "include": ["src", "../schemas"]
 }

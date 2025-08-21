@@ -16,7 +16,7 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
  */
 
 /**
- * @extends {VolumeData}
+ * @augments {VolumeData}
  */
 export default class SparseLabeledVolumeData extends VolumeData {
     static modelName = "sparseLabelVolumeData";
@@ -31,28 +31,28 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @param {number} id
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @param {number} creatorId
+     * @param {number} volumeId
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async create(creatorId, volumeId) {
         return await super.create(creatorId, volumeId);
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
+     * @param {number} creatorId
+     * @param {number} volumeId
      * @param {PendingUpload[]} files
-     * @param {Boolean?} skipLock
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @param {boolean?} skipLock
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
         return await super.createFromFiles(
@@ -64,26 +64,26 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.SparseLabelVolumeDataUpdateInput} changes
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @param {number} id
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async del(id) {
         return await super.del(id);
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<String[]>}
+     * @returns {Promise<string[]>}
      */
     static async deleteZombies(ids, tx) {
         if (ids.length === 0) {
@@ -121,7 +121,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
                 },
             });
 
-            /** @type {String[]} */
+            /** @type {string[]} */
             const fileDeleteStack = [];
 
             sparseVolumes.forEach((v) =>
@@ -133,9 +133,9 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
-     * @param {Number} volumeId
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @param {number} id
+     * @param {number} volumeId
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
         return Volume.withWriteLock(volumeId, [this.modelName], () => {
@@ -189,12 +189,12 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {String} filePath
-     * @param {Number} creatorId
-     * @param {Number} volumeId
-     * @param {String} settings
+     * @param {string} filePath
+     * @param {number} creatorId
+     * @param {number} volumeId
+     * @param {string} settings
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<SparseLabelVolumeDataDB>}
+     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async fromRawFile(
         filePath,
@@ -241,7 +241,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {PendingUpload} file
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
@@ -252,10 +252,10 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} labelId
-     * @param {Number} volumeId,
+     * @param {number} labelId
+     * @param {number} volumeId
      * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
-     * @param {Boolean} saveAsNew
+     * @param {boolean} saveAsNew
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async updateAnnotations(

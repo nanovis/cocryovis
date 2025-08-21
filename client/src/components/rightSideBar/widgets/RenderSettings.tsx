@@ -68,7 +68,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
   const globalClasses = globalStyles();
 
   const handleChangeClearColor = (event: InputChangeEvent) => {
-    var hex_code = event.target.value.split("");
+    const hex_code = event.target.value.split("");
     renderSettings.setClearColor(
       parseInt(hex_code[1] + hex_code[2], 16),
       parseInt(hex_code[3] + hex_code[4], 16),

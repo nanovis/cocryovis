@@ -20,9 +20,8 @@ export default class UserController {
     /**
      * @param {Request} req
      * @param {Response} res
-     * @param {import("express").NextFunction} next
      */
-    static async register(req, res, next) {
+    static async register(req, res) {
         const { body } = validateSchema(req, { bodySchema: registerSchema });
 
         const user = await User.create(
@@ -44,9 +43,8 @@ export default class UserController {
     /**
      * @param {Request} req
      * @param {Response} res
-     * @param {import("express").NextFunction} next
      */
-    static async login(req, res, next) {
+    static async login(req, res) {
         const { body } = validateSchema(req, { bodySchema: loginSchemaReq });
 
         try {

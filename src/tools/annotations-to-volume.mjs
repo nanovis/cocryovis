@@ -6,16 +6,16 @@ import { ApiError } from "./error-handler.mjs";
 import Utils from "./utils.mjs";
 
 /**
- * @typedef {Object} xyz
- * @property {Number} x
- * @property {Number} y
- * @property {Number} z
- * @typedef {Object} AnnotationsEntry
- * @property {Boolean} add
+ * @typedef {object} xyz
+ * @property {number} x
+ * @property {number} y
+ * @property {number} z
+ * @typedef {object} AnnotationsEntry
+ * @property {boolean} add
  * @property {xyz} dimensions
  * @property {xyz} kernelSize
  * @property {xyz[]} positions
- * @property {String} volumeName
+ * @property {string} volumeName
  */
 
 const annotationsEntrySchema = {
@@ -42,7 +42,7 @@ const annotationsEntrySchema = {
 
 /**
  * @param {AnnotationsEntry[]} entries
- * @param {String} outputFile
+ * @param {string} outputFile
  * @param {Buffer | undefined} currentData
  */
 export async function annotationsToVolume(

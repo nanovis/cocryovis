@@ -28,16 +28,16 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<CheckpointDB>}
+     * @param {number} id
+     * @returns {Promise<CheckpointDB>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<import("./model.mjs").ModelDB[]>}
+     * @param {number} id
+     * @returns {Promise<import("./model.mjs").ModelDB[]>}
      */
     static async getModels(id) {
         const models = await this.db.findUnique({
@@ -55,8 +55,8 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} modelId
-     * @return {Promise<CheckpointDB[]>}
+     * @param {number} modelId
+     * @returns {Promise<CheckpointDB[]>}
      */
     static async getFromModel(modelId) {
         const checkpoints = await this.db.findMany({
@@ -73,17 +73,17 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number[]} ids
-     * @return {Promise<CheckpointDB[]>}
+     * @param {number[]} ids
+     * @returns {Promise<CheckpointDB[]>}
      */
     static async getByIds(ids) {
         return await super.getByIds(ids);
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} modelId
-     * @return {Promise<CheckpointDB>}
+     * @param {number} creatorId
+     * @param {number} modelId
+     * @returns {Promise<CheckpointDB>}
      */
     static async create(creatorId, modelId) {
         return prismaManager.db.$transaction(async (tx) => {
@@ -115,10 +115,10 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} modelId
+     * @param {number} creatorId
+     * @param {number} modelId
      * @param {fileUpload.UploadedFile[]} files
-     * @return {Promise<CheckpointDB[]>}
+     * @returns {Promise<CheckpointDB[]>}
      */
     static async createFromFiles(creatorId, modelId, files) {
         const unpackedFiles = await unpackFiles(
@@ -173,11 +173,11 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} modelId
-     * @param {Number[]} labelIds
-     * @param {String} folderPath
-     * @param {String} filePath
+     * @param {number} creatorId
+     * @param {number} modelId
+     * @param {number[]} labelIds
+     * @param {string} folderPath
+     * @param {string} filePath
      */
     static async createFromFolder(
         creatorId,
@@ -242,18 +242,18 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.CheckpointUpdateInput} changes
-     * @return {Promise<CheckpointDB>}
+     * @returns {Promise<CheckpointDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<String[]>}
+     * @returns {Promise<string[]>}
      */
     static async deleteZombies(ids, tx) {
         if (ids.length === 0) {
@@ -291,7 +291,7 @@ export default class Checkpoint extends DatabaseModel {
                 },
             });
 
-            /** @type {String[]} */
+            /** @type {string[]} */
             const fileDeleteStack = [];
 
             checkpoints.forEach((c) =>
@@ -303,17 +303,17 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<CheckpointDB>}
+     * @param {number} id
+     * @returns {Promise<CheckpointDB>}
      */
     static async del(id) {
         return this.#del(id);
     }
 
     /**
-     * @param {Number} checkpointId
-     * @param {Number?} modelId
-     * @return {Promise<CheckpointDB>}
+     * @param {number} checkpointId
+     * @param {number?} modelId
+     * @returns {Promise<CheckpointDB>}
      */
     static async removeFromModel(checkpointId, modelId) {
         return Model.withWriteLock(checkpointId, [this.modelName], () => {
@@ -322,9 +322,9 @@ export default class Checkpoint extends DatabaseModel {
     }
 
     /**
-     * @param {Number} checkpointId
-     * @param {Number?} modelId
-     * @return {Promise<CheckpointDB>}
+     * @param {number} checkpointId
+     * @param {number?} modelId
+     * @returns {Promise<CheckpointDB>}
      */
     static async #del(checkpointId, modelId = null) {
         const fileDeleteStack = [];
@@ -436,15 +436,15 @@ export default class Checkpoint extends DatabaseModel {
 
     /**
      * @param {CheckpointDB} checkpoint
-     * @returns {String[]}
+     * @returns {string[]}
      */
     static getFilePaths(checkpoint) {
         return [checkpoint.folderPath];
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<String>}
+     * @param {number} id
+     * @returns {Promise<string>}
      */
     static async reserveFolderName(id) {
         const checkpointFolderPath = path.join(

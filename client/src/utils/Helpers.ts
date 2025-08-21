@@ -180,7 +180,7 @@ export function getFilenameFromHeader(response: Response) {
     }
   }
 
-  let fileName = response.url.split("/").pop()?.split("?")[0].split("#")[0];
+  const fileName = response.url.split("/").pop()?.split("?")[0].split("#")[0];
   if (fileName && fileName.includes(".")) return fileName;
 }
 
@@ -188,7 +188,7 @@ export async function downloadFile(
   response: Response,
   filenameOverwrite?: string
 ) {
-  let filename = filenameOverwrite ?? getFilenameFromHeader(response);
+  const filename = filenameOverwrite ?? getFilenameFromHeader(response);
 
   if (!filename) {
     throw new Error("Missing filename");
@@ -457,7 +457,7 @@ export function isValidHttpUrl(string: string) {
 
   try {
     url = new URL(string);
-  } catch (_) {
+  } catch {
     return false;
   }
 

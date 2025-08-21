@@ -12,45 +12,45 @@ import fsPromises from "fs/promises";
 
 export class PendingUpload {
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileName() {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get filteredFileName() {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileExtension() {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @return {Promise<Buffer>}
+     * @returns {Promise<Buffer>}
      */
     async getData() {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @param {String} folderPath
-     * @param {String?} fileNameOverride
-     * @return {Promise<String>}
+     * @param {string} _folderPath
+     * @param {string?} [_fileNameOverride]
+     * @returns {Promise<string>}
      */
-    async saveAs(folderPath, fileNameOverride = null) {
+    async saveAs(_folderPath, _fileNameOverride = null) {
         throw new Error("Method not implemented");
     }
 }
 
 /**
- * @extends {PendingUpload}
+ * @augments {PendingUpload}
  */
 export class PendingFile extends PendingUpload {
     /**
@@ -64,28 +64,28 @@ export class PendingFile extends PendingUpload {
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileName() {
         return this.file.name;
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get filteredFileName() {
         return Utils.fileNameFilter(this.file.name);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileExtension() {
         return path.extname(this.file.name);
     }
 
     /**
-     * @return {Promise<Buffer>}
+     * @returns {Promise<Buffer>}
      */
     async getData() {
         const contents = await fsPromises.readFile(this.file.tempFilePath);
@@ -93,8 +93,9 @@ export class PendingFile extends PendingUpload {
     }
 
     /**
-     * @param {String} folderPath
-     * @return {Promise<String>}
+     * @param {string} folderPath
+     * @param {string} [fileNameOverride]
+     * @returns {Promise<string>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
         const filteredFileName =
@@ -117,7 +118,7 @@ export class PendingFile extends PendingUpload {
 }
 
 /**
- * @extends {PendingUpload}
+ * @augments {PendingUpload}
  */
 export class PendingZipFile extends PendingUpload {
     /**
@@ -134,36 +135,37 @@ export class PendingZipFile extends PendingUpload {
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileName() {
         return this.entry.name;
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get filteredFileName() {
         return Utils.fileNameFilter(this.entry.name);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileExtension() {
         return path.extname(this.entry.name);
     }
 
     /**
-     * @return {Promise<Buffer>}
+     * @returns {Promise<Buffer>}
      */
     async getData() {
         return this.entry.getData();
     }
 
     /**
-     * @param {String} folderPath
-     * @return {Promise<String>}
+     * @param {string} folderPath
+     * @param {string} [fileNameOverride]
+     * @returns {Promise<string>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
         const filteredFileName =
@@ -199,42 +201,42 @@ export class PendingZipFile extends PendingUpload {
 }
 
 /**
- * @extends {PendingUpload}
+ * @augments {PendingUpload}
  */
 export class PendingLocalFile extends PendingUpload {
     /**
-     * @param {String} path
+     * @param {string} path
      */
     constructor(path) {
         super();
-        /** @type {String} */
+        /** @type {string} */
         this.path = path;
         Object.preventExtensions(this);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileName() {
         return path.basename(this.path);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get filteredFileName() {
         return Utils.fileNameFilter(this.fileName);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileExtension() {
         return path.extname(this.fileName);
     }
 
     /**
-     * @return {Promise<Buffer>}
+     * @returns {Promise<Buffer>}
      */
     async getData() {
         const contents = await fsPromises.readFile(this.path);
@@ -242,8 +244,9 @@ export class PendingLocalFile extends PendingUpload {
     }
 
     /**
-     * @param {String} folderPath
-     * @return {Promise<String>}
+     * @param {string} folderPath
+     * @param {string} [fileNameOverride]
+     * @returns {Promise<string>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
         const filteredFileName =
@@ -266,53 +269,54 @@ export class PendingLocalFile extends PendingUpload {
 }
 
 /**
- * @extends {PendingUpload}
+ * @augments {PendingUpload}
  */
 export class PendingData extends PendingUpload {
     /**
      * @param {Buffer} buffer
-     * @param {String} fileName
+     * @param {string} fileName
      */
     constructor(buffer, fileName) {
         super();
         /** @type {Buffer} */
         this.buffer = buffer;
-        /** @type {String} */
+        /** @type {string} */
         this._fileName = fileName;
         Object.preventExtensions(this);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileName() {
         return path.basename(this._fileName);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get filteredFileName() {
         return Utils.fileNameFilter(this._fileName);
     }
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     get fileExtension() {
         return path.extname(this._fileName);
     }
 
     /**
-     * @return {Promise<Buffer>}
+     * @returns {Promise<Buffer>}
      */
     async getData() {
         return this.buffer;
     }
 
     /**
-     * @param {String} folderPath
-     * @return {Promise<String>}
+     * @param {string} folderPath
+     * @param {string} [fileNameOverride]
+     * @returns {Promise<string>}
      */
     async saveAs(folderPath, fileNameOverride = null) {
         const filteredFileName =
@@ -336,7 +340,7 @@ export class PendingData extends PendingUpload {
 
 /**
  * @param {fileUpload.UploadedFile[]} files
- * @param {String[]?} acceptedExtensions
+ * @param {string[]?} acceptedExtensions
  * @returns {Promise<PendingUpload[]>}
  */
 export async function unpackFiles(files, acceptedExtensions = []) {
@@ -370,8 +374,8 @@ export async function unpackFiles(files, acceptedExtensions = []) {
 }
 
 /**
- * @param {String[]} files
- * @param {String} outputName
+ * @param {string[]} files
+ * @param {string} outputName
  */
 export function prepareDataForDownload(files, outputName) {
     if (files.length === 0) {

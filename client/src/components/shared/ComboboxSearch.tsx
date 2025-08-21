@@ -131,7 +131,7 @@ const ComboboxSearch = <
         style={{ flex: 1 }}
         clearable={clearable}
       >
-        {selectionOptions.map((option, _index) =>
+        {selectionOptions.map((option) =>
           showTooltip && option.props.tooltip ? (
             <Tooltip
               hideDelay={0}

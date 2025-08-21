@@ -18,23 +18,22 @@ import archiver from "archiver";
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
  * @typedef { RawVolumeDataDB | SparseLabelVolumeDataDB | PseudoLabelVolumeDataDB } VolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB
- *
- * @typedef {Object} VolumeDataSettings
- * @property {String} file
- * @property {{x: Number, y: Number, z:Number}} size
- * @property {{x: Number, y: Number, z:Number}} ratio
- * @property {Number} bytesPerVoxel
- * @property {Number} usedBits
- * @property {Number} skipBytes
- * @property {Boolean} isLittleEndian
- * @property {Boolean} isSigned
- * @property {Number} addValue
- * @property {String?} transferFunction
- * @property {String?} name
+ * @typedef {object} VolumeDataSettings
+ * @property {string} file
+ * @property {{x: number, y: number, z: number}} size
+ * @property {{x: number, y: number, z: number}} ratio
+ * @property {number} bytesPerVoxel
+ * @property {number} usedBits
+ * @property {number} skipBytes
+ * @property {boolean} isLittleEndian
+ * @property {boolean} isSigned
+ * @property {number} addValue
+ * @property {string?} transferFunction
+ * @property {string?} name
  */
 
 /**
- * @extends {DatabaseModel}
+ * @augments {DatabaseModel}
  */
 export default class VolumeData extends DatabaseModel {
     static volumeDataFolder = "volume-data";
@@ -45,24 +44,24 @@ export default class VolumeData extends DatabaseModel {
     );
 
     /**
-     * @return {String}
+     * @returns {string}
      */
     static get folderPath() {
         throw new Error("Method not implemented");
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<Object>}
+     * @param {number} id
+     * @returns {Promise<object>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {Number} volumeDataId
-     * @param {Number} volumeId
-     * @return {Promise<boolean>}
+     * @param {number} volumeDataId
+     * @param {number} volumeId
+     * @returns {Promise<boolean>}
      */
     static async belongsToVolume(volumeDataId, volumeId) {
         const volumeData = await this.db.findUnique({
@@ -78,8 +77,8 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<VolumeDB[]>}
+     * @param {number} id
+     * @returns {Promise<VolumeDB[]>}
      */
     static async getVolumes(id) {
         const volumeData = await this.db.findUnique({
@@ -92,9 +91,9 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
-     * @return {Promise<Object>}
+     * @param {number} creatorId
+     * @param {number} volumeId
+     * @returns {Promise<object>}
      */
     static async create(creatorId, volumeId) {
         return Volume.withWriteLock(volumeId, [this.modelName], () => {
@@ -133,11 +132,11 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
+     * @param {number} creatorId
+     * @param {number} volumeId
      * @param {PendingUpload[]} files
-     * @param {Boolean?} skipLock
-     * @return {Promise<Object>}
+     * @param {boolean?} skipLock
+     * @returns {Promise<object>}
      */
     static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
         return await Volume.withWriteLock(
@@ -228,17 +227,17 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {any} changes
-     * @return {Promise<Object>}
+     * @returns {Promise<object>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<Object>}
+     * @param {number} id
+     * @returns {Promise<object>}
      */
     static async del(id) {
         return this.withWriteLock(id, null, async () => {
@@ -252,9 +251,9 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @param {Number} volumeId
-     * @return {Promise<Object>}
+     * @param {number} id
+     * @param {number} volumeId
+     * @returns {Promise<object>}
      */
     static async removeFromVolume(id, volumeId) {
         return Volume.withWriteLock(volumeId, [this.modelName], () => {
@@ -304,7 +303,7 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      */
     static async createVolumeDataFolder(id) {
         const folderPath = path.join(
@@ -329,7 +328,7 @@ export default class VolumeData extends DatabaseModel {
 
     /**
      * @param {VolumeDataDB} volumeData
-     * @returns {String[]}
+     * @returns {string[]}
      */
     static getFilePaths(volumeData) {
         const files = [];
@@ -361,8 +360,8 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {String} settingsString
-     * @param {String?} rawFilePath
+     * @param {string} settingsString
+     * @param {string?} rawFilePath
      */
     static async parseSettings(settingsString, rawFilePath = null) {
         const settings = JSON.parse(settingsString);
@@ -376,8 +375,8 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {String} folderPath
-     * @param {String} fileName
+     * @param {string} folderPath
+     * @param {string} fileName
      */
     static checkFilePath(folderPath, fileName) {
         let fileNameOverride = null;
@@ -391,7 +390,9 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
+     * @param {boolean} downloadRawFile
+     * @param {boolean} downloadSettingsFile
      */
     static async prepareDataForDownload(
         id,
@@ -436,7 +437,7 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {PendingUpload} file
      * @returns {Promise<VolumeDataDB>}
      */

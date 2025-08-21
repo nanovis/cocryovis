@@ -2,9 +2,9 @@
 
 export class LockBlockedError extends Error {
     /**
-     * @param {String} message
-     * @param {Number} instanceId
-     * @param {String} instanceName
+     * @param {string} message
+     * @param {number} instanceId
+     * @param {string} instanceName
      */
     constructor(message, instanceId, instanceName) {
         super(message);
@@ -15,14 +15,14 @@ export class LockBlockedError extends Error {
 }
 
 export class WriteLock {
-    /** @type {Number} */ #instanceId;
-    /** @type {String[]?} */ #connections = null;
+    /** @type {number} */ #instanceId;
+    /** @type {string[]?} */ #connections = null;
     /** @type {WriteLockManager} */ #lockManager;
-    /** @type {Boolean} */ #active = false;
+    /** @type {boolean} */ #active = false;
 
     /**
-     * @param {Number} instanceId
-     * @param {String[]?} connections
+     * @param {number} instanceId
+     * @param {string[]?} connections
      * @param {WriteLockManager} lockManager
      */
     constructor(instanceId, connections, lockManager) {
@@ -45,12 +45,12 @@ export class WriteLock {
     }
 
     /**
-     * @returns {WriteLock}
+     * @returns {WriteLock | null}
      */
     requestLock() {
         if (this.#active) {
             console.error("Lock already active");
-            return;
+            return null;
         }
 
         try {
@@ -137,7 +137,7 @@ export class WriteLock {
     }
 
     /**
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     isLockBlocked() {
         return this.#lockManager.isLockBlocked(
@@ -197,16 +197,16 @@ export class WriteMultiLock {
 }
 
 export default class WriteLockManager {
-    /** @type {Map<Number, Set<WriteLock>>} */ #locks = new Map();
+    /** @type {Map<number, Set<WriteLock>>} */ #locks = new Map();
     /**
-     * @type {Map<Number, Map<String, Set<WriteLock>>>}
+     * @type {Map<number, Map<string, Set<WriteLock>>>}
      */
     #connectionLocks = new Map();
 
-    /** @type {String} */ #instanceName;
+    /** @type {string} */ #instanceName;
 
     /**
-     * @param {String} instanceName
+     * @param {string} instanceName
      */
     constructor(instanceName) {
         this.#instanceName = instanceName;
@@ -225,8 +225,8 @@ export default class WriteLockManager {
     }
 
     /**
-     * @param {Number} instanceId
-     * @return {Boolean}
+     * @param {number} instanceId
+     * @returns {boolean}
      */
     isLocked(instanceId) {
         const instanceLocks = this.#locks.get(instanceId);
@@ -234,9 +234,9 @@ export default class WriteLockManager {
     }
 
     /**
-     * @param {Number} instanceId
-     * @param {String} connection
-     * @return {Boolean}
+     * @param {number} instanceId
+     * @param {string} connection
+     * @returns {boolean}
      */
     hasLockedConnection(instanceId, connection) {
         const instanceConnectionLocks = this.#connectionLocks.get(instanceId);
@@ -249,9 +249,9 @@ export default class WriteLockManager {
     }
 
     /**
-     * @param {Number} instanceId
-     * @param {String[]?} lockConnections
-     * @return {Boolean}
+     * @param {number} instanceId
+     * @param {string[]?} lockConnections
+     * @returns {boolean}
      */
     isLockBlocked(instanceId, lockConnections = null) {
         if (lockConnections == null) {
@@ -264,8 +264,8 @@ export default class WriteLockManager {
     }
 
     /**
-     * @param {Number} instanceId
-     * @param {String[]?} connections
+     * @param {number} instanceId
+     * @param {string[]?} connections
      * @returns {WriteLock}
      */
     requestLock(instanceId, connections = null) {
@@ -273,8 +273,8 @@ export default class WriteLockManager {
     }
 
     /**
-     * @param {Number} instanceId
-     * @param {String[]?} connections
+     * @param {number} instanceId
+     * @param {string[]?} connections
      * @returns {WriteLock}
      */
     generateLockInstance(instanceId, connections = null) {

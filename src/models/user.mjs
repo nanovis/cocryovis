@@ -8,7 +8,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").User } UserDB
- * @typedef {{ id: Number, username: String, name: String, email: String }} PublicUser
+ * @typedef {{id: number, username: string, name: string, email: string}} PublicUser
  */
 
 export default class User extends DatabaseModel {
@@ -22,9 +22,9 @@ export default class User extends DatabaseModel {
     }
 
     /**
-     * @param {String} username
-     * @param {String} password
-     * @return {Promise<UserDB>}
+     * @param {string} username
+     * @param {string} password
+     * @returns {Promise<UserDB>}
      */
     static async authenticate(username, password) {
         const user = await User.getByUsername(username);
@@ -45,24 +45,24 @@ export default class User extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<UserDB>}
+     * @param {number} id
+     * @returns {Promise<UserDB>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {Number[]} ids
-     * @return {Promise<UserDB[]>}
+     * @param {number[]} ids
+     * @returns {Promise<UserDB[]>}
      */
     static async getByIds(ids) {
         return await super.getByIds(ids);
     }
 
     /**
-     * @param {String} username
-     * @return {Promise<UserDB>}
+     * @param {string} username
+     * @returns {Promise<UserDB>}
      */
     static async getByUsername(username) {
         let user = await prismaManager.db.user.findUnique({
@@ -87,11 +87,11 @@ export default class User extends DatabaseModel {
     }
 
     /**
-     * @param {String} username
-     * @param {String} password
-     * @param {String} name
-     * @param {String} email
-     * @return {Promise<UserDB>}
+     * @param {string} username
+     * @param {string} password
+     * @param {string} name
+     * @param {string} email
+     * @returns {Promise<UserDB>}
      */
     static async create(username, password, name, email) {
         if (!username || username.length === 0) {
@@ -122,8 +122,8 @@ export default class User extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
-     * @param {import("@prisma/client").Prisma.UserUpdateInput & {password?: String}} changes
+     * @param {number} id
+     * @param {import("@prisma/client").Prisma.UserUpdateInput & {password?: string}} changes
      * @returns {Promise<UserDB>}
      */
     static async update(id, changes) {
@@ -149,7 +149,7 @@ export default class User extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      */
     static async del(id) {
         return await super.del(id);

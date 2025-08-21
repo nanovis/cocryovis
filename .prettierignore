@@ -1,7 +1,6 @@
 src/routes/api/projects.mjs
 data/
 demo/
-docs-api/
 logs/
 modules/
 node_modules/
@@ -13,3 +12,9 @@ transfer-functions/
 *.yaml
 *.yml
 *.md
+
+!package.json
+!tsconfig*.json
+!nodemon.json
+!jsconfig.json
+!config.json

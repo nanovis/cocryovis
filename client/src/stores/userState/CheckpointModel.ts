@@ -69,7 +69,7 @@ export const ModelCheckpoints = types
         }
       }
 
-      var formData = new FormData();
+      const formData = new FormData();
       for (let i = 0; i < files.length; i++) {
         formData.append("files", files[i]);
       }

@@ -1,12 +1,9 @@
 // @ts-check
 
-import { exec } from "child_process";
 import appConfig from "./config.mjs";
 import path from "path";
-import { promisify } from "util";
 import LogFile from "./log-manager.mjs";
 import Utils from "./utils.mjs";
-const execPromise = promisify(exec);
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
@@ -14,13 +11,13 @@ const execPromise = promisify(exec);
  */
 
 /**
- * @param {String} rawVolumePath
- * @param {{x: Number, y: Number, z: Number}} dimensions
- * @param {Number} usedBits
- * @param {Boolean} isSigned
- * @param {Boolean} littleEndian
- * @param {String} outputPath
- * @param {String} datasetName
+ * @param {string} rawVolumePath
+ * @param {{x: number, y: number, z: number}} dimensions
+ * @param {number} usedBits
+ * @param {boolean} isSigned
+ * @param {boolean} littleEndian
+ * @param {string} outputPath
+ * @param {string} datasetName
  * @param {LogFile} logFile
  */
 export async function rawToH5(
@@ -57,10 +54,10 @@ export async function rawToH5(
 }
 
 /**
- * @param {String[]} labelPaths
- * @param {{x: Number, y: Number, z: Number}} dimensions
- * @param {String} outputPath
- * @param {String} datasetName
+ * @param {string[]} labelPaths
+ * @param {{x: number, y: number, z: number}} dimensions
+ * @param {string} outputPath
+ * @param {string} datasetName
  * @param {LogFile} logFile
  */
 export async function labelsToH5(
@@ -92,9 +89,9 @@ export async function labelsToH5(
 }
 
 /**
- * @param {String} labelPath
- * @param {String} datasetName
- * @param {String} outputPath
+ * @param {string} labelPath
+ * @param {string} datasetName
+ * @param {string} outputPath
  * @param {LogFile} logFile
  */
 export async function H5ToLabels(

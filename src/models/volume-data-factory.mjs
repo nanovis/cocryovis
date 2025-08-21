@@ -14,7 +14,7 @@ export class VolumeDataType {
     );
 
     /**
-     * @param {String} name
+     * @param {string} name
      */
     static mapName(name) {
         switch (name) {
@@ -29,10 +29,10 @@ export class VolumeDataType {
     }
 
     /**
-     * @param {String} name
+     * @param {string} name
      */
     constructor(name) {
-        /** @type {String} */
+        /** @type {string} */
         this.name = name;
     }
 }

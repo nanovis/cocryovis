@@ -6,11 +6,11 @@ import Utils from "./utils.mjs";
 import fileSystem from "fs";
 
 export default class LogFile {
-    /** @type {String} */ #filePath;
+    /** @type {string} */ #filePath;
 
     /**
-     * @param {String} basename
-     * @return {Promise<LogFile>}
+     * @param {string} basename
+     * @returns {Promise<LogFile>}
      */
     static async createLogFile(basename) {
         await fileSystem.promises.mkdir(appConfig.logPath, { recursive: true });
@@ -26,7 +26,7 @@ export default class LogFile {
     }
 
     /**
-     * @param {String} filePath
+     * @param {string} filePath
      */
     constructor(filePath) {
         this.#filePath = filePath;
@@ -43,7 +43,7 @@ export default class LogFile {
     }
 
     /**
-     * @param {String} data
+     * @param {string} data
      */
     async writeLog(data) {
         try {
@@ -54,7 +54,7 @@ export default class LogFile {
     }
 
     /**
-     * @param {String} directory
+     * @param {string} directory
      */
     async moveTo(directory) {
         const newFilePath = path.join(directory, path.basename(this.#filePath));

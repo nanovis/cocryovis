@@ -4,3 +4,6 @@ public/
 *.md
 *.svg
 *.html
+
+!package.json
+!tsconfig*.json

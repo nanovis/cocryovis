@@ -1,6 +1,5 @@
 // @ts-check
 
-import z from "zod";
 import Model from "../models/model.mjs";
 import { idProject } from "#schemas/componentSchemas/project-schema.mjs";
 import {
@@ -98,7 +97,7 @@ export default class ModelController {
 
         const projectId = params.idProject;
 
-        const model = await Model.removeFromProject(params.idModel, projectId);
+        await Model.removeFromProject(params.idModel, projectId);
 
         res.sendStatus(204);
     }

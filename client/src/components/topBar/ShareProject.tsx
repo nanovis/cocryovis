@@ -176,7 +176,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       try {
         allUsers = await getAllUsers();
         accessInfo = await getAccessInfo(activeProject.id);
-      } catch (error) {
+      } catch {
         throw new Error("Failed to fetch users or access info.");
       }
 

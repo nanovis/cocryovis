@@ -11,14 +11,14 @@ import Checkpoint from "./checkpoint.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
-import { volumeQuerySchema } from "#schemas/volume-path-schema.mjs";
-import z from "zod";
 
 /**
+ * @import z from "zod"
+ * @import { volumeQuerySchema } from "#schemas/volume-path-schema.mjs"
  * @typedef { import("@prisma/client").Project } ProjectDB
  * @typedef { import("@prisma/client").ProjectAccess } ProjectAccess
  * @typedef { { volumes?: boolean | { include: z.infer<volumeQuerySchema> }, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options
- * @typedef { {userId: Number, accessLevel: Number} } UserAccessInfo
+ * @typedef {{userId: number, accessLevel: number}} UserAccessInfo
  */
 
 export default class Project extends DatabaseModel {
@@ -29,8 +29,8 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} projectId
-     * @param {Number} userId
+     * @param {number} projectId
+     * @param {number} userId
      */
     static async getByIdDeep(projectId, userId = -1) {
         const project = await this.db.findUnique({
@@ -80,7 +80,7 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} userId
+     * @param {number} userId
      * @param {Options} options
      */
     static async getUserProjects(
@@ -128,7 +128,7 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} userId
+     * @param {number} userId
      */
     static async getUserProjectsDeep(userId) {
         const projects = await this.db.findMany({
@@ -186,9 +186,9 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} projectId
-     * @param {Number} userId
-     * @returns {Promise<Number>}
+     * @param {number} projectId
+     * @param {number} userId
+     * @returns {Promise<number>}
      */
     static async getUserAccessInfo(projectId, userId) {
         const projectAccess = await prismaManager.db.projectAccess.findUnique({
@@ -203,7 +203,7 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @returns {Promise<{projectAccess: {ownerId: number, publicAccess: number}, userAccess: UserAccessInfo[]}>}
      */
     static async getAccessInfo(id) {
@@ -219,7 +219,7 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @returns {Promise<UserAccessInfo[]>}
      */
     static async getProjectUsersAccessInfo(id) {
@@ -236,7 +236,7 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {{publicAccess: number, userAccess: Array<UserAccessInfo>}} accessInfo
      * @returns {Promise<{publicAccess: number, userAccess: UserAccessInfo[]}>}
      */
@@ -327,7 +327,7 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {Options} options
      */
     static async getById(
@@ -349,10 +349,10 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {String} name
-     * @param {String} description
-     * @param {Number} ownerId
-     * @return {Promise<ProjectDB>}
+     * @param {string} name
+     * @param {string} description
+     * @param {number} ownerId
+     * @returns {Promise<ProjectDB>}
      */
     static async create(name, description, ownerId) {
         return await prismaManager.db.project.create({
@@ -361,9 +361,9 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} sourceId
-     * @param {Number} ownerId
-     * @return {Promise<ProjectDB>}
+     * @param {number} sourceId
+     * @param {number} ownerId
+     * @returns {Promise<ProjectDB>}
      */
     static async deepClone(sourceId, ownerId) {
         return await prismaManager.db.$transaction(async (tx) => {
@@ -417,16 +417,16 @@ export default class Project extends DatabaseModel {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.ProjectUpdateInput} changes
-     * @return {Promise<ProjectDB>}
+     * @returns {Promise<ProjectDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param { Number } id
+     * @param {number} id
      * @returns { Promise<ProjectDB> }
      */
     static async del(id) {

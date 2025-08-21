@@ -17,7 +17,7 @@ import archiver from "archiver";
  */
 
 /**
- * @extends {VolumeData}
+ * @augments {VolumeData}
  */
 export default class RawVolumeData extends VolumeData {
     static modelName = "rawVolumeData";
@@ -33,28 +33,28 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
-     * @return {Promise<RawVolumeDataDB>}
+     * @param {number} id
+     * @returns {Promise<RawVolumeDataDB>}
      */
     static async getById(id) {
         return await super.getById(id);
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
-     * @return {Promise<RawVolumeDataDB>}
+     * @param {number} creatorId
+     * @param {number} volumeId
+     * @returns {Promise<RawVolumeDataDB>}
      */
     static async create(creatorId, volumeId) {
         return await super.create(creatorId, volumeId);
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
+     * @param {number} creatorId
+     * @param {number} volumeId
      * @param {PendingUpload[]} files
-     * @param {Boolean?} skipLock
-     * @return {Promise<RawVolumeDataDB>}
+     * @param {boolean?} skipLock
+     * @returns {Promise<RawVolumeDataDB>}
      */
     static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
         return await super.createFromFiles(
@@ -66,10 +66,10 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} creatorId
-     * @param {Number} volumeId
+     * @param {number} creatorId
+     * @param {number} volumeId
      * @param {PendingUpload} file
-     * @return {Promise<Object>}
+     * @returns {Promise<object>}
      */
     static async createFromMrcFile(creatorId, volumeId, file) {
         return await Volume.withWriteLock(
@@ -148,8 +148,6 @@ export default class RawVolumeData extends VolumeData {
                             timeout: 60000,
                         }
                     );
-                } catch (error) {
-                    throw error;
                 } finally {
                     await fsPromises.rm(tempDirectory, {
                         recursive: true,
@@ -161,18 +159,18 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
      * @param {import("@prisma/client").Prisma.RawVolumeDataUpdateInput} changes
-     * @return {Promise<RawVolumeDataDB>}
+     * @returns {Promise<RawVolumeDataDB>}
      */
     static async update(id, changes) {
         return await super.update(id, changes);
     }
 
     /**
-     * @param {Number} id
-     * @param {Number} volumeId
-     * @return {Promise<RawVolumeDataDB>}
+     * @param {number} id
+     * @param {number} volumeId
+     * @returns {Promise<RawVolumeDataDB>}
      */
     static async removeFromVolume(id, volumeId) {
         return Volume.withWriteLock(volumeId, [this.modelName], () => {
@@ -224,7 +222,7 @@ export default class RawVolumeData extends VolumeData {
 
     /**
      * @param {RawVolumeDataDB} volumeData
-     * @returns {String[]}
+     * @returns {string[]}
      */
     static getFilePaths(volumeData) {
         const files = super.getFilePaths(volumeData);
@@ -245,7 +243,10 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number} id
+     * @param {number} id
+     * @param {boolean} downloadRawFile
+     * @param {boolean} downloadSettingsFile
+     * @param {boolean} downloadMrcFile
      */
     static async prepareDataForDownload(
         id,
@@ -298,9 +299,9 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
-     * @param {Number[]} ids
+     * @param {number[]} ids
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @return {Promise<String[]>}
+     * @returns {Promise<string[]>}
      */
     static async deleteZombies(ids, tx) {
         if (ids.length === 0) {
@@ -338,7 +339,7 @@ export default class RawVolumeData extends VolumeData {
                 },
             });
 
-            /** @type {String[]} */
+            /** @type {string[]} */
             const fileDeleteStack = [];
 
             rawVolumes.forEach((v) =>

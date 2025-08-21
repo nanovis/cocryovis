@@ -58,7 +58,7 @@ const RootStore = types
     }),
   }));
 
-let initialState = RootStore.create({});
+const initialState = RootStore.create({});
 
 export const rootStore = initialState;
 

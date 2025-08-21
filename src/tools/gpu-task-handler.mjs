@@ -12,13 +12,6 @@ import Volume from "../models/volume.mjs";
 import Model from "../models/model.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
-import {
-    IMODOptions,
-    CTFOptions,
-    tiltSeriesOptions,
-    motionCorrectionOptions,
-} from "#schemas/cryoEt-path-schema.mjs";
-import { trainingOptions } from "#schemas/nano-oetzi-path-schema.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
@@ -26,9 +19,11 @@ import fileUpload from "express-fileupload";
 import { PendingLocalFile } from "./file-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "./config.mjs";
-import z from "zod";
 
 /**
+ * @import z from "zod"
+ * @import { trainingOptions } from "#schemas/nano-oetzi-path-schema.mjs";
+ * @import { IMODOptions, CTFOptions, tiltSeriesOptions, motionCorrectionOptions } from "#schemas/cryoEt-path-schema.mjs"
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB
@@ -64,10 +59,10 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {Number} checkpointId
-     * @param {Number} volumeId
-     * @param {Number} userId
-     * @param {String?} outputPath
+     * @param {number} checkpointId
+     * @param {number} volumeId
+     * @param {number} userId
+     * @param {string?} outputPath
      * @returns {Promise<void>}
      */
     async queueInference(checkpointId, volumeId, userId, outputPath = null) {
@@ -114,7 +109,7 @@ export default class GPUTaskHandler {
                         taskHistory.id
                     )
                 );
-            } catch (error) {
+            } catch {
                 console.error(
                     `Inference task by User with id ${userId} failed.`
                 );
@@ -123,11 +118,11 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {Number} checkpointId
-     * @param {Number} volumeId
-     * @param {Number} userId
-     * @param {String} outputPath
-     * @param {Number} taskHistoryId
+     * @param {number} checkpointId
+     * @param {number} volumeId
+     * @param {number} userId
+     * @param {string} outputPath
+     * @param {number} taskHistoryId
      * @returns {Promise<ResultDB>}
      */
     async #runInference(
@@ -274,14 +269,14 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {Number} modelId
-     * @param {Number} userId
-     * @param {Number[]} trainingVolumesIds
-     * @param {Number[]} validationVolumesIds
-     * @param {Number[]} testingVolumesIds
+     * @param {number} modelId
+     * @param {number} userId
+     * @param {number[]} trainingVolumesIds
+     * @param {number[]} validationVolumesIds
+     * @param {number[]} testingVolumesIds
      * @param {z.infer<trainingOptions>} params
-     * @param {String?} outputPath
-     * @returns {Promise<Void>}
+     * @param {string?} outputPath
+     * @returns {Promise<void>}
      */
     async queueTraining(
         modelId,
@@ -417,7 +412,7 @@ export default class GPUTaskHandler {
                         taskHistory.id
                     )
                 );
-            } catch (error) {
+            } catch {
                 console.error(
                     `Training task by User with id ${userId} failed.`
                 );
@@ -481,14 +476,14 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {Number} modelId
-     * @param {Number} userId
-     * @param {Number[]} trainingVolumesIds
-     * @param {Number[]} validationVolumesIds
-     * @param {Number[]} testingVolumesIds
+     * @param {number} modelId
+     * @param {number} userId
+     * @param {number[]} trainingVolumesIds
+     * @param {number[]} validationVolumesIds
+     * @param {number[]} testingVolumesIds
      * @param {z.infer<trainingOptions>} params
-     * @param {String} outputPath
-     * @param {Number} taskHistoryId
+     * @param {string} outputPath
+     * @param {number} taskHistoryId
      * @returns {Promise<CheckpointDB>}
      */
     async #runTraining(
@@ -735,8 +730,8 @@ export default class GPUTaskHandler {
      * @param {DeepVolume[]} trainingReferences
      * @param {DeepVolume[]} validationReferences
      * @param {DeepVolume[]} testReferences
-     * @param {String} outputPath
-     * @return {Promise<String>}
+     * @param {string} outputPath
+     * @returns {Promise<string>}
      */
     async #writeTrainingConfigFile(
         trainingReferences,
@@ -783,7 +778,7 @@ export default class GPUTaskHandler {
     /**
      * @param {DeepVolume[]} references
      * @param {Array} configDataArray
-     * @param {{dimensions: Object?, channels:Number?}} properties
+     * @param {{dimensions: object?, channels: number?}} properties
      */
     async #prepareTrainingConfigSet(references, configDataArray, properties) {
         for (const reference of references) {
@@ -917,8 +912,8 @@ export default class GPUTaskHandler {
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
      * @param {z.infer<tiltSeriesOptions>} options
-     * @param {Number} volumeId
-     * @param {Number} userId
+     * @param {number} volumeId
+     * @param {number} userId
      * @returns {Promise<void>}
      */
     async queueTiltSeriesReconstruction(
@@ -968,7 +963,7 @@ export default class GPUTaskHandler {
                         taskHistory.id
                     )
                 );
-            } catch (error) {
+            } catch {
                 console.error(
                     `Reconstruction task by User with id ${userId} failed.`
                 );
@@ -979,7 +974,7 @@ export default class GPUTaskHandler {
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
      * @param {z.infer<tiltSeriesOptions>} options
-     * @param {Number} volumeId
+     * @param {number} volumeId
      * @returns {Promise<void>}
      */
     async #validateReconstructionInput(tiltSeriesFile, options, volumeId) {
@@ -1017,10 +1012,10 @@ export default class GPUTaskHandler {
     /**
      * @param {fileUpload.UploadedFile} tiltSeriesFile
      * @param {z.infer<tiltSeriesOptions>} options
-     * @param {Number} volumeId
-     * @param {Number} userId
-     * @param {String} outputPath
-     * @param {Number} taskHistoryId
+     * @param {number} volumeId
+     * @param {number} userId
+     * @param {string} outputPath
+     * @param {number} taskHistoryId
      * @returns {Promise<RawVolumeDataDB>}
      */
     async #runTiltSeriesReconstruction(
@@ -1192,11 +1187,11 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {String} inputPath
-     * @param {String} outputFolder
-     * @param {z.infer<IMODOptions>}  options
+     * @param {string} inputPath
+     * @param {string} outputFolder
+     * @param {z.infer<IMODOptions>} options
      * @param {LogFile} logFile
-     * @returns {Promise<String>}
+     * @returns {Promise<string>}
      */
     async #runIMODTiltSeriesAlignment(
         inputPath,
@@ -1394,11 +1389,11 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {String} inputPath
-     * @param {String} outputFolder
+     * @param {string} inputPath
+     * @param {string} outputFolder
      * @param {z.infer<CTFOptions>} options
      * @param {LogFile} logFile
-     * @returns {Promise<String>}
+     * @returns {Promise<string>}
      */
     async #runGCTFFind(inputPath, outputFolder, options, logFile) {
         logFile.writeLog("--------------STARTING CTF ESTIMATION\n");
@@ -1463,11 +1458,11 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {String} inputPath
-     * @param {String} outputFolder
+     * @param {string} inputPath
+     * @param {string} outputFolder
      * @param {z.infer<motionCorrectionOptions>} options
      * @param {LogFile} logFile
-     * @returns {Promise<String>}
+     * @returns {Promise<string>}
      */
     async #runMotionCor3(inputPath, outputFolder, options, logFile) {
         logFile.writeLog("--------------STARTING MOTION CORRECTION\n");

@@ -1,8 +1,8 @@
 // @ts-check
 
 /**
- * @param {Object} obj
- * @return {Object}
+ * @param {object} obj
+ * @returns {object}
  */
 export function sanitize(obj) {
     if (Array.isArray(obj)) {
@@ -10,6 +10,7 @@ export function sanitize(obj) {
     }
 
     if (obj && typeof obj === "object") {
+        // eslint-disable-next-line no-unused-vars
         const { passwordHash, passwordSalt, ...rest } = obj;
         return Object.fromEntries(
             Object.entries(rest).map(([key, value]) => [key, sanitize(value)])
