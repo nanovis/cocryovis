@@ -25,7 +25,7 @@ import {
     idVolumeAndType,
     idVolumeDataAndType,
     idVolumeVolumeDataTypeParams,
-    updateAnnotations,
+    updateAnnotationsSchema,
     volumeDataUpdate,
 } from "#schemas/volume-data-path-schema.mjs";
 import { idTomogram } from "#schemas/cryoEt-path-schema.mjs";
@@ -433,7 +433,7 @@ export default class VolumeDataController {
     static async updateAnnotations(req, res) {
         const { params, body } = validateSchema(req, {
             paramsSchema: idVolumeVolumeDataTypeParams,
-            bodySchema: updateAnnotations,
+            bodySchema: updateAnnotationsSchema,
         });
 
         if (

@@ -11,7 +11,7 @@ import {
   makeStyles,
 } from "@fluentui/react-components";
 import { FormEvent, useState } from "react";
-import { sendRequestWithToast } from "../../utils/Helpers";
+import { updateUser } from "../../api/users";
 
 const useStyles = makeStyles({
   fieldHeight: {
@@ -51,18 +51,7 @@ const ChangePasswordDialog = ({ open, onClose }: Props) => {
   }
   const changePassword = async (password: string) => {
     try {
-      await sendRequestWithToast(
-        "user",
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            password: password,
-          }),
-        },
-        { successText: "Change successful!" }
-      );
+      updateUser({password})
     } catch (error) {
       console.error(error);
     }

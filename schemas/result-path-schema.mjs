@@ -5,7 +5,6 @@ import { idResult, resultSchema } from "./componentSchemas/result-schema.mjs";
 import { defaultError, generateErrors } from "./error-path-schema.mjs";
 import { idVolume, volumeSchema } from "./componentSchemas/volume-schema.mjs";
 import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
-import { rawVolumeDataSchema } from "./componentSchemas/raw-volume-data-schema.mjs";
 import {
     multipleFileSchema,
     singleFileSchema,
@@ -68,23 +67,23 @@ export const resultPath = {
             },
         },
     },
-    "/result/{idResult}/details": {
-        get: {
-            requestParams: {
-                path: idResult,
-            },
-            responses: {
-                200: {
-                    content: {
-                        "application/json": {
-                            schema: resultSchema,
-                        },
-                    },
-                },
-                ...defaultError,
-            },
-        },
-    },
+    // "/result/{idResult}/details": {
+    //     get: {
+    //         requestParams: {
+    //             path: idResult,
+    //         },
+    //         responses: {
+    //             200: {
+    //                 content: {
+    //                     "application/json": {
+    //                         schema: resultSchema,
+    //                     },
+    //                 },
+    //             },
+    //             ...defaultError,
+    //         },
+    //     },
+    // },
     "/volume/{idVolume}/results": {
         get: {
             requestParams: {

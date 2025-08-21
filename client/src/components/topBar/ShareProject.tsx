@@ -45,10 +45,9 @@ import { UserDB } from "../../stores/userState/UserModel";
 import { toast } from "react-toastify";
 import z from "zod";
 import { usersArray } from "#schemas/user-path-schema.mjs";
-import {
-  projectAccessInfoSchema,
-  setAccessSchemaRes,
-} from "#schemas/project-path-schema.mjs";
+import { projectAccessInfoSchema } from "#schemas/project-path-schema.mjs";
+import { getAllUsers } from "../../api/users";
+import { getAccessInfo, setAccess } from "../../api/projects";
 
 const useStyles = makeStyles({
   userSelection: {
@@ -175,25 +174,8 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       let accessInfo: z.infer<typeof projectAccessInfoSchema>;
 
       try {
-        let response = await Utils.sendReq(
-          "users",
-          {
-            method: "GET",
-          },
-          false
-        );
-
-        allUsers = await response.json();
-
-        response = await Utils.sendReq(
-          `project/${activeProject.id}/access`,
-          {
-            method: "GET",
-          },
-          false
-        );
-
-        accessInfo = await response.json();
+        allUsers = await getAllUsers();
+        accessInfo = await getAccessInfo(activeProject.id);
       } catch (error) {
         throw new Error("Failed to fetch users or access info.");
       }
@@ -295,7 +277,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   const onConfirmChanges = async () => {
     let toastId = null;
     try {
-      if (pageBusy() || !activeProject) {
+      if (pageBusy() || !activeProject || publicAccess === undefined) {
         return;
       }
 
@@ -325,22 +307,10 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
           accessLevel: accessLevel,
         }));
       }
-
-      const response = await Utils.sendReq(
-        `project/${activeProject.id}/access`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userAccess: changes,
-            publicAccess: publicAccess,
-          }),
-        },
-        false
-      );
-      const accessInfoChanges: z.infer<typeof setAccessSchemaRes> =
-        await response.json();
+      const accessInfoChanges = await setAccess(activeProject.id, {
+        userAccess: changes,
+        publicAccess: publicAccess,
+      });
 
       resetChanges();
 

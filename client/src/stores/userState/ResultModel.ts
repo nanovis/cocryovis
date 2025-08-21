@@ -3,7 +3,10 @@ import { Checkpoint } from "./CheckpointModel";
 import * as Utils from "../../utils/Helpers";
 import { getResultSchema } from "#schemas/result-path-schema.mjs";
 import z from "zod";
-
+import {
+  getResultsFromVolume,
+  removeResultFromVolume,
+} from "../../api/results";
 
 export const Result = types.model({
   id: types.identifierNumber,
@@ -50,18 +53,7 @@ export const VolumeResults = types
       });
     },
     removeResult: flow(function* removeResult(resultId: number) {
-      yield Utils.sendRequestWithToast(
-        `volume/${self.volumeId}/result/${resultId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-        { successText: "Result Successfuly Removed" }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-
+      removeResultFromVolume(self.volumeId, resultId);
       self.results.delete(resultId.toString());
       if (self.selectedResultId === resultId) {
         self.selectedResultId = undefined;
@@ -70,15 +62,9 @@ export const VolumeResults = types
   }))
   .actions((self) => ({
     refreshResults: flow(function* refreshResults() {
-      const response = yield Utils.sendReq(`/volume/${self.volumeId}/results`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (!isAlive(self)) {
-        return;
-      }
-      
-      const results: z.infer<typeof getResultSchema> = yield response.json();
+      const results: z.infer<typeof getResultSchema> =
+        yield getResultsFromVolume(self.volumeId);
+
       if (!isAlive(self)) {
         return;
       }

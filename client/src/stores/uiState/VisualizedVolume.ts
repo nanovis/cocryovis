@@ -15,6 +15,8 @@ import {
 import { Id, toast } from "react-toastify";
 import z from "zod";
 import { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
+import { downloadRawFile } from "../../api/volumeData";
+import { getVolumeWithSparseVolumes } from "../../api/volume";
 
 export type visualizedObjectInstances =
   | VolumeInstance
@@ -43,15 +45,7 @@ async function loadSparseLabelVolumesIntoAnnotations(
     });
     await Utils.waitForNextFrame();
 
-    const response = await Utils.sendReq(
-      `volumeData/SparseLabeledVolumeData/${sparseVolume.id}/download-raw-file`,
-      {
-        method: "GET",
-      },
-      false
-    );
-
-    const contents = await response.blob();
+    const contents = await downloadRawFile(sparseVolume.id);
     const fileMap = await Utils.zipToFileMap(contents);
     const rawFile = fileMap.values().next().value;
     if (!rawFile) {
@@ -230,20 +224,13 @@ export const VisualizedVolume = types
         if (self.volume === undefined) {
           throw new Error("Only raw volumes can be labeled.");
         }
-        const response = yield Utils.sendReq(
-          `/volume/${self.volume.id}?sparseVolumes=true`,
-          {
-            method: "GET",
-          },
-          false
-        );
+
+        const volume: z.infer<typeof getVolumeSchema> =
+          yield getVolumeWithSparseVolumes(self.volume.id);
         if (!isAlive(self)) {
           return;
         }
-        const volume: z.infer<typeof getVolumeSchema> = yield response.json();
-        if (!isAlive(self)) {
-          return;
-        }
+        
         self.volume.setSparseVolumes(volume.sparseVolumes);
         yield loadSparseLabelVolumesIntoAnnotations(self.volume, toastId);
         if (!isAlive(self)) {

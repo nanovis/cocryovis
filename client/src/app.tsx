@@ -21,6 +21,7 @@ import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import z from "zod";
 import { publicUser } from "#schemas/user-path-schema.mjs";
+import { getLoggedUserData, login, register } from "./api/users";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height
@@ -54,13 +55,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         return null;
       }
       return JSON.parse(cookieData);
-    };
-
-    const getLoggedUserData = async (): Promise<z.infer<typeof publicUser>> => {
-      const response = await Utils.sendReq("getLoggedUserData", {
-        method: "GET",
-      });
-      return await response.json();
     };
 
     const setupUser = async (user: UserDB) => {
@@ -135,20 +129,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const handleSignIn = async (credentials: SignInCredentials) => {
       try {
-        const response = await Utils.sendRequestWithToast(
-          "login",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: credentials.username,
-              password: credentials.password,
-            }),
-          },
-          { successText: "Sign-In successful!" }
-        );
-        const userData: z.infer<typeof publicUser> = await response.json();
+        const userData = await login(credentials);
         await setupUser(userData);
       } catch (error) {
         console.error(error);
@@ -160,25 +141,13 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         alert("Please repeat the password correctly.");
         return;
       }
-
       try {
-        const response = await Utils.sendRequestWithToast(
-          "register",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: userData.fullName,
-              username: userData.username,
-              password: userData.password,
-              email: userData.email,
-            }),
-          },
-          { successText: "Sign-Up successful!" }
-        );
-        const contents: z.infer<typeof publicUser> = await response.json();
-
+        const contents = await register({
+          name: userData.fullName,
+          username: userData.username,
+          password: userData.password,
+          email: userData.email,
+        });
         await setupUser(contents);
       } catch (error) {
         console.error("Error:", error);

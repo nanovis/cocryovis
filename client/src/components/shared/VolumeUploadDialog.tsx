@@ -88,7 +88,7 @@ interface Props {
   onFileConfirm: (file: File, volumeSettings?: VolumeSettings) => Promise<void>;
   onUrlConfirm: (
     url: string,
-    fileType: string,
+    fileType: "mrc" | "raw",
     volumeSettings?: VolumeSettings
   ) => Promise<void>;
   titleText: string;
@@ -282,6 +282,7 @@ const VolumeUploadDialog = observer(
         const settings = urlUploadInputs.toVolumeSettings();
         await onUrlConfirm(
           urlUploadInputs.url,
+          //TODO
           urlUploadInputs.fileType,
           settings
         );

@@ -12,6 +12,9 @@ import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
 import { volumesDeepSchemaRes } from "#schemas/volume-path-schema.mjs";
 import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
+import { getVolumesFromProjectDeep } from "../../api/volume";
+import * as volumeApi from "../../api/volume";
+import { createFromFiles, createFromMrcFile, createFromUrl, removeFromVolume } from "../../api/volumeData";
 
 export interface VolumeDB {
   id: number;
@@ -120,23 +123,11 @@ export const Volume = types
       formData.append("files", rawFile);
       formData.append("files", settingsFile);
 
-      const response = yield Utils.sendReq(
-        `volume/${self.id}/volumeData/RawVolumeData/from-files`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-        false
-      );
+      const rawData: z.infer<typeof rawVolumeDataSchema> =
+        yield createFromFiles("RawVolumeData", self.id, formData);
       if (!isAlive(self)) {
         return;
       }
-      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
-      if (!isAlive(self)) {
-        return;
-      }
-
       self.setRawVolume(rawData);
     }),
     uploadMrcVolume: flow(function* uploadMrcVolume(mrcFile: File) {
@@ -147,19 +138,10 @@ export const Volume = types
 
       const formData = new FormData();
       formData.append("files", mrcFile);
-      const response = yield Utils.sendReq(
-        `volume/${self.id}/volumeData/RawVolumeData/from-mrc-file`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-        false
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
+
+      const rawData: z.infer<typeof rawVolumeDataSchema> =
+        yield createFromMrcFile(self.id, formData);
+
       if (!isAlive(self)) {
         return;
       }
@@ -168,32 +150,22 @@ export const Volume = types
     }),
     uploadFromUrl: flow(function* uploadFromUrl(
       url: string,
-      fileType: string,
+      fileType: "mrc" | "raw",
       volumeSettings?: VolumeSettings
     ) {
       if (!Utils.isValidHttpUrl(url)) {
         toast.error(`Invalid URL.`);
         throw new Error("Invalid URL.");
       }
-
-      const response = yield Utils.sendReq(
-        `volume/${self.id}/volumeData/RawVolumeData/from-url`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: url,
-            fileType: fileType,
-            volumeSettings: volumeSettings,
-          }),
-        },
-        false
-      );
-      if (!isAlive(self)) {
-        return;
+      if (volumeSettings !== undefined && volumeSettings.file === undefined) {
+        toast.error(`Invalid URL.`);
+        throw new Error("Missing VolumeSettings");
       }
-      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
+      //TODO uros fix
+      const rawData: z.infer<typeof rawVolumeDataSchema> = yield createFromUrl(
+        self.id,
+        { url: url, fileType: fileType, volumeSettings: volumeSettings }
+      );
       if (!isAlive(self)) {
         return;
       }
@@ -205,7 +177,7 @@ export const Volume = types
         toast.error(`Invalid URL.`);
         throw new Error("Invalid URL.");
       }
-
+      //TODO fix
       const response = yield Utils.sendRequestWithToast(
         `volume/${self.id}/volumeData/RawVolumeData/from-mrc-url`,
         {
@@ -220,7 +192,8 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> =
+        yield response.json();
       if (!isAlive(self)) {
         return;
       }
@@ -248,20 +221,8 @@ export const Volume = types
         "settings.json"
       );
 
-      const response = yield Utils.sendReq(
-        `volume/${self.id}/volumeData/RawVolumeData/from-files`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-        false
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-
-      const rawData: z.infer<typeof rawVolumeDataSchema> = yield response.json();
+      const rawData: z.infer<typeof rawVolumeDataSchema> =
+        yield createFromFiles("RawVolumeData", self.id, formData);
       if (!isAlive(self)) {
         return;
       }
@@ -283,19 +244,8 @@ export const Volume = types
         formData.append("files", file);
       });
 
-      const response = yield Utils.sendRequestWithToast(
-        `volume/${self.id}/volumeData/SparseLabeledVolumeData/from-files`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-        { successText: "Volume Successfully Uploaded" }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-      const volume: z.infer<typeof sparseLabelVolumeDataSchema> = yield response.json();
+      const volume: z.infer<typeof sparseLabelVolumeDataSchema> =
+        yield createFromFiles("SparseLabeledVolumeData", self.id, formData);
       if (!isAlive(self)) {
         return;
       }
@@ -317,19 +267,8 @@ export const Volume = types
         formData.append("files", file);
       });
 
-      const response = yield Utils.sendRequestWithToast(
-        `volume/${self.id}/volumeData/PseudoLabeledVolumeData/from-files`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-        { successText: "Volume Successfully Uploaded" }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-      const volume: z.infer<typeof pseudoLabelVolumeDataSchema> = yield response.json();
+      const volume: z.infer<typeof pseudoLabelVolumeDataSchema> =
+        yield createFromFiles("PseudoLabeledVolumeData", self.id, formData);
       if (!isAlive(self)) {
         return;
       }
@@ -340,18 +279,8 @@ export const Volume = types
       dataType: LabeledVolumeTypes,
       dataId: number
     ) {
-      yield Utils.sendRequestWithToast(
-        `volume/${self.id}/volumeData/${dataType}/${dataId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-        { successText: "Volume Data Successfuly Deleted" }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-
+      removeFromVolume(dataType, self.id, dataId)
+      
       if (dataType == "SparseLabeledVolumeData") {
         self.sparseVolumes.delete(dataId.toString());
       } else if (dataType == "PseudoLabeledVolumeData") {
@@ -431,19 +360,11 @@ export const ProjectVolumes = types
       description: string
     ) {
       try {
-        const response = yield Utils.sendReq(
-          `project/${self.projectId}/volumes`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: name, description: description }),
-          }
-        );
-        if (!isAlive(self)) {
-          return;
-        }
-        const volume: z.infer<typeof volumeSchema> = yield response.json();
+        const volume: z.infer<typeof volumeSchema> =
+          yield volumeApi.createVolume(self.projectId, {
+            name: name,
+            description: description,
+          });
         if (!isAlive(self)) {
           return;
         }
@@ -458,18 +379,7 @@ export const ProjectVolumes = types
     }),
     removeVolume: flow(function* removeVolume(volumeId: number) {
       try {
-        yield Utils.sendRequestWithToast(
-          `project/${self.projectId}/volume/${volumeId}`,
-          {
-            method: "DELETE",
-            credentials: "include",
-          },
-          { successText: "Volume Successfuly Removed From Project" }
-        );
-        if (!isAlive(self)) {
-          return;
-        }
-
+        volumeApi.removeFromProject(self.projectId, volumeId);
         self.volumes.delete(volumeId.toString());
         if (self.selectedVolumeId === volumeId) {
           self.selectedVolumeId = undefined;
@@ -482,17 +392,8 @@ export const ProjectVolumes = types
   .actions((self) => ({
     refreshVolumes: flow(function* refreshVolumes() {
       try {
-        const response = yield Utils.sendReq(
-          `project/${self.projectId}/volumes/deep`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        if (!isAlive(self)) {
-          return;
-        }
-        const volumes: z.infer<typeof volumesDeepSchemaRes> = yield response.json();
+        const volumes: z.infer<typeof volumesDeepSchemaRes> =
+          yield getVolumesFromProjectDeep(self.projectId);
         if (!isAlive(self)) {
           return;
         }

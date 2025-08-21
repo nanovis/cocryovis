@@ -2,6 +2,7 @@ import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
 import z from "zod";
 import { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
+import * as checkpointApi from "../../api/checkpoint";
 
 export const Checkpoint = types.model({
   id: types.identifierNumber,
@@ -72,19 +73,9 @@ export const ModelCheckpoints = types
       for (let i = 0; i < files.length; i++) {
         formData.append("files", files[i]);
       }
-      const response = yield Utils.sendReq(
-        `model/${self.modelId}/checkpoints`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-
-      const checkpoints: z.infer<typeof checkpointSchemaArray> = yield response.json();
+      //LOL fix
+      const checkpoints: z.infer<typeof checkpointSchemaArray> =
+        yield checkpointApi.uploadCheckpoints(self.modelId, formData);
       if (!isAlive(self)) {
         return;
       }
@@ -99,16 +90,7 @@ export const ModelCheckpoints = types
       }
     }),
     removeCheckpoint: flow(function* removeModel(checkpointId: number) {
-      yield Utils.sendRequestWithToast(
-        `model/${self.modelId}/checkpoint/${checkpointId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
+      checkpointApi.removeFromModel(self.modelId, checkpointId);
 
       self.checkpoints.delete(checkpointId.toString());
 
@@ -119,17 +101,8 @@ export const ModelCheckpoints = types
   }))
   .actions((self) => ({
     refreshCheckpoints: flow(function* refreshCheckpoints() {
-      const response = yield Utils.sendReq(
-        `model/${self.modelId}/checkpoints`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-      const checkpoints: z.infer<typeof checkpointSchemaArray> = yield response.json();
+      const checkpoints: z.infer<typeof checkpointSchemaArray> =
+        yield checkpointApi.getCheckpointsFromModel(self.modelId);
       if (!isAlive(self)) {
         return;
       }

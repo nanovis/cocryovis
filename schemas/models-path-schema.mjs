@@ -118,24 +118,24 @@ export const modelsPath = {
             },
         },
     },
-    "/project/{idProject}/model/{idModel}/clone": {
-        post: {
-            requestParams: {
-                path: idModelAndTypeSchema,
-            },
+    // "/project/{idProject}/model/{idModel}/clone": {
+    //     post: {
+    //         requestParams: {
+    //             path: idModelAndTypeSchema,
+    //         },
 
-            responses: {
-                201: {
-                    content: {
-                        "application/json": {
-                            schema: createModelSchema,
-                        },
-                    },
-                },
-                ...defaultError,
-            },
-        },
-    },
+    //         responses: {
+    //             201: {
+    //                 content: {
+    //                     "application/json": {
+    //                         schema: createModelSchema,
+    //                     },
+    //                 },
+    //             },
+    //             ...defaultError,
+    //         },
+    //     },
+    // },
     "/model/{idModel}": {
         get: {
             requestParams: {

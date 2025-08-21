@@ -124,11 +124,11 @@ const readVolumeDataPrefix = "/volumeData/:type/:idVolumeData";
 // Get Raw Data
 projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess,   VolumeDataController.getById);
 
-// Get Raw Data Files
-projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess,VolumeDataController.getData);
-
 // Update Raw Data
 projectsApi.put(`${readVolumeDataPrefix}`, restrictApi, VolumeDataController.update);
+
+// Get Raw Data Files
+projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess,VolumeDataController.getData);
 
 // Visualize
 projectsApi.get(`${readVolumeDataPrefix}/visualization-data`, restrictReadVolumeDataAccess, VolumeDataController.getVolumeVisualizationFiles);

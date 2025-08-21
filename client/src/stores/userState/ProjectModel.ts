@@ -5,8 +5,11 @@ import * as Utils from "../../utils/Helpers";
 import { toast } from "react-toastify";
 import { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
 import z from "zod";
-import { projectSchemaDeepRes, projectsSchemaDeepRes } from "#schemas/project-path-schema.mjs";
-
+import {
+  projectSchemaDeepRes,
+  projectsSchemaDeepRes,
+} from "#schemas/project-path-schema.mjs";
+import * as ProjectApi from "../../api/projects";
 
 interface ProjectDB {
   id: number;
@@ -71,15 +74,8 @@ export const UserProjects = types
     },
     fetchProject: flow(function* fetchProject(id: number) {
       try {
-        const response = yield Utils.sendReq(`project/${id}/deep`, {
-          method: "GET",
-        });
-        // Check if the model is still alive after async call
-        if (!isAlive(self)) {
-          return;
-        }
-
-        const project: z.infer<typeof projectSchemaDeepRes> = yield response.json();
+        const project: z.infer<typeof projectSchemaDeepRes> =
+          yield ProjectApi.getProjectDeep(id);
         if (!isAlive(self)) {
           return;
         }
@@ -105,15 +101,8 @@ export const UserProjects = types
     }),
     fetchProjects: flow(function* fetchProjects() {
       try {
-        const response = yield Utils.sendReq("projects-deep", {
-          method: "GET",
-        });
-        // Check if the model is still alive after async call
-        if (!isAlive(self)) {
-          return;
-        }
-
-        const projects: z.infer<typeof projectsSchemaDeepRes> = yield response.json();
+        const projects: z.infer<typeof projectsSchemaDeepRes> =
+          yield ProjectApi.getAllUserProjectsDeep();
         if (!isAlive(self)) {
           return;
         }
@@ -148,21 +137,12 @@ export const UserProjects = types
       projectDescription: string
     ) {
       try {
-        const response = yield Utils.sendRequestWithToast("projects", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        const project: z.infer<typeof projectSchema> =
+          yield ProjectApi.createProject({
             name: projectName,
             description: projectDescription,
-          }),
-        });
-        // Check if the model is still alive after async call
-        if (!isAlive(self)) {
-          return;
-        }
+          });
 
-        const project: z.infer<typeof projectSchema> = yield response.json();
         if (!isAlive(self)) {
           return;
         }
@@ -183,15 +163,8 @@ export const UserProjects = types
     }),
     deleteProject: flow(function* deleteProject(projectId: number) {
       try {
-        yield Utils.sendRequestWithToast(`project/${projectId}`, {
-          method: "DELETE",
-        });
-        if (!isAlive(self)) {
-          return;
-        }
-
+        ProjectApi.deleteProject(projectId);
         self.projects.delete(projectId.toString());
-
         self.activeProjectId = undefined;
       } catch (error) {
         console.error("Failed to delete project", error);
@@ -223,7 +196,8 @@ export const UserProjects = types
           return;
         }
 
-        const project: z.infer<typeof projectSchemaDeepRes> = yield response.json();
+        const project: z.infer<typeof projectSchemaDeepRes> =
+          yield response.json();
         if (!isAlive(self)) {
           return;
         }

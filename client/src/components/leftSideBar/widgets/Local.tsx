@@ -23,6 +23,7 @@ import JSZip from "jszip";
 import saveAs from "file-saver";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
+import { checkpointFileToText } from "../../../api/checkpoint";
 
 const useStyles = makeStyles({
   inferenceButtons: {
@@ -210,16 +211,7 @@ const Local = observer(({ open, close }: Props) => {
       const formData = new FormData();
       formData.append("checkpoint", inferenceCheckpointFile);
 
-      const response = await Utils.sendReq(
-        `checkpoint/to-text`,
-        {
-          method: "POST",
-          body: formData,
-        },
-        false
-      );
-
-      const checkpointTxt = await response.text();
+      const checkpointTxt = await checkpointFileToText(formData);
       window.WasmModule?.FS.writeFile("parameters.txt", checkpointTxt);
 
       const volumeData = await window.WasmModule?.doInference(

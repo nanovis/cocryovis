@@ -1,9 +1,5 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import {
-  CheckpointInstance,
-  CheckpointSnapshotIn,
-  ModelCheckpoints,
-} from "./CheckpointModel";
+import { CheckpointInstance, ModelCheckpoints } from "./CheckpointModel";
 import * as Utils from "../../utils/Helpers";
 import z from "zod";
 import {
@@ -11,6 +7,7 @@ import {
   modelSchemaWithCheckpoint,
   modelSchemaWithOptionalCheckpoint,
 } from "#schemas/componentSchemas/model-schema.mjs";
+import * as modelApi from "../../api/models";
 
 export type ModelDB = z.infer<typeof modelSchemaWithOptionalCheckpoint>;
 
@@ -79,17 +76,10 @@ export const ProjectModels = types
       });
     },
     createModel: flow(function* createModel(name: string, description: string) {
-      const response = yield Utils.sendReq(`project/${self.projectId}/models`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name, description: description }),
-      });
-      if (!isAlive(self)) {
-        return;
-      }
-
-      const model: z.infer<typeof modelSchema> = yield response.json();
+      const model: z.infer<typeof modelSchema> = yield modelApi.createModel(
+        self.projectId,
+        { name: name, description: description }
+      );
 
       if (!isAlive(self)) {
         return;
@@ -101,16 +91,7 @@ export const ProjectModels = types
       return model;
     }),
     removeModel: flow(function* removeModel(modelId: number) {
-      yield Utils.sendRequestWithToast(
-        `project/${self.projectId}/model/${modelId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
+      modelApi.removeModelFromProject(modelId, self.projectId);
 
       self.models.delete(modelId.toString());
 
@@ -121,17 +102,9 @@ export const ProjectModels = types
   }))
   .actions((self) => ({
     refreshModels: flow(function* refreshModels() {
-      const response = yield Utils.sendReq(
-        `project/${self.projectId}/models?checkpoints=true`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      if (!isAlive(self)) {
-        return;
-      }
-      const models: z.infer<typeof modelSchemaWithCheckpoint>[] = yield response.json();
+      const models: z.infer<typeof modelSchemaWithCheckpoint>[] =
+        yield modelApi.getModelsFromProjectWithCheckpoints(self.projectId);
+
       if (!isAlive(self)) {
         return;
       }

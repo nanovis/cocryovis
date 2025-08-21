@@ -1,25 +1,14 @@
 import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
 import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
-import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
-import z from "zod";
+import { updateVolumeData } from "../../api/volumeData";
 
 async function updateSparseVolume(
   id: number,
   params: Partial<SparseVolumeInstance>
 ): Promise<SparseVolumeSnapshotIn> {
-  const response = await Utils.sendReq(
-    `/volumeData/SparseLabeledVolumeData/${id}`,
-    {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
-    },
-    false
-  );
-  const update: z.infer<typeof sparseLabelVolumeDataSchema> =
-    await response.json();
+  const update =
+    await updateVolumeData("SparseLabeledVolumeData", id, params);
   return update;
 }
 

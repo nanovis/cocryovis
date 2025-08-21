@@ -8,7 +8,7 @@ import { defaultError } from "./error-path-schema.mjs";
  */
 export const IlastikPath = {
     "/volume/{idVolume}/queue-pseudo-label-generation": {
-        get: {
+        post: {
             requestParams: {
                 path: idVolume,
             },

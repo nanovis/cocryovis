@@ -60,6 +60,13 @@ import { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeMode
 import { VolVisSettingsSnapshotIn } from "../../../stores/uiState/VolVisSettings";
 import { VisualizedVolumeSnapshotIn } from "../../../stores/uiState/VisualizedVolume";
 import { DEFAULT_TF } from "../../../DefaultTransferFunctions";
+import { queuePseudoLabelsGeneration } from "../../../api/ilastik";
+import { queueTiltSeriesReconstruction } from "../../../api/cryoEt";
+import {
+  downloadFullVolumeData,
+  getVolumeVisualizationFiles,
+} from "../../../api/volumeData";
+import { getResultData } from "../../../api/results";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -220,7 +227,7 @@ const Volume = observer(({ open, close }: Props) => {
 
   const uploadUrl = async (
     url: string,
-    fileType: string,
+    fileType: "mrc" | "raw",
     volumeSettings?: VolumeSettings
   ) => {
     let toastId = null;
@@ -271,14 +278,7 @@ const Volume = observer(({ open, close }: Props) => {
             options: options,
           })
         );
-        await Utils.sendReq(
-          `tilt-series-reconstruction`,
-          {
-            method: "POST",
-            body: formData,
-          },
-          false
-        );
+        queueTiltSeriesReconstruction(formData);
         toast.update(toastId, {
           render: "Tilt series reconstruction successfuly queued!",
           type: "success",
@@ -326,7 +326,7 @@ const Volume = observer(({ open, close }: Props) => {
 
   const handleVisualisationRequest = async (
     dataType: RawDataTypes,
-    id: Number | undefined,
+    id: number | undefined,
     volumeInstance:
       | VolumeInstance
       | SparseVolumeInstance
@@ -342,21 +342,13 @@ const Volume = observer(({ open, close }: Props) => {
     try {
       toastId = toast.loading("Fetching visualization data...");
 
-      const response = await Utils.sendReq(
-        `volumeData/${dataType}/${id}/visualization-data`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const contents = await getVolumeVisualizationFiles(dataType, id);
 
       toast.update(toastId, {
         render: "Processing visualization data...",
         isLoading: true,
         autoClose: false,
       });
-
-      const contents = await response.blob();
       const fileMap = await Utils.zipToFileMap(contents);
 
       await uiState.visualizeVolume(fileMap, volumeInstance);
@@ -429,15 +421,7 @@ const Volume = observer(({ open, close }: Props) => {
         });
         await Utils.waitForNextFrame();
 
-        const response = await Utils.sendReq(
-          `volumeData/${dataType}/${labelVolume.id}/download-full`,
-          {
-            method: "GET",
-          },
-          false
-        );
-
-        const contents = await response.blob();
+        const contents = await downloadFullVolumeData(dataType, labelVolume.id);
         const fileMap = await Utils.zipToFileMap(contents);
         let settingsFile;
         let rawFile;
@@ -541,15 +525,13 @@ const Volume = observer(({ open, close }: Props) => {
 
   // dataType options = 'RawVolumeData', 'SparseLabeledVolumeData', 'PseudoLabeledVolumeData'.
   const handleResultVisualisationRequest = async () => {
+    if(selectedResultId === undefined){
+      return
+    }
     let toastId = null;
 
     try {
       toastId = toast.loading("Fetching visualization data...");
-
-      const response = await Utils.sendReq(`result/${selectedResultId}/data`, {
-        method: "GET",
-        credentials: "include",
-      });
 
       toast.update(toastId, {
         render: "Processing visualization data...",
@@ -557,7 +539,7 @@ const Volume = observer(({ open, close }: Props) => {
         autoClose: false,
       });
 
-      const contents = await response.blob();
+      const contents = await getResultData(selectedResultId);
       const fileMap = await Utils.zipToFileMap(contents);
 
       await uiState.visualizeVolume(fileMap, selectedResult);
@@ -570,18 +552,11 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const queuePseudoLabelGeneration = async () => {
-    if (!selectedVolumeId) {
+    if (selectedVolumeId === undefined) {
       return;
     }
     try {
-      await Utils.sendRequestWithToast(
-        `volume/${selectedVolumeId}/queue-pseudo-label-generation`,
-        {
-          method: "POST",
-          credentials: "include",
-        },
-        { successText: "Label generation successfuly queued!" }
-      );
+      queuePseudoLabelsGeneration(selectedVolumeId);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -660,7 +635,6 @@ const Volume = observer(({ open, close }: Props) => {
       if (!id) {
         return;
       }
-
       await Utils.downloadFileFromServer(
         `volumeData/${dataType}/${id}/download-full`
       );

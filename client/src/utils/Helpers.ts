@@ -142,6 +142,7 @@ export function isFloatBetween(
 /**
  * @param {string?} filenameOverwrite
  */
+//Don't put in Api folder
 export async function downloadFileFromServer(
   url: string,
   filenameOverwrite?: string

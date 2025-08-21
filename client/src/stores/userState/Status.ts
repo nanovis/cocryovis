@@ -2,6 +2,7 @@ import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
 import z from "zod";
 import { statusSchema } from "#schemas/user-path-schema.mjs";
+import { getStatus } from "../../api/users";
 
 export type TaskHistoryItem = {
   taskStatus: {
@@ -231,16 +232,8 @@ export const Status = types
   .actions((self) => ({
     fetchStatus: flow(function* fetchProjects() {
       try {
-        const response = yield Utils.sendReq("status", {
-          method: "GET",
-          credentials: "include",
-        });
+        const contents: z.infer<typeof statusSchema> = yield getStatus();
         // Check if the model is still alive after async call
-        if (!isAlive(self)) {
-          return;
-        }
-        const contents: z.infer<typeof statusSchema> = yield response.json();
-
         if (!isAlive(self)) {
           return;
         }

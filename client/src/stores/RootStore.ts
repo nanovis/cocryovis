@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 import Cookies from "js-cookie";
 import * as Utils from "../utils/Helpers";
 import { UiState } from "./uiState/UiState";
+import * as Api from "../api/users";
 
 const CookieName = "LoggedUser";
 
@@ -40,11 +41,13 @@ const RootStore = types
       }
       return;
     }),
+
     logout: flow(function* logout() {
       try {
-        yield Utils.sendReq("logout", {
-          method: "POST",
-        });
+        yield Api.logout();
+        if (!isAlive(self)) {
+          return;
+        }
         self.user = User.create({});
         self.uiState.visualizedVolume = undefined;
         Cookies.remove(CookieName);

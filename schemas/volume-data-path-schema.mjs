@@ -53,7 +53,7 @@ export const fromUrlSchema = z
         message: "Raw files require volume settings.",
     });
 
-export const updateAnnotations = z.object({
+export const updateAnnotationsSchema = z.object({
     annotation: annotationsSchema,
     saveAsNew: z.boolean().default(false),
 });
@@ -101,7 +101,6 @@ export const idVolumeDataAndType = z
             },
         ],
     });
-
 
 export const idVolumeVolumeDataTypeParams = z
     .object({
@@ -154,10 +153,19 @@ export const volumeDataPath = {
             requestParams: {
                 path: idVolumeDataAndType,
             },
+            requestBody: {
+                content: {
+                    "application/json": {
+                        schema: volumeDataUpdate,
+                    },
+                },
+            },
             responses: {
                 200: {
                     content: {
-                        "application/octet-stream": {},
+                        "application/json": {
+                            schema: volumeData,
+                        },
                     },
                 },
                 ...defaultError,
@@ -169,13 +177,7 @@ export const volumeDataPath = {
             requestParams: {
                 path: idVolumeDataAndType,
             },
-            requestBody: {
-                content: {
-                    "application/json": {
-                        schema: volumeDataUpdate,
-                    },
-                },
-            },
+
             responses: {
                 200: {
                     content: {
@@ -282,7 +284,7 @@ export const volumeDataPath = {
             requestBody: {
                 content: {
                     "application/json": {
-                        schema: updateAnnotations,
+                        schema: updateAnnotationsSchema,
                     },
                 },
             },
@@ -377,5 +379,4 @@ export const volumeDataPath = {
             },
         },
     },
-
 };

@@ -30,6 +30,8 @@ import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
 import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import z from "zod";
+import { addAnnotations } from "../../../api/volume";
+import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -154,35 +156,13 @@ const Visualization = observer(({ open, close }: Props) => {
       if (
         visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
       ) {
-        let response = await Utils.sendReq(
-          `volume/${volume.id}/add-annotations`,
-          {
-            method: "PUT",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: annotationData,
-          },
-          false
+        let sparseLabel = await addAnnotations(volume.id, annotationData);
+
+        sparseLabel = await updateVolumeData(
+          "SparseLabeledVolumeData",
+          sparseLabel.id,
+          { color: volume.sparseLabelColors[visualizedVolume.manualLabelIndex] }
         );
-
-        let sparseLabel: z.infer<typeof sparseLabelVolumeDataSchema> =
-          await response.json();
-
-        response = await Utils.sendReq(
-          `/volumeData/SparseLabeledVolumeData/${sparseLabel.id}`,
-          {
-            method: "PUT",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              color:
-                volume.sparseLabelColors[visualizedVolume.manualLabelIndex],
-            }),
-          },
-          false
-        );
-
-        sparseLabel = await response.json();
 
         volume.addSparseVolume(sparseLabel);
       } else {
@@ -191,19 +171,11 @@ const Visualization = observer(({ open, close }: Props) => {
 
         const annotation = JSON.parse(annotationData);
 
-        await Utils.sendReq(
-          `volume/${volume.id}/volumeData/SparseLabeledVolumeData/${sparseLabelVolume.id}/update-annotations`,
-          {
-            method: "PUT",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              annotation: annotation,
-              saveAsNew:
-                visualizedVolume.saveAsNew[visualizedVolume.manualLabelIndex],
-            }),
-          }
-        );
+        updateAnnotations(volume.id, sparseLabelVolume.id, {
+          annotation: annotation,
+          saveAsNew:
+            visualizedVolume.saveAsNew[visualizedVolume.manualLabelIndex],
+        });
       }
 
       toast.update(toastId, {

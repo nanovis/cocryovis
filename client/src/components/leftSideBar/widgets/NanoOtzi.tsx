@@ -34,8 +34,10 @@ import {
   DropdownInputValidatedField,
   NumberInputValidatedField,
 } from "../../shared/ValidatedFields";
-import z from "zod";
-import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
+import { queueInference } from "../../../api/nanoOetzi";
+import { getVolumeDataById, getVolumeData } from "../../../api/volumeData";
+import { checkpointToText } from "../../../api/checkpoint";
+import { createResultFromFiles } from "../../../api/results";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {
@@ -80,24 +82,19 @@ const NanoOtzi = observer(({ open, close }: Props) => {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState<string[]>([]);
 
   const startInference = async () => {
-    if (!canDoInference()) {
+    if (
+      !canDoInference() ||
+      inferenceCheckpointId === undefined ||
+      inferenceVolumeId === undefined
+    ) {
       return;
     }
     try {
       setInferenceInProgress(true);
-      await Utils.sendRequestWithToast(
-        `queue-inference`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            checkpointId: inferenceCheckpointId,
-            volumeId: inferenceVolumeId,
-          }),
-        },
-        { successText: "Inference successfuly queued!" }
-      );
+      queueInference({
+        checkpointId: inferenceCheckpointId,
+        volumeId: inferenceVolumeId,
+      });
       setInferenceInProgress(false);
     } catch (error) {
       console.error("startInference Error:", error);
@@ -128,32 +125,21 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         throw new Error("Volume not found!");
       }
 
+      if (volume.rawDataId === null) {
+        throw new Error("volume missing raw data");
+      }
+
       toastId = toast.loading("Fetching raw data...");
 
-      let response = await Utils.sendReq(
-        `volumeData/RawVolumeData/${volume.rawDataId}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      const rawData = await getVolumeDataById(
+        "RawVolumeData",
+        volume.rawDataId
       );
-
-      const rawData: z.infer<typeof rawVolumeDataSchema> =
-        await response.json();
       if (!rawData.settings) {
         throw new Error("Settings missing in raw data!");
       }
 
-      response = await Utils.sendReq(
-        `volumeData/RawVolumeData/${rawData.id}/data`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-        false
-      );
-
-      const arrayBuffer = await response.arrayBuffer();
+      const arrayBuffer = await getVolumeData("RawVolumeData", rawData.id);
       const rawDataFile = new Uint8Array(arrayBuffer);
 
       const settings = JSON.parse(rawData.settings);
@@ -164,16 +150,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       window.WasmModule?.FS.writeFile(settings.file, rawDataFile);
 
-      response = await Utils.sendReq(
-        `checkpoint/${inferenceCheckpointId}/as-text`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-        false
-      );
-
-      const checkpointTxt = await response.text();
+      const checkpointTxt = await checkpointToText(inferenceCheckpointId);
 
       window.WasmModule?.FS.writeFile("parameters.txt", checkpointTxt);
 
@@ -249,14 +226,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         })
       );
 
-      await Utils.sendReq(
-        `volume/${volume.id}/results`,
-        {
-          method: "POST",
-          body: formData,
-        },
-        false
-      );
+      createResultFromFiles(volume.id, formData);
 
       toast.update(toastId, {
         render: "Local Inference Successful!",

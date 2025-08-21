@@ -17,6 +17,7 @@ import GlobalStyles from "../GlobalStyles";
 import ChangePasswordDialog from "./ChangePasswordDialog";
 import { publicUser } from "#schemas/user-path-schema.mjs";
 import z from "zod";
+import { updateUser } from "../../api/users";
 
 const useStyles = makeStyles({
   container: {
@@ -111,21 +112,11 @@ const ProfilePage = observer(({}: Props) => {
 
   const changeUserInformation = async () => {
     try {
-      const response = await sendRequestWithToast(
-        "user",
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: name,
-            username: username,
-            email: email,
-          }),
-        },
-        { successText: "Change successful!" }
-      );
-      const userData: z.infer<typeof publicUser> = await response.json();
+      const userData = await updateUser({
+        name: name,
+        username: username,
+        email: email,
+      });
       user.setName(userData.name);
       user.setUsername(userData.username);
       user.setEmail(userData.email);

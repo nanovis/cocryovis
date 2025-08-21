@@ -17,6 +17,7 @@ import {
   NumberInputField,
   StringInputFieldType,
 } from "../../utils/Input";
+import { queueTraining } from "../../api/nanoOetzi";
 
 export enum lossOptions {
   mse = "Mean Squared Error",
@@ -332,17 +333,8 @@ export const ModelTraining = types
         if (self.checkpointId !== undefined) {
           trainData.checkpointId = self.checkpointId;
         }
-
-        yield Utils.sendReq(
-          `queue-training`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(trainData),
-          },
-          false
-        );
+        //TODO uros shema not maching trainData
+        queueTraining(trainData)
         if (!isAlive(self)) {
           return;
         }
