@@ -3,7 +3,6 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { sanitize } from "../middleware/sanitizer.mjs";
 import { isActiveSession, sessionExpired } from "../middleware/restrict.mjs";
-import { Session } from "express-session";
 
 /**
  * Enum websocket broadcast actions.

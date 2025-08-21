@@ -24,10 +24,9 @@ export default class DatabaseModel {
 
     /**
      * @param {number} id
-     * @param {any} options
      * @returns {Promise<object>}
      */
-    static async getById(id, options) {
+    static async getById(id) {
         const entry = await this.db.findUniqueOrThrow({
             where: { id: id },
         });
@@ -56,10 +55,10 @@ export default class DatabaseModel {
     }
 
     /**
-     * @param {...*} var_args
+     * @param {...*} _var_args
      * @returns {Promise<object>}
      */
-    static async create(...var_args) {
+    static async create(..._var_args) {
         throw new Error("Method not implemented");
     }
 

@@ -1,8 +1,11 @@
 // @ts-check
 
-import z from "zod";
 import Utils from "./utils.mjs";
-import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
+
+/**
+ * @import z from "zod"
+ * @import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs"
+ */
 
 /**
  * Fetch cryoET tomogram metadata by id
@@ -21,7 +24,7 @@ export async function fetchCtyoETTomogramMetadata(id) {
             (value) => (errOutput += value)
         );
         return JSON.parse(output);
-    } catch (error) {
+    } catch {
         throw new Error(
             "Failed to fetch cryoET tomogram metadata: " + errOutput
         );

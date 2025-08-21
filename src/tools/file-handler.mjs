@@ -40,11 +40,11 @@ export class PendingUpload {
     }
 
     /**
-     * @param {string} folderPath
-     * @param {string?} fileNameOverride
+     * @param {string} _folderPath
+     * @param {string?} [_fileNameOverride]
      * @returns {Promise<string>}
      */
-    async saveAs(folderPath, fileNameOverride = null) {
+    async saveAs(_folderPath, _fileNameOverride = null) {
         throw new Error("Method not implemented");
     }
 }

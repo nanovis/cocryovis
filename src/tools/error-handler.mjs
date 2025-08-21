@@ -2,6 +2,11 @@
 
 import { Prisma } from "@prisma/client";
 
+/**
+ * @typedef { import("express").Request } Request
+ * @typedef { import("express").Response } Response
+ * @typedef { import("express").NextFunction } NextFunction
+ */
 export class ApiError extends Error {
     /** @type {number} */
     statusCode = 500;
@@ -56,11 +61,23 @@ export class MissingResourceError extends ApiError {
     }
 }
 
+/**
+ * @param {Error} err
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
 export function logErrors(err, req, res, next) {
     console.error(err.message);
     next(err);
 }
 
+/**
+ * @param {Error} error
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
 export function clientErrorHandler(error, req, res, next) {
     if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -75,4 +92,5 @@ export function clientErrorHandler(error, req, res, next) {
     } else {
         res.status(500).json({ name: error.name, message: error.message });
     }
+    next();
 }

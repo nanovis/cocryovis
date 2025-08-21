@@ -13,8 +13,11 @@ export default defineConfig([
         extends: ["js/recommended"],
         languageOptions: { globals: globals.node },
         rules: {
-            "no-unused-vars": 0,
-            "jsdoc/no-undefined-types": 0,
+            "no-unused-vars": [
+                "error",
+                { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
+            ],
+            "jsdoc/no-undefined-types": 1,
             "jsdoc/check-indentation": 0,
             "jsdoc/check-line-alignment": 1,
             "jsdoc/check-template-names": 0,
@@ -42,6 +45,7 @@ export default defineConfig([
         "modules/*",
         "node_modules/*",
         "sessions/*",
+        "database/*",
         "transfer-functions/*",
         "*.json",
         "*.log",

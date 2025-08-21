@@ -97,7 +97,7 @@ export default class ModelController {
 
         const projectId = params.idProject;
 
-        const model = await Model.removeFromProject(params.idModel, projectId);
+        await Model.removeFromProject(params.idModel, projectId);
 
         res.sendStatus(204);
     }

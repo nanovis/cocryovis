@@ -12,13 +12,6 @@ import Volume from "../models/volume.mjs";
 import Model from "../models/model.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
-import {
-    IMODOptions,
-    CTFOptions,
-    tiltSeriesOptions,
-    motionCorrectionOptions,
-} from "#schemas/cryoEt-path-schema.mjs";
-import { trainingOptions } from "#schemas/nano-oetzi-path-schema.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
@@ -26,9 +19,11 @@ import fileUpload from "express-fileupload";
 import { PendingLocalFile } from "./file-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "./config.mjs";
-import z from "zod";
 
 /**
+ * @import z from "zod"
+ * @import { trainingOptions } from "#schemas/nano-oetzi-path-schema.mjs";
+ * @import { IMODOptions, CTFOptions, tiltSeriesOptions, motionCorrectionOptions } from "#schemas/cryoEt-path-schema.mjs"
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB
@@ -114,7 +109,7 @@ export default class GPUTaskHandler {
                         taskHistory.id
                     )
                 );
-            } catch (error) {
+            } catch {
                 console.error(
                     `Inference task by User with id ${userId} failed.`
                 );
@@ -417,7 +412,7 @@ export default class GPUTaskHandler {
                         taskHistory.id
                     )
                 );
-            } catch (error) {
+            } catch {
                 console.error(
                     `Training task by User with id ${userId} failed.`
                 );
@@ -968,7 +963,7 @@ export default class GPUTaskHandler {
                         taskHistory.id
                     )
                 );
-            } catch (error) {
+            } catch {
                 console.error(
                     `Reconstruction task by User with id ${userId} failed.`
                 );

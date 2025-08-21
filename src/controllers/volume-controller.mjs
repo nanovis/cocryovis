@@ -1,6 +1,5 @@
 // @ts-check
 
-import z from "zod";
 import Volume from "../models/volume.mjs";
 import { annotationsSchema } from "#schemas/volume-path-schema.mjs";
 import { idProject } from "#schemas/componentSchemas/project-schema.mjs";

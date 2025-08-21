@@ -14,10 +14,10 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
-import { volumeQuerySchema } from "#schemas/volume-path-schema.mjs";
-import z from "zod";
 
 /**
+ * @import z from "zod"
+ * @import { volumeQuerySchema } from "#schemas/volume-path-schema.mjs"
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
@@ -41,22 +41,22 @@ export default class Volume extends DatabaseModel {
      */
     static async getById(
         id,
-        {
-            rawData = false,
-            sparseVolumes = false,
-            pseudoVolumes = false,
-            results = false,
-            projects = false,
-        } = {}
+        options = {
+            rawData: false,
+            sparseVolumes: false,
+            pseudoVolumes: false,
+            results: false,
+            projects: false,
+        }
     ) {
         const entry = await this.db.findUnique({
             where: { id: id },
             include: {
-                rawData: rawData,
-                sparseVolumes: sparseVolumes,
-                pseudoVolumes: pseudoVolumes,
-                results: results,
-                projects: projects,
+                rawData: options.rawData,
+                sparseVolumes: options.sparseVolumes,
+                pseudoVolumes: options.pseudoVolumes,
+                results: options.results,
+                projects: options.projects,
             },
         });
         if (entry === null) {
@@ -71,13 +71,13 @@ export default class Volume extends DatabaseModel {
      */
     static async getVolumesFromProject(
         projectId,
-        {
-            rawData = false,
-            sparseVolumes = false,
-            pseudoVolumes = false,
-            results = false,
-            projects = false,
-        } = {}
+        options = {
+            rawData: false,
+            sparseVolumes: false,
+            pseudoVolumes: false,
+            results: false,
+            projects: false,
+        }
     ) {
         return await this.db.findMany({
             where: {
@@ -88,11 +88,11 @@ export default class Volume extends DatabaseModel {
                 },
             },
             include: {
-                rawData: rawData,
-                sparseVolumes: sparseVolumes,
-                pseudoVolumes: pseudoVolumes,
-                results: results,
-                projects: projects,
+                rawData: options.rawData,
+                sparseVolumes: options.sparseVolumes,
+                pseudoVolumes: options.pseudoVolumes,
+                results: options.results,
+                projects: options.projects,
             },
         });
     }
@@ -559,7 +559,7 @@ export default class Volume extends DatabaseModel {
                     }
 
                     return newPseudoLabels;
-                } catch (error) {
+                } catch {
                     newFolders.forEach((folder) => {
                         try {
                             fsPromises.rm(folder, {

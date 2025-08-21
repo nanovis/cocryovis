@@ -47,7 +47,7 @@ export default class Utils {
             "./python-scripts",
             "mrc-to-raw.py"
         )}" -i "${inputFile}" -o "${outputPath}"`;
-        const { stdout, stderr } = await execPromise(command);
+        const { stdout } = await execPromise(command);
         // fs.writeFileSync(
         //     path.join(outputPath, "mrc-to-raw.log"),
         //     `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
@@ -68,7 +68,7 @@ export default class Utils {
             "./python-scripts",
             "analyze-to-raw.py"
         )}" -i "${inputFile}" -o "${outputPath}"`;
-        const { stdout, stderr } = await execPromise(command);
+        const { stdout } = await execPromise(command);
         const data = JSON.parse(stdout);
         return {
             rawFileName: data["file"],
@@ -328,7 +328,7 @@ export default class Utils {
 
         try {
             url = new URL(string);
-        } catch (_) {
+        } catch {
             return false;
         }
 

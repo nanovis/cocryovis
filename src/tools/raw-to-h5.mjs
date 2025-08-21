@@ -1,12 +1,9 @@
 // @ts-check
 
-import { exec } from "child_process";
 import appConfig from "./config.mjs";
 import path from "path";
-import { promisify } from "util";
 import LogFile from "./log-manager.mjs";
 import Utils from "./utils.mjs";
-const execPromise = promisify(exec);
 
 /**
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB

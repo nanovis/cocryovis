@@ -51,10 +51,10 @@ export default class ResultFile extends DatabaseModel {
     }
 
     /**
-     * @param {number} id
+     * @param {number} _id
      * @returns {Promise<ResultFileDB>}
      */
-    static async del(id) {
+    static async del(_id) {
         throw new Error(
             "Result File cannot be deleted manually. Delete Result instead."
         );
