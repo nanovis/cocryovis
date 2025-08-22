@@ -1,6 +1,5 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { Checkpoint } from "./CheckpointModel";
-import * as Utils from "../../utils/Helpers";
 import { getResultSchema } from "#schemas/result-path-schema.mjs";
 import z from "zod";
 import {
@@ -53,7 +52,11 @@ export const VolumeResults = types
       });
     },
     removeResult: flow(function* removeResult(resultId: number) {
-      removeResultFromVolume(self.volumeId, resultId);
+      yield removeResultFromVolume(self.volumeId, resultId);
+      if (!isAlive(self)) {
+        return;
+      }
+
       self.results.delete(resultId.toString());
       if (self.selectedResultId === resultId) {
         self.selectedResultId = undefined;

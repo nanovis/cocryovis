@@ -88,3 +88,28 @@ export async function updateUser(request: z.input<typeof updateUserSchema>) {
   const contents: z.infer<typeof publicUser> = await response.json();
   return contents;
 }
+
+export async function deleteUser() {
+  await Utils.sendRequestWithToast(
+    "user",
+    {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    },
+    { successText: "Change successful!" }
+  );
+}
+
+export async function AdminDeleteUser(id: number) {
+  await Utils.sendRequestWithToast(
+    "user-admin",
+    {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(id),
+    },
+    { successText: "Change successful!" }
+  );
+}

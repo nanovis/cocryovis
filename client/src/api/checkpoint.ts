@@ -22,6 +22,17 @@ export async function getCheckpointsFromModel(id: number) {
   return checkpoints;
 }
 
+export async function uploadCheckpoints(id: number, request: FormData) {
+  const response = await Utils.sendReq(`model/${id}/checkpoints`, {
+    method: "POST",
+    credentials: "include",
+    body: request,
+  });
+  const checkpoints: z.infer<typeof checkpointSchemaArray> =
+    await response.json();
+  return checkpoints;
+}
+
 export async function checkpointToText(id: number) {
   const response = await Utils.sendReq(
     `checkpoint/${id}/as-text`,

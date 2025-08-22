@@ -533,25 +533,6 @@ paths:
           schema:
             $ref: "#/components/schemas/__schema3"
           required: true
-      responses:
-        "200":
-          content:
-            application/octet-stream: {}
-        "404": *a1
-        "500": *a1
-  /volumeData/{type}/{idVolumeData}/data:
-    get:
-      parameters:
-        - in: path
-          name: idVolumeData
-          schema:
-            $ref: "#/components/schemas/__schema0"
-          required: true
-        - in: path
-          name: type
-          schema:
-            $ref: "#/components/schemas/__schema3"
-          required: true
       requestBody:
         content:
           application/json:
@@ -579,6 +560,27 @@ paths:
                       anyOf:
                         - type: string
                         - type: "null"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/__schema45"
+        "404": *a1
+        "500": *a1
+  /volumeData/{type}/{idVolumeData}/data:
+    get:
+      parameters:
+        - in: path
+          name: idVolumeData
+          schema:
+            $ref: "#/components/schemas/__schema0"
+          required: true
+        - in: path
+          name: type
+          schema:
+            $ref: "#/components/schemas/__schema3"
+          required: true
       responses:
         "200":
           content:
@@ -963,36 +965,6 @@ paths:
                 $ref: "#/components/schemas/__schema19"
         "404": *a1
         "500": *a1
-  /project/{idProject}/model/{idModel}/clone:
-    post:
-      parameters:
-        - in: path
-          name: idModel
-          schema:
-            $ref: "#/components/schemas/__schema0"
-          required: true
-        - in: path
-          name: type
-          schema:
-            $ref: "#/components/schemas/__schema3"
-          required: true
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  description:
-                    type: string
-                required:
-                  - name
-                  - description
-                additionalProperties: false
-        "404": *a1
-        "500": *a1
   /model/{idModel}:
     get:
       parameters:
@@ -1178,23 +1150,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema49"
-        "404": *a1
-        "500": *a1
-  /result/{idResult}/details:
-    get:
-      parameters:
-        - in: path
-          name: idResult
-          schema:
-            $ref: "#/components/schemas/__schema0"
-          required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/__schema49"
+                type: object
+                properties:
+                  id:
+                    $ref: "#/components/schemas/__schema36"
+                  folderPath:
+                    $ref: "#/components/schemas/__schema37"
+                  rawVolumeChannel:
+                    $ref: "#/components/schemas/__schema38"
+                  logFile:
+                    $ref: "#/components/schemas/__schema39"
+                  checkpointId:
+                    $ref: "#/components/schemas/__schema40"
+                  creatorId:
+                    $ref: "#/components/schemas/__schema41"
+                  volumeDataId:
+                    $ref: "#/components/schemas/__schema42"
+                required:
+                  - id
+                  - folderPath
+                  - rawVolumeChannel
+                  - logFile
+                  - checkpointId
+                  - creatorId
+                  - volumeDataId
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/results:
@@ -1332,7 +1312,7 @@ paths:
         "404": *a1
         "500": *a1
   /volume/{idVolume}/queue-pseudo-label-generation:
-    get:
+    post:
       parameters:
         - in: path
           name: idVolume
@@ -1370,11 +1350,11 @@ paths:
             schema:
               type: object
               properties:
-                trainingVolumesIds:
+                trainingVolumes:
                   $ref: "#/components/schemas/__schema9"
-                validationVolumesIds:
+                validationVolumes:
                   $ref: "#/components/schemas/__schema9"
-                testingVolumesIds:
+                testingVolumes:
                   $ref: "#/components/schemas/__schema9"
                 modelId:
                   type: number
@@ -1408,9 +1388,9 @@ paths:
                   minimum: -9007199254740991
                   maximum: 9007199254740991
               required:
-                - trainingVolumesIds
-                - validationVolumesIds
-                - testingVolumesIds
+                - trainingVolumes
+                - validationVolumes
+                - testingVolumes
                 - modelId
                 - minEpochs
                 - maxEpochs
@@ -1420,7 +1400,6 @@ paths:
                 - loss
                 - optimizer
                 - accumulateGradients
-                - checkpointId
       responses:
         "204": {}
         "404": *a1
@@ -2388,29 +2367,3 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/__schema24"
-    __schema49:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema36"
-        folderPath:
-          $ref: "#/components/schemas/__schema37"
-        rawVolumeChannel:
-          $ref: "#/components/schemas/__schema38"
-        logFile:
-          $ref: "#/components/schemas/__schema39"
-        checkpointId:
-          $ref: "#/components/schemas/__schema40"
-        creatorId:
-          $ref: "#/components/schemas/__schema41"
-        volumeDataId:
-          $ref: "#/components/schemas/__schema42"
-      required:
-        - id
-        - folderPath
-        - rawVolumeChannel
-        - logFile
-        - checkpointId
-        - creatorId
-        - volumeDataId
-      additionalProperties: false

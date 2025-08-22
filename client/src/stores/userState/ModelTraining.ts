@@ -335,7 +335,7 @@ export const ModelTraining = types
           checkpointId: self.checkpointId !== undefined ? self.checkpointId : undefined,
         };
 
-        queueTraining(trainData);
+        yield queueTraining(trainData);
         if (!isAlive(self)) {
           return;
         }

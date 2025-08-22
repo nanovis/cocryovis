@@ -19,8 +19,6 @@ import { useMst } from "./stores/RootStore";
 import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
-import z from "zod";
-import { publicUser } from "#schemas/user-path-schema.mjs";
 import { getLoggedUserData, login, register } from "./api/users";
 
 const useStyles = makeStyles({

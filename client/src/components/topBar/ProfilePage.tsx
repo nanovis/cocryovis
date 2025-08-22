@@ -12,12 +12,9 @@ import {
 } from "@fluentui/react-components";
 import { useState } from "react";
 import DeleteDialog from "../shared/DeleteDialog";
-import { sendRequestWithToast } from "../../utils/Helpers";
 import GlobalStyles from "../GlobalStyles";
 import ChangePasswordDialog from "./ChangePasswordDialog";
-import { publicUser } from "#schemas/user-path-schema.mjs";
-import z from "zod";
-import { updateUser } from "../../api/users";
+import * as usersApi from "../../api/users";
 
 const useStyles = makeStyles({
   container: {
@@ -111,7 +108,7 @@ const ProfilePage = observer(() => {
 
   const changeUserInformation = async () => {
     try {
-      const userData = await updateUser({
+      const userData = await usersApi.updateUser({
         name: name,
         username: username,
         email: email,
@@ -124,17 +121,10 @@ const ProfilePage = observer(() => {
       console.error(error);
     }
   };
+  //LOL deleteUser user doesn't exist in API
   const deleteUser = async () => {
     try {
-      await sendRequestWithToast(
-        "user",
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        },
-        { successText: "Change successful!" }
-      );
+      await usersApi.deleteUser()
       logout();
     } catch (error) {
       console.error(error);

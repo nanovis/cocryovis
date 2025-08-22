@@ -272,7 +272,10 @@ export const Volume = types
       dataType: LabeledVolumeTypes,
       dataId: number
     ) {
-      removeFromVolume(dataType, self.id, dataId);
+      yield removeFromVolume(dataType, self.id, dataId);
+      if (!isAlive(self)) {
+        return;
+      }
 
       if (dataType == "SparseLabeledVolumeData") {
         self.sparseVolumes.delete(dataId.toString());
@@ -372,7 +375,11 @@ export const ProjectVolumes = types
     }),
     removeVolume: flow(function* removeVolume(volumeId: number) {
       try {
-        volumeApi.removeFromProject(self.projectId, volumeId);
+        yield volumeApi.removeFromProject(self.projectId, volumeId);
+        if (!isAlive(self)) {
+          return;
+        }
+
         self.volumes.delete(volumeId.toString());
         if (self.selectedVolumeId === volumeId) {
           self.selectedVolumeId = undefined;

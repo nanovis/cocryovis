@@ -1,5 +1,4 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import * as Utils from "../../utils/Helpers";
 import z from "zod";
 import { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
 import * as checkpointApi from "../../api/checkpoint";
@@ -73,7 +72,7 @@ export const ModelCheckpoints = types
       for (let i = 0; i < files.length; i++) {
         formData.append("files", files[i]);
       }
-      //LOL fix
+
       const checkpoints: z.infer<typeof checkpointSchemaArray> =
         yield checkpointApi.uploadCheckpoints(self.modelId, formData);
       if (!isAlive(self)) {
@@ -90,7 +89,10 @@ export const ModelCheckpoints = types
       }
     }),
     removeCheckpoint: flow(function* removeModel(checkpointId: number) {
-      checkpointApi.removeFromModel(self.modelId, checkpointId);
+      yield checkpointApi.removeFromModel(self.modelId, checkpointId);
+      if (!isAlive(self)) {
+        return;
+      }
 
       self.checkpoints.delete(checkpointId.toString());
 

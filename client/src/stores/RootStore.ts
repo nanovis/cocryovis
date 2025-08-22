@@ -2,7 +2,6 @@ import { flow, Instance, isAlive, types } from "mobx-state-tree";
 import { User, UserDB } from "./userState/UserModel";
 import { createContext, useContext } from "react";
 import Cookies from "js-cookie";
-import * as Utils from "../utils/Helpers";
 import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
 

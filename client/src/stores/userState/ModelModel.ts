@@ -1,6 +1,5 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { CheckpointInstance, ModelCheckpoints } from "./CheckpointModel";
-import * as Utils from "../../utils/Helpers";
 import z from "zod";
 import {
   modelSchema,
@@ -91,7 +90,10 @@ export const ProjectModels = types
       return model;
     }),
     removeModel: flow(function* removeModel(modelId: number) {
-      modelApi.removeModelFromProject(modelId, self.projectId);
+      yield modelApi.removeModelFromProject(modelId, self.projectId);
+      if (!isAlive(self)) {
+        return;
+      }
 
       self.models.delete(modelId.toString());
 

@@ -24,12 +24,12 @@ import {
 } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import GlobalStyles from "../GlobalStyles";
-import { sendReq, sendRequestWithToast } from "../../utils/Helpers";
 import { useEffect, useState } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
 import { usersArray } from "#schemas/user-path-schema.mjs";
 import z from "zod";
+import { AdminDeleteUser, getAllUsers } from "../../api/users";
 
 const useStyles = makeStyles({
   container: {
@@ -82,31 +82,16 @@ const AdminPanel = observer(() => {
 
   const getUserData = async () => {
     try {
-      const response = await sendReq("users", {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-      const usersData: z.infer<typeof usersArray> = await response.json();
+      const usersData: z.infer<typeof usersArray> = await getAllUsers();
       setUsers(usersData);
     } catch (error) {
       console.error(error);
     }
   };
+  //LOL DELETE user-admin user doesn't exist in
   const deleteUser = async () => {
     try {
-      await sendRequestWithToast(
-        "user-admin",
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: users[userDeleteIndex].id,
-          }),
-        },
-        { successText: "Change successful!" }
-      );
+      await AdminDeleteUser(users[userDeleteIndex].id)
       await getUserData();
     } catch (error) {
       console.error(error);

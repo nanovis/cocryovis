@@ -12,6 +12,7 @@ import * as Utils from "../../utils/Helpers";
 import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 import z from "zod";
 import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
+import { getTomographyMetadataFromCryoETId } from "../../api/cryoEt";
 
 export enum Tabs {
   fromFile = "fromFile",
@@ -34,7 +35,8 @@ export const endianOptions = [
 ] as readonly string[];
 
 export type FileTypeOptions = z.infer<typeof fileTypeSchema>;
-export const fileTypeOptions = fileTypeSchema.options as readonly FileTypeOptions[];
+export const fileTypeOptions =
+  fileTypeSchema.options as readonly FileTypeOptions[];
 
 function stringToPositiveInteger(value: string) {
   const parsedValue = parseInt(value);
@@ -197,7 +199,10 @@ export const UrlUploadInputs = types
       self.url = url;
     },
     setFileType(fileType: string) {
-      if (fileType && (fileTypeOptions as readonly string[]).includes(fileType)) {
+      if (
+        fileType &&
+        (fileTypeOptions as readonly string[]).includes(fileType)
+      ) {
         self.fileType = fileType as FileTypeOptions;
       }
     },
@@ -317,18 +322,8 @@ export const CryoETUploadInputs = types
       let toastId = null;
       try {
         toastId = toast.loading("Fetching CryoET metadata...");
-        const response = yield Utils.sendReq(
-          `cryoet/${self.cryoETId}`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-          false
-        );
-        if (!isAlive(self)) {
-          return;
-        }
-        const metadata: z.infer<typeof tomogramSchema> = yield response.json();
+        const metadata: z.infer<typeof tomogramSchema> =
+          yield getTomographyMetadataFromCryoETId(self.cryoETId);
         if (!isAlive(self)) {
           return;
         }

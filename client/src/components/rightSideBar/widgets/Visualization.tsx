@@ -28,8 +28,6 @@ import { useMst } from "../../../stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
-import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
-import z from "zod";
 import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
 

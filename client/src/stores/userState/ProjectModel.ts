@@ -10,6 +10,7 @@ import {
   projectsSchemaDeepRes,
 } from "#schemas/project-path-schema.mjs";
 import * as ProjectApi from "../../api/projects";
+import { getDemo } from "../../api/demo";
 
 interface ProjectDB {
   id: number;
@@ -163,7 +164,10 @@ export const UserProjects = types
     }),
     deleteProject: flow(function* deleteProject(projectId: number) {
       try {
-        ProjectApi.deleteProject(projectId);
+        yield ProjectApi.deleteProject(projectId);
+        if (!isAlive(self)) {
+          return;
+        }
         self.projects.delete(projectId.toString());
         self.activeProjectId = undefined;
       } catch (error) {
@@ -185,19 +189,7 @@ export const UserProjects = types
       let toastId = null;
       try {
         toastId = toast.loading("Loading demo project...");
-        const response = yield Utils.sendReq(
-          "demo",
-          {
-            method: "GET",
-          },
-          false
-        );
-        if (!isAlive(self)) {
-          return;
-        }
-
-        const project: z.infer<typeof projectSchemaDeepRes> =
-          yield response.json();
+        const project: z.infer<typeof projectSchemaDeepRes> = yield getDemo();
         if (!isAlive(self)) {
           return;
         }
