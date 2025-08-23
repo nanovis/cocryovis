@@ -27,16 +27,12 @@ interface RawDataUpdate {
   rawData: RawVolumeSnapshotIn;
 }
 
-interface TaskHistoryUpdate {
-  taskHistory: TaskHistorySnapshotIn;
-}
-
 type Response =
   | { actionType: "InsertPseudoVolumes"; actionContent: PseudoVolumeUpdate }
   | { actionType: "InsertResult"; actionContent: ResultUpdate }
   | { actionType: "InsertCheckpoint"; actionContent: CheckpointUpdate }
   | { actionType: "AddRawData"; actionContent: RawDataUpdate }
-  | { actionType: "InsertTaskHistory"; actionContent: TaskHistoryUpdate }
+  | { actionType: "InsertTaskHistory"; actionContent: TaskHistorySnapshotIn }
   | { actionType: "CPUQueueUpdated"; actionContent: TaskHistorySnapshotIn[] }
   | { actionType: "GPUQueueUpdated"; actionContent: TaskHistorySnapshotIn[] };
 
@@ -56,6 +52,8 @@ export function useServerListener(websocketUrl: string, user: UserInstance) {
       return;
     }
 
+    console.log(action)
+
     switch (action.actionType) {
       case "InsertPseudoVolumes":
         handleInsertPseudoVolumes(action.actionContent);
@@ -70,7 +68,7 @@ export function useServerListener(websocketUrl: string, user: UserInstance) {
         handleAddRawData(action.actionContent);
         break;
       case "InsertTaskHistory":
-        handleInsertTaskHistory(action.actionContent.taskHistory);
+        handleInsertTaskHistory(action.actionContent);
         break;
       case "CPUQueueUpdated":
         handleCPUQueueUpdated(action.actionContent);
