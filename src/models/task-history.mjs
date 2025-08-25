@@ -40,9 +40,21 @@ export default class TaskHistory extends DatabaseModel {
 
     /**
      * @param {number} userId
+     * @param {number} page
      */
-    static async getFromUser(userId) {
+    static async getFromUser(userId, page = 1) {
+        const taskHistoryLenght = await this.db.count({
+            where: {
+                userId: userId,
+            },
+        });
+        const pageSize = 10;
+        let skip = 1;
+        skip = (page - 1) * pageSize;
+
         const taskHistory = await this.db.findMany({
+            skip: skip,
+            take: pageSize,
             where: {
                 userId: userId,
             },
@@ -56,9 +68,14 @@ export default class TaskHistory extends DatabaseModel {
             },
         });
 
-        return taskHistory.map((task) => {
+        const parsedTaskHistory = taskHistory.map((task) => {
             return TaskHistory.parseTaskHistory(task);
         });
+
+        return {
+            values: parsedTaskHistory,
+            lenght: taskHistoryLenght,
+        };
     }
 
     static async getCPUTaskQueue() {

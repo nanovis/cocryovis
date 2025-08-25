@@ -5,6 +5,7 @@ import { defaultError, generateErrors } from "./error-path-schema.mjs";
 import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
 import { modelSchema } from "./componentSchemas/model-schema.mjs";
 import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
+import { stringToInt } from "./componentSchemas/string-to-int.mjs";
 
 export const registerSchema = z.object({
     username: z.string().min(1),
@@ -38,8 +39,13 @@ export const taskHistorySchema = z.object({
     checkpoint: checkpointSchema.nullable(),
 });
 
+export const statusTaskHistory = z.object({
+     values: z.array(taskHistorySchema),
+     lenght: z.number()
+})
+
 export const statusSchema = z.object({
-    taskHistory: z.array(taskHistorySchema),
+    taskHistory: statusTaskHistory,
     cpuTaskQueue: z.array(taskHistorySchema),
     gpuTaskQueue: z.array(taskHistorySchema),
 });
@@ -56,6 +62,10 @@ export const publicUser = z.object({
     username: z.string(),
     name: z.string(),
     email: z.email(),
+});
+
+export const statusQuery = z.object({
+    pageNumber: stringToInt,
 });
 
 export const usersArray = z.array(publicUser);
@@ -153,6 +163,9 @@ export const userPath = {
     },
     "/status": {
         get: {
+            requestParams: {
+                query: statusQuery,
+            },
             responses: {
                 200: {
                     content: {

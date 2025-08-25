@@ -8,6 +8,7 @@ import validateSchema from "../tools/validate-schema.mjs";
 import {
     loginSchemaReq,
     registerSchema,
+    statusQuery,
     updateUserSchema,
 } from "#schemas/user-path-schema.mjs";
 
@@ -123,7 +124,10 @@ export default class UserController {
      * @param {Response} res
      */
     static async getStatus(req, res) {
-        const taskHistory = await TaskHistory.getFromUser(req.session.user.id);
+        const { query } = validateSchema(req, {
+           querySchema: statusQuery,
+        });
+        const taskHistory = await TaskHistory.getFromUser(req.session.user.id, query.pageNumber);
         const cpuTaskQueue = await TaskHistory.getCPUTaskQueue();
         const gpuTaskQueue = await TaskHistory.getGPUTaskQueue();
 

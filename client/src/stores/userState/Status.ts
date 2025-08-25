@@ -140,6 +140,9 @@ function parseTaskQueueArray(
 
 export const Status = types
   .model({
+    pageNumber: types.optional(types.integer, 1),
+    pageSize: types.optional(types.integer, 10),
+    taskHistoryLenght: types.optional(types.integer, 0),
     taskHistory: types.map(TaskHistory),
     cpuTaskQueue: types.array(TaskQueueElement),
     gpuTaskQueue: types.array(TaskQueueElement),
@@ -191,7 +194,14 @@ export const Status = types
     gpuTaskQueueItems(): TaskQueueItem[] {
       return parseTaskQueueArray(self.gpuTaskQueue);
     },
+    get pageSkip() {
+      return self.pageNumber * self.pageSize;
+    },
+    get maxPageNumber() {
+      return Math.ceil(self.taskHistoryLenght / self.pageSize);
+    },
   }))
+
   .actions((self) => ({
     createTaskHistory(task: TaskHistorySnapshotIn) {
       return TaskHistory.create({
@@ -229,19 +239,39 @@ export const Status = types
     },
   }))
   .actions((self) => ({
-    fetchStatus: flow(function* fetchProjects() {
+    fetchStatus: flow(function* fetchStatus() {
       try {
-        const contents: z.infer<typeof statusSchema> = yield getStatus();
+        const contents: z.infer<typeof statusSchema> = yield getStatus(
+          self.pageNumber
+        );
         // Check if the model is still alive after async call
         if (!isAlive(self)) {
           return;
         }
 
-        self.setTaskHistory(contents.taskHistory);
+        self.setTaskHistory(contents.taskHistory.values);
         self.setCPUTaskQueue(contents.cpuTaskQueue);
-        self.setCPUTaskQueue(contents.gpuTaskQueue);
+        self.setGPUTaskQueue(contents.gpuTaskQueue);
+        self.taskHistoryLenght = contents.taskHistory.lenght;
       } catch (error) {
         console.error("Error:", error);
+      }
+    }),
+  }))
+  .actions((self) => ({
+    setPageNumber: flow(function* setPageNumber(page: number) {
+      self.pageNumber = page;
+      if (self.pageNumber <= 0) {
+        self.pageNumber = 1;
+      }
+
+      if (self.maxPageNumber < self.pageNumber) {
+        self.pageNumber = self.maxPageNumber;
+      }
+      yield self.fetchStatus();
+
+      if (!isAlive(self)) {
+        return;
       }
     }),
   }));

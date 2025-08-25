@@ -65,8 +65,8 @@ export async function getAllUsers() {
   return allUsers;
 }
 
-export async function getStatus() {
-  const response = await Utils.sendReq("status", {
+export async function getStatus(pageNumber: number) {
+  const response = await Utils.sendReq(`status?pageNumber=${pageNumber}`, {
     method: "GET",
     credentials: "include",
   });

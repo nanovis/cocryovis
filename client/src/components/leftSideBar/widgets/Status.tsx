@@ -1,8 +1,12 @@
 //Status.js
-import { makeStyles, TabList, Tab } from "@fluentui/react-components";
+import { makeStyles, TabList, Tab, Button } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
   bundleIcon,
+  ChevronDoubleLeftFilled,
+  ChevronDoubleRightFilled,
+  ChevronLeftFilled,
+  ChevronRightFilled,
   HistoryFilled,
   HistoryRegular,
   HourglassHalfRegular,
@@ -39,6 +43,21 @@ const useStyles = makeStyles({
     marginBottom: "24px",
     paddingLeft: "14px",
     paddingRight: "14px",
+  },
+
+  pagination: {
+    display: "flex",
+    alignItems: "center",
+    marginTop: "30px",
+    justifyContent: "end",
+    gap: "15px",
+  },
+  paginationButton: {
+    height: "20px",
+  },
+  table: {
+    minHeight: "523px",
+    maxHeight: "523px",
   },
 });
 
@@ -89,19 +108,71 @@ const Status = observer(({ open, close }: Props) => {
           </TabList>
           <div>
             {selectedIndex === 0 && (
-              <UserHistoryTable
-                taskHistoryItems={status?.taskHistoryItems() ?? []}
-              />
+              <>
+                <div className={classes.table}>
+                  <UserHistoryTable
+                    taskHistoryItems={status?.taskHistoryItems() ?? []}
+                  />
+                </div>
+                {status && status.taskHistory.size !== 0 && (
+                  <div className={classes.pagination}>
+                    <div>
+                      <span>
+                        {status.pageSkip - (status.pageSize - 1)} -{" "}
+                        {status.pageSkip > status.taskHistoryLenght
+                          ? status.taskHistoryLenght
+                          : status.pageSkip}{" "}
+                        of {status.taskHistoryLenght}
+                      </span>
+                    </div>
+                    <Button
+                      className={classes.paginationButton}
+                      icon={<ChevronDoubleLeftFilled />}
+                      disabled={status.pageNumber <= 1}
+                      onClick={() => status?.setPageNumber(1)}
+                    ></Button>
+                    <Button
+                      appearance="secondary"
+                      className={classes.paginationButton}
+                      icon={<ChevronLeftFilled />}
+                      disabled={status.pageNumber <= 1}
+                      onClick={() =>
+                        status?.setPageNumber(status?.pageNumber - 1)
+                      }
+                    ></Button>
+                    <Button
+                      className={classes.paginationButton}
+                      icon={<ChevronRightFilled />}
+                      disabled={status.maxPageNumber <= status.pageNumber}
+                      onClick={() =>
+                        status?.setPageNumber(status?.pageNumber + 1)
+                      }
+                    ></Button>
+                    <Button
+                      className={classes.paginationButton}
+                      icon={<ChevronDoubleRightFilled />}
+                      disabled={status.maxPageNumber <= status.pageNumber}
+                      onClick={() =>
+                        status?.setPageNumber(status.maxPageNumber)
+                      }
+                    ></Button>
+                  </div>
+                )}
+              </>
             )}
             {selectedIndex === 1 && (
-              <TaskQueueTable
-                taskQueueItems={status?.cpuTaskQueueItems() ?? []}
-              />
+              <div className={classes.table}>
+                <TaskQueueTable
+                  taskQueueItems={status?.cpuTaskQueueItems() ?? []}
+                />
+              </div>
             )}
             {selectedIndex === 2 && (
-              <TaskQueueTable
-                taskQueueItems={status?.gpuTaskQueueItems() ?? []}
-              />
+              <div className={classes.table}>
+                <TaskQueueTable
+                  taskQueueItems={status?.gpuTaskQueueItems() ?? []}
+                />
+              </div>
             )}
           </div>
         </div>
