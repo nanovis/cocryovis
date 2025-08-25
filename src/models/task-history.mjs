@@ -40,17 +40,26 @@ export default class TaskHistory extends DatabaseModel {
 
     /**
      * @param {number} userId
-     * @param {number} page
+     * @param {number} [page]
+     * @param {number} [pageSize]
      */
-    static async getFromUser(userId, page = 1) {
+    static async getFromUser(userId, page, pageSize) {
         const taskHistoryLenght = await this.db.count({
             where: {
                 userId: userId,
             },
         });
-        const pageSize = 10;
-        let skip = 1;
-        skip = (page - 1) * pageSize;
+
+        if (pageSize !== undefined && page === undefined) {
+            page = 1;
+        } else if (pageSize === undefined && pageSize !== undefined) {
+            pageSize = 10;
+        }
+
+        let skip = 0
+        if (pageSize !== undefined && page !== undefined) {
+            skip = (page - 1) * pageSize;
+        }
 
         const taskHistory = await this.db.findMany({
             skip: skip,

@@ -40,9 +40,9 @@ export const taskHistorySchema = z.object({
 });
 
 export const statusTaskHistory = z.object({
-     values: z.array(taskHistorySchema),
-     lenght: z.number()
-})
+    values: z.array(taskHistorySchema),
+    lenght: z.number(),
+});
 
 export const statusSchema = z.object({
     taskHistory: statusTaskHistory,
@@ -65,7 +65,18 @@ export const publicUser = z.object({
 });
 
 export const statusQuery = z.object({
-    pageNumber: stringToInt,
+    pageNumber: stringToInt
+        .optional()
+        .meta({
+            description:
+                "The page number of the results to return (1-based index). If omitted while pageSize is provided, defaults to 1 (first page).",
+        }),
+    pageSize: stringToInt
+        .optional()
+        .meta({
+            description:
+                "The maximum number of items to return per page. If omitted while page is provided, the default value is 10. If both pageSize and page are omitted, the API returns all available items (no pagination applied).",
+        }),
 });
 
 export const usersArray = z.array(publicUser);
@@ -130,7 +141,6 @@ export const userPath = {
             },
         },
     },
-
     "/getLoggedUserData": {
         get: {
             responses: {

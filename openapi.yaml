@@ -37,17 +37,54 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  username:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                    pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                required:
+                  - id
+                  - username
+                  - name
+                  - email
+                additionalProperties: false
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": &a1
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "500": *a1
   /login:
     post:
@@ -69,12 +106,40 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  username:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                    pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                required:
+                  - id
+                  - username
+                  - name
+                  - email
+                additionalProperties: false
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /logout:
@@ -92,12 +157,40 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  username:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                    pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                required:
+                  - id
+                  - username
+                  - name
+                  - email
+                additionalProperties: false
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /users:
@@ -110,7 +203,26 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/__schema10"
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    username:
+                      type: string
+                    name:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                      pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                  required:
+                    - id
+                    - username
+                    - name
+                    - email
+                  additionalProperties: false
         "404": *a1
         "500": *a1
   /status:
@@ -119,8 +231,23 @@ paths:
         - in: query
           name: pageNumber
           schema:
-            $ref: "#/components/schemas/__schema0"
-          required: true
+            description: The page number of the results to return (1-based index). If
+              omitted while pageSize is provided, defaults to 1 (first page).
+            type: string
+          description: The page number of the results to return (1-based index). If
+            omitted while pageSize is provided, defaults to 1 (first page).
+        - in: query
+          name: pageSize
+          schema:
+            description: The maximum number of items to return per page. If omitted while
+              page is provided, the default value is 10. If both pageSize and
+              page are omitted, the API returns all available items (no
+              pagination applied).
+            type: string
+          description: The maximum number of items to return per page. If omitted while
+            page is provided, the default value is 10. If both pageSize and page
+            are omitted, the API returns all available items (no pagination
+            applied).
       responses:
         "200":
           content:
@@ -134,7 +261,144 @@ paths:
                       values:
                         type: array
                         items:
-                          $ref: "#/components/schemas/__schema12"
+                          type: object
+                          properties:
+                            enqueuedTime:
+                              type: string
+                            startTime:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                            endTime:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                            id:
+                              type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            taskType:
+                              type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            taskStatus:
+                              type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            userId:
+                              type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            logFile:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                            volumeId:
+                              anyOf:
+                                - type: integer
+                                  minimum: -9007199254740991
+                                  maximum: 9007199254740991
+                                - type: "null"
+                            modelId:
+                              anyOf:
+                                - type: integer
+                                  minimum: -9007199254740991
+                                  maximum: 9007199254740991
+                                - type: "null"
+                            checkpointId:
+                              anyOf:
+                                - type: integer
+                                  minimum: -9007199254740991
+                                  maximum: 9007199254740991
+                                - type: "null"
+                            volume:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: number
+                                    name:
+                                      type: string
+                                    description:
+                                      type: string
+                                    creatorId:
+                                      anyOf:
+                                        - type: number
+                                        - type: "null"
+                                    rawDataId:
+                                      anyOf:
+                                        - type: number
+                                        - type: "null"
+                                  required:
+                                    - id
+                                    - name
+                                    - description
+                                    - creatorId
+                                    - rawDataId
+                                  additionalProperties: false
+                                - type: "null"
+                            model:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: number
+                                    name:
+                                      type: string
+                                    description:
+                                      type: string
+                                    creatorId:
+                                      anyOf:
+                                        - type: number
+                                        - type: "null"
+                                  required:
+                                    - id
+                                    - name
+                                    - description
+                                    - creatorId
+                                  additionalProperties: false
+                                - type: "null"
+                            checkpoint:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: number
+                                    filePath:
+                                      anyOf:
+                                        - type: string
+                                        - type: "null"
+                                    folderPath:
+                                      anyOf:
+                                        - type: string
+                                        - type: "null"
+                                    creatorId:
+                                      anyOf:
+                                        - type: number
+                                        - type: "null"
+                                  required:
+                                    - id
+                                    - filePath
+                                    - folderPath
+                                    - creatorId
+                                  additionalProperties: false
+                                - type: "null"
+                          required:
+                            - enqueuedTime
+                            - startTime
+                            - endTime
+                            - id
+                            - taskType
+                            - taskStatus
+                            - userId
+                            - logFile
+                            - volumeId
+                            - modelId
+                            - checkpointId
+                            - volume
+                            - model
+                            - checkpoint
+                          additionalProperties: false
                       lenght:
                         type: number
                     required:
@@ -144,11 +408,285 @@ paths:
                   cpuTaskQueue:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema12"
+                      type: object
+                      properties:
+                        enqueuedTime:
+                          type: string
+                        startTime:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        endTime:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        id:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        taskType:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        taskStatus:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        userId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        logFile:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        volumeId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        modelId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        checkpointId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        volume:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                                description:
+                                  type: string
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                                rawDataId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - name
+                                - description
+                                - creatorId
+                                - rawDataId
+                              additionalProperties: false
+                            - type: "null"
+                        model:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                                description:
+                                  type: string
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - name
+                                - description
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                        checkpoint:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                      required:
+                        - enqueuedTime
+                        - startTime
+                        - endTime
+                        - id
+                        - taskType
+                        - taskStatus
+                        - userId
+                        - logFile
+                        - volumeId
+                        - modelId
+                        - checkpointId
+                        - volume
+                        - model
+                        - checkpoint
+                      additionalProperties: false
                   gpuTaskQueue:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema12"
+                      type: object
+                      properties:
+                        enqueuedTime:
+                          type: string
+                        startTime:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        endTime:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        id:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        taskType:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        taskStatus:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        userId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        logFile:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        volumeId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        modelId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        checkpointId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        volume:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                                description:
+                                  type: string
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                                rawDataId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - name
+                                - description
+                                - creatorId
+                                - rawDataId
+                              additionalProperties: false
+                            - type: "null"
+                        model:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                                description:
+                                  type: string
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - name
+                                - description
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                        checkpoint:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                      required:
+                        - enqueuedTime
+                        - startTime
+                        - endTime
+                        - id
+                        - taskType
+                        - taskStatus
+                        - userId
+                        - logFile
+                        - volumeId
+                        - modelId
+                        - checkpointId
+                        - volume
+                        - model
+                        - checkpoint
+                      additionalProperties: false
                 required:
                   - taskHistory
                   - cpuTaskQueue
@@ -183,12 +721,40 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema10"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  username:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                    pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                required:
+                  - id
+                  - username
+                  - name
+                  - email
+                additionalProperties: false
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /projects-deep:
@@ -200,7 +766,292 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/__schema25"
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    ownerId:
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    publicAccess:
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    accessLevel:
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
+                    volumes:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawDataId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawData:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  id:
+                                    type: number
+                                  path:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  creatorId:
+                                    anyOf:
+                                      - type: number
+                                      - type: "null"
+                                  rawFilePath:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  settings:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  mrcFilePath:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                required:
+                                  - id
+                                  - path
+                                  - creatorId
+                                  - rawFilePath
+                                  - settings
+                                  - mrcFilePath
+                                additionalProperties: false
+                              - type: "null"
+                          sparseVolumes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: integer
+                                  minimum: -9007199254740991
+                                  maximum: 9007199254740991
+                                path:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: integer
+                                      minimum: -9007199254740991
+                                      maximum: 9007199254740991
+                                    - type: "null"
+                                rawFilePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                settings:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                color:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                              required:
+                                - id
+                                - path
+                                - creatorId
+                                - rawFilePath
+                                - settings
+                                - color
+                              additionalProperties: false
+                          pseudoVolumes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                path:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                                rawFilePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                settings:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                originalLabelId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - path
+                                - creatorId
+                                - rawFilePath
+                                - settings
+                                - originalLabelId
+                              additionalProperties: false
+                          results:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: integer
+                                  minimum: -9007199254740991
+                                  maximum: 9007199254740991
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                rawVolumeChannel:
+                                  anyOf:
+                                    - type: integer
+                                      minimum: -9007199254740991
+                                      maximum: 9007199254740991
+                                    - type: "null"
+                                logFile:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                checkpointId:
+                                  type: number
+                                creatorId:
+                                  anyOf:
+                                    - type: integer
+                                      minimum: -9007199254740991
+                                      maximum: 9007199254740991
+                                    - type: "null"
+                                volumeDataId:
+                                  type: number
+                                checkpoint:
+                                  anyOf:
+                                    - type: object
+                                      properties:
+                                        id:
+                                          type: number
+                                        filePath:
+                                          anyOf:
+                                            - type: string
+                                            - type: "null"
+                                        folderPath:
+                                          anyOf:
+                                            - type: string
+                                            - type: "null"
+                                        creatorId:
+                                          anyOf:
+                                            - type: number
+                                            - type: "null"
+                                      required:
+                                        - id
+                                        - filePath
+                                        - folderPath
+                                        - creatorId
+                                      additionalProperties: false
+                                    - type: "null"
+                              required:
+                                - id
+                                - folderPath
+                                - rawVolumeChannel
+                                - logFile
+                                - checkpointId
+                                - creatorId
+                                - volumeDataId
+                                - checkpoint
+                              additionalProperties: false
+                        required:
+                          - id
+                          - name
+                          - description
+                          - creatorId
+                          - rawDataId
+                          - rawData
+                          - sparseVolumes
+                          - pseudoVolumes
+                          - results
+                        additionalProperties: false
+                    models:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          checkpoints:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                        required:
+                          - id
+                          - name
+                          - description
+                          - creatorId
+                          - checkpoints
+                        additionalProperties: false
+                  required:
+                    - id
+                    - name
+                    - description
+                    - ownerId
+                    - publicAccess
+                    - accessLevel
+                    - volumes
+                    - models
+                  additionalProperties: false
         "404": *a1
         "500": *a1
   /projects:
@@ -223,7 +1074,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema43"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  ownerId:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  publicAccess:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                required:
+                  - id
+                  - name
+                  - description
+                  - ownerId
+                  - publicAccess
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /project/{idProject}/deep:
@@ -232,14 +1107,299 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema25"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  ownerId:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  publicAccess:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  accessLevel:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  volumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawDataId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawData:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                path:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                                rawFilePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                settings:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                mrcFilePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                              required:
+                                - id
+                                - path
+                                - creatorId
+                                - rawFilePath
+                                - settings
+                                - mrcFilePath
+                              additionalProperties: false
+                            - type: "null"
+                        sparseVolumes:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              path:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: integer
+                                    minimum: -9007199254740991
+                                    maximum: 9007199254740991
+                                  - type: "null"
+                              rawFilePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              settings:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              color:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                            required:
+                              - id
+                              - path
+                              - creatorId
+                              - rawFilePath
+                              - settings
+                              - color
+                            additionalProperties: false
+                        pseudoVolumes:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: number
+                              path:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                              rawFilePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              settings:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              originalLabelId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                            required:
+                              - id
+                              - path
+                              - creatorId
+                              - rawFilePath
+                              - settings
+                              - originalLabelId
+                            additionalProperties: false
+                        results:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              folderPath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              rawVolumeChannel:
+                                anyOf:
+                                  - type: integer
+                                    minimum: -9007199254740991
+                                    maximum: 9007199254740991
+                                  - type: "null"
+                              logFile:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              checkpointId:
+                                type: number
+                              creatorId:
+                                anyOf:
+                                  - type: integer
+                                    minimum: -9007199254740991
+                                    maximum: 9007199254740991
+                                  - type: "null"
+                              volumeDataId:
+                                type: number
+                              checkpoint:
+                                anyOf:
+                                  - type: object
+                                    properties:
+                                      id:
+                                        type: number
+                                      filePath:
+                                        anyOf:
+                                          - type: string
+                                          - type: "null"
+                                      folderPath:
+                                        anyOf:
+                                          - type: string
+                                          - type: "null"
+                                      creatorId:
+                                        anyOf:
+                                          - type: number
+                                          - type: "null"
+                                    required:
+                                      - id
+                                      - filePath
+                                      - folderPath
+                                      - creatorId
+                                    additionalProperties: false
+                                  - type: "null"
+                            required:
+                              - id
+                              - folderPath
+                              - rawVolumeChannel
+                              - logFile
+                              - checkpointId
+                              - creatorId
+                              - volumeDataId
+                              - checkpoint
+                            additionalProperties: false
+                      required:
+                        - id
+                        - name
+                        - description
+                        - creatorId
+                        - rawDataId
+                        - rawData
+                        - sparseVolumes
+                        - pseudoVolumes
+                        - results
+                      additionalProperties: false
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        checkpoints:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: number
+                              filePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              folderPath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                            required:
+                              - id
+                              - filePath
+                              - folderPath
+                              - creatorId
+                            additionalProperties: false
+                      required:
+                        - id
+                        - name
+                        - description
+                        - creatorId
+                        - checkpoints
+                      additionalProperties: false
+                required:
+                  - id
+                  - name
+                  - description
+                  - ownerId
+                  - publicAccess
+                  - accessLevel
+                  - volumes
+                  - models
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /project/{idProject}/access:
@@ -248,7 +1408,7 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
@@ -275,7 +1435,20 @@ paths:
                   userAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema44"
+                      type: object
+                      properties:
+                        userId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        accessLevel:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                      required:
+                        - userId
+                        - accessLevel
+                      additionalProperties: false
                 required:
                   - projectAccess
                   - userAccess
@@ -287,7 +1460,7 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
@@ -332,7 +1505,20 @@ paths:
                   userAccess:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema44"
+                      type: object
+                      properties:
+                        userId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        accessLevel:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                      required:
+                        - userId
+                        - accessLevel
+                      additionalProperties: false
                 required:
                   - publicAccess
                   - userAccess
@@ -345,7 +1531,7 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "204": {}
@@ -357,7 +1543,7 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
@@ -366,7 +1552,210 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/__schema31"
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    creatorId:
+                      anyOf:
+                        - type: number
+                        - type: "null"
+                    rawDataId:
+                      anyOf:
+                        - type: number
+                        - type: "null"
+                    rawData:
+                      anyOf:
+                        - type: object
+                          properties:
+                            id:
+                              type: number
+                            path:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                            creatorId:
+                              anyOf:
+                                - type: number
+                                - type: "null"
+                            rawFilePath:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                            settings:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                            mrcFilePath:
+                              anyOf:
+                                - type: string
+                                - type: "null"
+                          required:
+                            - id
+                            - path
+                            - creatorId
+                            - rawFilePath
+                            - settings
+                            - mrcFilePath
+                          additionalProperties: false
+                        - type: "null"
+                    sparseVolumes:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          path:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              - type: "null"
+                          rawFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          settings:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          color:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                        required:
+                          - id
+                          - path
+                          - creatorId
+                          - rawFilePath
+                          - settings
+                          - color
+                        additionalProperties: false
+                    pseudoVolumes:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          path:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          settings:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          originalLabelId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                        required:
+                          - id
+                          - path
+                          - creatorId
+                          - rawFilePath
+                          - settings
+                          - originalLabelId
+                        additionalProperties: false
+                    results:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          folderPath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          rawVolumeChannel:
+                            anyOf:
+                              - type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              - type: "null"
+                          logFile:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          checkpointId:
+                            type: number
+                          creatorId:
+                            anyOf:
+                              - type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              - type: "null"
+                          volumeDataId:
+                            type: number
+                          checkpoint:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  id:
+                                    type: number
+                                  filePath:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  folderPath:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  creatorId:
+                                    anyOf:
+                                      - type: number
+                                      - type: "null"
+                                required:
+                                  - id
+                                  - filePath
+                                  - folderPath
+                                  - creatorId
+                                additionalProperties: false
+                              - type: "null"
+                        required:
+                          - id
+                          - folderPath
+                          - rawVolumeChannel
+                          - logFile
+                          - checkpointId
+                          - creatorId
+                          - volumeDataId
+                          - checkpoint
+                        additionalProperties: false
+                  required:
+                    - id
+                    - name
+                    - description
+                    - creatorId
+                    - rawDataId
+                    - rawData
+                    - sparseVolumes
+                    - pseudoVolumes
+                    - results
+                  additionalProperties: false
         "404": *a1
         "500": *a1
   /project/{idProject}/volumes:
@@ -375,7 +1764,7 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
@@ -395,7 +1784,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema13"
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawDataId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                  - rawDataId
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}:
@@ -404,7 +1815,7 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: query
           name: rawData
@@ -434,35 +1845,224 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema14"
+                    type: number
                   name:
-                    $ref: "#/components/schemas/__schema15"
+                    type: string
                   description:
-                    $ref: "#/components/schemas/__schema16"
+                    type: string
                   creatorId:
-                    $ref: "#/components/schemas/__schema17"
+                    anyOf:
+                      - type: number
+                      - type: "null"
                   rawDataId:
-                    $ref: "#/components/schemas/__schema18"
+                    anyOf:
+                      - type: number
+                      - type: "null"
                   rawData:
                     anyOf:
-                      - $ref: "#/components/schemas/__schema32"
+                      - type: object
+                        properties:
+                          id:
+                            type: number
+                          path:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                          rawFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          settings:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          mrcFilePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                        required:
+                          - id
+                          - path
+                          - creatorId
+                          - rawFilePath
+                          - settings
+                          - mrcFilePath
+                        additionalProperties: false
                       - type: "null"
                   sparseVolumes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema33"
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        color:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - color
+                      additionalProperties: false
                   pseudoVolumes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema34"
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        path:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawFilePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        settings:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        originalLabelId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                      required:
+                        - id
+                        - path
+                        - creatorId
+                        - rawFilePath
+                        - settings
+                        - originalLabelId
+                      additionalProperties: false
                   results:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema35"
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        folderPath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        rawVolumeChannel:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        logFile:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        checkpointId:
+                          type: number
+                        creatorId:
+                          anyOf:
+                            - type: integer
+                              minimum: -9007199254740991
+                              maximum: 9007199254740991
+                            - type: "null"
+                        volumeDataId:
+                          type: number
+                        checkpoint:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                filePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                folderPath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                              required:
+                                - id
+                                - filePath
+                                - folderPath
+                                - creatorId
+                              additionalProperties: false
+                            - type: "null"
+                      required:
+                        - id
+                        - folderPath
+                        - rawVolumeChannel
+                        - logFile
+                        - checkpointId
+                        - creatorId
+                        - volumeDataId
+                        - checkpoint
+                      additionalProperties: false
                   projects:
                     type: array
                     items:
-                      $ref: "#/components/schemas/__schema43"
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        ownerId:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        publicAccess:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                      required:
+                        - id
+                        - name
+                        - description
+                        - ownerId
+                        - publicAccess
+                      additionalProperties: false
                 required:
                   - id
                   - name
@@ -483,12 +2083,12 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "204": {}
@@ -500,19 +2100,108 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/__schema1"
+              type: array
+              items:
+                type: object
+                properties:
+                  add:
+                    type: boolean
+                  dimensions:
+                    type: object
+                    properties:
+                      x:
+                        type: number
+                      y:
+                        type: number
+                      z:
+                        type: number
+                    required:
+                      - x
+                      - y
+                      - z
+                  kernelSize:
+                    type: object
+                    properties:
+                      x:
+                        type: number
+                      y:
+                        type: number
+                      z:
+                        type: number
+                    required:
+                      - x
+                      - y
+                      - z
+                  positions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                        y:
+                          type: number
+                        z:
+                          type: number
+                      required:
+                        - x
+                        - y
+                        - z
+                  volumeName:
+                    type: string
+                required:
+                  - add
+                  - dimensions
+                  - kernelSize
+                  - positions
+                  - volumeName
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema33"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  path:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  creatorId:
+                    anyOf:
+                      - type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      - type: "null"
+                  rawFilePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  settings:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  color:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                required:
+                  - id
+                  - path
+                  - creatorId
+                  - rawFilePath
+                  - settings
+                  - color
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}:
@@ -521,19 +2210,123 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema45"
+                anyOf:
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      color:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - color
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      originalLabelId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - originalLabelId
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      mrcFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - mrcFilePath
+                    additionalProperties: false
         "404": *a1
         "500": *a1
     put:
@@ -541,12 +2334,16 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       requestBody:
         content:
@@ -580,7 +2377,107 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema45"
+                anyOf:
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      color:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - color
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      originalLabelId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - originalLabelId
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      mrcFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - mrcFilePath
+                    additionalProperties: false
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/data:
@@ -589,12 +2486,16 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
@@ -608,12 +2509,16 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
@@ -627,24 +2532,138 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/__schema4"
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+              required:
+                - files
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema45"
+                anyOf:
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      color:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - color
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      originalLabelId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - originalLabelId
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      path:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      creatorId:
+                        anyOf:
+                          - type: number
+                          - type: "null"
+                      rawFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      settings:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      mrcFilePath:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                    required:
+                      - id
+                      - path
+                      - creatorId
+                      - rawFilePath
+                      - settings
+                      - mrcFilePath
+                    additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/from-mrc-file:
@@ -653,24 +2672,67 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/__schema6"
+              type: object
+              properties:
+                files:
+                  type: string
+                  format: binary
+                  contentEncoding: binary
+                  contentMediaType: application/zip
+              required:
+                - files
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema32"
+                type: object
+                properties:
+                  id:
+                    type: number
+                  path:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawFilePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  settings:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  mrcFilePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                required:
+                  - id
+                  - path
+                  - creatorId
+                  - rawFilePath
+                  - settings
+                  - mrcFilePath
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/from-url:
@@ -679,12 +2741,16 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       requestBody:
         content:
@@ -780,7 +2846,38 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema32"
+                type: object
+                properties:
+                  id:
+                    type: number
+                  path:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                  rawFilePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  settings:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  mrcFilePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                required:
+                  - id
+                  - path
+                  - creatorId
+                  - rawFilePath
+                  - settings
+                  - mrcFilePath
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/{idVolumeData}/update-annotations:
@@ -789,17 +2886,21 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
@@ -808,7 +2909,61 @@ paths:
               type: object
               properties:
                 annotation:
-                  $ref: "#/components/schemas/__schema1"
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      add:
+                        type: boolean
+                      dimensions:
+                        type: object
+                        properties:
+                          x:
+                            type: number
+                          y:
+                            type: number
+                          z:
+                            type: number
+                        required:
+                          - x
+                          - y
+                          - z
+                      kernelSize:
+                        type: object
+                        properties:
+                          x:
+                            type: number
+                          y:
+                            type: number
+                          z:
+                            type: number
+                        required:
+                          - x
+                          - y
+                          - z
+                      positions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            x:
+                              type: number
+                            y:
+                              type: number
+                            z:
+                              type: number
+                          required:
+                            - x
+                            - y
+                            - z
+                      volumeName:
+                        type: string
+                    required:
+                      - add
+                      - dimensions
+                      - kernelSize
+                      - positions
+                      - volumeName
                 saveAsNew:
                   default: false
                   type: boolean
@@ -819,7 +2974,42 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema33"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  path:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  creatorId:
+                    anyOf:
+                      - type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      - type: "null"
+                  rawFilePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  settings:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  color:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                required:
+                  - id
+                  - path
+                  - creatorId
+                  - rawFilePath
+                  - settings
+                  - color
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/download-full:
@@ -828,19 +3018,32 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema46"
+                type: object
+                properties:
+                  files:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+                required:
+                  - files
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData}/download-raw-file:
@@ -849,19 +3052,32 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema46"
+                type: object
+                properties:
+                  files:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+                required:
+                  - files
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData/download-settings-file:
@@ -870,19 +3086,32 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema46"
+                type: object
+                properties:
+                  files:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+                required:
+                  - files
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volumeData/{type}/{idVolumeData/download-mrc-file:
@@ -891,19 +3120,32 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
       responses:
         "200":
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema46"
+                type: object
+                properties:
+                  files:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+                required:
+                  - files
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/volumeData/{type}/{idVolumeData}:
@@ -912,17 +3154,21 @@ paths:
         - in: path
           name: idVolumeData
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: type
           schema:
-            $ref: "#/components/schemas/__schema3"
+            type: string
+            enum:
+              - RawVolumeData
+              - SparseLabeledVolumeData
+              - PseudoLabeledVolumeData
           required: true
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "204": {}
@@ -934,22 +3180,94 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: query
           name: checkpoints
           schema:
-            $ref: "#/components/schemas/__schema7"
+            type: boolean
         - in: query
           name: projects
           schema:
-            $ref: "#/components/schemas/__schema8"
+            type: boolean
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema47"
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    creatorId:
+                      anyOf:
+                        - type: number
+                        - type: "null"
+                    checkpoints:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          filePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          folderPath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                        required:
+                          - id
+                          - filePath
+                          - folderPath
+                          - creatorId
+                        additionalProperties: false
+                    projects:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          ownerId:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          publicAccess:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                        required:
+                          - id
+                          - name
+                          - description
+                          - ownerId
+                          - publicAccess
+                        additionalProperties: false
+                  required:
+                    - id
+                    - name
+                    - description
+                    - creatorId
+                  additionalProperties: false
         "404": *a1
         "500": *a1
     post:
@@ -957,7 +3275,7 @@ paths:
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
@@ -977,7 +3295,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema19"
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                required:
+                  - id
+                  - name
+                  - description
+                  - creatorId
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /model/{idModel}:
@@ -986,22 +3321,94 @@ paths:
         - in: path
           name: idModel
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: query
           name: checkpoints
           schema:
-            $ref: "#/components/schemas/__schema7"
+            type: boolean
         - in: query
           name: projects
           schema:
-            $ref: "#/components/schemas/__schema8"
+            type: boolean
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema47"
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    creatorId:
+                      anyOf:
+                        - type: number
+                        - type: "null"
+                    checkpoints:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          filePath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          folderPath:
+                            anyOf:
+                              - type: string
+                              - type: "null"
+                          creatorId:
+                            anyOf:
+                              - type: number
+                              - type: "null"
+                        required:
+                          - id
+                          - filePath
+                          - folderPath
+                          - creatorId
+                        additionalProperties: false
+                    projects:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          ownerId:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                          publicAccess:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                        required:
+                          - id
+                          - name
+                          - description
+                          - ownerId
+                          - publicAccess
+                        additionalProperties: false
+                  required:
+                    - id
+                    - name
+                    - description
+                    - creatorId
+                  additionalProperties: false
         "404": *a1
         "500": *a1
   /project/{idProject}/model/{idModel}params:
@@ -1010,12 +3417,12 @@ paths:
         - in: path
           name: idModel
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: idProject
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "204": {}
@@ -1027,14 +3434,35 @@ paths:
         - in: path
           name: idCheckpoint
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema24"
+                type: object
+                properties:
+                  id:
+                    type: number
+                  filePath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  folderPath:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                  creatorId:
+                    anyOf:
+                      - type: number
+                      - type: "null"
+                required:
+                  - id
+                  - filePath
+                  - folderPath
+                  - creatorId
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /model/{idModel}/checkpoint/{idCheckpoint}:
@@ -1043,12 +3471,12 @@ paths:
         - in: path
           name: idCheckpoint
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: idModel
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "204": {}
@@ -1060,14 +3488,37 @@ paths:
         - in: path
           name: idModel
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                    filePath:
+                      anyOf:
+                        - type: string
+                        - type: "null"
+                    folderPath:
+                      anyOf:
+                        - type: string
+                        - type: "null"
+                    creatorId:
+                      anyOf:
+                        - type: number
+                        - type: "null"
+                  required:
+                    - id
+                    - filePath
+                    - folderPath
+                    - creatorId
+                  additionalProperties: false
         "404": *a1
         "500": *a1
     post:
@@ -1075,19 +3526,52 @@ paths:
         - in: path
           name: idModel
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/__schema4"
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+              required:
+                - files
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema48"
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                    filePath:
+                      anyOf:
+                        - type: string
+                        - type: "null"
+                    folderPath:
+                      anyOf:
+                        - type: string
+                        - type: "null"
+                    creatorId:
+                      anyOf:
+                        - type: number
+                        - type: "null"
+                  required:
+                    - id
+                    - filePath
+                    - folderPath
+                    - creatorId
+                  additionalProperties: false
         "404": *a1
         "500": *a1
   /checkpoint/{idCheckpoint}/download:
@@ -1096,19 +3580,38 @@ paths:
         - in: path
           name: idCheckpoint
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/__schema4"
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+              required:
+                - files
       responses:
         "201":
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema46"
+                type: object
+                properties:
+                  files:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+                required:
+                  - files
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /checkpoint/{idCheckpoint}/as-text:
@@ -1117,7 +3620,7 @@ paths:
         - in: path
           name: idCheckpoint
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
@@ -1129,7 +3632,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /checkpoint/to-text:
@@ -1138,7 +3650,15 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/__schema6"
+              type: object
+              properties:
+                files:
+                  type: string
+                  format: binary
+                  contentEncoding: binary
+                  contentMediaType: application/zip
+              required:
+                - files
       responses:
         "200":
           content:
@@ -1149,7 +3669,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /result/{idResult}:
@@ -1158,7 +3687,7 @@ paths:
         - in: path
           name: idResult
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
@@ -1168,19 +3697,33 @@ paths:
                 type: object
                 properties:
                   id:
-                    $ref: "#/components/schemas/__schema36"
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
                   folderPath:
-                    $ref: "#/components/schemas/__schema37"
+                    anyOf:
+                      - type: string
+                      - type: "null"
                   rawVolumeChannel:
-                    $ref: "#/components/schemas/__schema38"
+                    anyOf:
+                      - type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      - type: "null"
                   logFile:
-                    $ref: "#/components/schemas/__schema39"
+                    anyOf:
+                      - type: string
+                      - type: "null"
                   checkpointId:
-                    $ref: "#/components/schemas/__schema40"
+                    type: number
                   creatorId:
-                    $ref: "#/components/schemas/__schema41"
+                    anyOf:
+                      - type: integer
+                        minimum: -9007199254740991
+                        maximum: 9007199254740991
+                      - type: "null"
                   volumeDataId:
-                    $ref: "#/components/schemas/__schema42"
+                    type: number
                 required:
                   - id
                   - folderPath
@@ -1198,7 +3741,7 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
@@ -1210,21 +3753,56 @@ paths:
                   type: object
                   properties:
                     id:
-                      $ref: "#/components/schemas/__schema36"
+                      type: integer
+                      minimum: -9007199254740991
+                      maximum: 9007199254740991
                     folderPath:
-                      $ref: "#/components/schemas/__schema37"
+                      anyOf:
+                        - type: string
+                        - type: "null"
                     rawVolumeChannel:
-                      $ref: "#/components/schemas/__schema38"
+                      anyOf:
+                        - type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        - type: "null"
                     logFile:
-                      $ref: "#/components/schemas/__schema39"
+                      anyOf:
+                        - type: string
+                        - type: "null"
                     checkpointId:
-                      $ref: "#/components/schemas/__schema40"
+                      type: number
                     creatorId:
-                      $ref: "#/components/schemas/__schema41"
+                      anyOf:
+                        - type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                        - type: "null"
                     volumeDataId:
-                      $ref: "#/components/schemas/__schema42"
+                      type: number
                     checkpoints:
-                      $ref: "#/components/schemas/__schema24"
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        filePath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        folderPath:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                      required:
+                        - id
+                        - filePath
+                        - folderPath
+                        - creatorId
+                      additionalProperties: false
                   required:
                     - id
                     - folderPath
@@ -1242,13 +3820,23 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/__schema4"
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+              required:
+                - files
       responses:
         "200":
           content:
@@ -1284,12 +3872,12 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
         - in: path
           name: idResult
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "204": {}
@@ -1301,19 +3889,37 @@ paths:
         - in: path
           name: idResult
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
           content:
             application/zip:
               schema:
-                $ref: "#/components/schemas/__schema46"
+                type: object
+                properties:
+                  files:
+                    type: string
+                    format: binary
+                    contentEncoding: binary
+                    contentMediaType: application/zip
+                required:
+                  - files
+                additionalProperties: false
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema11"
+                type: object
+                properties:
+                  name:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - name
+                  - message
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /demo:
@@ -1323,7 +3929,292 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/__schema25"
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  ownerId:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  publicAccess:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  accessLevel:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  volumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawDataId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        rawData:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: number
+                                path:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                creatorId:
+                                  anyOf:
+                                    - type: number
+                                    - type: "null"
+                                rawFilePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                settings:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                                mrcFilePath:
+                                  anyOf:
+                                    - type: string
+                                    - type: "null"
+                              required:
+                                - id
+                                - path
+                                - creatorId
+                                - rawFilePath
+                                - settings
+                                - mrcFilePath
+                              additionalProperties: false
+                            - type: "null"
+                        sparseVolumes:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              path:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: integer
+                                    minimum: -9007199254740991
+                                    maximum: 9007199254740991
+                                  - type: "null"
+                              rawFilePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              settings:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              color:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                            required:
+                              - id
+                              - path
+                              - creatorId
+                              - rawFilePath
+                              - settings
+                              - color
+                            additionalProperties: false
+                        pseudoVolumes:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: number
+                              path:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                              rawFilePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              settings:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              originalLabelId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                            required:
+                              - id
+                              - path
+                              - creatorId
+                              - rawFilePath
+                              - settings
+                              - originalLabelId
+                            additionalProperties: false
+                        results:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                minimum: -9007199254740991
+                                maximum: 9007199254740991
+                              folderPath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              rawVolumeChannel:
+                                anyOf:
+                                  - type: integer
+                                    minimum: -9007199254740991
+                                    maximum: 9007199254740991
+                                  - type: "null"
+                              logFile:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              checkpointId:
+                                type: number
+                              creatorId:
+                                anyOf:
+                                  - type: integer
+                                    minimum: -9007199254740991
+                                    maximum: 9007199254740991
+                                  - type: "null"
+                              volumeDataId:
+                                type: number
+                              checkpoint:
+                                anyOf:
+                                  - type: object
+                                    properties:
+                                      id:
+                                        type: number
+                                      filePath:
+                                        anyOf:
+                                          - type: string
+                                          - type: "null"
+                                      folderPath:
+                                        anyOf:
+                                          - type: string
+                                          - type: "null"
+                                      creatorId:
+                                        anyOf:
+                                          - type: number
+                                          - type: "null"
+                                    required:
+                                      - id
+                                      - filePath
+                                      - folderPath
+                                      - creatorId
+                                    additionalProperties: false
+                                  - type: "null"
+                            required:
+                              - id
+                              - folderPath
+                              - rawVolumeChannel
+                              - logFile
+                              - checkpointId
+                              - creatorId
+                              - volumeDataId
+                              - checkpoint
+                            additionalProperties: false
+                      required:
+                        - id
+                        - name
+                        - description
+                        - creatorId
+                        - rawDataId
+                        - rawData
+                        - sparseVolumes
+                        - pseudoVolumes
+                        - results
+                      additionalProperties: false
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        creatorId:
+                          anyOf:
+                            - type: number
+                            - type: "null"
+                        checkpoints:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: number
+                              filePath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              folderPath:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              creatorId:
+                                anyOf:
+                                  - type: number
+                                  - type: "null"
+                            required:
+                              - id
+                              - filePath
+                              - folderPath
+                              - creatorId
+                            additionalProperties: false
+                      required:
+                        - id
+                        - name
+                        - description
+                        - creatorId
+                        - checkpoints
+                      additionalProperties: false
+                required:
+                  - id
+                  - name
+                  - description
+                  - ownerId
+                  - publicAccess
+                  - accessLevel
+                  - volumes
+                  - models
+                additionalProperties: false
         "404": *a1
         "500": *a1
   /volume/{idVolume}/queue-pseudo-label-generation:
@@ -1332,7 +4223,7 @@ paths:
         - in: path
           name: idVolume
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "201": {}
@@ -1366,11 +4257,20 @@ paths:
               type: object
               properties:
                 trainingVolumes:
-                  $ref: "#/components/schemas/__schema9"
+                  minItems: 1
+                  type: array
+                  items:
+                    type: string
                 validationVolumes:
-                  $ref: "#/components/schemas/__schema9"
+                  minItems: 1
+                  type: array
+                  items:
+                    type: string
                 testingVolumes:
-                  $ref: "#/components/schemas/__schema9"
+                  minItems: 1
+                  type: array
+                  items:
+                    type: string
                 modelId:
                   type: number
                 minEpochs:
@@ -1604,7 +4504,7 @@ paths:
         - in: path
           name: idTomogram
           schema:
-            $ref: "#/components/schemas/__schema0"
+            type: string
           required: true
       responses:
         "200":
@@ -1756,629 +4656,3 @@ paths:
                 additionalProperties: false
         "404": *a1
         "500": *a1
-components:
-  schemas:
-    __schema0:
-      type: string
-    __schema1:
-      type: array
-      items:
-        type: object
-        properties:
-          add:
-            type: boolean
-          dimensions:
-            $ref: "#/components/schemas/__schema2"
-          kernelSize:
-            $ref: "#/components/schemas/__schema2"
-          positions:
-            type: array
-            items:
-              $ref: "#/components/schemas/__schema2"
-          volumeName:
-            type: string
-        required:
-          - add
-          - dimensions
-          - kernelSize
-          - positions
-          - volumeName
-    __schema2:
-      type: object
-      properties:
-        x:
-          type: number
-        y:
-          type: number
-        z:
-          type: number
-      required:
-        - x
-        - y
-        - z
-    __schema3:
-      type: string
-      enum:
-        - RawVolumeData
-        - SparseLabeledVolumeData
-        - PseudoLabeledVolumeData
-    __schema4:
-      type: object
-      properties:
-        files:
-          type: array
-          items:
-            $ref: "#/components/schemas/__schema5"
-      required:
-        - files
-    __schema5:
-      type: string
-      format: binary
-      contentEncoding: binary
-      contentMediaType: application/zip
-    __schema6:
-      type: object
-      properties:
-        files:
-          $ref: "#/components/schemas/__schema5"
-      required:
-        - files
-    __schema7:
-      type: boolean
-    __schema8:
-      type: boolean
-    __schema9:
-      minItems: 1
-      type: array
-      items:
-        $ref: "#/components/schemas/__schema0"
-    __schema10:
-      type: object
-      properties:
-        id:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        username:
-          type: string
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-          pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
-      required:
-        - id
-        - username
-        - name
-        - email
-      additionalProperties: false
-    __schema11:
-      type: object
-      properties:
-        name:
-          type: string
-        message:
-          type: string
-      required:
-        - name
-        - message
-      additionalProperties: false
-    __schema12:
-      type: object
-      properties:
-        enqueuedTime:
-          type: string
-        startTime:
-          anyOf:
-            - type: string
-            - type: "null"
-        endTime:
-          anyOf:
-            - type: string
-            - type: "null"
-        id:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        taskType:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        taskStatus:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        userId:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        logFile:
-          anyOf:
-            - type: string
-            - type: "null"
-        volumeId:
-          anyOf:
-            - type: integer
-              minimum: -9007199254740991
-              maximum: 9007199254740991
-            - type: "null"
-        modelId:
-          anyOf:
-            - type: integer
-              minimum: -9007199254740991
-              maximum: 9007199254740991
-            - type: "null"
-        checkpointId:
-          anyOf:
-            - type: integer
-              minimum: -9007199254740991
-              maximum: 9007199254740991
-            - type: "null"
-        volume:
-          anyOf:
-            - $ref: "#/components/schemas/__schema13"
-            - type: "null"
-        model:
-          anyOf:
-            - $ref: "#/components/schemas/__schema19"
-            - type: "null"
-        checkpoint:
-          anyOf:
-            - $ref: "#/components/schemas/__schema24"
-            - type: "null"
-      required:
-        - enqueuedTime
-        - startTime
-        - endTime
-        - id
-        - taskType
-        - taskStatus
-        - userId
-        - logFile
-        - volumeId
-        - modelId
-        - checkpointId
-        - volume
-        - model
-        - checkpoint
-      additionalProperties: false
-    __schema13:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema14"
-        name:
-          $ref: "#/components/schemas/__schema15"
-        description:
-          $ref: "#/components/schemas/__schema16"
-        creatorId:
-          $ref: "#/components/schemas/__schema17"
-        rawDataId:
-          $ref: "#/components/schemas/__schema18"
-      required:
-        - id
-        - name
-        - description
-        - creatorId
-        - rawDataId
-      additionalProperties: false
-    __schema14:
-      type: number
-    __schema15:
-      type: string
-    __schema16:
-      type: string
-    __schema17:
-      anyOf:
-        - type: number
-        - type: "null"
-    __schema18:
-      anyOf:
-        - type: number
-        - type: "null"
-    __schema19:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema20"
-        name:
-          $ref: "#/components/schemas/__schema21"
-        description:
-          $ref: "#/components/schemas/__schema22"
-        creatorId:
-          $ref: "#/components/schemas/__schema23"
-      required:
-        - id
-        - name
-        - description
-        - creatorId
-      additionalProperties: false
-    __schema20:
-      type: number
-    __schema21:
-      type: string
-    __schema22:
-      type: string
-    __schema23:
-      anyOf:
-        - type: number
-        - type: "null"
-    __schema24:
-      type: object
-      properties:
-        id:
-          type: number
-        filePath:
-          anyOf:
-            - type: string
-            - type: "null"
-        folderPath:
-          anyOf:
-            - type: string
-            - type: "null"
-        creatorId:
-          anyOf:
-            - type: number
-            - type: "null"
-      required:
-        - id
-        - filePath
-        - folderPath
-        - creatorId
-      additionalProperties: false
-    __schema25:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema26"
-        name:
-          $ref: "#/components/schemas/__schema27"
-        description:
-          $ref: "#/components/schemas/__schema28"
-        ownerId:
-          $ref: "#/components/schemas/__schema29"
-        publicAccess:
-          $ref: "#/components/schemas/__schema30"
-        accessLevel:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        volumes:
-          type: array
-          items:
-            $ref: "#/components/schemas/__schema31"
-        models:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                $ref: "#/components/schemas/__schema20"
-              name:
-                $ref: "#/components/schemas/__schema21"
-              description:
-                $ref: "#/components/schemas/__schema22"
-              creatorId:
-                $ref: "#/components/schemas/__schema23"
-              checkpoints:
-                type: array
-                items:
-                  $ref: "#/components/schemas/__schema24"
-            required:
-              - id
-              - name
-              - description
-              - creatorId
-              - checkpoints
-            additionalProperties: false
-      required:
-        - id
-        - name
-        - description
-        - ownerId
-        - publicAccess
-        - accessLevel
-        - volumes
-        - models
-      additionalProperties: false
-    __schema26:
-      type: integer
-      minimum: -9007199254740991
-      maximum: 9007199254740991
-    __schema27:
-      type: string
-    __schema28:
-      type: string
-    __schema29:
-      type: integer
-      minimum: -9007199254740991
-      maximum: 9007199254740991
-    __schema30:
-      type: integer
-      minimum: -9007199254740991
-      maximum: 9007199254740991
-    __schema31:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema14"
-        name:
-          $ref: "#/components/schemas/__schema15"
-        description:
-          $ref: "#/components/schemas/__schema16"
-        creatorId:
-          $ref: "#/components/schemas/__schema17"
-        rawDataId:
-          $ref: "#/components/schemas/__schema18"
-        rawData:
-          anyOf:
-            - $ref: "#/components/schemas/__schema32"
-            - type: "null"
-        sparseVolumes:
-          type: array
-          items:
-            $ref: "#/components/schemas/__schema33"
-        pseudoVolumes:
-          type: array
-          items:
-            $ref: "#/components/schemas/__schema34"
-        results:
-          type: array
-          items:
-            $ref: "#/components/schemas/__schema35"
-      required:
-        - id
-        - name
-        - description
-        - creatorId
-        - rawDataId
-        - rawData
-        - sparseVolumes
-        - pseudoVolumes
-        - results
-      additionalProperties: false
-    __schema32:
-      type: object
-      properties:
-        id:
-          type: number
-        path:
-          anyOf:
-            - type: string
-            - type: "null"
-        creatorId:
-          anyOf:
-            - type: number
-            - type: "null"
-        rawFilePath:
-          anyOf:
-            - type: string
-            - type: "null"
-        settings:
-          anyOf:
-            - type: string
-            - type: "null"
-        mrcFilePath:
-          anyOf:
-            - type: string
-            - type: "null"
-      required:
-        - id
-        - path
-        - creatorId
-        - rawFilePath
-        - settings
-        - mrcFilePath
-      additionalProperties: false
-    __schema33:
-      type: object
-      properties:
-        id:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        path:
-          anyOf:
-            - type: string
-            - type: "null"
-        creatorId:
-          anyOf:
-            - type: integer
-              minimum: -9007199254740991
-              maximum: 9007199254740991
-            - type: "null"
-        rawFilePath:
-          anyOf:
-            - type: string
-            - type: "null"
-        settings:
-          anyOf:
-            - type: string
-            - type: "null"
-        color:
-          anyOf:
-            - type: string
-            - type: "null"
-      required:
-        - id
-        - path
-        - creatorId
-        - rawFilePath
-        - settings
-        - color
-      additionalProperties: false
-    __schema34:
-      type: object
-      properties:
-        id:
-          type: number
-        path:
-          anyOf:
-            - type: string
-            - type: "null"
-        creatorId:
-          anyOf:
-            - type: number
-            - type: "null"
-        rawFilePath:
-          anyOf:
-            - type: string
-            - type: "null"
-        settings:
-          anyOf:
-            - type: string
-            - type: "null"
-        originalLabelId:
-          anyOf:
-            - type: number
-            - type: "null"
-      required:
-        - id
-        - path
-        - creatorId
-        - rawFilePath
-        - settings
-        - originalLabelId
-      additionalProperties: false
-    __schema35:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema36"
-        folderPath:
-          $ref: "#/components/schemas/__schema37"
-        rawVolumeChannel:
-          $ref: "#/components/schemas/__schema38"
-        logFile:
-          $ref: "#/components/schemas/__schema39"
-        checkpointId:
-          $ref: "#/components/schemas/__schema40"
-        creatorId:
-          $ref: "#/components/schemas/__schema41"
-        volumeDataId:
-          $ref: "#/components/schemas/__schema42"
-        checkpoint:
-          anyOf:
-            - $ref: "#/components/schemas/__schema24"
-            - type: "null"
-      required:
-        - id
-        - folderPath
-        - rawVolumeChannel
-        - logFile
-        - checkpointId
-        - creatorId
-        - volumeDataId
-        - checkpoint
-      additionalProperties: false
-    __schema36:
-      type: integer
-      minimum: -9007199254740991
-      maximum: 9007199254740991
-    __schema37:
-      anyOf:
-        - type: string
-        - type: "null"
-    __schema38:
-      anyOf:
-        - type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        - type: "null"
-    __schema39:
-      anyOf:
-        - type: string
-        - type: "null"
-    __schema40:
-      type: number
-    __schema41:
-      anyOf:
-        - type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        - type: "null"
-    __schema42:
-      type: number
-    __schema43:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/__schema26"
-        name:
-          $ref: "#/components/schemas/__schema27"
-        description:
-          $ref: "#/components/schemas/__schema28"
-        ownerId:
-          $ref: "#/components/schemas/__schema29"
-        publicAccess:
-          $ref: "#/components/schemas/__schema30"
-      required:
-        - id
-        - name
-        - description
-        - ownerId
-        - publicAccess
-      additionalProperties: false
-    __schema44:
-      type: object
-      properties:
-        userId:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-        accessLevel:
-          type: integer
-          minimum: -9007199254740991
-          maximum: 9007199254740991
-      required:
-        - userId
-        - accessLevel
-      additionalProperties: false
-    __schema45:
-      anyOf:
-        - $ref: "#/components/schemas/__schema33"
-        - $ref: "#/components/schemas/__schema34"
-        - $ref: "#/components/schemas/__schema32"
-    __schema46:
-      type: object
-      properties:
-        files:
-          type: string
-          format: binary
-          contentEncoding: binary
-          contentMediaType: application/zip
-      required:
-        - files
-      additionalProperties: false
-    __schema47:
-      type: array
-      items:
-        type: object
-        properties:
-          id:
-            $ref: "#/components/schemas/__schema20"
-          name:
-            $ref: "#/components/schemas/__schema21"
-          description:
-            $ref: "#/components/schemas/__schema22"
-          creatorId:
-            $ref: "#/components/schemas/__schema23"
-          checkpoints:
-            type: array
-            items:
-              $ref: "#/components/schemas/__schema24"
-          projects:
-            type: array
-            items:
-              $ref: "#/components/schemas/__schema43"
-        required:
-          - id
-          - name
-          - description
-          - creatorId
-        additionalProperties: false
-    __schema48:
-      type: array
-      items:
-        $ref: "#/components/schemas/__schema24"

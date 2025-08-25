@@ -127,7 +127,7 @@ export default class UserController {
         const { query } = validateSchema(req, {
            querySchema: statusQuery,
         });
-        const taskHistory = await TaskHistory.getFromUser(req.session.user.id, query.pageNumber);
+        const taskHistory = await TaskHistory.getFromUser(req.session.user.id, query.pageNumber, query.pageSize);
         const cpuTaskQueue = await TaskHistory.getCPUTaskQueue();
         const gpuTaskQueue = await TaskHistory.getGPUTaskQueue();
 

@@ -1,12 +1,8 @@
 //Status.js
-import { makeStyles, TabList, Tab, Button } from "@fluentui/react-components";
+import { makeStyles, TabList, Tab } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
   bundleIcon,
-  ChevronDoubleLeftFilled,
-  ChevronDoubleRightFilled,
-  ChevronLeftFilled,
-  ChevronRightFilled,
   HistoryFilled,
   HistoryRegular,
   HourglassHalfRegular,
@@ -17,6 +13,7 @@ import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import UserHistoryTable from "./elements/UserHistoryTable";
 import TaskQueueTable from "./elements/TaskQueueTable";
+import Paganation from "../../shared/Pagination";
 
 const useStyles = makeStyles({
   contents: {
@@ -115,48 +112,18 @@ const Status = observer(({ open, close }: Props) => {
                   />
                 </div>
                 {status && status.taskHistory.size !== 0 && (
-                  <div className={classes.pagination}>
-                    <div>
-                      <span>
-                        {status.pageSkip - (status.pageSize - 1)} -{" "}
-                        {status.pageSkip > status.taskHistoryLenght
-                          ? status.taskHistoryLenght
-                          : status.pageSkip}{" "}
-                        of {status.taskHistoryLenght}
-                      </span>
-                    </div>
-                    <Button
-                      className={classes.paginationButton}
-                      icon={<ChevronDoubleLeftFilled />}
-                      disabled={status.pageNumber <= 1}
-                      onClick={() => status?.setPageNumber(1)}
-                    ></Button>
-                    <Button
-                      appearance="secondary"
-                      className={classes.paginationButton}
-                      icon={<ChevronLeftFilled />}
-                      disabled={status.pageNumber <= 1}
-                      onClick={() =>
-                        status?.setPageNumber(status?.pageNumber - 1)
-                      }
-                    ></Button>
-                    <Button
-                      className={classes.paginationButton}
-                      icon={<ChevronRightFilled />}
-                      disabled={status.maxPageNumber <= status.pageNumber}
-                      onClick={() =>
-                        status?.setPageNumber(status?.pageNumber + 1)
-                      }
-                    ></Button>
-                    <Button
-                      className={classes.paginationButton}
-                      icon={<ChevronDoubleRightFilled />}
-                      disabled={status.maxPageNumber <= status.pageNumber}
-                      onClick={() =>
-                        status?.setPageNumber(status.maxPageNumber)
-                      }
-                    ></Button>
-                  </div>
+                  <Paganation
+                    pageSkip={status.pageSkip}
+                    pageSize={status.pageSize}
+                    pageNumber={status.pageNumber}
+                    maxPageNumber={status.maxPageNumber}
+                    ListLenght={status.taskHistoryLenght}
+                    setPageNumberFunction={(pageNumber) =>
+                      status?.setPageNumber(pageNumber)
+                    }
+                    rowClassName={classes.pagination}
+                    buttonClassName={classes.paginationButton}
+                  ></Paganation>
                 )}
               </>
             )}

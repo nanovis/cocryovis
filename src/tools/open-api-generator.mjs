@@ -48,7 +48,7 @@ const document = createDocument(
             ...cryoEtPath,
         },
     },
-    { reused: "ref" }
+    { reused: "inline" }
 );
 export function writeOpenApi() {
     const yaml = YAML.stringify(document);
