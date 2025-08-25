@@ -18,6 +18,7 @@ db.json
 /modules/imod/*
 python-scripts/__pycache__
 !.gitkeep
+openapi.yaml
 
 sessions/*.db
 sessions/*.db-shm
