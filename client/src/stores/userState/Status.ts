@@ -147,6 +147,9 @@ export const Status = types
     cpuTaskQueue: types.array(TaskQueueElement),
     gpuTaskQueue: types.array(TaskQueueElement),
   })
+  .volatile(() => ({
+    activeRequests: 0,
+  }))
   .views((self) => ({
     taskHistoryItems(): TaskHistoryItem[] {
       const taskHistoryItems: TaskHistoryItem[] = [];
@@ -240,21 +243,24 @@ export const Status = types
   }))
   .actions((self) => ({
     fetchStatus: flow(function* fetchStatus() {
+      self.activeRequests += 1;
       try {
         const contents: z.infer<typeof statusSchema> = yield getStatus(
-          self.pageNumber, self.pageSize
+          self.pageNumber,
+          self.pageSize
         );
         // Check if the model is still alive after async call
         if (!isAlive(self)) {
           return;
         }
-
         self.setTaskHistory(contents.taskHistory.values);
         self.setCPUTaskQueue(contents.cpuTaskQueue);
         self.setGPUTaskQueue(contents.gpuTaskQueue);
         self.taskHistoryLenght = contents.taskHistory.lenght;
       } catch (error) {
         console.error("Error:", error);
+      } finally {
+        self.activeRequests -= 1;
       }
     }),
   }))
@@ -269,7 +275,6 @@ export const Status = types
         self.pageNumber = self.maxPageNumber;
       }
       yield self.fetchStatus();
-
       if (!isAlive(self)) {
         return;
       }

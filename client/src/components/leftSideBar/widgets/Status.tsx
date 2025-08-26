@@ -48,6 +48,7 @@ const useStyles = makeStyles({
     marginTop: "30px",
     justifyContent: "end",
     gap: "15px",
+    height: "25px",
   },
   paginationButton: {
     height: "20px",
@@ -123,6 +124,7 @@ const Status = observer(({ open, close }: Props) => {
                     }
                     rowClassName={classes.pagination}
                     buttonClassName={classes.paginationButton}
+                    showSpinner={status.activeRequests > 0}
                   ></Paganation>
                 )}
               </>

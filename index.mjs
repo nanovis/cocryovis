@@ -30,6 +30,7 @@ import { program } from "commander";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yaml";
 import { writeOpenApi } from "./src/tools/open-api-generator.mjs";
+import { delay } from "./src/middleware/delay.mjs";
 
 const SqliteStore = sqlite3SessionStore(session);
 
@@ -86,6 +87,9 @@ const startServer = async () => {
     ]);
 
     // middleware
+    if (app.get("env") !== "production" && process.env.DELAY !== undefined) {
+        app.use(delay(Number(process.env.DELAY)));
+    }
     app.use(express.urlencoded({ extended: true }));
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());

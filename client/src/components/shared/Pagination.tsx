@@ -1,4 +1,4 @@
-import { Button } from "@fluentui/react-components";
+import { Button, Spinner } from "@fluentui/react-components";
 import {
   ChevronDoubleLeftFilled,
   ChevronDoubleRightFilled,
@@ -17,6 +17,7 @@ interface Props {
   buttonStyle?: React.CSSProperties;
   rowClassName?: string;
   buttonClassName?: string;
+  showSpinner?: boolean;
 }
 const Paganation = ({
   pageSkip,
@@ -29,9 +30,13 @@ const Paganation = ({
   buttonStyle = {},
   rowClassName,
   buttonClassName,
+  showSpinner,
 }: Props) => {
   return (
     <div style={rowStyle} className={rowClassName}>
+      {showSpinner &&(
+      <Spinner appearance="primary" size="extra-small"  />
+      )}
       <div>
         <span>
           {pageSkip - (pageSize - 1)} -{" "}

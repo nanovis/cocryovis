@@ -12,7 +12,7 @@ import z from "zod";
 
 export async function login(request: z.input<typeof loginSchemaReq>) {
   const response = await Utils.sendApiRequest(
-    "1login",
+    "login",
     {
       method: "POST",
       credentials: "include",
