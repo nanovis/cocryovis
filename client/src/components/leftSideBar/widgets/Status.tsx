@@ -1,5 +1,5 @@
 //Status.js
-import { makeStyles, TabList, Tab } from "@fluentui/react-components";
+import { makeStyles, TabList, Tab, Spinner } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
   bundleIcon,
@@ -56,6 +56,12 @@ const useStyles = makeStyles({
   table: {
     minHeight: "523px",
     maxHeight: "523px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  tableLoader: {
+    margin: "auto"
   },
 });
 
@@ -111,6 +117,12 @@ const Status = observer(({ open, close }: Props) => {
                   <UserHistoryTable
                     taskHistoryItems={status?.taskHistoryItems() ?? []}
                   />
+                  {status?.taskHistory.size === 0 &&
+                    status.activeRequests > 0 && (
+                      <div className={classes.tableLoader}>
+                        <Spinner appearance="primary" size="huge" />
+                      </div>
+                    )}
                 </div>
                 {status && status.taskHistory.size !== 0 && (
                   <Paganation
@@ -134,6 +146,12 @@ const Status = observer(({ open, close }: Props) => {
                 <TaskQueueTable
                   taskQueueItems={status?.cpuTaskQueueItems() ?? []}
                 />
+                {status?.cpuTaskQueue.length === 0 &&
+                  status.activeRequests > 0 && (
+                    <div className={classes.tableLoader}>
+                      <Spinner appearance="primary" size="huge" />
+                    </div>
+                  )}
               </div>
             )}
             {selectedIndex === 2 && (
@@ -141,6 +159,12 @@ const Status = observer(({ open, close }: Props) => {
                 <TaskQueueTable
                   taskQueueItems={status?.gpuTaskQueueItems() ?? []}
                 />
+                {status?.gpuTaskQueue.length === 0 &&
+                  status.activeRequests > 0 && (
+                    <div className={classes.tableLoader}>
+                      <Spinner appearance="primary" size="huge" />
+                    </div>
+                  )}
               </div>
             )}
           </div>
