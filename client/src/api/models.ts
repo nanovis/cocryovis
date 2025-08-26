@@ -4,15 +4,19 @@ import {
   modelSchema,
   modelSchemaWithCheckpoint,
 } from "#schemas/componentSchemas/model-schema.mjs";
-import { createModelSchema } from "#schemas/models-path-schema.mjs";
+import { createModelSchema, getModelQuerySchema } from "#schemas/models-path-schema.mjs";
 
 export async function getModelsFromProjectWithCheckpoints(id: number) {
-  const response = await Utils.sendReq(
-    `project/${id}/models?checkpoints=true`,
+    const query: z.input<typeof getModelQuerySchema> = {
+      checkpoints: "true",
+    };
+  const response = await Utils.sendApiRequest(
+    `project/${id}/models`,
     {
       method: "GET",
       credentials: "include",
-    }
+    },
+    {query}
   );
   const models: z.infer<typeof modelSchemaWithCheckpoint>[] =
     await response.json();
@@ -23,7 +27,7 @@ export async function createModel(
   id: number,
   request: z.input<typeof createModelSchema>
 ) {
-  const response = await Utils.sendReq(`project/${id}/models`, {
+  const response = await Utils.sendApiRequest(`project/${id}/models`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -37,7 +41,7 @@ export async function removeModelFromProject(
   idModel: number,
   idProject: number
 ) {
-  await Utils.sendRequestWithToast(`project/${idProject}/model/${idModel}`, {
+  await Utils.sendApiRequest(`project/${idProject}/model/${idModel}`, {
     method: "DELETE",
     credentials: "include",
   });

@@ -3,7 +3,7 @@ import z from "zod";
 import * as Utils from "../utils/Helpers";
 
 export async function removeFromModel(idModel: number, idCheckpoint: number) {
-  await Utils.sendRequestWithToast(
+  await Utils.sendApiRequest(
     `model/${idModel}/checkpoint/${idCheckpoint}`,
     {
       method: "DELETE",
@@ -13,7 +13,7 @@ export async function removeFromModel(idModel: number, idCheckpoint: number) {
 }
 
 export async function getCheckpointsFromModel(id: number) {
-  const response = await Utils.sendReq(`model/${id}/checkpoints`, {
+  const response = await Utils.sendApiRequest(`model/${id}/checkpoints`, {
     method: "GET",
     credentials: "include",
   });
@@ -23,7 +23,7 @@ export async function getCheckpointsFromModel(id: number) {
 }
 
 export async function uploadCheckpoints(id: number, request: FormData) {
-  const response = await Utils.sendReq(`model/${id}/checkpoints`, {
+  const response = await Utils.sendApiRequest(`model/${id}/checkpoints`, {
     method: "POST",
     credentials: "include",
     body: request,
@@ -34,26 +34,24 @@ export async function uploadCheckpoints(id: number, request: FormData) {
 }
 
 export async function checkpointToText(id: number) {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     `checkpoint/${id}/as-text`,
     {
       method: "GET",
       credentials: "include",
     },
-    false
   );
   const checkpointTxt = await response.text();
   return checkpointTxt;
 }
 
 export async function checkpointFileToText(request: FormData) {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     `checkpoint/to-text`,
     {
       method: "POST",
       body: request,
     },
-    false
   );
   const checkpointTxt = await response.text();
   return checkpointTxt;

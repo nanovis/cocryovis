@@ -1,23 +1,26 @@
-import { Id, toast, ToastPromiseParams } from "react-toastify";
+import { Id, toast } from "react-toastify";
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../DefaultTransferFunctions";
 
 export type FileMap = Map<string, File>;
 
-export async function sendReq(
+export async function sendApiRequest(
   url: string,
-  options: RequestInit = {},
-  showErrorToast = true
+  request: RequestInit,
+  options?: { query?: Record<string, string> }
 ) {
-  if (!options.method) {
+  if (!request.method) {
     throw new Error("The 'method' option is required.");
   }
-
   const defaultOptions: RequestInit = {
     credentials: "include",
   };
 
-  const fetchOptions = { ...defaultOptions, ...options };
+  if (options?.query !== undefined) {
+    url += "?" + new URLSearchParams(options.query);
+  }
+
+  const fetchOptions = { ...defaultOptions, ...request };
 
   let errorMsg = "Error connecting to the server.";
 
@@ -29,52 +32,44 @@ export async function sendReq(
     const content = isJson ? await response.json() : await response.text();
 
     errorMsg = isJson ? content.message : content;
-    if (showErrorToast) {
-      toast.error(`(${response.status}) ${errorMsg}`, {
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-      });
-    }
     console.error(
       `Error when calling ${url}: (${response.status}) ${errorMsg}`
     );
     throw new Error(`(${response.status}) ${errorMsg}`);
   }
-
   return response;
 }
 
-export async function sendRequestWithToast(
-  url: string,
-  options: RequestInit,
-  {
-    successText = null as string | null,
-    pendingTextOverride = null as string | null,
-  } = {}
-) {
-  const errorRender = (messageData: { data: { message: string } }) => {
-    return messageData.data.message;
-  };
+// export async function sendRequestWithToast(
+//   url: string,
+//   options: RequestInit,
+//   {
+//     successText = null as string | null,
+//     pendingTextOverride = null as string | null,
+//   } = {}
+// ) {
+//   const errorRender = (messageData: { data: { message: string } }) => {
+//     return messageData.data.message;
+//   };
 
-  const toastParameters: ToastPromiseParams<unknown, { message: string }> = {
-    pending: pendingTextOverride ?? "Processing request...",
-    error: {
-      render: errorRender,
-    },
-  };
+//   const toastParameters: ToastPromiseParams<unknown, { message: string }> = {
+//     pending: pendingTextOverride ?? "Processing request...",
+//     error: {
+//       render: errorRender,
+//     },
+//   };
 
-  if (successText) {
-    toastParameters.success = successText;
-  }
+//   if (successText) {
+//     toastParameters.success = successText;
+//   }
 
-  return toast.promise(
-    sendReq(url, options, false).then((response) => {
-      return response;
-    }),
-    toastParameters
-  ) as Promise<Response>;
-}
+//   return toast.promise(
+//     sendReq(url, options).then((response) => {
+//       return response;
+//     }),
+//     toastParameters
+//   ) as Promise<Response>;
+// }
 
 export function updateToastWithErrorMsg(toastId: Id | null, error: unknown) {
   if (toastId !== null) {
@@ -150,14 +145,10 @@ export async function downloadFileFromServer(
   let toastId = null;
   try {
     toastId = toast.loading("Downloading...");
-    const response = await sendReq(
-      url,
-      {
-        method: "GET",
-        credentials: "include",
-      },
-      false
-    );
+    const response = await sendApiRequest(url, {
+      method: "GET",
+      credentials: "include",
+    });
     await downloadFile(response, filenameOverwrite);
     toast.update(toastId, {
       render: "Download Successful!",

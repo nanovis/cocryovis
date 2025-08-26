@@ -6,7 +6,7 @@ import {
 } from "#schemas/result-path-schema.mjs";
 
 export async function getResultsFromVolume(id: number) {
-  const response = await Utils.sendReq(`/volume/${id}/results`, {
+  const response = await Utils.sendApiRequest(`/volume/${id}/results`, {
     method: "GET",
     credentials: "include",
   });
@@ -15,13 +15,12 @@ export async function getResultsFromVolume(id: number) {
 }
 
 export async function createResultFromFiles(id: number, request: FormData) {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     `volume/${id}/results`,
     {
       method: "POST",
       body: request,
     },
-    false
   );
   const Result: z.infer<typeof resultFilesSchema> = await response.json();
   return Result;
@@ -31,18 +30,17 @@ export async function removeResultFromVolume(
   idVolume: number,
   idResult: number
 ) {
-  await Utils.sendRequestWithToast(
+  await Utils.sendApiRequest(
     `volume/${idVolume}/result/${idResult}`,
     {
       method: "DELETE",
       credentials: "include",
     },
-    { successText: "Result Successfuly Removed" }
   );
 }
 
 export async function getResultData(id: number) {
-  const response = await Utils.sendReq(`result/${id}/data`, {
+  const response = await Utils.sendApiRequest(`result/${id}/data`, {
     method: "GET",
     credentials: "include",
   });

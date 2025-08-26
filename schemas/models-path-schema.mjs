@@ -10,10 +10,11 @@ import { idModel, modelSchema } from "./componentSchemas/model-schema.mjs";
 import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
 import { typeSchema } from "./componentSchemas/volume-data-schema.mjs";
 import { idSchema } from "./componentSchemas/id-param-schema.mjs";
+import { stringToBoolean } from "./componentSchemas/string-to-boolean.mjs";
 
 export const getModelQuerySchema = z.object({
-    checkpoints: z.coerce.boolean().optional(),
-    projects: z.coerce.boolean().optional(),
+    checkpoints: stringToBoolean.optional(),
+    projects: stringToBoolean.optional(),
 });
 
 export const getModelsSchema = z.array(

@@ -13,13 +13,14 @@ import {
     projectSchema,
 } from "./componentSchemas/project-schema.mjs";
 import { idSchema } from "./componentSchemas/id-param-schema.mjs";
+import { stringToBoolean } from "./componentSchemas/string-to-boolean.mjs";
 
 export const volumeQuerySchema = z.object({
-    rawData: z.coerce.boolean().optional(),
-    sparseVolumes: z.coerce.boolean().optional(),
-    pseudoVolumes: z.coerce.boolean().optional(),
-    results: z.coerce.boolean().optional(),
-    projects: z.coerce.boolean().optional(),
+    rawData: stringToBoolean.optional(),
+    sparseVolumes: stringToBoolean.optional(),
+    pseudoVolumes: stringToBoolean.optional(),
+    results: stringToBoolean.optional(),
+    projects: stringToBoolean.optional(),
 });
 
 export const deepVolumeSchema = volumeSchema.extend({

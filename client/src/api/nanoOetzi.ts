@@ -3,7 +3,7 @@ import * as Utils from "../utils/Helpers";
 import { inferenceIds, trainingReq } from "#schemas/nano-oetzi-path-schema.mjs";
 
 export async function queueInference(request: z.input<typeof inferenceIds>) {
-  await Utils.sendRequestWithToast(
+  await Utils.sendApiRequest(
     `queue-inference`,
     {
       method: "POST",
@@ -11,12 +11,11 @@ export async function queueInference(request: z.input<typeof inferenceIds>) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    { successText: "Inference successfuly queued!" }
   );
 }
 
 export async function queueTraining(request: z.input<typeof trainingReq>) {
-  await Utils.sendReq(
+  await Utils.sendApiRequest(
     `queue-training`,
     {
       method: "POST",
@@ -24,6 +23,5 @@ export async function queueTraining(request: z.input<typeof trainingReq>) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    false
   );
 }

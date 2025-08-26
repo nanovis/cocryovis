@@ -11,7 +11,7 @@ import * as Utils from "../utils/Helpers";
 import z from "zod";
 
 export async function getAllUserProjectsDeep() {
-  const response = await Utils.sendReq("projects-deep", {
+  const response = await Utils.sendApiRequest("projects-deep", {
     method: "GET",
   });
   const projects: z.infer<typeof projectsSchemaDeepRes> = await response.json();
@@ -21,7 +21,7 @@ export async function getAllUserProjectsDeep() {
 export async function createProject(
   request: z.input<typeof projectCreateSchemaReq>
 ) {
-  const response = await Utils.sendRequestWithToast("projects", {
+  const response = await Utils.sendApiRequest("projects", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -32,12 +32,11 @@ export async function createProject(
 }
 
 export async function getAccessInfo(id: number) {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     `project/${id}/access`,
     {
       method: "GET",
     },
-    false
   );
   const accessInfo: z.infer<typeof projectAccessInfoSchema> =
     await response.json();
@@ -45,11 +44,10 @@ export async function getAccessInfo(id: number) {
 }
 
 export async function getProjectDeep(id: number) {
-  const response = await Utils.sendReq(`project/${id}/deep`, {
+  const response = await Utils.sendApiRequest(`project/${id}/deep`, {
     method: "GET",
   });
-  const project: z.infer<typeof projectSchemaDeepRes> =
-    await response.json();
+  const project: z.infer<typeof projectSchemaDeepRes> = await response.json();
   return project;
 }
 
@@ -57,7 +55,7 @@ export async function setAccess(
   id: number,
   request: z.input<typeof setAccessSchemaReq>
 ) {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     `project/${id}/access`,
     {
       method: "POST",
@@ -65,7 +63,6 @@ export async function setAccess(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    false
   );
   const accessInfoChanges: z.infer<typeof setAccessSchemaRes> =
     await response.json();
@@ -73,7 +70,7 @@ export async function setAccess(
 }
 
 export async function deleteProject(id: number) {
-  await Utils.sendRequestWithToast(`project/${id}`, {
+  await Utils.sendApiRequest(`project/${id}`, {
     method: "DELETE",
   });
 }

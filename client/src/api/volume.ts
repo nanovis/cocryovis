@@ -3,13 +3,14 @@ import * as Utils from "../utils/Helpers";
 import {
   createVolumeReq,
   getVolumeSchema,
+  volumeQuerySchema,
   volumesDeepSchemaRes,
 } from "#schemas/volume-path-schema.mjs";
 import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
 import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 
 export async function getVolumesFromProjectDeep(id: number) {
-  const response = await Utils.sendReq(`project/${id}/volumes/deep`, {
+  const response = await Utils.sendApiRequest(`project/${id}/volumes/deep`, {
     method: "GET",
     credentials: "include",
   });
@@ -21,7 +22,7 @@ export async function createVolume(
   id: number,
   request: z.input<typeof createVolumeReq>
 ) {
-  const response = await Utils.sendReq(`project/${id}/volumes`, {
+  const response = await Utils.sendApiRequest(`project/${id}/volumes`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -32,30 +33,32 @@ export async function createVolume(
 }
 
 export async function getVolumeWithSparseVolumes(Id: number) {
-  const response = await Utils.sendReq(
-    `/volume/${Id}?sparseVolumes=true`,
+  const query: z.input<typeof volumeQuerySchema> = {
+    sparseVolumes: "true",
+  };
+  const response = await Utils.sendApiRequest(
+    `/volume/${Id}`,
     {
       method: "GET",
     },
-    false
+    {query}
   );
   const volume: z.infer<typeof getVolumeSchema> = await response.json();
   return volume;
 }
 
 export async function removeFromProject(projectId: number, volumeId: number) {
-  await Utils.sendRequestWithToast(
+  await Utils.sendApiRequest(
     `project/${projectId}/volume/${volumeId}`,
     {
       method: "DELETE",
       credentials: "include",
     },
-    { successText: "Volume Successfuly Removed From Project" }
   );
 }
 
 export async function addAnnotations(id: number, request: string) {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     `volume/${id}/add-annotations`,
     {
       method: "PUT",
@@ -63,7 +66,6 @@ export async function addAnnotations(id: number, request: string) {
       headers: { "Content-Type": "application/json" },
       body: request,
     },
-    false
   );
   const sparseLabel: z.infer<typeof sparseLabelVolumeDataSchema> =
     await response.json();

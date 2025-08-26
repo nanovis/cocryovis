@@ -2,6 +2,7 @@ import {
   loginSchemaReq,
   publicUser,
   registerSchema,
+  statusQuery,
   statusSchema,
   updateUserSchema,
   usersArray,
@@ -10,28 +11,27 @@ import * as Utils from "../utils/Helpers";
 import z from "zod";
 
 export async function login(request: z.input<typeof loginSchemaReq>) {
-  const response = await Utils.sendRequestWithToast(
-    "login",
+  const response = await Utils.sendApiRequest(
+    "1login",
     {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    { successText: "Sign-In successful!" }
   );
   const userData: z.infer<typeof publicUser> = await response.json();
   return userData;
 }
 
 export async function logout() {
-  await Utils.sendReq("logout", {
+  await Utils.sendApiRequest("logout", {
     method: "POST",
   });
 }
 
 export async function register(request: z.input<typeof registerSchema>) {
-  const response = await Utils.sendRequestWithToast(
+  const response = await Utils.sendApiRequest(
     "register",
     {
       method: "POST",
@@ -39,14 +39,13 @@ export async function register(request: z.input<typeof registerSchema>) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    { successText: "Sign-Up successful!" }
   );
   const contents: z.infer<typeof publicUser> = await response.json();
   return contents;
 }
 
 export async function getLoggedUserData() {
-  const response = await Utils.sendReq("getLoggedUserData", {
+  const response = await Utils.sendApiRequest("getLoggedUserData", {
     method: "GET",
   });
   const userData: z.infer<typeof publicUser> = await response.json();
@@ -54,28 +53,35 @@ export async function getLoggedUserData() {
 }
 
 export async function getAllUsers() {
-  const response = await Utils.sendReq(
+  const response = await Utils.sendApiRequest(
     "users",
     {
       method: "GET",
     },
-    false
   );
   const allUsers: z.infer<typeof usersArray> = await response.json();
   return allUsers;
 }
 
-export async function getStatus(pageNumber: number) {
-  const response = await Utils.sendReq(`status?pageNumber=${pageNumber}`, {
-    method: "GET",
-    credentials: "include",
-  });
+export async function getStatus(pageNumber: number, pageSize: number) {
+  const query: z.input<typeof statusQuery> = {
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString(),
+  };
+  const response = await Utils.sendApiRequest(
+    `status`,
+    {
+      method: "GET",
+      credentials: "include",
+    },
+    { query }
+  );
   const contents: z.infer<typeof statusSchema> = await response.json();
   return contents;
 }
 
 export async function updateUser(request: z.input<typeof updateUserSchema>) {
-  const response = await Utils.sendRequestWithToast(
+  const response = await Utils.sendApiRequest(
     "user",
     {
       method: "PUT",
@@ -83,26 +89,24 @@ export async function updateUser(request: z.input<typeof updateUserSchema>) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    { successText: "Change successful!" }
   );
   const contents: z.infer<typeof publicUser> = await response.json();
   return contents;
 }
 
 export async function deleteUser() {
-  await Utils.sendRequestWithToast(
+  await Utils.sendApiRequest(
     "user",
     {
       method: "DELETE",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
     },
-    { successText: "Change successful!" }
   );
 }
 
 export async function AdminDeleteUser(id: number) {
-  await Utils.sendRequestWithToast(
+  await Utils.sendApiRequest(
     "user-admin",
     {
       method: "DELETE",
@@ -110,6 +114,5 @@ export async function AdminDeleteUser(id: number) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(id),
     },
-    { successText: "Change successful!" }
   );
 }

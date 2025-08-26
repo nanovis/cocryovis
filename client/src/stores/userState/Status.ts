@@ -242,7 +242,7 @@ export const Status = types
     fetchStatus: flow(function* fetchStatus() {
       try {
         const contents: z.infer<typeof statusSchema> = yield getStatus(
-          self.pageNumber
+          self.pageNumber, self.pageSize
         );
         // Check if the model is still alive after async call
         if (!isAlive(self)) {
