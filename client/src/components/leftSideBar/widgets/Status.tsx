@@ -42,17 +42,6 @@ const useStyles = makeStyles({
     paddingRight: "14px",
   },
 
-  pagination: {
-    display: "flex",
-    alignItems: "center",
-    marginTop: "30px",
-    justifyContent: "end",
-    gap: "15px",
-    height: "25px",
-  },
-  paginationButton: {
-    height: "20px",
-  },
   table: {
     minHeight: "523px",
     maxHeight: "523px",
@@ -61,7 +50,7 @@ const useStyles = makeStyles({
     alignItems: "center",
   },
   tableLoader: {
-    margin: "auto"
+    margin: "auto",
   },
 });
 
@@ -81,6 +70,7 @@ const Status = observer(({ open, close }: Props) => {
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // FIXME slides to the right when new operations are qeued.
   return open ? (
     <div className={globalClasses.leftSidebar} style={{ width: "700px" }}>
       <div className={classes.contents}>
@@ -134,8 +124,6 @@ const Status = observer(({ open, close }: Props) => {
                     setPageNumberFunction={(pageNumber) =>
                       status?.setPageNumber(pageNumber)
                     }
-                    rowClassName={classes.pagination}
-                    buttonClassName={classes.paginationButton}
                     showSpinner={status.activeRequests > 0}
                   ></Paganation>
                 )}

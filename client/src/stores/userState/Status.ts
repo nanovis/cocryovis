@@ -245,12 +245,18 @@ export const Status = types
     fetchStatus: flow(function* fetchStatus() {
       self.activeRequests += 1;
       try {
+        const currentPageNumber = self.pageNumber;
         const contents: z.infer<typeof statusSchema> = yield getStatus(
-          self.pageNumber,
+          currentPageNumber,
           self.pageSize
         );
         // Check if the model is still alive after async call
         if (!isAlive(self)) {
+          return;
+        }
+        // This checks if the page that we are currently fetching is the same as the page that we want to display.
+        // This is needed since we can fetch 2 pages at the same time.
+        if (self.pageNumber !== currentPageNumber) {
           return;
         }
         self.setTaskHistory(contents.taskHistory.values);
