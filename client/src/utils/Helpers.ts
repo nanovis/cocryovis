@@ -35,7 +35,7 @@ export async function sendApiRequest(
     console.error(
       `Error when calling ${url}: (${response.status}) ${errorMsg}`
     );
-    throw new Error(`(${response.status}) ${errorMsg}`);
+    throw new Error(errorMsg);
   }
   return response;
 }

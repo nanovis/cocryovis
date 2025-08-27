@@ -12,6 +12,7 @@ const RootStore = types
     user: types.optional(User, {}),
     uiState: types.optional(UiState, {}),
     wasmLoaded: types.optional(types.boolean, false),
+
   })
   .actions((self) => ({
     setWasmLoaded(loaded: boolean) {

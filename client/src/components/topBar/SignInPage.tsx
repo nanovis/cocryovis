@@ -1,6 +1,14 @@
 import { useState } from "react";
-import { makeStyles, tokens } from "@fluentui/react-components";
-import { Button as FluentUIButton, Input } from "@fluentui/react-components";
+import {
+  Button as FluentUIButton,
+  Input,
+  Text,
+  makeStyles,
+  Spinner,
+  tokens,
+} from "@fluentui/react-components";
+import { observer } from "mobx-react-lite";
+import { getErrorMessage } from "../../utils/Helpers";
 
 const useStyles = makeStyles({
   container: {
@@ -34,7 +42,6 @@ const useStyles = makeStyles({
     border: "0px",
     fontWeight: tokens.fontWeightRegular,
     alignItems: "center",
-    marginTop: "8px",
     paddingLeft: "30px",
     paddingRight: "30px",
     height: "40px",
@@ -53,7 +60,6 @@ const useStyles = makeStyles({
     border: "0px",
     fontWeight: tokens.fontWeightRegular,
     alignItems: "center",
-    marginTop: "8px",
     paddingLeft: "30px",
     paddingRight: "30px",
     height: "40px",
@@ -70,15 +76,15 @@ const useStyles = makeStyles({
   },
   buttonRow: {
     display: "flex",
-    marginTop: "30px", // Adjust the margin as needed
     justifyContent: "center",
+    gap: "15px",
+    marginTop: "8px",
   },
-  buttonSpacer: {
-    marginLeft: "15px", // Adjust the spacing between buttons
+  errorText: {
+    color: tokens.colorStatusDangerForeground1,
+    paddingTop: "10px",
   },
 });
-
-
 
 export interface SignInCredentials {
   username: string;
@@ -86,21 +92,31 @@ export interface SignInCredentials {
 }
 
 interface Props {
-  onSignIn: (credentials: SignInCredentials) => void;
+  onSignIn: (credentials: SignInCredentials) => Promise<void>;
 }
 
-const SignInPage = ({ onSignIn }: Props) => {
+const SignInPage = observer(({ onSignIn }: Props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showSpinner, setShowSpinner] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const classes = useStyles();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    setShowSpinner(true);
+    setErrorMessage("");
     const credentials: SignInCredentials = {
       username: username,
       password: password,
     };
-    onSignIn(credentials);
+    try {
+      await onSignIn(credentials);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error) + "!");
+    }
+    setShowSpinner(false);
   };
 
   const handleClear = () => {
@@ -139,28 +155,49 @@ const SignInPage = ({ onSignIn }: Props) => {
             id="password"
           />
         </div>
-        <div className={classes.buttonRow}>
-          <FluentUIButton
-            appearance="primary"
-            type="submit"
-            className={classes.button}
-          >
-            Sign In
-          </FluentUIButton>
-          {/* Add a space between Clear and Sign In buttons */}
-          <div className={classes.buttonSpacer}></div>
-          {/* Clear button */}
-          <FluentUIButton
-            type="button"
-            onClick={handleClear}
-            className={classes.buttonSecondary}
-          >
-            Clear
-          </FluentUIButton>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Text className={classes.errorText} weight="semibold">
+            {errorMessage}
+          </Text>
         </div>
+        {showSpinner ? (
+          <Spinner
+            appearance="primary"
+            size="huge"
+            style={{
+              marginTop: "8px",
+            }}
+          />
+        ) : (
+          <div className={classes.buttonRow}>
+            <FluentUIButton
+              appearance="primary"
+              type="submit"
+              className={classes.button}
+              disabled={showSpinner}
+            >
+              Sign In
+            </FluentUIButton>
+
+            <FluentUIButton
+              type="button"
+              onClick={handleClear}
+              className={classes.buttonSecondary}
+              disabled={showSpinner}
+            >
+              Clear
+            </FluentUIButton>
+          </div>
+        )}
       </form>
     </div>
   );
-};
-
+});
 export default SignInPage;

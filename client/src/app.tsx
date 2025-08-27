@@ -126,12 +126,8 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
     const classes = useStyles();
 
     const handleSignIn = async (credentials: SignInCredentials) => {
-      try {
-        const userData = await login(credentials);
-        await setupUser(userData);
-      } catch (error) {
-        console.error(error);
-      }
+      const userData = await login(credentials);
+      await setupUser(userData);
     };
 
     const handleSignUp = async (userData: SignUpCredentials) => {
