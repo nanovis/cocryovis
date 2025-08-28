@@ -43,7 +43,7 @@ export async function convertMRCToRaw(
       isSigned = false;
     }
     // Read the data stream and collect the chunks.
-    const chunks: Uint8Array[] = [];
+    const chunks: BlobPart[] = [];
     const reader = dataBlob.stream().getReader();
     while (true) {
       const { done, value } = await reader.read();
@@ -88,7 +88,7 @@ export async function convertMRCToRaw(
     }
 
     // --- Second Pass: Normalize and convert float values to 8-bit ---
-    const chunks: Uint8Array[] = [];
+    const chunks: BlobPart[] = [];
     const range = maxVal - minVal;
     {
       const reader = dataBlob.stream().getReader();
