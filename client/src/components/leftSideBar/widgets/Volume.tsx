@@ -68,6 +68,7 @@ import {
 } from "../../../api/volumeData";
 import { getResultData } from "../../../api/results";
 import { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
+import ToastContainer from "../../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -183,9 +184,9 @@ const Volume = observer(({ open, close }: Props) => {
     pendingFile: File,
     volumeSettings?: VolumeSettings
   ) => {
-    let toastId = null;
+    const toastContainer = new ToastContainer();
     try {
-      toastId = toast.loading("Uploading files...");
+      toastContainer.loading("Uploading files...");
       if (Utils.isMrcFile(pendingFile.name)) {
         try {
           await selectedVolume?.uploadMrcVolume(pendingFile);
@@ -212,16 +213,9 @@ const Volume = observer(({ open, close }: Props) => {
         await Utils.waitForNextFrame();
         await selectedVolume?.uploadRawVolume(pendingFile, volumeSettingsFile);
       }
-
-      toast.update(toastId, {
-        render: "Data successfully uploaded!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Data successfully uploaded!");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
     }
   };
@@ -526,8 +520,8 @@ const Volume = observer(({ open, close }: Props) => {
 
   // dataType options = 'RawVolumeData', 'SparseLabeledVolumeData', 'PseudoLabeledVolumeData'.
   const handleResultVisualisationRequest = async () => {
-    if(selectedResultId === undefined){
-      return
+    if (selectedResultId === undefined) {
+      return;
     }
     let toastId = null;
 

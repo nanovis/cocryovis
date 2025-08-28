@@ -5,12 +5,17 @@ import MenuBar from "./components/topBar/MenuBar";
 import SideControls from "./components/leftSideBar/SideControls";
 import RightSideControls from "./components/rightSideBar/RightSideControls";
 
-import { makeStyles } from "@fluentui/react-components";
+import {
+  makeStyles,
+  Toaster,
+  useId,
+  useToastController,
+} from "@fluentui/react-components";
 import SignInPage, { SignInCredentials } from "./components/topBar/SignInPage";
 import SignUpPage, { SignUpCredentials } from "./components/topBar/SignUpPage";
 import ProfilePage from "./components/topBar/ProfilePage";
 import Cookies from "js-cookie";
-import { Slide, toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as Utils from "./utils/Helpers";
 import { useServerListener } from "./hooks/useServerListener";
@@ -20,6 +25,7 @@ import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import { getLoggedUserData, login, register } from "./api/users";
+import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/ToastContainer";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height
@@ -38,6 +44,13 @@ const useStyles = makeStyles({
 const App: React.FC<{ toggleTheme: () => void }> = observer(
   ({ toggleTheme }) => {
     const CookieName = "LoggedUser";
+
+    const toasterId = useId("toaster");
+    const toastFunctions = useToastController(toasterId);
+
+    useEffect(() => {
+      ToastContainer.register(toastFunctions);
+    }, [toastFunctions]);
 
     const rootStore = useMst();
     const user = rootStore.user;
@@ -210,11 +223,9 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     return (
       <div className={classes.app}>
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          transition={Slide}
-          style={{ zIndex: 9999999 }}
+        <Toaster
+          toasterId={toasterId}
+          {...DEFAULT_TOASTER_PROPS}
         />
         <MenuBar
           toggleSignClick={toggleSignClick}
