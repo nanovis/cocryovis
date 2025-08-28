@@ -19,7 +19,6 @@ import {
   GlobeDesktop20Regular,
 } from "@fluentui/react-icons";
 import * as Utils from "../../../utils/Helpers";
-import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import ComboboxTagMultiselect from "../../shared/ComboboxTagMultiselect";
@@ -38,6 +37,7 @@ import { queueInference } from "../../../api/nanoOetzi";
 import { getVolumeDataById, getVolumeData } from "../../../api/volumeData";
 import { checkpointToText } from "../../../api/checkpoint";
 import { createResultFromFiles } from "../../../api/results";
+import ToastContainer from "../../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {
@@ -106,7 +106,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       return;
     }
 
-    let toastId = null;
+    const toastContainer = new ToastContainer();
 
     try {
       if (!window.WasmModule) {
@@ -129,7 +129,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         throw new Error("volume missing raw data");
       }
 
-      toastId = toast.loading("Fetching raw data...");
+      toastContainer.loading("Fetching raw data...");
 
       const rawData = await getVolumeDataById(
         "RawVolumeData",
@@ -154,11 +154,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       window.WasmModule?.FS.writeFile("parameters.txt", checkpointTxt);
 
-      toast.update(toastId, {
-        render: "Running Local Inference...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Running Local Inference...");
+
       // This allows the toast to update, hopefully...
       await new Promise((r) => setTimeout(r, 1000));
 
@@ -167,12 +164,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         "parameters.txt"
       );
 
-      toast.update(toastId, {
-        render: "Sending data to server...",
-        isLoading: true,
-        autoClose: false,
-      });
-
+      toastContainer.loading("Sending data to server...");
       const volumeDescriptors = [];
 
       const formData = new FormData();
@@ -228,17 +220,11 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       createResultFromFiles(volume.id, formData);
 
-      toast.update(toastId, {
-        render: "Local Inference Successful!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Local Inference Successful!");
 
       setInferenceInProgress(false);
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Local Inference Error:", error);
     }
   };

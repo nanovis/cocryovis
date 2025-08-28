@@ -17,13 +17,13 @@ import ProcessTiltSeriesDialog, {
   TiltSeriesOptions,
 } from "../../shared/ProcessTiltSeriesDialog";
 import { useRef, useState } from "react";
-import { Id, toast } from "react-toastify";
 import * as Utils from "../../../utils/Helpers";
 import JSZip from "jszip";
 import saveAs from "file-saver";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { checkpointFileToText } from "../../../api/checkpoint";
+import ToastContainer from "../../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   inferenceButtons: {
@@ -67,7 +67,7 @@ const Local = observer(({ open, close }: Props) => {
   const processTiltSeries = async (
     file: File,
     options: TiltSeriesOptions,
-    toastId: Id
+    toastContainer: ToastContainer
   ) => {
     try {
       setTiltSeriesProccessing(true);
@@ -75,12 +75,8 @@ const Local = observer(({ open, close }: Props) => {
       if (!file) {
         return;
       }
+      toastContainer.loading("Performing local tilt series reconstruction...");
 
-      toast.update(toastId, {
-        render: "Performing local tilt series reconstruction...",
-        isLoading: true,
-        autoClose: false,
-      });
       await Utils.waitForNextFrame();
 
       const { parsedSettings, fileData } =
@@ -88,12 +84,8 @@ const Local = observer(({ open, close }: Props) => {
           file,
           options.reconstruction.volume_depth
         );
+      toastContainer.loading("Preparing data for download...");
 
-      toast.update(toastId, {
-        render: "Preparing data for download...",
-        isLoading: true,
-        autoClose: false,
-      });
       await Utils.waitForNextFrame();
 
       const baseName = Utils.removeExtensionFromPath(parsedSettings.file);
@@ -115,13 +107,7 @@ const Local = observer(({ open, close }: Props) => {
       const content = await zip.generateAsync({ type: "blob" });
       saveAs(content, `${baseName}.zip`);
 
-      toast.update(toastId, {
-        render: "Data successfully processed!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Data successfully processed!");
     } catch (error) {
       console.error("Error:", error);
       throw error;
@@ -171,7 +157,7 @@ const Local = observer(({ open, close }: Props) => {
     ) {
       return;
     }
-    let toastId = null;
+    const toastContainer = new ToastContainer();
     try {
       if (!window.WasmModule) {
         throw new Error("Wasm module not initialized!");
@@ -179,7 +165,7 @@ const Local = observer(({ open, close }: Props) => {
 
       setIsInferenceOngoing(true);
 
-      toastId = toast.loading("Loading raw data...");
+      toastContainer.loading("Loading raw data...");
 
       const arrayBuffer =
         await Utils.readFileAsArrayBuffer(inferenceRawDataFile);
@@ -196,11 +182,8 @@ const Local = observer(({ open, close }: Props) => {
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
-      toast.update(toastId, {
-        render: "Running Local Inference...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Running Local Inference...");
+
       // This allows the toast to update, hopefully...
       await new Promise((r) => setTimeout(r, 1000));
 
@@ -223,11 +206,8 @@ const Local = observer(({ open, close }: Props) => {
 
       const settingFileList = new Array(volumeData.length + 1);
 
-      toast.update(toastId, {
-        render: "Creating mean-filtered volume...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Creating mean-filtered volume...");
+
       await new Promise((r) => setTimeout(r, 1000));
 
       const kernel = Array.from({ length: 3 }, () =>
@@ -256,11 +236,7 @@ const Local = observer(({ open, close }: Props) => {
         { compression: "DEFLATE", compressionOptions: { level: 9 } }
       );
 
-      toast.update(toastId, {
-        render: "Preparing files for download...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Preparing files for download...");
 
       for (const [i, volume] of volumeData.entries()) {
         const fileName = `volume_${i}`;
@@ -303,16 +279,9 @@ const Local = observer(({ open, close }: Props) => {
 
       const content = await zip.generateAsync({ type: "blob" });
       saveAs(content, "result.zip");
-
-      toast.update(toastId, {
-        render: "Local Inference Successful!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Local Inference Successful!");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Local Inference Error:", error);
     } finally {
       setIsInferenceOngoing(false);

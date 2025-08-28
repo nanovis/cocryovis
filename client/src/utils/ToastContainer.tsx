@@ -109,4 +109,11 @@ export default class ToastContainer {
     );
     this.createOrUpdateToast(content, DEFAULT_ERROR_PARAMETERS);
   }
+
+  dismiss() {
+    if (ToastContainer.toastFunctions === undefined) {
+      return;
+    }
+    ToastContainer.toastFunctions.dismissToast(this.toastId);
+  }
 }

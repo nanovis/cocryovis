@@ -15,8 +15,6 @@ import SignInPage, { SignInCredentials } from "./components/topBar/SignInPage";
 import SignUpPage, { SignUpCredentials } from "./components/topBar/SignUpPage";
 import ProfilePage from "./components/topBar/ProfilePage";
 import Cookies from "js-cookie";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import * as Utils from "./utils/Helpers";
 import { useServerListener } from "./hooks/useServerListener";
 import { observer } from "mobx-react-lite";
@@ -112,24 +110,18 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       const match = window.location.pathname.match(/^\/project\/(\w+)\/?$/);
       if (match) {
         window.history.replaceState(null, "", "/");
-        let toastId = null;
+        const toastContainer = new ToastContainer();
         try {
-          toastId = toast.loading("Loading Project...");
-
+          toastContainer.loading("Loading Project...");
           const projectId = parseInt(match[1]);
           if (isNaN(projectId)) {
             throw new Error("Invalid project ID");
           }
           await rootStore.user.userProjects.setActiveProject(Number(projectId));
-          toast.update(toastId, {
-            render: "Project loaded successfully!",
-            type: "success",
-            isLoading: false,
-            autoClose: 2000,
-          });
+          toastContainer.success("Project loaded successfully!");
         } catch (error) {
-          Utils.updateToastWithErrorMsg(toastId, error);
-          console.error(error);
+          toastContainer.error(Utils.getErrorMessage(error));
+          console.error("Error:", error);
         }
       }
     };
@@ -223,10 +215,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     return (
       <div className={classes.app}>
-        <Toaster
-          toasterId={toasterId}
-          {...DEFAULT_TOASTER_PROPS}
-        />
+        <Toaster toasterId={toasterId} {...DEFAULT_TOASTER_PROPS} />
         <MenuBar
           toggleSignClick={toggleSignClick}
           toggleTheme={toggleTheme}

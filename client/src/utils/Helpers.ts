@@ -1,6 +1,6 @@
-import { Id, toast } from "react-toastify";
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../DefaultTransferFunctions";
+import ToastContainer from "./ToastContainer";
 
 export type FileMap = Map<string, File>;
 
@@ -71,19 +71,6 @@ export async function sendApiRequest(
 //   ) as Promise<Response>;
 // }
 
-export function updateToastWithErrorMsg(toastId: Id | null, error: unknown) {
-  if (toastId !== null) {
-    const errMsg = getErrorMessage(error);
-    toast.update(toastId, {
-      render: errMsg,
-      type: "error",
-      isLoading: false,
-      autoClose: 2000,
-      closeOnClick: true,
-    });
-  }
-}
-
 export function getFileNameFromPath(path: string | null | undefined) {
   return path?.replace(/^.*[\\/]/, "");
 }
@@ -142,23 +129,17 @@ export async function downloadFileFromServer(
   url: string,
   filenameOverwrite?: string
 ) {
-  let toastId = null;
+  const toastContainer = new ToastContainer();
   try {
-    toastId = toast.loading("Downloading...");
+    toastContainer.loading("Downloading...");
     const response = await sendApiRequest(url, {
       method: "GET",
       credentials: "include",
     });
     await downloadFile(response, filenameOverwrite);
-    toast.update(toastId, {
-      render: "Download Successful!",
-      type: "success",
-      isLoading: false,
-      autoClose: 2000,
-      closeOnClick: true,
-    });
+    toastContainer.success("Download Successful!");
   } catch (error) {
-    updateToastWithErrorMsg(toastId, error);
+    toastContainer.error(getErrorMessage(error));
   }
 }
 
@@ -302,45 +283,47 @@ export function pickDefaultTF(currentIndex: number, blank = false) {
 }
 
 export function validateRawFileUpload(files: FileMap | null) {
-  if (!files || files.size == 0) {
-    toast.error(`No files silected`);
-    throw new Error("No files silected.");
-  }
-
-  if (files.size > 2) {
-    toast.error(
-      `Too many files selected. Volume Data only requires a raw data file and settings file.`
-    );
-    throw new Error("Too many files selected.");
-  }
-
-  let rawFileFound = false;
-  let settingsFileFound = false;
-  files.forEach((file) => {
-    if (file.name.endsWith(".raw")) {
-      rawFileFound = true;
-    } else if (file.name.endsWith(".json")) {
-      settingsFileFound = true;
-    } else if (file.name.endsWith(".zip")) {
-      rawFileFound = true;
-      settingsFileFound = true;
+  try {
+    if (!files || files.size == 0) {
+      throw new Error("No files silected.");
     }
-  });
 
-  if (!rawFileFound) {
-    toast.error(
-      "Missing .raw data file. Volume Data requires both a raw data file and settings file."
-    );
-    throw new Error("Missing .raw data file.");
-  }
-  if (!settingsFileFound) {
-    toast.error(
-      "Missing volume settings file. Volume Data requires both a raw data file and settings file."
-    );
-    throw new Error("Missing volume settings file.");
-  }
+    if (files.size > 2) {
+      throw new Error(
+        `Too many files selected. Volume Data only requires a raw data file and settings file.`
+      );
+    }
 
-  return files;
+    let rawFileFound = false;
+    let settingsFileFound = false;
+    files.forEach((file) => {
+      if (file.name.endsWith(".raw")) {
+        rawFileFound = true;
+      } else if (file.name.endsWith(".json")) {
+        settingsFileFound = true;
+      } else if (file.name.endsWith(".zip")) {
+        rawFileFound = true;
+        settingsFileFound = true;
+      }
+    });
+
+    if (!rawFileFound) {
+      throw new Error(
+        "Missing .raw data file. Volume Data requires both a raw data file and settings file."
+      );
+    }
+    if (!settingsFileFound) {
+      throw new Error(
+        "Missing volume settings file. Volume Data requires both a raw data file and settings file."
+      );
+    }
+
+    return files;
+  } catch (error) {
+    const toastContainer = new ToastContainer();
+    toastContainer.error(getErrorMessage(error));
+    throw error;
+  }
 }
 
 export async function convertTiltSeriesToRawData(

@@ -16,8 +16,8 @@ import * as Utils from "../../utils/Helpers";
 import { convertMRCToRaw } from "../../utils/MrcParser";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import { toast } from "react-toastify";
 import { VolumeSettings } from "../../utils/VolumeSettings";
+import ToastContainer from "../../utils/ToastContainer";
 
 const enum WidgetIndices {
   Visualization = 0,
@@ -35,30 +35,19 @@ const SideControls = observer(() => {
     pendingFile: File,
     volumeSettings?: VolumeSettings
   ) => {
-    let toastId = null;
+    const toastContainer = new ToastContainer();
 
     try {
-      toastId = toast.loading("Parsing volume files...");
+      toastContainer.loading("Parsing volume files...");
 
       const fileMap = await parseVisualizationFile(pendingFile, volumeSettings);
 
-      toast.update(toastId, {
-        render: "Visualizing the volume...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("isualizing the volume...");
 
       await uiState.visualizeVolume(fileMap, undefined);
-
-      toast.update(toastId, {
-        render: "Visualization Ready!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Visualization Ready!");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       throw error;
     }
   };
@@ -68,10 +57,10 @@ const SideControls = observer(() => {
     fileType: string,
     volumeSettings?: VolumeSettings
   ) => {
-    let toastId = null;
+    const toastContainer = new ToastContainer();
 
     try {
-      toastId = toast.loading("Downloading volume files...");
+      toastContainer.loading("Downloading volume files...");
       const response = await fetch(url);
       const blob = await response.blob();
       let filename = Utils.getFilenameFromHeader(response);
@@ -88,33 +77,21 @@ const SideControls = observer(() => {
         type: "application/octet-stream",
       });
 
-      toast.update(toastId, {
-        render: "Parsing volume files...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Parsing volume files...");
+
       await Utils.waitForNextFrame();
 
       const fileMap = await parseVisualizationFile(pendingFile, volumeSettings);
 
-      toast.update(toastId, {
-        render: "Visualizing the volume...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Visualizing the volume...");
+
       await Utils.waitForNextFrame();
 
       await uiState.visualizeVolume(fileMap, undefined);
 
-      toast.update(toastId, {
-        render: "Visualization Ready!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Visualization Ready!");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
     }
   };
 

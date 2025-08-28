@@ -10,7 +10,6 @@ import { Volume, VolumeInstance } from "./VolumeModel";
 import { User } from "./UserModel";
 import { Model, ModelInstance } from "./ModelModel";
 import * as Utils from "../../utils/Helpers";
-import { toast } from "react-toastify";
 import {
   BooleanInputField,
   DropdownInputField,
@@ -18,6 +17,7 @@ import {
   StringInputFieldType,
 } from "../../utils/Input";
 import { queueTraining } from "../../api/nanoOetzi";
+import ToastContainer from "../../utils/ToastContainer";
 
 export enum lossOptions {
   mse = "Mean Squared Error",
@@ -299,9 +299,9 @@ export const ModelTraining = types
       if (!self.canDoTraining) {
         return;
       }
-      let toastId = null;
+      const toastContainer = new ToastContainer();
       try {
-        toastId = toast.loading("Training in progress...");
+        toastContainer.loading("Training in progress...");
         self.isBusy = true;
 
         if (!self.model) {
@@ -339,15 +339,10 @@ export const ModelTraining = types
         if (!isAlive(self)) {
           return;
         }
-        toast.update(toastId, {
-          render: "Training queued successfuly!",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
+        toastContainer.success("Training queued successfuly!");
       } catch (error) {
         console.error("startTraining Error:", error);
-        Utils.updateToastWithErrorMsg(toastId, error);
+        toastContainer.error(Utils.getErrorMessage(error));
       } finally {
         self.isBusy = false;
       }

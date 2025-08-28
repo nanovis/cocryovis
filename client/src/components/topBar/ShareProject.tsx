@@ -42,12 +42,12 @@ import {
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
 import { UserDB } from "../../stores/userState/UserModel";
-import { toast } from "react-toastify";
 import z from "zod";
 import { usersArray } from "#schemas/user-path-schema.mjs";
 import { projectAccessInfoSchema } from "#schemas/project-path-schema.mjs";
 import { getAllUsers } from "../../api/users";
 import { getAccessInfo, setAccess } from "../../api/projects";
+import ToastContainer from "../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   userSelection: {
@@ -190,11 +190,12 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       refreshUsersWithAccess();
       refreshTagPickerOptions();
     } catch (error) {
+      const toastContainer = new ToastContainer();
       console.error(error);
       setOpen(false);
-      const errMsg = Utils.getErrorMessage(error);
-      toast.error(
-        errMsg || "Failed to fetch project access data. Please try again."
+      toastContainer.error(
+        Utils.getErrorMessage(error) ||
+          "Failed to fetch project access data. Please try again."
       );
     } finally {
       setIsFetchingData(false);
@@ -275,13 +276,13 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   };
 
   const onConfirmChanges = async () => {
-    let toastId = null;
+    const toastContainer = new ToastContainer();
     try {
       if (pageBusy() || !activeProject || publicAccess === undefined) {
         return;
       }
 
-      toastId = toast.loading("Modifying access...");
+      toastContainer.loading("Modifying access...");
 
       if (
         pendingChanges.size === 0 &&
@@ -318,14 +319,9 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       activeProject.setPublicAccess(accessInfoChanges.publicAccess);
       setPublicAccess(activeProject.publicAccess);
 
-      toast.update(toastId, {
-        render: "Access modified successfully!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-      });
+      toastContainer.success("Access modified successfully!");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error(error);
     } finally {
       setIsModifyingAccess(false);

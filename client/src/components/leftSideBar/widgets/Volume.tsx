@@ -33,7 +33,6 @@ import DeleteVolumeDialog from "./elements/DeleteVolumeDialog";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import * as Utils from "../../../utils/Helpers";
-import { Id, toast } from "react-toastify";
 import DeleteDialog from "../../shared/DeleteDialog";
 import { CONFIG } from "../../../Constants.mjs";
 import "../../../App.css";
@@ -225,19 +224,13 @@ const Volume = observer(({ open, close }: Props) => {
     fileType: FileTypeOptions,
     volumeSettings?: VolumeSettings
   ) => {
-    let toastId = null;
+    const toastContainer = new ToastContainer();
     try {
-      toastId = toast.loading("Uploading files...");
+      toastContainer.loading("Uploading files...");
       await selectedVolume?.uploadFromUrl(url, fileType, volumeSettings);
-      toast.update(toastId, {
-        render: "Data successfully uploaded!",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success("Data successfully uploaded!");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
     }
   };
@@ -245,7 +238,7 @@ const Volume = observer(({ open, close }: Props) => {
   const tiltSeriesUpload = async (
     file: File,
     options: TiltSeriesOptions,
-    toastId: Id,
+    toastContainer: ToastContainer,
     serverSide?: boolean
   ) => {
     if (!selectedVolumeId) {
@@ -274,42 +267,27 @@ const Volume = observer(({ open, close }: Props) => {
           })
         );
         queueTiltSeriesReconstruction(formData);
-        toast.update(toastId, {
-          render: "Tilt series reconstruction successfuly queued!",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
+        toastContainer.success(
+          "Tilt series reconstruction successfuly queued!"
+        );
       } else {
-        toast.update(toastId, {
-          render: "Performing local tilt series reconstruction...",
-          isLoading: true,
-          autoClose: false,
-        });
+        toastContainer.loading(
+          "Performing local tilt series reconstruction..."
+        );
+
         await Utils.waitForNextFrame();
         const { parsedSettings, fileData } =
           await Utils.convertTiltSeriesToRawData(
             file,
             options.reconstruction.volume_depth
           );
+        toastContainer.loading("Uploading data to the server...");
 
-        toast.update(toastId, {
-          render: "Uploading data to the server...",
-          isLoading: true,
-          autoClose: false,
-        });
         await Utils.waitForNextFrame();
 
         await selectedVolume?.uploadTiltSeries(parsedSettings, fileData);
 
-        toast.update(toastId, {
-          render: "Data successfully uploaded!",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
+        toastContainer.success("Data successfully uploaded!");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -332,25 +310,22 @@ const Volume = observer(({ open, close }: Props) => {
       return;
     }
 
-    let toastId = null;
+    const toastContainer = new ToastContainer();
 
     try {
-      toastId = toast.loading("Fetching visualization data...");
+      toastContainer.loading("Fetching visualization data...");
 
       const contents = await getVolumeVisualizationFiles(dataType, id);
 
-      toast.update(toastId, {
-        render: "Processing visualization data...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Processing visualization data...");
+
       const fileMap = await Utils.zipToFileMap(contents);
 
       await uiState.visualizeVolume(fileMap, volumeInstance);
 
-      toast.dismiss(toastId);
+      toastContainer.dismiss();
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
     }
   };
@@ -359,14 +334,14 @@ const Volume = observer(({ open, close }: Props) => {
     volume: VolumeInstance | undefined,
     dataType: "SparseLabeledVolumeData" | "PseudoLabeledVolumeData"
   ) => {
-    let toastId = null;
+    const toastContainer = new ToastContainer();
 
     try {
       if (!volume) {
         throw new Error("No volume selected.");
       }
 
-      toastId = toast.loading(
+      toastContainer.loading(
         `Fetching manual label volume 0/${volume.sparseVolumeArray.length}`
       );
 
@@ -407,13 +382,10 @@ const Volume = observer(({ open, close }: Props) => {
 
       for (let i = 0; i < volumeArray.length; i++) {
         const labelVolume = volumeArray[i];
-        toast.update(toastId, {
-          render: `Fetching ${type} label volume ${i + 1}/${
-            volumeArray.length
-          }`,
-          isLoading: true,
-          autoClose: false,
-        });
+        toastContainer.loading(
+          `Fetching ${type} label volume ${i + 1}/${volumeArray.length}`
+        );
+
         await Utils.waitForNextFrame();
 
         const contents = await downloadFullVolumeData(dataType, labelVolume.id);
@@ -494,26 +466,17 @@ const Volume = observer(({ open, close }: Props) => {
         volumeVisualizationSettingsArray.push(volumeVisualizationSettings);
       }
 
-      toast.update(toastId, {
-        render: "Processing rendering data...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Processing rendering data...");
+
       await Utils.waitForNextFrame();
 
       window.WasmModule?.FS.writeFile("config.json", JSON.stringify(config));
       window.WasmModule?.open_volume();
       uiState.setVizualizedVolume(vizualizedVolume);
 
-      toast.update(toastId, {
-        render: `${type} label volumes visualized.`,
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-        closeOnClick: true,
-      });
+      toastContainer.success(`${type} label volumes visualized.`);
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
     }
   };
@@ -523,25 +486,19 @@ const Volume = observer(({ open, close }: Props) => {
     if (selectedResultId === undefined) {
       return;
     }
-    let toastId = null;
+    const toastContainer = new ToastContainer();
 
     try {
-      toastId = toast.loading("Fetching visualization data...");
-
-      toast.update(toastId, {
-        render: "Processing visualization data...",
-        isLoading: true,
-        autoClose: false,
-      });
+      toastContainer.loading("Fetching visualization data...");
 
       const contents = await getResultData(selectedResultId);
       const fileMap = await Utils.zipToFileMap(contents);
 
       await uiState.visualizeVolume(fileMap, selectedResult);
 
-      toast.dismiss(toastId);
+      toastContainer.dismiss();
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
     }
   };

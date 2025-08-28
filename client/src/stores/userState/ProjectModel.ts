@@ -2,7 +2,6 @@ import { flow, getParent, Instance, isAlive, types } from "mobx-state-tree";
 import { ModelDB, ProjectModels } from "./ModelModel";
 import { ProjectVolumes, VolumeDB } from "./VolumeModel";
 import * as Utils from "../../utils/Helpers";
-import { toast } from "react-toastify";
 import { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
 import z from "zod";
 import {
@@ -11,6 +10,7 @@ import {
 } from "#schemas/project-path-schema.mjs";
 import * as ProjectApi from "../../api/projects";
 import { getDemo } from "../../api/demo";
+import ToastContainer from "../../utils/ToastContainer";
 
 interface ProjectDB {
   id: number;
@@ -186,9 +186,9 @@ export const UserProjects = types
       self.activeProjectId = projectId;
     }),
     loadDemoProject: flow(function* loadDemoProject() {
-      let toastId = null;
+      const toastContainer = new ToastContainer();
       try {
-        toastId = toast.loading("Loading demo project...");
+        toastContainer.loading("Loading demo project...");
         const project: z.infer<typeof projectSchemaDeepRes> = yield getDemo();
         if (!isAlive(self)) {
           return;
@@ -206,17 +206,11 @@ export const UserProjects = types
           newProject?.projectVolumes.setVolumes(project.volumes);
           newProject?.projectModels.setModels(project.models);
         }
-
-        toast.update(toastId, {
-          render: "Demo project loaded",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
+        toastContainer.success("Demo project loaded");
 
         self.activeProjectId = project.id;
       } catch (error) {
-        Utils.updateToastWithErrorMsg(toastId, error);
+        toastContainer.error(Utils.getErrorMessage(error));
         console.error("Failed to load demo project", error);
       }
     }),

@@ -30,7 +30,7 @@ import {
 import { observer } from "mobx-react-lite";
 import { BooleanInputField, NumberInputField } from "../../utils/Input";
 import * as Utils from "../../utils/Helpers";
-import { toast, Id } from "react-toastify";
+import ToastContainer from "../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   optionsTabCheckbox: {},
@@ -93,7 +93,7 @@ interface Props {
   onSubmit: (
     file: File,
     options: TiltSeriesOptions,
-    toastId: Id,
+    toastContainer: ToastContainer,
     serverSide?: boolean
   ) => Promise<void>;
   showServerVariant?: boolean;
@@ -129,9 +129,9 @@ const ProcessTiltSeriesDialog = observer(
     };
 
     const handleSubmit = async () => {
-      let toastId = null;
+      const toastContainer = new ToastContainer();
       try {
-        toastId = toast.loading("Processing inputs...");
+        toastContainer.loading("Processing inputs...");
         if (!store.generalInputs.volume_depth.isValid()) {
           throw new Error("Invalid volume depth");
         }
@@ -164,19 +164,14 @@ const ProcessTiltSeriesDialog = observer(
             ...parseOptions(Object.entries(store.reconstructionInputs)),
           };
         }
-        await onSubmit(store.pendingFile, options, toastId, store.serverSide);
+        await onSubmit(store.pendingFile, options, toastContainer, store.serverSide);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
         onClose();
-        toast.update(toastId, {
-          render: "Tilt series processed successfully.",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
+        toastContainer.success("Tilt series processed successfully.");
       } catch (error) {
-        Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       } finally {
         setIsBusy(false);
       }

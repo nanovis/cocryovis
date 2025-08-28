@@ -12,11 +12,11 @@ import {
   PseudoLabelVolume,
   PseudoVolumeInstance,
 } from "../userState/PseudoVolumeModel";
-import { Id, toast } from "react-toastify";
 import z from "zod";
 import { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
 import { downloadRawFile } from "../../api/volumeData";
 import { getVolumeWithSparseVolumes } from "../../api/volume";
+import ToastContainer from "../../utils/ToastContainer";
 
 export type visualizedObjectInstances =
   | VolumeInstance
@@ -27,7 +27,7 @@ export type visualizedObjectInstances =
 
 async function loadSparseLabelVolumesIntoAnnotations(
   volume: VolumeInstance,
-  toastId: Id
+  toastContainer: ToastContainer
 ) {
   if (!window.WasmModule) {
     throw new Error("WasmModule is not loaded.");
@@ -36,13 +36,10 @@ async function loadSparseLabelVolumesIntoAnnotations(
   const volumeNames = new window.WasmModule.VectorString();
   for (let i = 0; i < sparseVolumeArray.length; i++) {
     const sparseVolume = sparseVolumeArray[i];
-    toast.update(toastId, {
-      render: `Fetching manual label volume ${i + 1}/${
-        sparseVolumeArray.length
-      }`,
-      isLoading: true,
-      autoClose: false,
-    });
+    toastContainer.loading(
+      `Fetching manual label volume ${i + 1}/${sparseVolumeArray.length}`
+    );
+
     await Utils.waitForNextFrame();
 
     const contents = await downloadRawFile(sparseVolume.id);
@@ -215,9 +212,9 @@ export const VisualizedVolume = types
         window.WasmModule?.clear_annotations(-1);
         return;
       }
-      let toastId = null;
+      const toastContainer = new ToastContainer();
       try {
-        toastId = toast.loading("Fething volume data...");
+        toastContainer.loading("Fething volume data...");
         if (!window.WasmModule) {
           throw new Error("WasmModule is not loaded.");
         }
@@ -230,9 +227,11 @@ export const VisualizedVolume = types
         if (!isAlive(self)) {
           return;
         }
-        
         self.volume.setSparseVolumes(volume.sparseVolumes);
-        yield loadSparseLabelVolumesIntoAnnotations(self.volume, toastId);
+        yield loadSparseLabelVolumesIntoAnnotations(
+          self.volume,
+          toastContainer
+        );
         if (!isAlive(self)) {
           return;
         }
@@ -244,15 +243,9 @@ export const VisualizedVolume = types
         if (self.clippingPlane === "0") {
           self.setClippingPlane("4");
         }
-
-        toast.update(toastId, {
-          render: "Labeling mode enabled.",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-        });
+        toastContainer.success("Labeling mode enabled.");
       } catch (error) {
-        Utils.updateToastWithErrorMsg(toastId, error);
+        toastContainer.error(Utils.getErrorMessage(error));
         throw error;
       }
     }),

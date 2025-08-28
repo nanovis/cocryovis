@@ -21,7 +21,6 @@ import {
 } from "@fluentui/react-icons";
 import { useRef, useState } from "react";
 import * as Utils from "../../../utils/Helpers";
-import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
@@ -30,6 +29,7 @@ import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
 import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
+import ToastContainer from "../../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -138,9 +138,9 @@ const Visualization = observer(({ open, close }: Props) => {
       return;
     }
 
-    let toastId = null;
+    const toastContainer = new ToastContainer();
     try {
-      toastId = toast.loading("Saving annotations...");
+      toastContainer.loading("Saving annotations...");
       if (!window.WasmModule) {
         throw new Error("Wasm module not initialized!");
       }
@@ -175,15 +175,9 @@ const Visualization = observer(({ open, close }: Props) => {
             visualizedVolume.saveAsNew[visualizedVolume.manualLabelIndex],
         });
       }
-
-      toast.update(toastId, {
-        render: "Annotations saved.",
-        type: "success",
-        isLoading: false,
-        autoClose: 2000,
-      });
+      toastContainer.success("Annotations saved.");
     } catch (error) {
-      Utils.updateToastWithErrorMsg(toastId, error);
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
     } finally {
       setProcessingSaveAnnotations(false);
@@ -236,7 +230,8 @@ const Visualization = observer(({ open, close }: Props) => {
     try {
       await volVisSettings.transferFunction?.handleTFUpload(event.target.files);
     } catch (error) {
-      toast.error(`Error: ${error}`);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(`Error: ${error}`);
       console.error("Error:", error);
     } finally {
       if (TFFileRef.current) {

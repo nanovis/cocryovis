@@ -4,7 +4,6 @@ import { SparseLabelVolume, SparseVolumeSnapshotIn } from "./SparseVolumeModel";
 import { PseudoLabelVolume, PseudoVolumeSnapshotIn } from "./PseudoVolumeModel";
 import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
-import { toast } from "react-toastify";
 import { VolumeSettings } from "../../utils/VolumeSettings";
 import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import z from "zod";
@@ -21,6 +20,7 @@ import {
   removeFromVolume,
 } from "../../api/volumeData";
 import { FileTypeOptions } from "../uiState/UploadDialog";
+import ToastContainer from "../../utils/ToastContainer";
 
 export interface VolumeDB {
   id: number;
@@ -138,7 +138,8 @@ export const Volume = types
     }),
     uploadMrcVolume: flow(function* uploadMrcVolume(mrcFile: File) {
       if (!mrcFile || !mrcFile.name.endsWith(".mrc")) {
-        toast.error(`No MRC file selected.`);
+        const toastContainer = new ToastContainer();
+        toastContainer.error(`No MRC file selected.`);
         throw new Error("Too many files selected.");
       }
 
@@ -160,7 +161,9 @@ export const Volume = types
       volumeSettings?: VolumeSettings
     ) {
       if (!Utils.isValidHttpUrl(url)) {
-        toast.error(`Invalid URL.`);
+        const toastContainer = new ToastContainer();
+        toastContainer.error(`Invalid URL.`);
+
         throw new Error("Invalid URL.");
       }
 

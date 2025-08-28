@@ -1,14 +1,13 @@
 import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
-import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
 import { updateVolumeData } from "../../api/volumeData";
+import ToastContainer from "../../utils/ToastContainer";
 
 async function updateSparseVolume(
   id: number,
   params: Partial<SparseVolumeInstance>
 ): Promise<SparseVolumeSnapshotIn> {
-  const update =
-    await updateVolumeData("SparseLabeledVolumeData", id, params);
+  const update = await updateVolumeData("SparseLabeledVolumeData", id, params);
   return update;
 }
 
@@ -26,9 +25,9 @@ export const SparseLabelVolume = types
       color: string,
       index: number
     ): Generator<any, void, any> {
-      let toastId = null;
+      const toastContainer = new ToastContainer();
       try {
-        toastId = toast.loading("Updating label color...");
+        toastContainer.loading("Updating label color...");
         const sparselabel = yield updateSparseVolume(self.id, {
           color: color,
         });
@@ -46,9 +45,9 @@ export const SparseLabelVolume = types
           );
         }
 
-        toast.dismiss(toastId);
-      } catch (e) {
-        Utils.updateToastWithErrorMsg(toastId, e);
+        toastContainer.dismiss();
+      } catch (error) {
+        toastContainer.error(Utils.getErrorMessage(error));
       }
     }),
   }));

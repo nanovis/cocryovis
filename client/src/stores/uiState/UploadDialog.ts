@@ -7,12 +7,12 @@ import {
   types,
 } from "mobx-state-tree";
 import { VolumeSettings } from "../../utils/VolumeSettings";
-import { toast } from "react-toastify";
 import * as Utils from "../../utils/Helpers";
 import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 import z from "zod";
 import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
 import { getTomographyMetadataFromCryoETId } from "../../api/cryoEt";
+import ToastContainer from "../../utils/ToastContainer";
 
 export enum Tabs {
   fromFile = "fromFile",
@@ -319,9 +319,9 @@ export const CryoETUploadInputs = types
       if (!self.cryoETId) {
         return;
       }
-      let toastId = null;
+      const toastContainer = new ToastContainer();
       try {
-        toastId = toast.loading("Fetching CryoET metadata...");
+        toastContainer.loading("Fetching CryoET metadata...");
         const metadata: z.infer<typeof tomogramSchema> =
           yield getTomographyMetadataFromCryoETId(self.cryoETId);
         if (!isAlive(self)) {
@@ -336,15 +336,9 @@ export const CryoETUploadInputs = types
 
         self.lastId = self.cryoETId;
 
-        toast.update(toastId, {
-          render: "CryoET metadata fetched successfully",
-          type: "success",
-          isLoading: false,
-          autoClose: 2000,
-          closeOnClick: true,
-        });
+        toastContainer.success("CryoET metadata fetched successfully");
       } catch (error) {
-        Utils.updateToastWithErrorMsg(toastId, error);
+        toastContainer.error(Utils.getErrorMessage(error));
         console.error("Error fetching CryoET metadata:", error);
       }
     }),

@@ -16,7 +16,6 @@
     "mobx-state-tree": "^6.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-toastify": "^10.0.6",
     "react-use-websocket": "4.10.1",
     "zod": "^4.0.17"
   },

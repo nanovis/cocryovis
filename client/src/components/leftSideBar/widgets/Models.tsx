@@ -16,7 +16,6 @@ import { useState, useRef } from "react";
 import CreateModelDialog from "./elements/CreateModelDialog";
 import DeleteDialog from "../../shared/DeleteDialog";
 import * as Utils from "../../../utils/Helpers";
-import { toast } from "react-toastify";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import { observer } from "mobx-react-lite";
@@ -24,6 +23,7 @@ import { useMst } from "../../../stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import { ModelInstance } from "../../../stores/userState/ModelModel";
 import { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
+import ToastContainer from "../../../utils/ToastContainer";
 
 interface Props {
   open: boolean;
@@ -128,10 +128,9 @@ const Models = observer(({ open, close }: Props) => {
     try {
       await modelCheckpoints?.uploadCheckpoints(event.target.files);
     } catch (error) {
-      const errMsg = Utils.getErrorMessage(error);
-
+      const toastContainer = new ToastContainer();
       console.error("Error:", error);
-      toast.error(errMsg);
+      toastContainer.error(Utils.getErrorMessage(error));
     } finally {
       if (checkpointFileRef.current) {
         checkpointFileRef.current.value = "";

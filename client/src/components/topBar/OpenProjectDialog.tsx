@@ -19,7 +19,7 @@ import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
 import { JSX } from "react/jsx-runtime";
 import { ProjectInstance } from "../../stores/userState/ProjectModel";
-import { toast } from "react-toastify";
+import ToastContainer from "../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   combobox: {
@@ -55,7 +55,8 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
 
       onClose();
     } catch (error) {
-      toast.error("Failed to open project");
+      const toastContainer = new ToastContainer();
+      toastContainer.error("Failed to open project");
       console.error("Error:", error);
     }
   };
