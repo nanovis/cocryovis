@@ -25,6 +25,7 @@ export function checkAndThrowValidationError(validation) {
         const validationError = fromError(validation.error, {
             maxIssuesInMessage: 1,
             prefix: undefined,
+            includePath: false,
         });
 
         throw new ApiError(

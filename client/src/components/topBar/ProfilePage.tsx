@@ -51,7 +51,6 @@ const useStyles = makeStyles({
     minWidth: "100px",
     color: tokens.colorBrandForeground1,
   },
-
   button: {
     marginTop: "8px",
     paddingLeft: "30px",
@@ -124,7 +123,7 @@ const ProfilePage = observer(() => {
   //LOL deleteUser user doesn't exist in API
   const deleteUser = async () => {
     try {
-      await usersApi.deleteUser()
+      await usersApi.deleteUser();
       logout();
     } catch (error) {
       console.error(error);

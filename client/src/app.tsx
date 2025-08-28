@@ -132,20 +132,15 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const handleSignUp = async (userData: SignUpCredentials) => {
       if (userData.password != userData.repeatpwd) {
-        alert("Please repeat the password correctly.");
         return;
       }
-      try {
-        const contents = await register({
-          name: userData.fullName,
-          username: userData.username,
-          password: userData.password,
-          email: userData.email,
-        });
-        await setupUser(contents);
-      } catch (error) {
-        console.error("Error:", error);
-      }
+      const contents = await register({
+        name: userData.fullName,
+        username: userData.username,
+        password: userData.password,
+        email: userData.email,
+      });
+      await setupUser(contents);
     };
 
     const toggleSignClick = (id: number) => {

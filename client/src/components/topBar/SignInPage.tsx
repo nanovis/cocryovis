@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Button as FluentUIButton,
+  Button,
   Input,
   Text,
   makeStyles,
@@ -22,57 +22,30 @@ const useStyles = makeStyles({
     marginTop: "50px",
     marginBottom: "48px",
     fontSize: "32px",
-    color: "#DEFF5C",
+    color: tokens.colorBrandForeground1,
   },
   inputContainer: {
     display: "flex",
-    justifyContent: "center",
     flexDirection: "column",
-    rowGap: "2px",
     marginTop: "16px",
     width: "300px",
   },
   label: {
     fontWeight: tokens.fontWeightRegular,
-    alignSelf: "flex-start", // Align labels to the left
     marginBottom: "8px",
-    color: "#DEFF5C",
+    color: tokens.colorBrandForeground1,
   },
   button: {
-    border: "0px",
-    fontWeight: tokens.fontWeightRegular,
-    alignItems: "center",
+    marginTop: "8px",
     paddingLeft: "30px",
     paddingRight: "30px",
     height: "40px",
-    lineHeight: "1", // This can help with vertical alignment
-    paddingTop: "0",
-    paddingBottom: "0",
-    color: "#000",
-    backgroundColor: "#DEFF5C",
-    "&:hover": {
-      backgroundColor: "#B0CA4C",
-      color: "#000",
-      cursor: "pointer",
-    },
   },
   buttonSecondary: {
-    border: "0px",
-    fontWeight: tokens.fontWeightRegular,
-    alignItems: "center",
+    marginTop: "8px",
     paddingLeft: "30px",
     paddingRight: "30px",
     height: "40px",
-    lineHeight: "1", // This can help with vertical alignment
-    paddingTop: "0",
-    paddingBottom: "0",
-    color: "#000",
-    backgroundColor: "#bfccbc",
-    "&:hover": {
-      backgroundColor: "#889B3D",
-      color: "#000",
-      cursor: "pointer",
-    },
   },
   buttonRow: {
     display: "flex",
@@ -104,7 +77,7 @@ const SignInPage = observer(({ onSignIn }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     setShowSpinner(true);
     setErrorMessage("");
     const credentials: SignInCredentials = {
@@ -177,23 +150,23 @@ const SignInPage = observer(({ onSignIn }: Props) => {
           />
         ) : (
           <div className={classes.buttonRow}>
-            <FluentUIButton
+            <Button
               appearance="primary"
               type="submit"
               className={classes.button}
               disabled={showSpinner}
             >
               Sign In
-            </FluentUIButton>
+            </Button>
 
-            <FluentUIButton
+            <Button
               type="button"
               onClick={handleClear}
               className={classes.buttonSecondary}
               disabled={showSpinner}
             >
               Clear
-            </FluentUIButton>
+            </Button>
           </div>
         )}
       </form>

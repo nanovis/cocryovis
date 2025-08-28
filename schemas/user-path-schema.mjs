@@ -8,10 +8,19 @@ import { checkpointSchema } from "./componentSchemas/checkpoint-schema.mjs";
 import { stringToInt } from "./componentSchemas/string-to-int.mjs";
 
 export const registerSchema = z.object({
-    username: z.string().min(1),
-    name: z.string().min(1),
-    email: z.email().meta({ example: "email@example.com" }),
-    password: z.string().min(6),
+    username: z.string().min(1, { message: "Username is required." }),
+    name: z.string().min(1, { message: "Name is required." }),
+    email: z
+        .email({
+            message:
+                "Please provide a valid email address (e.g., email@example.com).",
+        })
+        .meta({
+            example: "email@example.com",
+        }),
+    password: z
+        .string()
+        .min(6, { message: "Password must be at least 6 characters long." }),
     // .regex(/[A-Z]/, "The password must contain an uppercase letter")
     // .regex(/[a-z]/, "The password must contain a lowercase letter")
     // .regex(/[0-9]/, "The password must contain a number")
@@ -65,18 +74,14 @@ export const publicUser = z.object({
 });
 
 export const statusQuery = z.object({
-    pageNumber: stringToInt
-        .optional()
-        .meta({
-            description:
-                "The page number of the results to return (1-based index). If omitted while pageSize is provided, defaults to 1 (first page).",
-        }),
-    pageSize: stringToInt
-        .optional()
-        .meta({
-            description:
-                "The maximum number of items to return per page. If omitted while page is provided, the default value is 10. If both pageSize and page are omitted, the API returns all available items (no pagination applied).",
-        }),
+    pageNumber: stringToInt.optional().meta({
+        description:
+            "The page number of the results to return (1-based index). If omitted while pageSize is provided, defaults to 1 (first page).",
+    }),
+    pageSize: stringToInt.optional().meta({
+        description:
+            "The maximum number of items to return per page. If omitted while page is provided, the default value is 10. If both pageSize and page are omitted, the API returns all available items (no pagination applied).",
+    }),
 });
 
 export const usersArray = z.array(publicUser);
