@@ -21,7 +21,7 @@ const useStyles = makeStyles({
     display: "flex",
     marginTop: "30px",
     alignItems: "center",
-    justifyContent: "spacebetween",
+    justifyContent: "space-between",
   },
 });
 interface Props {
