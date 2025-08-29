@@ -26,7 +26,10 @@ export const UiState = types
   .model({
     openLeftWidget: types.optional(types.number, -1),
     openRightWidget: types.optional(types.number, -1),
+    openSignInPage: types.optional(types.boolean, false),
+    openSignUpPage: types.optional(types.boolean, false),
     openProfilePage: types.optional(types.boolean, false),
+    isActive: types.optional(types.boolean, false),
     openAdminPanel: types.optional(types.boolean, false),
     kernelSize: types.optional(types.integer, 25),
     visualizedVolume: types.maybe(VisualizedVolume),
@@ -47,6 +50,9 @@ export const UiState = types
     },
     closeRightHandWidgets() {
       self.openRightWidget = -1;
+    },
+    setIsActive(active: boolean) {
+      self.isActive = active;
     },
     setOpenProfilePage(open: boolean) {
       self.openProfilePage = open;
@@ -70,6 +76,30 @@ export const UiState = types
       self.openAdminPanel = !self.openAdminPanel;
       if (self.openAdminPanel) {
         self.openProfilePage = false;
+      }
+    },
+    toggleSignInPage() {
+      self.openSignInPage = !self.openSignInPage;
+      if (self.openSignInPage) {
+        self.openSignUpPage = false;
+      }
+    },
+    setOpenSignInPage(open: boolean) {
+      self.openSignInPage = open;
+      if (self.openSignInPage) {
+        self.openSignUpPage = false;
+      }
+    },
+    toggleSignUpPage() {
+      self.openSignUpPage = !self.openSignUpPage;
+      if (self.openSignUpPage) {
+        self.openSignInPage = false;
+      }
+    },
+    setOpenSignUpPage(open: boolean) {
+      self.openSignUpPage = open;
+      if (self.openSignUpPage) {
+        self.openSignInPage = false;
       }
     },
     setKernelSize(kernalSize: number) {

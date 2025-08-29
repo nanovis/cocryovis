@@ -67,8 +67,8 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
     };
 
     const setupUser = async (user: UserDB) => {
-      setShowSignUp(false);
-      setShowSignIn(false);
+      uiState.setOpenSignUpPage(false);
+      uiState.setOpenSignInPage(false);
       return await rootStore.login(user);
     };
 
@@ -86,7 +86,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         } catch {
           Cookies.remove(CookieName);
           await rootStore.logout();
-          setShowSignIn(true);
+          uiState.setOpenSignInPage(true);
         }
       }
 
@@ -126,8 +126,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       }
     };
 
-    const [showSignIn, setShowSignIn] = useState(false);
-    const [showSignUp, setShowSignUp] = useState(false);
     const classes = useStyles();
 
     const handleSignIn = async (credentials: SignInCredentials) => {
@@ -146,19 +144,6 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         email: userData.email,
       });
       await setupUser(contents);
-    };
-
-    const toggleSignClick = (id: number) => {
-      if (id === 0) {
-        setShowSignIn(!showSignIn);
-        setShowSignUp(false);
-      } else if (id === 1) {
-        setShowSignUp(!showSignUp);
-        setShowSignIn(false);
-      } else {
-        setShowSignUp(false);
-        setShowSignIn(false);
-      }
     };
 
     useEffect(() => {
@@ -217,25 +202,28 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       <div className={classes.app}>
         <Toaster toasterId={toasterId} {...DEFAULT_TOASTER_PROPS} />
         <MenuBar
-          toggleSignClick={toggleSignClick}
           toggleTheme={toggleTheme}
           connectionStatus={connectionStatus}
         />
         <div id="main-panel" className={classes.mainPanel}>
-          {!showSignIn && !showSignUp && <SideControls />}
+          {!uiState.openSignInPage && !uiState.openSignUpPage && (
+            <SideControls />
+          )}
           <div
             id="rendering"
             onContextMenu={(e) => e.preventDefault()}
             onMouseEnter={() => (mouseOverCanvas.current = true)}
             onMouseLeave={() => (mouseOverCanvas.current = false)}
           >
-            {showSignIn && <SignInPage onSignIn={handleSignIn} />}
-            {showSignUp && <SignUpPage onSignUp={handleSignUp} />}
+            {uiState.openSignInPage && <SignInPage onSignIn={handleSignIn} />}
+            {uiState.openSignUpPage && <SignUpPage onSignUp={handleSignUp} />}
             {uiState.openProfilePage && <ProfilePage />}
             {uiState.openAdminPanel && <AdminPanel />}
             <canvas id="canvas" tabIndex={0} />
           </div>
-          {!showSignIn && !showSignUp && <RightSideControls />}
+          {!uiState.openSignInPage && !uiState.openSignUpPage && (
+            <RightSideControls />
+          )}
         </div>
       </div>
     );

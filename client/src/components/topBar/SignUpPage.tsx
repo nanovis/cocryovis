@@ -2,6 +2,7 @@ import { useState } from "react";
 import { makeStyles, Spinner, tokens, Text } from "@fluentui/react-components";
 import { Button, Input } from "@fluentui/react-components";
 import { getErrorMessage } from "../../utils/Helpers";
+import { useMst } from "../../stores/RootStore";
 
 const useStyles = makeStyles({
   container: {
@@ -77,6 +78,8 @@ interface Props {
 }
 
 const SignUpPage = ({ onSignUp }: Props) => {
+  const { uiState } = useMst();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -87,6 +90,7 @@ const SignUpPage = ({ onSignUp }: Props) => {
   const classes = useStyles();
 
   const handleSubmit = async () => {
+    uiState.setIsActive(true);
     setShowSpinner(true);
     setErrorMessage("");
     const userData = {
@@ -97,11 +101,13 @@ const SignUpPage = ({ onSignUp }: Props) => {
       email,
     };
     try {
+      //LOL
       await onSignUp(userData);
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
     }
     setShowSpinner(false);
+    uiState.setIsActive(false);
   };
 
   const handleReset = () => {

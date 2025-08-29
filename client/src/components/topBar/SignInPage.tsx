@@ -9,6 +9,7 @@ import {
 } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import { getErrorMessage } from "../../utils/Helpers";
+import { useMst } from "../../stores/RootStore";
 
 const useStyles = makeStyles({
   container: {
@@ -69,6 +70,8 @@ interface Props {
 }
 
 const SignInPage = observer(({ onSignIn }: Props) => {
+  const { uiState } = useMst();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showSpinner, setShowSpinner] = useState(false);
@@ -78,6 +81,7 @@ const SignInPage = observer(({ onSignIn }: Props) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    uiState.setIsActive(true);
     setShowSpinner(true);
     setErrorMessage("");
     const credentials: SignInCredentials = {
@@ -90,6 +94,7 @@ const SignInPage = observer(({ onSignIn }: Props) => {
       setErrorMessage(getErrorMessage(error) + "!");
     }
     setShowSpinner(false);
+    uiState.setIsActive(false);
   };
 
   const handleClear = () => {

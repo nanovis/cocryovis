@@ -44,13 +44,12 @@ const useStyles = makeStyles({
 });
 
 interface Props {
-  toggleSignClick: (id: number) => void;
   toggleTheme: () => void;
   connectionStatus: string;
 }
 
 const MenuBar = observer(
-  ({ toggleSignClick, toggleTheme, connectionStatus }: Props) => {
+  ({  toggleTheme, connectionStatus }: Props) => {
     const { user, logout, uiState } = useMst();
 
     const classes = useStyles();
@@ -148,6 +147,7 @@ const MenuBar = observer(
               style={{ marginLeft: "50px" }}
               appearance="subtle"
               onClick={() => user.userProjects.loadDemoProject()}
+              disabled = {uiState.isActive}
             >
               Open Demo Project
             </Button>
@@ -204,11 +204,16 @@ const MenuBar = observer(
               <Button
                 style={{ marginRight: "5px" }}
                 appearance="subtle"
-                onClick={() => toggleSignClick(0)}
+                onClick={() => uiState.toggleSignInPage()}
+                disabled = {uiState.isActive}
               >
                 Sign In
               </Button>
-              <Button appearance="subtle" onClick={() => toggleSignClick(1)}>
+              <Button
+                appearance="subtle"
+                onClick={() => uiState.toggleSignUpPage()}
+                disabled = {uiState.isActive}
+              >
                 Sign Up
               </Button>
             </>
