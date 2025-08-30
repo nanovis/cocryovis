@@ -24,6 +24,7 @@ import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessToolti
 import { ModelInstance } from "../../../stores/userState/ModelModel";
 import { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
 import ToastContainer from "../../../utils/ToastContainer";
+import { getErrorMessage } from "../../../utils/Helpers";
 
 interface Props {
   open: boolean;
@@ -70,18 +71,8 @@ const Models = observer(({ open, close }: Props) => {
     setCreateModelDialogOpen(false);
   };
 
-  const handleDeleteModelClick = () => {
-    handleRemoveModel();
-    setDeleteModelDialogOpen(false);
-  };
-
   const handleCloseModelDialog = () => {
     setDeleteModelDialogOpen(false); // Close dialog
-  };
-
-  const handleDeleteCheckpointClick = () => {
-    handleRemoveCheckpoint();
-    setDeleteCheckpointDialogOpen(false);
   };
 
   const handleCloseCheckpointDialog = () => {
@@ -90,13 +81,24 @@ const Models = observer(({ open, close }: Props) => {
 
   // Function to handle model creation
   const handleCreateModel = async () => {
+    if (!projectModels) {
+      return;
+    }
     try {
-      await projectModels?.createModel(modelName, modelDescription);
+      if (projectModels?.createModelActiveRequest) {
+        throw new Error("Model deletion already in progress.");
+      }
+      await projectModels.createModel(modelName, modelDescription);
+      projectModels.setCreateModelActiveRequest(true);
 
       setCreateModelDialogOpen(false);
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
     }
+    projectModels.setCreateModelActiveRequest(false);
+    setCreateModelDialogOpen(false);
   };
 
   // Function to handle model selection
@@ -125,10 +127,12 @@ const Models = observer(({ open, close }: Props) => {
 
   // Function to handle file change for checkpoints
   const handleCheckpointFileChange = async (event: FileChangeEvent) => {
+    const toastContainer = new ToastContainer();
     try {
+      toastContainer.loading("Uploading checkpoint(s)");
       await modelCheckpoints?.uploadCheckpoints(event.target.files);
+      toastContainer.success("Checkpoint(s) uploaded");
     } catch (error) {
-      const toastContainer = new ToastContainer();
       console.error("Error:", error);
       toastContainer.error(Utils.getErrorMessage(error));
     } finally {
@@ -138,28 +142,42 @@ const Models = observer(({ open, close }: Props) => {
     }
   };
 
-  // Function to remove the selected model
   const handleRemoveModel = async () => {
+    if (!selectedModelId) {
+      return;
+    }
     try {
-      if (!selectedModelId) {
-        return;
+      if (projectModels.createModelActiveRequest) {
+        throw new Error("Model deletion already in progress.");
       }
-      await projectModels?.removeModel(selectedModelId);
+      projectModels.setDeleteModelActiveRequest(true);
+      await projectModels.removeModel(selectedModelId);
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
     }
+    projectModels?.setDeleteModelActiveRequest(false);
+    setDeleteModelDialogOpen(false);
   };
 
   // Function to remove the selected checkpoint
   const handleRemoveCheckpoint = async () => {
+    if (!selectedCheckpointId) {
+      return;
+    }
     try {
-      if (!selectedCheckpointId) {
-        return;
+      if (modelCheckpoints.deleteModelCheckpointActiveRequset) {
+        throw new Error("Checkpoint deletion already in progress.");
       }
+      modelCheckpoints.setDeleteModelCheckpointActiveRequset(true);
+
       await modelCheckpoints?.removeCheckpoint(selectedCheckpointId);
     } catch (error) {
       console.error("Error:", error);
     }
+    modelCheckpoints.setDeleteModelCheckpointActiveRequset(true);
+    setDeleteCheckpointDialogOpen(false);
   };
 
   // Function to handle checkpoint download
@@ -168,12 +186,13 @@ const Models = observer(({ open, close }: Props) => {
       if (!selectedCheckpointId) {
         return;
       }
-
       await Utils.downloadFileFromServer(
         `checkpoint/${selectedCheckpointId}/download`
       );
     } catch (error) {
+      const toastContainer = new ToastContainer();
       console.error("Error:", error);
+      toastContainer.error(getErrorMessage(error));
     }
   };
 
@@ -191,7 +210,7 @@ const Models = observer(({ open, close }: Props) => {
   const refreshCheckpoints = async () => {
     try {
       setLoadingCheckpoints(true);
-      modelCheckpoints?.refreshCheckpoints();
+      await modelCheckpoints?.refreshCheckpoints();
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -343,8 +362,9 @@ const Models = observer(({ open, close }: Props) => {
                 appearance="primary"
                 className={mergeClasses(globalClasses.actionButton)}
                 disabled={
-                  (!selectedModelId && !isPageBusy()) ||
-                  !activeProject?.hasWriteAccess
+                  isPageBusy() ||
+                  !activeProject?.hasWriteAccess ||
+                  !selectedModelId
                 }
                 onClick={() => checkpointFileRef.current?.click()}
               >
@@ -403,7 +423,8 @@ const Models = observer(({ open, close }: Props) => {
             }
             open={deleteModelDialogOpen}
             onClose={handleCloseModelDialog}
-            onConfirm={handleDeleteModelClick}
+            onConfirm={handleRemoveModel}
+            isActive={!!projectModels?.deleteModelActiveRequest}
           />
 
           {/* Horizontal Line */}
@@ -517,7 +538,8 @@ const Models = observer(({ open, close }: Props) => {
             }
             open={deleteCheckpointDialogOpen}
             onClose={handleCloseCheckpointDialog}
-            onConfirm={handleDeleteCheckpointClick}
+            onConfirm={handleRemoveCheckpoint}
+            isActive={!!modelCheckpoints?.deleteModelCheckpointActiveRequset}
           />
         </div>
       </div>
@@ -531,6 +553,7 @@ const Models = observer(({ open, close }: Props) => {
         setModelName={setModelName}
         modelDescription={modelDescription}
         setModelDescription={setModelDescription}
+        isActive={!!projectModels?.createModelActiveRequest}
       />
     </div>
   ) : null;

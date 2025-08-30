@@ -19,6 +19,9 @@ export const ModelCheckpoints = types
     checkpoints: types.map(Checkpoint),
     selectedCheckpointId: types.maybe(types.integer),
   })
+  .volatile(() => ({
+    deleteModelCheckpointActiveRequset: false,
+  }))
   .views((self) => ({
     get selectedCheckpoint() {
       return self.selectedCheckpointId
@@ -27,6 +30,9 @@ export const ModelCheckpoints = types
     },
   }))
   .actions((self) => ({
+    setDeleteModelCheckpointActiveRequset(active: boolean) {
+      self.deleteModelCheckpointActiveRequset = active;
+    },
     setSelectedCheckpointId(checkpointId: number | undefined) {
       if (checkpointId && !self.checkpoints.has(checkpointId)) {
         throw new Error(`Checkpoint with id ${checkpointId} not found`);
@@ -88,7 +94,7 @@ export const ModelCheckpoints = types
         return checkpoints[0];
       }
     }),
-    removeCheckpoint: flow(function* removeModel(checkpointId: number) {
+    removeCheckpoint: flow(function* removeCheckpoint(checkpointId: number) {
       yield checkpointApi.removeFromModel(self.modelId, checkpointId);
       if (!isAlive(self)) {
         return;

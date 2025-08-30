@@ -15,6 +15,8 @@ import DeleteDialog from "../shared/DeleteDialog";
 import GlobalStyles from "../GlobalStyles";
 import ChangePasswordDialog from "./ChangePasswordDialog";
 import * as usersApi from "../../api/users";
+import ToastContainer from "../../utils/ToastContainer";
+import { getErrorMessage } from "../../utils/Helpers";
 
 const useStyles = makeStyles({
   container: {
@@ -78,7 +80,7 @@ const useStyles = makeStyles({
 });
 
 const ProfilePage = observer(() => {
-  const { user, logout } = useMst();
+  const { user, logout, uiState } = useMst();
   const classes = useStyles();
   const globalClasses = GlobalStyles();
 
@@ -118,15 +120,22 @@ const ProfilePage = observer(() => {
       setShowChangePage(false);
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
     }
   };
   //LOL deleteUser user doesn't exist in API
   const deleteUser = async () => {
     try {
+      uiState.setDeleteUserActiveRequset(true);
       await usersApi.deleteUser();
       logout();
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
+    } finally {
+      uiState.setDeleteUserActiveRequset(false);
     }
   };
 
@@ -241,12 +250,13 @@ const ProfilePage = observer(() => {
         onClose={function (): void {
           setShowDialogPage(false);
         }}
-        style={{ width: "500px" }}
+        style={{ width: "500px", height:"" }}
         onConfirm={deleteUser}
         TitleText={"Are you sure you want to delete your account?"}
         BodyText={
           "This account will be permanently deleted and cannot be recovered!"
         }
+        isActive={uiState.deleteUserActiveRequset}
       />
       <ChangePasswordDialog
         open={showChangePasswordPage}

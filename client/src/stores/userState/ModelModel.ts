@@ -27,6 +27,10 @@ export const ProjectModels = types
     models: types.map(Model),
     selectedModelId: types.maybe(types.integer),
   })
+  .volatile(() => ({
+    createModelActiveRequest: false,
+    deleteModelActiveRequest: false,
+  }))
   .views((self) => ({
     get selectedModel() {
       return self.selectedModelId
@@ -50,6 +54,12 @@ export const ProjectModels = types
     },
   }))
   .actions((self) => ({
+    setCreateModelActiveRequest(active: boolean) {
+      self.createModelActiveRequest = active;
+    },
+    setDeleteModelActiveRequest(active: boolean) {
+      self.deleteModelActiveRequest = active;
+    },
     addModel(model: ModelDB) {
       self.models.set(model.id, {
         ...model,
@@ -75,6 +85,8 @@ export const ProjectModels = types
       });
     },
     createModel: flow(function* createModel(name: string, description: string) {
+
+      self.setCreateModelActiveRequest(true);
       const model: z.infer<typeof modelSchema> = yield modelApi.createModel(
         self.projectId,
         { name: name, description: description }
@@ -86,10 +98,10 @@ export const ProjectModels = types
 
       self.addModel(model);
       self.selectedModelId = model.id;
-
       return model;
     }),
     removeModel: flow(function* removeModel(modelId: number) {
+      self.setDeleteModelActiveRequest(true);
       yield modelApi.removeModelFromProject(modelId, self.projectId);
       if (!isAlive(self)) {
         return;

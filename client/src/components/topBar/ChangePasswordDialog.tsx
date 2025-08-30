@@ -9,9 +9,15 @@ import {
   Input,
   Field,
   makeStyles,
+  tokens,
+  Spinner,
 } from "@fluentui/react-components";
 import { FormEvent, useState } from "react";
 import { updateUser } from "../../api/users";
+import ToastContainer from "../../utils/ToastContainer";
+import { getErrorMessage } from "../../utils/Helpers";
+import { useMst } from "../../stores/RootStore";
+import { observer } from "mobx-react-lite";
 
 const useStyles = makeStyles({
   fieldHeight: {
@@ -21,56 +27,70 @@ const useStyles = makeStyles({
     minHeight: "34px",
     height: "34px",
   },
+  passwordMatch: {
+    display: "flex",
+    minHeight: "30px",
+    alignSelf: "start",
+  },
+  errorText: {
+    color: tokens.colorStatusDangerForeground1,
+  },
+  dialogContent: {
+    paddingTop: "15px",
+    paddingBottom: "15px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  loadingSpinner:{
+    marginRight: "10px"
+  }
 });
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-const ChangePasswordDialog = ({ open, onClose }: Props) => {
+const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
+  const { uiState } = useMst();
+
   const classes = useStyles();
   const [matchingPasswords, setIsMatchingPasswords] = useState(false);
   function resetMatchingPassword() {
     setIsMatchingPasswords(false);
     onClose();
   }
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const inputPassword = form.elements.namedItem(
-      "password"
-    ) as HTMLInputElement;
-    const inputRepeatPassword = form.elements.namedItem(
-      "repeatPassword"
-    ) as HTMLInputElement;
-    if (inputPassword.value !== inputRepeatPassword.value) {
-      setIsMatchingPasswords(true);
-      return;
-    }
-    changePassword(inputPassword.value);
-  }
-  const changePassword = async (password: string) => {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     try {
-      updateUser({password})
+      event.preventDefault();
+
+      uiState.setChangePasswordActiveRequest(true);
+      const form = event.currentTarget;
+      const inputPassword = form.elements.namedItem(
+        "password"
+      ) as HTMLInputElement;
+      const inputRepeatPassword = form.elements.namedItem(
+        "repeatPassword"
+      ) as HTMLInputElement;
+      if (inputPassword.value !== inputRepeatPassword.value) {
+        return;
+      }
+      await updateUser({ password: inputPassword.value });
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
+    } finally {
+      uiState.setChangePasswordActiveRequest(false);
     }
-  };
+  }
+
   return (
     <Dialog open={open}>
       <DialogSurface style={{ width: "400px" }}>
         <form onSubmit={handleSubmit}>
           <DialogBody>
             <DialogTitle>Change Password</DialogTitle>
-            <DialogContent
-              style={{
-                paddingTop: "15px",
-                paddingBottom: "15px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "20px",
-              }}
-            >
+            <DialogContent className={classes.dialogContent}>
               <Field
                 label="New Password"
                 validationMessage={
@@ -103,18 +123,33 @@ const ChangePasswordDialog = ({ open, onClose }: Props) => {
               </Field>
             </DialogContent>
             <DialogActions>
-              <Button appearance="secondary" onClick={resetMatchingPassword}>
-                Back
-              </Button>
-              <Button appearance="primary" type="submit">
-                Change
-              </Button>
+              {uiState.changePasswordActiveRequest ? (
+                <div >
+                  <Spinner appearance="primary" size="medium"  className={classes.loadingSpinner} />
+                </div>
+              ) : (
+                <>
+                  <Button
+                    appearance="secondary"
+                    onClick={resetMatchingPassword}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    appearance="primary"
+                    type="submit"
+                    disabled={uiState.changePasswordActiveRequest}
+                  >
+                    Change
+                  </Button>
+                </>
+              )}
             </DialogActions>
           </DialogBody>
         </form>
       </DialogSurface>
     </Dialog>
   );
-};
+});
 
 export default ChangePasswordDialog;

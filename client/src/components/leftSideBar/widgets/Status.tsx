@@ -14,6 +14,8 @@ import { useMst } from "../../../stores/RootStore";
 import UserHistoryTable from "./elements/UserHistoryTable";
 import TaskQueueTable from "./elements/TaskQueueTable";
 import Paganation from "../../shared/Pagination";
+import { getErrorMessage } from "../../../utils/Helpers";
+import ToastContainer from "../../../utils/ToastContainer";
 
 const useStyles = makeStyles({
   contents: {
@@ -60,15 +62,24 @@ interface Props {
 }
 
 const Status = observer(({ open, close }: Props) => {
+  const { user } = useMst();
   const classes = useStyles();
   const globalClasses = globalStyles();
 
-  const { user } = useMst();
   const status = user?.status;
 
   const HistoryIcon = bundleIcon(HistoryFilled, HistoryRegular);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  async function setPageNumber(pageNumber: number) {
+    try {
+      await status?.setPageNumber(pageNumber);
+    } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
+    }
+  }
 
   // FIXME slides to the right when new operations are qeued.
   return open ? (
@@ -122,7 +133,7 @@ const Status = observer(({ open, close }: Props) => {
                     maxPageNumber={status.maxPageNumber}
                     ListLenght={status.taskHistoryLenght}
                     setPageNumberFunction={(pageNumber) =>
-                      status?.setPageNumber(pageNumber)
+                      setPageNumber(pageNumber)
                     }
                     showSpinner={status.activeRequests > 0}
                   ></Paganation>

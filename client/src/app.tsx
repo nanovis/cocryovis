@@ -218,7 +218,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
             {uiState.openSignInPage && <SignInPage onSignIn={handleSignIn} />}
             {uiState.openSignUpPage && <SignUpPage onSignUp={handleSignUp} />}
             {uiState.openProfilePage && <ProfilePage />}
-            {uiState.openAdminPanel && <AdminPanel />}
+            <AdminPanel />
             <canvas id="canvas" tabIndex={0} />
           </div>
           {!uiState.openSignInPage && !uiState.openSignUpPage && (

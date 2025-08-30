@@ -29,7 +29,6 @@ export const UiState = types
     openSignInPage: types.optional(types.boolean, false),
     openSignUpPage: types.optional(types.boolean, false),
     openProfilePage: types.optional(types.boolean, false),
-    isActive: types.optional(types.boolean, false),
     openAdminPanel: types.optional(types.boolean, false),
     kernelSize: types.optional(types.integer, 25),
     visualizedVolume: types.maybe(VisualizedVolume),
@@ -38,6 +37,11 @@ export const UiState = types
     tiltSeriesDialogServer: types.optional(TiltSeriesDialog, {}),
     tiltSeriesDialogClient: types.optional(TiltSeriesDialog, {}),
   })
+  .volatile(() => ({
+    isSignInOrSignUpInProgress: false,
+    changePasswordActiveRequest: false,
+    deleteUserActiveRequset: false,
+  }))
   .actions((self) => ({
     setOpenLeftWidget(id: number) {
       self.openLeftWidget = self.openLeftWidget !== id ? id : -1;
@@ -52,7 +56,7 @@ export const UiState = types
       self.openRightWidget = -1;
     },
     setIsActive(active: boolean) {
-      self.isActive = active;
+      self.isSignInOrSignUpInProgress = active;
     },
     setOpenProfilePage(open: boolean) {
       self.openProfilePage = open;
@@ -101,6 +105,12 @@ export const UiState = types
       if (self.openSignUpPage) {
         self.openSignInPage = false;
       }
+    },
+    setChangePasswordActiveRequest(active: boolean) {
+      self.changePasswordActiveRequest = active;
+    },
+    setDeleteUserActiveRequset(active: boolean) {
+      self.deleteUserActiveRequset = active;
     },
     setKernelSize(kernalSize: number) {
       self.kernelSize = kernalSize;

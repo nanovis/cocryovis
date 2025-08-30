@@ -9,6 +9,7 @@ import {
   createTableColumn,
   makeStyles,
   mergeClasses,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -30,6 +31,9 @@ import DeleteDialog from "../shared/DeleteDialog";
 import { usersArray } from "#schemas/user-path-schema.mjs";
 import z from "zod";
 import { AdminDeleteUser, getAllUsers } from "../../api/users";
+import { useMst } from "../../stores/RootStore";
+import ToastContainer from "../../utils/ToastContainer";
+import { getErrorMessage } from "../../utils/Helpers";
 
 const useStyles = makeStyles({
   container: {
@@ -52,10 +56,11 @@ const useStyles = makeStyles({
     fontWeight: "bold",
     color: tokens.colorBrandForeground1,
   },
-
   scrollableBody: {
+    display: "flex",
+    flexDirection: "column",
     overflowY: "auto",
-    maxHeight: "calc(100vh - 250px)",
+    height: "calc(100vh - 250px)",
     borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   refreshButton: {
@@ -65,36 +70,60 @@ const useStyles = makeStyles({
     width: "100%",
     display: "flex",
     justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  tableLoader: {
+    margin: "auto",
   },
 });
 
 const AdminPanel = observer(() => {
+  const { uiState } = useMst();
+
   const classes = useStyles();
   const globalClasses = GlobalStyles();
   const [users, setUsers] = useState<User[]>([]);
 
+  const [adminPageActiveRequest, setAdminPageActiveRequest] = useState(false);
   const [showDialogPage, setShowDialogPage] = useState(false);
   const [userDeleteIndex, setUserDeleteIndex] = useState(-1);
 
   useEffect(() => {
-    getUserData();
-  }, []);
+    if (uiState.openAdminPanel) {
+      getUserData();
+    }
+  }, [uiState.openAdminPanel]);
 
   const getUserData = async () => {
+    if (adminPageActiveRequest) {
+      return;
+    }
+    setAdminPageActiveRequest(true);
     try {
       const usersData: z.infer<typeof usersArray> = await getAllUsers();
       setUsers(usersData);
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
+    } finally {
+      setAdminPageActiveRequest(false);
+      console.log(adminPageActiveRequest);
     }
   };
-  //LOL DELETE user-admin user doesn't exist in
+
+  //LOL DELETE user-admin user doesn't exist
   const deleteUser = async () => {
+    uiState.setDeleteUserActiveRequset(true);
     try {
-      await AdminDeleteUser(users[userDeleteIndex].id)
+      await AdminDeleteUser(users[userDeleteIndex].id);
       await getUserData();
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
+    } finally {
+      uiState.setDeleteUserActiveRequset(false);
     }
   };
 
@@ -142,118 +171,133 @@ const AdminPanel = observer(() => {
   const rows = sort(getRows());
 
   return (
-    <div className={classes.container}>
-      <h1 className={classes.profilePageHeader}>Admin Panel</h1>
-
-      <Table sortable aria-label="Sortable user table">
-        <TableHeader>
-          <TableRow>
-            <TableHeaderCell
-              className={classes.tableHeaderCell}
-              {...headerSortProps("id")}
-            >
-              ID
-            </TableHeaderCell>
-            <TableHeaderCell
-              className={classes.tableHeaderCell}
-              {...headerSortProps("username")}
-            >
-              Username
-            </TableHeaderCell>
-            <TableHeaderCell
-              className={classes.tableHeaderCell}
-              {...headerSortProps("name")}
-            >
-              Name
-            </TableHeaderCell>
-            <TableHeaderCell
-              className={classes.tableHeaderCell}
-              {...headerSortProps("email")}
-            >
-              Email
-            </TableHeaderCell>
-            <TableHeaderCell className={classes.tableHeaderCell}>
-              Action
-            </TableHeaderCell>
-          </TableRow>
-        </TableHeader>
-      </Table>
-      <div className={classes.scrollableBody}>
-        <Table>
-          <TableBody>
-            {rows.map(({ item, rowId }) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <TableCellLayout>{item.id}</TableCellLayout>
-                </TableCell>
-                <TableCell>
-                  <TableCellLayout>{item.username}</TableCellLayout>
-                </TableCell>
-                <TableCell>
-                  <TableCellLayout>{item.name}</TableCellLayout>
-                </TableCell>
-                <TableCell>
-                  <TableCellLayout>{item.email}</TableCellLayout>
-                </TableCell>
-                <TableCell>
-                  <TableCellLayout>
-                    <Button
-                      className={mergeClasses(
-                        globalClasses.actionButton,
-                        globalClasses.actionButtonDelete
-                      )}
-                      onClick={function (): void {
-                        setShowDialogPage(true);
-                        setUserDeleteIndex(Number(rowId));
-                      }}
-                    >
-                      <div className={globalClasses.actionButtonIconContainer}>
-                        <Delete20Regular />
-                      </div>
-                      <div className="buttonText">Delete</div>
-                    </Button>
-                  </TableCellLayout>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      {userDeleteIndex >= 0 && users.length > userDeleteIndex && (
-        <DeleteDialog
-          open={showDialogPage}
-          onClose={function (): void {
-            setShowDialogPage(false);
-          }}
-          style={{ width: "500px" }}
-          onConfirm={deleteUser}
-          TitleText={
-            <div>
-              Are you sure you want to delete{" "}
-              <span
-                style={{
-                  fontStyle: "italic",
-                  color: tokens.colorBrandForeground1,
-                }}
+    uiState.openAdminPanel && (
+      <div className={classes.container}>
+        <h1 className={classes.profilePageHeader}>Admin Panel</h1>
+        <Table sortable aria-label="Sortable user table">
+          <TableHeader>
+            <TableRow>
+              <TableHeaderCell
+                className={classes.tableHeaderCell}
+                {...headerSortProps("id")}
               >
-                {users[userDeleteIndex].username}
-              </span>
-              ?
-            </div>
-          }
-          BodyText={"This account will be permanently deleted!"}
-        />
-      )}
-      <div className={classes.refreshContainer}>
-        <Button
-          appearance="secondary"
-          className={classes.refreshButton}
-          onClick={getUserData}
-        >
-          Refresh
-        </Button>
+                ID
+              </TableHeaderCell>
+              <TableHeaderCell
+                className={classes.tableHeaderCell}
+                {...headerSortProps("username")}
+              >
+                Username
+              </TableHeaderCell>
+              <TableHeaderCell
+                className={classes.tableHeaderCell}
+                {...headerSortProps("name")}
+              >
+                Name
+              </TableHeaderCell>
+              <TableHeaderCell
+                className={classes.tableHeaderCell}
+                {...headerSortProps("email")}
+              >
+                Email
+              </TableHeaderCell>
+              <TableHeaderCell className={classes.tableHeaderCell}>
+                Action
+              </TableHeaderCell>
+            </TableRow>
+          </TableHeader>
+        </Table>
+        <div className={classes.scrollableBody}>
+          <Table>
+            <TableBody>
+              {rows.map(({ item, rowId }) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <TableCellLayout>{item.id}</TableCellLayout>
+                  </TableCell>
+                  <TableCell>
+                    <TableCellLayout>{item.username}</TableCellLayout>
+                  </TableCell>
+                  <TableCell>
+                    <TableCellLayout>{item.name}</TableCellLayout>
+                  </TableCell>
+                  <TableCell>
+                    <TableCellLayout>{item.email}</TableCellLayout>
+                  </TableCell>
+                  <TableCell>
+                    <TableCellLayout>
+                      <Button
+                        className={mergeClasses(
+                          globalClasses.actionButton,
+                          globalClasses.actionButtonDelete
+                        )}
+                        onClick={function (): void {
+                          setShowDialogPage(true);
+                          setUserDeleteIndex(Number(rowId));
+                        }}
+                      >
+                        <div
+                          className={globalClasses.actionButtonIconContainer}
+                        >
+                          <Delete20Regular />
+                        </div>
+                        <div className="buttonText">Delete</div>
+                      </Button>
+                    </TableCellLayout>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {adminPageActiveRequest && users.length === 0 && (
+            <Spinner
+              appearance="primary"
+              size="huge"
+              className={classes.tableLoader}
+            />
+          )}
+        </div>
+        {userDeleteIndex >= 0 && users.length > userDeleteIndex && (
+          <DeleteDialog
+            open={showDialogPage}
+            onClose={function (): void {
+              setShowDialogPage(false);
+            }}
+            style={{ width: "500px" }}
+            onConfirm={deleteUser}
+            TitleText={
+              <div>
+                Are you sure you want to delete{" "}
+                <span
+                  style={{
+                    fontStyle: "italic",
+                    color: tokens.colorBrandForeground1,
+                  }}
+                >
+                  {users[userDeleteIndex].username}
+                </span>
+                ?
+              </div>
+            }
+            BodyText={"This account will be permanently deleted!"}
+            isActive={uiState.deleteUserActiveRequset}
+          />
+        )}
+        <div className={classes.refreshContainer}>
+          {adminPageActiveRequest && users.length !== 0 && (
+            <Spinner appearance="primary" size="medium" />
+          )}
+          <Button
+            appearance="secondary"
+            className={classes.refreshButton}
+            onClick={getUserData}
+            disabled={adminPageActiveRequest}
+          >
+            Refresh
+          </Button>
+        </div>
       </div>
-    </div>
+    )
   );
 });
 

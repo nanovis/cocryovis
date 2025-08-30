@@ -48,215 +48,213 @@ interface Props {
   connectionStatus: string;
 }
 
-const MenuBar = observer(
-  ({  toggleTheme, connectionStatus }: Props) => {
-    const { user, logout, uiState } = useMst();
+const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
+  const { user, logout, uiState } = useMst();
 
-    const classes = useStyles();
-    const [isShareProjectOpen, setIsShareProjectOpen] = useState(false);
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
-    const [projectName, setProjectName] = useState("");
-    const [projectDescription, setProjectDescription] = useState("");
+  const classes = useStyles();
+  const [isShareProjectOpen, setIsShareProjectOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
 
-    const handleCreateProjectClick = () => {
-      setIsCreateDialogOpen(true);
-    };
+  const handleCreateProjectClick = () => {
+    setIsCreateDialogOpen(true);
+  };
 
-    const handleOpenProjectClick = () => {
-      setIsOpenDialogOpen(true); // Open the Open Project dialog
-    };
+  const handleOpenProjectClick = () => {
+    setIsOpenDialogOpen(true); // Open the Open Project dialog
+  };
 
-    const handleCloseCreateDialog = () => {
-      setIsCreateDialogOpen(false);
-      setProjectName(""); // Clear project name on close
-    };
+  const handleCloseCreateDialog = () => {
+    setIsCreateDialogOpen(false);
+    setProjectName(""); // Clear project name on close
+  };
 
-    const handleCloseOpenDialog = () => {
-      setIsOpenDialogOpen(false); // Close the Open Project dialog
-    };
+  const handleCloseOpenDialog = () => {
+    setIsOpenDialogOpen(false); // Close the Open Project dialog
+  };
 
-    const handleConfirmCreate = async () => {
-      try {
-        if (projectName.length === 0) {
-          alert("Project name must not be empty.");
-          return;
-        }
-
-        if (user.isGuest) {
-          return;
-        }
-
-        await user.userProjects.createProject(projectName, projectDescription);
-
-        handleCloseCreateDialog();
-      } catch (error) {
-        console.error("Error:", error);
+  const handleConfirmCreate = async () => {
+    try {
+      if (projectName.length === 0) {
+        alert("Project name must not be empty.");
+        return;
       }
-    };
 
-    return (
-      <div className={classes.menubar}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <Image src={KaustLogo} className={classes.logoIcon} />
-          {!user.isGuest && (
-            <MenuBarItem
-              label="Select Project"
-              children={[
-                <MenuItem key="newProject" onClick={handleCreateProjectClick}>
-                  New Project
-                </MenuItem>,
-                <MenuItem key="openProject" onClick={handleOpenProjectClick}>
-                  Open Project
-                </MenuItem>,
-              ]}
-            />
-          )}
-          {user.userProjects.activeProjectId && (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Label style={{ marginLeft: "20px" }}>
-                {"Active Project: "} {user.userProjects.activeProject?.name}
-              </Label>
-              {!user.isGuest &&
-                user.userProjects.activeProject &&
-                user.userProjects.activeProject.accessLevel >= 0 && (
-                  <Tooltip
-                    content={"Sharing"}
-                    relationship={"label"}
-                    appearance="inverted"
-                    withArrow={true}
-                  >
-                    <Button
-                      style={{ marginLeft: "10px" }}
-                      appearance="subtle"
-                      onClick={() => setIsShareProjectOpen(true)}
-                      icon={<PeopleAdd20Filled />}
-                    />
-                  </Tooltip>
-                )}
-            </div>
-          )}
-          <Tooltip
-            content={"Loads the demo project from the server."}
-            relationship={"label"}
-            appearance="inverted"
-            withArrow={true}
-            positioning={"after"}
-          >
-            <Button
-              style={{ marginLeft: "50px" }}
-              appearance="subtle"
-              onClick={() => user.userProjects.loadDemoProject()}
-              disabled = {uiState.isActive}
-            >
-              Open Demo Project
-            </Button>
-          </Tooltip>
-        </div>
-        <div style={{ display: "flex" }}>
-          {!user.isGuest ? (
-            <div style={{ display: "flex", minHeight: "34px" }}>
-              <div className={classes.userStatus} style={{ minHeight: "20px" }}>
-                <Text weight="bold">{user.name}</Text>
-                {connectionStatus === "Open" ? (
-                  <Tooltip
-                    content={"Connected to Server"}
-                    relationship={"label"}
-                    appearance="inverted"
-                    withArrow={true}
-                  >
-                    <PlugConnected20Filled
-                      style={{ color: tokens.colorBrandForeground1 }}
-                    />
-                  </Tooltip>
-                ) : (
-                  <Tooltip
-                    content={"Reconnecting to Server"}
-                    relationship={"label"}
-                    appearance="inverted"
-                    withArrow={true}
-                  >
-                    <PlugDisconnected20Filled
-                      // style={{ color: tokens.colorStatusDangerBackground3 }}
-                      style={{ color: tokens.colorPaletteMarigoldBorderActive }}
-                    />
-                  </Tooltip>
-                )}
-              </div>
-              <Button appearance="subtle" onClick={() => logout()}>
-                Logout
-              </Button>
-              <Button
-                appearance="subtle"
-                onClick={() => uiState.toggleOpenProfilePage()}
-              >
-                Profile
-              </Button>
-              <Button
-                appearance="subtle"
-                onClick={() => uiState.toggleOpenAdminPage()}
-              >
-                Admin
-              </Button>
-            </div>
-          ) : (
-            <>
-              <Button
-                style={{ marginRight: "5px" }}
-                appearance="subtle"
-                onClick={() => uiState.toggleSignInPage()}
-                disabled = {uiState.isActive}
-              >
-                Sign In
-              </Button>
-              <Button
-                appearance="subtle"
-                onClick={() => uiState.toggleSignUpPage()}
-                disabled = {uiState.isActive}
-              >
-                Sign Up
-              </Button>
-            </>
-          )}
+      if (user.isGuest) {
+        return;
+      }
+
+      await user.userProjects.createProject(projectName, projectDescription);
+
+      handleCloseCreateDialog();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  return (
+    <div className={classes.menubar}>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <Image src={KaustLogo} className={classes.logoIcon} />
+        {!user.isGuest && (
+          <MenuBarItem
+            label="Select Project"
+            children={[
+              <MenuItem key="newProject" onClick={handleCreateProjectClick}>
+                New Project
+              </MenuItem>,
+              <MenuItem key="openProject" onClick={handleOpenProjectClick}>
+                Open Project
+              </MenuItem>,
+            ]}
+          />
+        )}
+        {user.userProjects.activeProjectId && (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Label style={{ marginLeft: "20px" }}>
+              {"Active Project: "} {user.userProjects.activeProject?.name}
+            </Label>
+            {!user.isGuest &&
+              user.userProjects.activeProject &&
+              user.userProjects.activeProject.accessLevel >= 0 && (
+                <Tooltip
+                  content={"Sharing"}
+                  relationship={"label"}
+                  appearance="inverted"
+                  withArrow={true}
+                >
+                  <Button
+                    style={{ marginLeft: "10px" }}
+                    appearance="subtle"
+                    onClick={() => setIsShareProjectOpen(true)}
+                    icon={<PeopleAdd20Filled />}
+                  />
+                </Tooltip>
+              )}
+          </div>
+        )}
+        <Tooltip
+          content={"Loads the demo project from the server."}
+          relationship={"label"}
+          appearance="inverted"
+          withArrow={true}
+          positioning={"after"}
+        >
           <Button
-            style={{
-              minWidth: "34px",
-              marginRight: "18.5px",
-              marginLeft: "18.5px",
-            }}
-            size="small"
+            style={{ marginLeft: "50px" }}
             appearance="subtle"
-            onClick={toggleTheme}
+            onClick={() => user.userProjects.loadDemoProject()}
+            disabled={uiState.isSignInOrSignUpInProgress}
           >
-            <DarkTheme20Regular />
+            Open Demo Project
           </Button>
-        </div>
-
-        {/* Render CreateProjectDialog */}
-
-        <CreateProjectDialog
-          open={isCreateDialogOpen}
-          onClose={handleCloseCreateDialog}
-          onConfirm={handleConfirmCreate}
-          projectName={projectName}
-          setProjectName={setProjectName}
-          projectDescription={projectDescription}
-          setProjectDescription={setProjectDescription} // Pass the state setter to the dialog
-        />
-
-        {/* Render OpenProjectDialog */}
-        <OpenProjectDialog
-          open={isOpenDialogOpen}
-          onClose={handleCloseOpenDialog}
-        />
-
-        <ShareProject
-          open={isShareProjectOpen}
-          setOpen={setIsShareProjectOpen}
-        ></ShareProject>
+        </Tooltip>
       </div>
-    );
-  }
-);
+      <div style={{ display: "flex" }}>
+        {!user.isGuest ? (
+          <div style={{ display: "flex", minHeight: "34px" }}>
+            <div className={classes.userStatus} style={{ minHeight: "20px" }}>
+              <Text weight="bold">{user.name}</Text>
+              {connectionStatus === "Open" ? (
+                <Tooltip
+                  content={"Connected to Server"}
+                  relationship={"label"}
+                  appearance="inverted"
+                  withArrow={true}
+                >
+                  <PlugConnected20Filled
+                    style={{ color: tokens.colorBrandForeground1 }}
+                  />
+                </Tooltip>
+              ) : (
+                <Tooltip
+                  content={"Reconnecting to Server"}
+                  relationship={"label"}
+                  appearance="inverted"
+                  withArrow={true}
+                >
+                  <PlugDisconnected20Filled
+                    // style={{ color: tokens.colorStatusDangerBackground3 }}
+                    style={{ color: tokens.colorPaletteMarigoldBorderActive }}
+                  />
+                </Tooltip>
+              )}
+            </div>
+            <Button appearance="subtle" onClick={() => logout()}>
+              Logout
+            </Button>
+            <Button
+              appearance="subtle"
+              onClick={() => uiState.toggleOpenProfilePage()}
+            >
+              Profile
+            </Button>
+            <Button
+              appearance="subtle"
+              onClick={() => uiState.toggleOpenAdminPage()}
+            >
+              Admin
+            </Button>
+          </div>
+        ) : (
+          <>
+            <Button
+              style={{ marginRight: "5px" }}
+              appearance="subtle"
+              onClick={() => uiState.toggleSignInPage()}
+              disabled={uiState.isSignInOrSignUpInProgress}
+            >
+              Sign In
+            </Button>
+            <Button
+              appearance="subtle"
+              onClick={() => uiState.toggleSignUpPage()}
+              disabled={uiState.isSignInOrSignUpInProgress}
+            >
+              Sign Up
+            </Button>
+          </>
+        )}
+        <Button
+          style={{
+            minWidth: "34px",
+            marginRight: "18.5px",
+            marginLeft: "18.5px",
+          }}
+          size="small"
+          appearance="subtle"
+          onClick={toggleTheme}
+        >
+          <DarkTheme20Regular />
+        </Button>
+      </div>
+
+      {/* Render CreateProjectDialog */}
+
+      <CreateProjectDialog
+        open={isCreateDialogOpen}
+        onClose={handleCloseCreateDialog}
+        onConfirm={handleConfirmCreate}
+        projectName={projectName}
+        setProjectName={setProjectName}
+        projectDescription={projectDescription}
+        setProjectDescription={setProjectDescription} // Pass the state setter to the dialog
+      />
+
+      {/* Render OpenProjectDialog */}
+      <OpenProjectDialog
+        open={isOpenDialogOpen}
+        onClose={handleCloseOpenDialog}
+      />
+
+      <ShareProject
+        open={isShareProjectOpen}
+        setOpen={setIsShareProjectOpen}
+      ></ShareProject>
+    </div>
+  );
+});
 
 export default MenuBar;

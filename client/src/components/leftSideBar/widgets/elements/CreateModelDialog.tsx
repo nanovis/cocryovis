@@ -9,6 +9,7 @@ import {
   Input,
   Field,
   Textarea,
+  Spinner,
 } from "@fluentui/react-components";
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
   setModelName: React.Dispatch<React.SetStateAction<string>>;
   modelDescription: string;
   setModelDescription: React.Dispatch<React.SetStateAction<string>>;
+  isActive: boolean;
 }
 
 const CreateModelDialog = ({
@@ -29,6 +31,7 @@ const CreateModelDialog = ({
   setModelName,
   modelDescription,
   setModelDescription,
+  isActive,
 }: Props) => {
   return (
     <Dialog open={open}>
@@ -56,12 +59,38 @@ const CreateModelDialog = ({
             </Field>
           </DialogContent>
           <DialogActions style={{ marginTop: "35px" }}>
-            <Button appearance="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button appearance="primary" onClick={onConfirm}>
-              Create New Model
-            </Button>
+            {isActive ? (
+              <div>
+                <Spinner
+                  appearance="primary"
+                  size="medium"
+                  style={{ marginRight: "10px" }}
+                />
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "25px",
+                }}
+              >
+                <Button
+                  appearance="secondary"
+                  onClick={onClose}
+                  disabled={isActive}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  appearance="primary"
+                  onClick={onConfirm}
+                  disabled={isActive}
+                >
+                  Create New Model
+                </Button>
+              </div>
+            )}
           </DialogActions>
         </DialogBody>
       </DialogSurface>

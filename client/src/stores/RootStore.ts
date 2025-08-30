@@ -12,8 +12,12 @@ const RootStore = types
     user: types.optional(User, {}),
     uiState: types.optional(UiState, {}),
     wasmLoaded: types.optional(types.boolean, false),
-
   })
+  // .views((self) => ({
+  //   get isAdminPanelOpen() {
+  //     return self.uiState.openAdminPanel && self.user.isAdmin
+  //   }
+  // }))
   .actions((self) => ({
     setWasmLoaded(loaded: boolean) {
       self.wasmLoaded = loaded;
