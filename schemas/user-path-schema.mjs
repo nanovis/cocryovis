@@ -76,6 +76,7 @@ export const publicUser = z.object({
     username: z.string(),
     name: z.string(),
     email: z.email(),
+    admin: z.boolean()
 });
 
 export const statusQuery = z.object({

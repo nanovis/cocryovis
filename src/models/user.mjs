@@ -7,8 +7,10 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 
 /**
+ * @import { publicUser } from "#schemas/user-path-schema.mjs"
+ * @import z from "zod"
  * @typedef { import("@prisma/client").User } UserDB
- * @typedef {{id: number, username: string, name: string, email: string}} PublicUser
+ * @typedef {z.infer<publicUser>} PublicUser
  */
 
 export default class User extends DatabaseModel {
@@ -165,6 +167,7 @@ export default class User extends DatabaseModel {
             username: user.username,
             name: user.name,
             email: user.email,
+            admin: user.admin,
         };
     }
 }

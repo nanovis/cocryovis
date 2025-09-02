@@ -61,6 +61,18 @@ export function restrictApi(req, res, next) {
 }
 
 /**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+export async function restrictAdminAccess(req, res, next) {
+    if (!isActiveSession(req) || !req?.session?.user?.admin) {
+        throw new ApiError(403, `Access to ${req.path} denied!`);
+    }
+    next();
+}
+
+/**
  * @param {import("../models/project.mjs").ProjectDB} project
  * @param {number | undefined} userId
  */

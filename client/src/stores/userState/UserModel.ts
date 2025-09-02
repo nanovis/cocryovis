@@ -2,13 +2,10 @@ import { Instance, SnapshotIn, types } from "mobx-state-tree";
 import { UserProjects, UserProjectsInstance } from "./ProjectModel";
 import { Status } from "./Status";
 import { ModelTraining } from "./ModelTraining";
+import z from "zod";
+import { publicUser } from "#schemas/user-path-schema.mjs";
 
-export interface UserDB {
-  id: number;
-  name: string;
-  username: string;
-  email: string;
-}
+export type UserDB = z.infer<typeof publicUser>
 
 export const User = types
   .model({
@@ -16,6 +13,7 @@ export const User = types
     name: types.optional(types.string, "Guest"),
     username: types.optional(types.string, "Guest"),
     email: types.optional(types.string, ""),
+    admin: types.optional(types.boolean, false),
     userProjects: types.optional(UserProjects, {}),
     status: types.maybe(Status),
     modelTraining: types.optional(ModelTraining, {}),

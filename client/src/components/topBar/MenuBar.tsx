@@ -188,35 +188,31 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
                 </Tooltip>
               )}
             </div>
-            <Button appearance="subtle" onClick={() => logout()}>
+            <Button appearance="subtle" onClick={logout}>
               Logout
             </Button>
-            <Button
-              appearance="subtle"
-              onClick={() => uiState.toggleOpenProfilePage()}
-            >
+            <Button appearance="subtle" onClick={uiState.toggleOpenProfilePage}>
               Profile
             </Button>
-            <Button
-              appearance="subtle"
-              onClick={() => uiState.toggleOpenAdminPage()}
-            >
-              Admin
-            </Button>
+            {user.admin && (
+              <Button appearance="subtle" onClick={uiState.toggleOpenAdminPage}>
+                Admin
+              </Button>
+            )}
           </div>
         ) : (
           <>
             <Button
               style={{ marginRight: "5px" }}
               appearance="subtle"
-              onClick={() => uiState.toggleSignInPage()}
+              onClick={uiState.toggleSignInPage}
               disabled={rootStore.pageDisabled}
             >
               Sign In
             </Button>
             <Button
               appearance="subtle"
-              onClick={() => uiState.toggleSignUpPage()}
+              onClick={uiState.toggleSignUpPage}
               disabled={rootStore.pageDisabled}
             >
               Sign Up

@@ -108,7 +108,6 @@ const AdminPanel = observer(() => {
       toastContainer.error(getErrorMessage(error));
     } finally {
       setAdminPageActiveRequest(false);
-      console.log(adminPageActiveRequest);
     }
   };
 

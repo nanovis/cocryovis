@@ -16,6 +16,7 @@ model User {
   email                 String
   passwordSalt          String
   passwordHash          String
+  admin                 Boolean                 @default(false)
   projects              Project[]
   volumes               Volume[]
   rawVolumeData         RawVolumeData[]
