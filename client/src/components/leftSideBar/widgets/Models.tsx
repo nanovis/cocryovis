@@ -142,15 +142,16 @@ const Models = observer(({ open, close }: Props) => {
     if (!selectedModelId) {
       return;
     }
+    const toastContainer = new ToastContainer();
     try {
       if (projectModels.createModelActiveRequest) {
         throw new Error("Model deletion already in progress.");
       }
       projectModels.setDeleteModelActiveRequest(true);
       await projectModels.removeModel(selectedModelId);
+      toastContainer.success("Model deleted!");
     } catch (error) {
       console.error("Error:", error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     }
     projectModels?.setDeleteModelActiveRequest(false);

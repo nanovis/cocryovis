@@ -162,13 +162,14 @@ const Volume = observer(({ open, close }: Props) => {
     if (!selectedVolumeId) {
       return;
     }
+    const toastContainer = new ToastContainer();
     try {
       projectVolumes.setRemoveVolumeActiveRequest(true);
       await projectVolumes.removeVolume(selectedVolumeId);
       closeDeleteDialog();
+      toastContainer.success("Volume removed from project!");
     } catch (error) {
       console.error("Error:", error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(Utils.getErrorMessage(error));
     }
     projectVolumes.setRemoveVolumeActiveRequest(false);
@@ -178,13 +179,14 @@ const Volume = observer(({ open, close }: Props) => {
     if (projectVolumes === undefined) {
       return;
     }
+    const toastContainer = new ToastContainer();
     try {
       projectVolumes.setCreateVolumeActiveRequest(true);
       await projectVolumes.createVolume(name, description);
       closeCreateDialog();
+      toastContainer.success("Volume created!")
     } catch (error) {
       console.error("Error:", error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(Utils.getErrorMessage(error));
     }
     projectVolumes.setCreateVolumeActiveRequest(false);
@@ -204,16 +206,16 @@ const Volume = observer(({ open, close }: Props) => {
           if (error instanceof Error) {
             throw new Error("Error converting MRC file:" + error.message);
           } else {
-            throw new Error("Error converting MRC file");
+            throw new Error("Error converting MRC file.");
           }
         }
       } else {
         if (!Utils.isRawFile(pendingFile.name)) {
-          throw new Error("No .raw file found in the uploaded files");
+          throw new Error("No .raw file found in the uploaded files.");
         }
 
         if (!volumeSettings) {
-          throw new Error("Missing volume settings");
+          throw new Error("Missing volume settings.");
         }
 
         volumeSettings.file = pendingFile.name;
@@ -223,7 +225,7 @@ const Volume = observer(({ open, close }: Props) => {
         await Utils.waitForNextFrame();
         await selectedVolume?.uploadRawVolume(pendingFile, volumeSettingsFile);
       }
-      toastContainer.success("Data successfully uploaded!");
+      toastContainer.success("Data uploaded!");
     } catch (error) {
       toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
@@ -522,7 +524,7 @@ const Volume = observer(({ open, close }: Props) => {
     try {
       toastContainer.loading("Creating pseudo label volumes...");
       await queuePseudoLabelsGeneration(selectedVolumeId);
-      toastContainer.success("Pseudo label volumes created.");
+      toastContainer.success("Label generation queued!");
     } catch (error) {
       console.error("Error:", error);
       toastContainer.error(Utils.getErrorMessage(error));
@@ -543,20 +545,17 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const handleSparseLabelFileChange = async (event: FileChangeEvent) => {
-    if (!event.target.files) {
-      return;
-    }
     const toastContainer = new ToastContainer();
 
     try {
       if (!event.target.files) {
-        return;
+        throw Error("No files selected.");
       }
       setIsUploadingData(true);
       toastContainer.loading("Uploading manual label volume file(s)...");
 
       await selectedVolume?.uploadSparseLabelVolume(event.target.files);
-      toastContainer.success("Manual label volume file(s) uploaded.");
+      toastContainer.success("Manual label volume(s) uploaded!");
     } catch (error) {
       console.error("Error:", error);
       toastContainer.error(Utils.getErrorMessage(error));
@@ -578,7 +577,7 @@ const Volume = observer(({ open, close }: Props) => {
       toastContainer.loading("Uploading pseudo label volume(s)...");
       setIsUploadingData(true);
       await selectedVolume?.uploadPseudoLabelVolume(event.target.files);
-      toastContainer.success("Label generation queued!");
+      toastContainer.success("Pseudo label Volume uploaded!");
     } catch (error) {
       console.error("Error:", error);
       toastContainer.error(Utils.getErrorMessage(error));
@@ -597,12 +596,15 @@ const Volume = observer(({ open, close }: Props) => {
     if (!dataId) {
       return;
     }
+    const toastContainer = new ToastContainer();
+
     try {
       selectedVolume?.setVolumeDataConfirmDeleteActiveRequest(true);
       await selectedVolume?.deleteLabeledVolume(dataType, dataId);
       if (dataType === "SparseLabeledVolumeData") {
         visualizedVolume?.setLabelEditingMode(false);
       }
+      toastContainer.success("Volume data deleted.");
     } catch (error) {
       console.error("Error:", error);
       const toastContainer = new ToastContainer();
@@ -678,13 +680,15 @@ const Volume = observer(({ open, close }: Props) => {
     if (!selectedResultId) {
       return;
     }
+    const toastContainer = new ToastContainer();
+
     try {
       volumeResults.setRemoveResultActiveRequest(true);
       await volumeResults.removeResult(selectedResultId);
       setDeleteResultDialogOpen(false);
+      toastContainer.success("Result deleted!");
     } catch (error) {
       console.error("Error", error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(Utils.getErrorMessage(error));
     }
     volumeResults.setRemoveResultActiveRequest(false);
@@ -1203,7 +1207,6 @@ const Volume = observer(({ open, close }: Props) => {
                   }
                 />
               ) : (
-                //LOL
                 <ItemTitleDownloadDelete
                   inactive={true}
                   highlighted={

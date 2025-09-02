@@ -20,12 +20,23 @@ export const User = types
     status: types.maybe(Status),
     modelTraining: types.optional(ModelTraining, {}),
   })
+  .volatile(() => ({
+    changePasswordActiveRequest: false,
+    deleteUserActiveRequset: false,
+  }))
   .views((self) => ({
     get isGuest() {
       return self.id < 0;
     },
   }))
+
   .actions((self) => ({
+    setChangePasswordActiveRequest(active: boolean) {
+      self.changePasswordActiveRequest = active;
+    },
+    setDeleteUserActiveRequset(active: boolean) {
+      self.deleteUserActiveRequset = active;
+    },
     setUserProjects(userProjects: UserProjectsInstance) {
       self.userProjects = userProjects;
     },

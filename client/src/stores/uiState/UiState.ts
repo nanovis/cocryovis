@@ -39,9 +39,7 @@ export const UiState = types
   })
   .volatile(() => ({
     isSignInOrSignUpInProgress: false,
-    //LOL change place
-    changePasswordActiveRequest: false,
-    deleteUserActiveRequset: false,
+
   }))
   .actions((self) => ({
     setOpenLeftWidget(id: number) {
@@ -106,12 +104,6 @@ export const UiState = types
       if (self.openSignUpPage) {
         self.openSignInPage = false;
       }
-    },
-    setChangePasswordActiveRequest(active: boolean) {
-      self.changePasswordActiveRequest = active;
-    },
-    setDeleteUserActiveRequset(active: boolean) {
-      self.deleteUserActiveRequset = active;
     },
     setKernelSize(kernalSize: number) {
       self.kernelSize = kernalSize;

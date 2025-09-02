@@ -89,16 +89,17 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     ) {
       return;
     }
+    const toastContainer = new ToastContainer();
+
     try {
       setInferenceInProgress(true);
-      queueInference({
+      await queueInference({
         checkpointId: inferenceCheckpointId,
         volumeId: inferenceVolumeId,
       });
       setInferenceInProgress(false);
-      console.log(inferenceInProgress);
+      toastContainer.success("Inference queued!");
     } catch (error) {
-      const toastContainer = new ToastContainer();
       toastContainer.error(Utils.getErrorMessage(error));
       console.error("startInference Error:", error);
     }

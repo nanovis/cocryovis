@@ -80,7 +80,7 @@ const useStyles = makeStyles({
 });
 
 const ProfilePage = observer(() => {
-  const { user, logout, uiState } = useMst();
+  const { user, logout } = useMst();
   const classes = useStyles();
   const globalClasses = GlobalStyles();
 
@@ -108,26 +108,28 @@ const ProfilePage = observer(() => {
   };
 
   const changeUserInformation = async () => {
+    const toastContainer = new ToastContainer();
+
     try {
       const userData = await usersApi.updateUser({
         name: name,
         username: username,
         email: email,
       });
+      toastContainer.success("Change successful!");
       user.setName(userData.name);
       user.setUsername(userData.username);
       user.setEmail(userData.email);
       setShowChangePage(false);
     } catch (error) {
       console.error(error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     }
   };
   //LOL deleteUser user doesn't exist in API
   const deleteUser = async () => {
     try {
-      uiState.setDeleteUserActiveRequset(true);
+      user.setDeleteUserActiveRequset(true);
       await usersApi.deleteUser();
       logout();
     } catch (error) {
@@ -135,7 +137,7 @@ const ProfilePage = observer(() => {
       const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
-      uiState.setDeleteUserActiveRequset(false);
+      user.setDeleteUserActiveRequset(false);
     }
   };
 
@@ -250,13 +252,13 @@ const ProfilePage = observer(() => {
         onClose={function (): void {
           setShowDialogPage(false);
         }}
-        style={{ width: "500px", height:"" }}
+        style={{ width: "500px", height: "" }}
         onConfirm={deleteUser}
         TitleText={"Are you sure you want to delete your account?"}
         BodyText={
           "This account will be permanently deleted and cannot be recovered!"
         }
-        isActive={uiState.deleteUserActiveRequset}
+        isActive={user.deleteUserActiveRequset}
       />
       <ChangePasswordDialog
         open={showChangePasswordPage}

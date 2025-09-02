@@ -78,7 +78,7 @@ const useStyles = makeStyles({
 });
 
 const AdminPanel = observer(() => {
-  const { uiState } = useMst();
+  const { uiState, user } = useMst();
 
   const classes = useStyles();
   const globalClasses = GlobalStyles();
@@ -114,7 +114,7 @@ const AdminPanel = observer(() => {
 
   //LOL DELETE user-admin user doesn't exist
   const deleteUser = async () => {
-    uiState.setDeleteUserActiveRequset(true);
+    user.setDeleteUserActiveRequset(true);
     try {
       await AdminDeleteUser(users[userDeleteIndex].id);
       await getUserData();
@@ -123,7 +123,7 @@ const AdminPanel = observer(() => {
       const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
-      uiState.setDeleteUserActiveRequset(false);
+      user.setDeleteUserActiveRequset(false);
     }
   };
 
@@ -280,7 +280,7 @@ const AdminPanel = observer(() => {
               </div>
             }
             BodyText={"This account will be permanently deleted!"}
-            isActive={uiState.deleteUserActiveRequset}
+            isActive={user.deleteUserActiveRequset}
           />
         )}
         <div className={classes.refreshContainer}>

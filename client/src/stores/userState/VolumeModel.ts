@@ -203,7 +203,7 @@ export const Volume = types
 
       self.setRawVolume(rawData);
     }),
-    uploadTiltSeries: flow(function* uploadMrcVolume(
+    uploadTiltSeries: flow(function* uploadTiltSeries(
       parsedSettings: any,
       fileData: ArrayBuffer
     ) {

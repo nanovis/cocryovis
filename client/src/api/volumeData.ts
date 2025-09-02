@@ -37,15 +37,12 @@ export async function updateVolumeData<T extends keyof VolumeDataMap>(
   id: number,
   request: z.input<typeof volumeDataUpdate>
 ) {
-  const response = await Utils.sendApiRequest(
-    `/volumeData/${type}/${id}`,
-    {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
-    },
-  );
+  const response = await Utils.sendApiRequest(`/volumeData/${type}/${id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
 
   const volumeData: VolumeDataMap[T] = await response.json();
   return volumeData;
@@ -55,13 +52,10 @@ export async function getVolumeData(
   type: z.input<typeof typeSchema>,
   id: number
 ) {
-  const response = await Utils.sendApiRequest(
-    `volumeData/${type}/${id}/data`,
-    {
-      method: "GET",
-      credentials: "include",
-    },
-  );
+  const response = await Utils.sendApiRequest(`volumeData/${type}/${id}/data`, {
+    method: "GET",
+    credentials: "include",
+  });
   const file = await response.arrayBuffer();
   return file;
 }
@@ -92,7 +86,7 @@ export async function createFromFiles<T extends keyof VolumeDataMap>(
       method: "POST",
       credentials: "include",
       body: request,
-    },
+    }
   );
   const volumeData: VolumeDataMap[T] = await response.json();
   return volumeData;
@@ -105,7 +99,7 @@ export async function createFromMrcFile(id: number, request: FormData) {
       method: "POST",
       credentials: "include",
       body: request,
-    },
+    }
   );
   const rawVolumeData: RawVolumeData = await response.json();
   return rawVolumeData;
@@ -122,7 +116,7 @@ export async function createFromUrl(
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
-    },
+    }
   );
   const rawVolumeData: RawVolumeData = await response.json();
   return rawVolumeData;
@@ -155,7 +149,7 @@ export async function downloadFullVolumeData<T extends keyof VolumeDataMap>(
     `volumeData/${type}/${id}/download-full`,
     {
       method: "GET",
-    },
+    }
   );
   const fullVolumeDataFile = await response.blob();
   return fullVolumeDataFile;
@@ -166,7 +160,7 @@ export async function downloadRawFile(id: number) {
     `volumeData/SparseLabeledVolumeData/${id}/download-raw-file`,
     {
       method: "GET",
-    },
+    }
   );
   const rawFile = await response.blob();
   return rawFile;
@@ -182,6 +176,6 @@ export async function removeFromVolume<T extends keyof VolumeDataMap>(
     {
       method: "DELETE",
       credentials: "include",
-    },
+    }
   );
 }

@@ -41,9 +41,9 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
   },
-  loadingSpinner:{
-    marginRight: "10px"
-  }
+  loadingSpinner: {
+    marginRight: "10px",
+  },
 });
 interface Props {
   open: boolean;
@@ -51,7 +51,7 @@ interface Props {
 }
 
 const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
-  const { uiState } = useMst();
+  const { user } = useMst();
 
   const classes = useStyles();
   const [matchingPasswords, setIsMatchingPasswords] = useState(false);
@@ -60,10 +60,12 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
     onClose();
   }
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const toastContainer = new ToastContainer();
+
     try {
       event.preventDefault();
 
-      uiState.setChangePasswordActiveRequest(true);
+      user.setChangePasswordActiveRequest(true);
       const form = event.currentTarget;
       const inputPassword = form.elements.namedItem(
         "password"
@@ -75,12 +77,12 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
         return;
       }
       await updateUser({ password: inputPassword.value });
+      toastContainer.success("Password changed!");
     } catch (error) {
       console.error(error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
-      uiState.setChangePasswordActiveRequest(false);
+      user.setChangePasswordActiveRequest(false);
     }
   }
 
@@ -123,9 +125,13 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
               </Field>
             </DialogContent>
             <DialogActions>
-              {uiState.changePasswordActiveRequest ? (
-                <div >
-                  <Spinner appearance="primary" size="medium"  className={classes.loadingSpinner} />
+              {user.changePasswordActiveRequest ? (
+                <div>
+                  <Spinner
+                    appearance="primary"
+                    size="medium"
+                    className={classes.loadingSpinner}
+                  />
                 </div>
               ) : (
                 <>
@@ -138,7 +144,7 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
                   <Button
                     appearance="primary"
                     type="submit"
-                    disabled={uiState.changePasswordActiveRequest}
+                    disabled={user.changePasswordActiveRequest}
                   >
                     Change
                   </Button>

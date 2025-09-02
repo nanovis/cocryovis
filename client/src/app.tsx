@@ -127,6 +127,8 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
     const handleSignIn = async (credentials: SignInCredentials) => {
       const userData = await login(credentials);
       await rootStore.login(userData);
+      const toastContainer = new ToastContainer();
+      toastContainer.success("Sign-in successful!");
     };
 
     const handleSignUp = async (userData: SignUpCredentials) => {
@@ -140,6 +142,8 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         email: userData.email,
       });
       await rootStore.login(contents);
+      const toastContainer = new ToastContainer();
+      toastContainer.success("Sign-up successful!");
     };
 
     useEffect(() => {

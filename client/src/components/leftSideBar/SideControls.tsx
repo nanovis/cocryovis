@@ -19,6 +19,7 @@ import {
   Cube24Regular,
   Delete24Regular,
   DesktopTower24Regular,
+  Molecule24Regular,
   Status24Regular,
 } from "@fluentui/react-icons";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
@@ -58,7 +59,6 @@ const SideControls = observer(() => {
     }
     user.userProjects.setProjectDeleteActiveRequest(false);
   };
-  //LOL fix LabelIcon on Training and Inference
   return (
     <>
       <div
@@ -89,7 +89,7 @@ const SideControls = observer(() => {
           <WidgetToggleButton
             title={"Training and Inference"}
             labelPositioning={"after"}
-            LabelIcon={Cube24Regular}
+            LabelIcon={Molecule24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.NanoOtzi}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.NanoOtzi)}
             disabled={activeProjectId === undefined || pageDisabled}
