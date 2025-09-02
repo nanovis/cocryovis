@@ -61,25 +61,22 @@ const Models = observer(({ open, close }: Props) => {
     return isLoadingModels || isLoadingCheckpoints;
   };
 
-  // Function to open the dialog
   const openCreateModelDialog = () => {
     setCreateModelDialogOpen(true);
   };
 
-  // Function to close the dialog
   const closeCreateModelDialog = () => {
     setCreateModelDialogOpen(false);
   };
 
   const handleCloseModelDialog = () => {
-    setDeleteModelDialogOpen(false); // Close dialog
+    setDeleteModelDialogOpen(false);
   };
 
   const handleCloseCheckpointDialog = () => {
-    setDeleteCheckpointDialogOpen(false); // Close dialog
+    setDeleteCheckpointDialogOpen(false);
   };
 
-  // Function to handle model creation
   const handleCreateModel = async () => {
     if (!projectModels) {
       return;
@@ -88,9 +85,8 @@ const Models = observer(({ open, close }: Props) => {
       if (projectModels?.createModelActiveRequest) {
         throw new Error("Model deletion already in progress.");
       }
-      await projectModels.createModel(modelName, modelDescription);
       projectModels.setCreateModelActiveRequest(true);
-
+      await projectModels.createModel(modelName, modelDescription);
       setCreateModelDialogOpen(false);
     } catch (error) {
       console.error("Error:", error);
@@ -98,10 +94,8 @@ const Models = observer(({ open, close }: Props) => {
       toastContainer.error(getErrorMessage(error));
     }
     projectModels.setCreateModelActiveRequest(false);
-    setCreateModelDialogOpen(false);
   };
 
-  // Function to handle model selection
   const handleModelSelect = async (value: string | null) => {
     try {
       if (!value) {
@@ -109,11 +103,12 @@ const Models = observer(({ open, close }: Props) => {
       }
       projectModels?.setSelectedModelId(Number(value));
     } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
       console.error(error);
     }
   };
 
-  // Function to handle checkpoint selection
   const handleCheckpointSelect = (value: string | null) => {
     try {
       if (!value) {
@@ -121,11 +116,12 @@ const Models = observer(({ open, close }: Props) => {
       }
       modelCheckpoints?.setSelectedCheckpointId(Number(value));
     } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
       console.error(error);
     }
   };
 
-  // Function to handle file change for checkpoints
   const handleCheckpointFileChange = async (event: FileChangeEvent) => {
     const toastContainer = new ToastContainer();
     try {
@@ -175,6 +171,8 @@ const Models = observer(({ open, close }: Props) => {
       await modelCheckpoints?.removeCheckpoint(selectedCheckpointId);
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
     }
     modelCheckpoints.setDeleteModelCheckpointActiveRequset(true);
     setDeleteCheckpointDialogOpen(false);
@@ -213,6 +211,8 @@ const Models = observer(({ open, close }: Props) => {
       await modelCheckpoints?.refreshCheckpoints();
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
     } finally {
       setLoadingCheckpoints(false);
     }

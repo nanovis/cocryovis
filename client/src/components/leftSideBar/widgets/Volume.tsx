@@ -29,7 +29,6 @@ import {
   Stack24Regular,
 } from "@fluentui/react-icons";
 import { useState, useRef } from "react";
-import DeleteVolumeDialog from "./elements/DeleteVolumeDialog";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import * as Utils from "../../../utils/Helpers";
@@ -134,6 +133,8 @@ const Volume = observer(({ open, close }: Props) => {
       projectVolumes?.setSelectedVolumeId(Number(value));
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
   };
 
@@ -158,25 +159,35 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const confirmDeleteVolume = async () => {
+    if (!selectedVolumeId) {
+      return;
+    }
     try {
-      if (!selectedVolumeId) {
-        return;
-      }
-      await projectVolumes?.removeVolume(selectedVolumeId);
+      projectVolumes.setRemoveVolumeActiveRequest(true);
+      await projectVolumes.removeVolume(selectedVolumeId);
       closeDeleteDialog();
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
+    projectVolumes.setRemoveVolumeActiveRequest(false);
   };
 
   const handleCreateVolume = async (name: string, description: string) => {
+    if (projectVolumes === undefined) {
+      return;
+    }
     try {
-      await projectVolumes?.createVolume(name, description);
-
+      projectVolumes.setCreateVolumeActiveRequest(true);
+      await projectVolumes.createVolume(name, description);
       closeCreateDialog();
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
+    projectVolumes.setCreateVolumeActiveRequest(false);
   };
 
   const uploadRawData = async (
@@ -507,10 +518,14 @@ const Volume = observer(({ open, close }: Props) => {
     if (selectedVolumeId === undefined) {
       return;
     }
+    const toastContainer = new ToastContainer();
     try {
-      queuePseudoLabelsGeneration(selectedVolumeId);
+      toastContainer.loading("Creating pseudo label volumes...");
+      await queuePseudoLabelsGeneration(selectedVolumeId);
+      toastContainer.success("Pseudo label volumes created.");
     } catch (error) {
       console.error("Error:", error);
+      toastContainer.error(Utils.getErrorMessage(error));
     }
   };
 
@@ -520,21 +535,31 @@ const Volume = observer(({ open, close }: Props) => {
       await projectVolumes?.refreshVolumes();
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     } finally {
       setLoadingVolumes(false);
     }
   };
 
   const handleSparseLabelFileChange = async (event: FileChangeEvent) => {
+    if (!event.target.files) {
+      return;
+    }
+    const toastContainer = new ToastContainer();
+
     try {
       if (!event.target.files) {
         return;
       }
-
       setIsUploadingData(true);
+      toastContainer.loading("Uploading manual label volume file(s)...");
+
       await selectedVolume?.uploadSparseLabelVolume(event.target.files);
+      toastContainer.success("Manual label volume file(s) uploaded.");
     } catch (error) {
       console.error("Error:", error);
+      toastContainer.error(Utils.getErrorMessage(error));
     } finally {
       setIsUploadingData(false);
       if (sparseLabelFileRef.current) {
@@ -544,15 +569,19 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const handlePseudoLabelFileChange = async (event: FileChangeEvent) => {
-    try {
-      if (!event.target.files) {
-        return;
-      }
+    if (!event.target.files) {
+      return;
+    }
+    const toastContainer = new ToastContainer();
 
+    try {
+      toastContainer.loading("Uploading pseudo label volume(s)...");
       setIsUploadingData(true);
       await selectedVolume?.uploadPseudoLabelVolume(event.target.files);
+      toastContainer.success("Label generation queued!");
     } catch (error) {
       console.error("Error:", error);
+      toastContainer.error(Utils.getErrorMessage(error));
     } finally {
       setIsUploadingData(false);
       if (pseudoLabelFileRef.current) {
@@ -565,17 +594,21 @@ const Volume = observer(({ open, close }: Props) => {
     dataType: LabeledVolumeTypes,
     dataId: number | undefined
   ) => {
+    if (!dataId) {
+      return;
+    }
     try {
-      if (!dataId) {
-        return;
-      }
+      selectedVolume?.setVolumeDataConfirmDeleteActiveRequest(true);
       await selectedVolume?.deleteLabeledVolume(dataType, dataId);
       if (dataType === "SparseLabeledVolumeData") {
         visualizedVolume?.setLabelEditingMode(false);
       }
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
+    selectedVolume?.setVolumeDataConfirmDeleteActiveRequest(false);
   };
 
   // Download handlers
@@ -592,6 +625,8 @@ const Volume = observer(({ open, close }: Props) => {
       );
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
   };
 
@@ -619,6 +654,8 @@ const Volume = observer(({ open, close }: Props) => {
       volumeResults?.setSelectedResultId(Number(value));
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
   };
 
@@ -632,20 +669,25 @@ const Volume = observer(({ open, close }: Props) => {
       await Utils.downloadFileFromServer(`result/${selectedResultId}/data`);
     } catch (error) {
       console.error("Error:", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
   };
 
   const removeResult = async () => {
+    if (!selectedResultId) {
+      return;
+    }
     try {
-      if (!selectedResultId) {
-        return;
-      }
-
-      await volumeResults?.removeResult(selectedResultId);
+      volumeResults.setRemoveResultActiveRequest(true);
+      await volumeResults.removeResult(selectedResultId);
       setDeleteResultDialogOpen(false);
     } catch (error) {
       console.error("Error", error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     }
+    volumeResults.setRemoveResultActiveRequest(false);
   };
 
   const refreshVolumeResultsData = async () => {
@@ -654,6 +696,8 @@ const Volume = observer(({ open, close }: Props) => {
       await volumeResults?.refreshResults();
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
     } finally {
       setLoadingResults(false);
     }
@@ -1154,8 +1198,12 @@ const Volume = observer(({ open, close }: Props) => {
                   onEnabled={() => {
                     selectedVolume.toggleShownAnnotation(index);
                   }}
+                  isActive={
+                    selectedVolume?.volumeDataConfirmDeleteActiveRequest
+                  }
                 />
               ) : (
+                //LOL
                 <ItemTitleDownloadDelete
                   inactive={true}
                   highlighted={
@@ -1379,6 +1427,9 @@ const Volume = observer(({ open, close }: Props) => {
                   )}
                   deleteTitle={"Remove Pseudo Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
+                  isActive={
+                    !!selectedVolume?.volumeDataConfirmDeleteActiveRequest
+                  }
                 />
               ) : (
                 <ItemTitleDownloadDelete inactive={true} />
@@ -1500,11 +1551,15 @@ const Volume = observer(({ open, close }: Props) => {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <DeleteVolumeDialog
+      <DeleteDialog
+        TitleText={"Remove Volume?"}
+        BodyText={
+          "Do you want to remove the selected volume from the active project?"
+        }
         open={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
         onConfirm={confirmDeleteVolume}
+        isActive={!!projectVolumes?.removeVolumeActiveRequest}
       />
 
       {/* Create Volume Dialog */}
@@ -1512,6 +1567,7 @@ const Volume = observer(({ open, close }: Props) => {
         open={isCreateDialogOpen}
         onClose={closeCreateDialog}
         onCreate={handleCreateVolume}
+        isActive={!!projectVolumes?.createVolumeActiveRequest}
       />
 
       {/* Remove Result Dialog */}
@@ -1523,6 +1579,7 @@ const Volume = observer(({ open, close }: Props) => {
         open={isDeleteResultDialogOpen}
         onClose={handleCloseCheckpointDialog}
         onConfirm={removeResult}
+        isActive={!!volumeResults?.removeResultActiveRequest}
       />
     </div>
   ) : null;

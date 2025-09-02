@@ -214,7 +214,7 @@ export const VisualizedVolume = types
       }
       const toastContainer = new ToastContainer();
       try {
-        toastContainer.loading("Fething volume data...");
+        toastContainer.loading("Fetching volume data...");
         if (!window.WasmModule) {
           throw new Error("WasmModule is not loaded.");
         }

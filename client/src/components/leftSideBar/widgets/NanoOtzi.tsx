@@ -96,7 +96,10 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         volumeId: inferenceVolumeId,
       });
       setInferenceInProgress(false);
+      console.log(inferenceInProgress);
     } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
       console.error("startInference Error:", error);
     }
   };
@@ -150,6 +153,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       window.WasmModule?.FS.writeFile(settings.file, rawDataFile);
 
+      //LOL error when calling this api
       const checkpointTxt = await checkpointToText(inferenceCheckpointId);
 
       window.WasmModule?.FS.writeFile("parameters.txt", checkpointTxt);

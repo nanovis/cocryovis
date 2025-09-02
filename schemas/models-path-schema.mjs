@@ -25,7 +25,7 @@ export const getModelsSchema = z.array(
 );
 
 export const createModelSchema = z.object({
-    name: z.string(),
+    name: z.string().min(1, "Model name is required"),
     description: z.string(),
 });
 

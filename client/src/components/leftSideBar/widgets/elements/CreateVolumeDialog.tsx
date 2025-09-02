@@ -10,15 +10,17 @@ import {
   Input,
   Field,
   Textarea,
+  Spinner,
 } from "@fluentui/react-components";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreate: (name: string, description: string) => void;
+  isActive: boolean;
 }
 
-const CreateVolumeDialog = ({ open, onClose, onCreate }: Props) => {
+const CreateVolumeDialog = ({ open, onClose, onCreate, isActive }: Props) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -52,12 +54,30 @@ const CreateVolumeDialog = ({ open, onClose, onCreate }: Props) => {
             </Field>
           </DialogContent>
           <DialogActions>
-            <Button appearance="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button appearance="primary" onClick={handleCreate}>
-              Create
-            </Button>
+            {isActive ? (
+              <div>
+                <Spinner
+                  appearance="primary"
+                  size="medium"
+                  style={{ marginRight: "10px" }}
+                />
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "25px",
+                }}
+              >
+                <Button appearance="secondary" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button appearance="primary" onClick={handleCreate}>
+                  Create
+                </Button>
+              </div>
+            )}
           </DialogActions>
         </DialogBody>
       </DialogSurface>

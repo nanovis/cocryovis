@@ -39,6 +39,7 @@ export const UiState = types
   })
   .volatile(() => ({
     isSignInOrSignUpInProgress: false,
+    //LOL change place
     changePasswordActiveRequest: false,
     deleteUserActiveRequset: false,
   }))

@@ -58,6 +58,10 @@ export const Volume = types
       new Array(4).fill(false)
     ),
   })
+  .volatile(() => ({
+    volumeDataConfirmDeleteActiveRequest: false,
+  }))
+
   .views((self) => ({
     get sparseVolumeArray() {
       return Array.from(self.sparseVolumes.values());
@@ -67,6 +71,9 @@ export const Volume = types
     },
   }))
   .actions((self) => ({
+    setVolumeDataConfirmDeleteActiveRequest(active: boolean) {
+      self.volumeDataConfirmDeleteActiveRequest = active;
+    },
     setRawVolume(volume: RawVolumeSnapshotIn | undefined) {
       if (!volume) return;
 
@@ -297,6 +304,10 @@ export const ProjectVolumes = types
     volumes: types.map(Volume),
     selectedVolumeId: types.maybe(types.integer),
   })
+  .volatile(() => ({
+    removeVolumeActiveRequest: false,
+    createVolumeActiveRequest: false,
+  }))
   .views((self) => ({
     get volumeArray() {
       return Array.from(self.volumes.values());
@@ -322,6 +333,13 @@ export const ProjectVolumes = types
     },
   }))
   .actions((self) => ({
+    setRemoveVolumeActiveRequest(active: boolean) {
+      self.removeVolumeActiveRequest = active;
+    },
+    setCreateVolumeActiveRequest(active: boolean) {
+      self.createVolumeActiveRequest = active;
+    },
+
     setSelectedVolumeId(volumeId: number | undefined) {
       if (volumeId && !self.volumes.has(volumeId)) {
         throw new Error(`Volume with id ${volumeId} not found`);
@@ -358,60 +376,50 @@ export const ProjectVolumes = types
       name: string,
       description: string
     ) {
-      try {
-        const volume: z.infer<typeof volumeSchema> =
-          yield volumeApi.createVolume(self.projectId, {
-            name: name,
-            description: description,
-          });
-        if (!isAlive(self)) {
-          return;
+      const volume: z.infer<typeof volumeSchema> = yield volumeApi.createVolume(
+        self.projectId,
+        {
+          name: name,
+          description: description,
         }
-
-        self.addVolume(volume);
-        self.selectedVolumeId = volume.id;
-
-        return volume;
-      } catch (error) {
-        console.error(error);
+      );
+      if (!isAlive(self)) {
+        return;
       }
+
+      self.addVolume(volume);
+      self.selectedVolumeId = volume.id;
+
+      return volume;
     }),
     removeVolume: flow(function* removeVolume(volumeId: number) {
-      try {
-        yield volumeApi.removeFromProject(self.projectId, volumeId);
-        if (!isAlive(self)) {
-          return;
-        }
+      yield volumeApi.removeFromProject(self.projectId, volumeId);
+      if (!isAlive(self)) {
+        return;
+      }
 
-        self.volumes.delete(volumeId.toString());
-        if (self.selectedVolumeId === volumeId) {
-          self.selectedVolumeId = undefined;
-        }
-      } catch (error) {
-        console.error(error);
+      self.volumes.delete(volumeId.toString());
+      if (self.selectedVolumeId === volumeId) {
+        self.selectedVolumeId = undefined;
       }
     }),
   }))
   .actions((self) => ({
     refreshVolumes: flow(function* refreshVolumes() {
-      try {
-        const volumes: z.infer<typeof volumesDeepSchemaRes> =
-          yield getVolumesFromProjectDeep(self.projectId);
-        if (!isAlive(self)) {
-          return;
-        }
-
-        self.volumes.clear();
-        self.setVolumes(volumes);
-
-        if (self.selectedVolumeId && !self.volumes.has(self.selectedVolumeId)) {
-          self.selectedVolumeId = undefined;
-        }
-
-        return self.selectedVolume;
-      } catch (error) {
-        console.error(error);
+      const volumes: z.infer<typeof volumesDeepSchemaRes> =
+        yield getVolumesFromProjectDeep(self.projectId);
+      if (!isAlive(self)) {
+        return;
       }
+
+      self.volumes.clear();
+      self.setVolumes(volumes);
+
+      if (self.selectedVolumeId && !self.volumes.has(self.selectedVolumeId)) {
+        self.selectedVolumeId = undefined;
+      }
+
+      return self.selectedVolume;
     }),
   }));
 

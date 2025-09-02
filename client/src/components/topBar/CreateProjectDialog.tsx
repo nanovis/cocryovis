@@ -9,6 +9,7 @@ import {
   Input,
   Field,
   Textarea,
+  Spinner,
 } from "@fluentui/react-components";
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
   setProjectName: React.Dispatch<React.SetStateAction<string>>;
   projectDescription: string;
   setProjectDescription: React.Dispatch<React.SetStateAction<string>>;
+  isActive: boolean;
 }
 
 const CreateProjectDialog = ({
@@ -29,6 +31,7 @@ const CreateProjectDialog = ({
   setProjectName,
   projectDescription,
   setProjectDescription,
+  isActive,
 }: Props) => {
   return (
     <Dialog open={open}>
@@ -65,12 +68,30 @@ const CreateProjectDialog = ({
             </Field>
           </DialogContent>
           <DialogActions style={{ marginTop: "35px" }}>
-            <Button appearance="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button appearance="primary" onClick={onConfirm}>
-              Create New Project
-            </Button>
+            {isActive ? (
+              <div>
+                <Spinner
+                  appearance="primary"
+                  size="medium"
+                  style={{ marginRight: "10px" }}
+                />
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "25px",
+                }}
+              >
+                <Button appearance="secondary" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button appearance="primary" onClick={onConfirm}>
+                  Create New Project
+                </Button>
+              </div>
+            )}
           </DialogActions>
         </DialogBody>
       </DialogSurface>

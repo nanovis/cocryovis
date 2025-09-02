@@ -58,6 +58,10 @@ export const UserProjects = types
     projects: types.map(Project),
     activeProjectId: types.maybe(types.integer),
   })
+  .volatile(() => ({
+    projectDeleteActiveRequest: false,
+    createProjectActiveRequest: false,
+  }))
   .views((self) => ({
     get user() {
       return getParent(self);
@@ -69,6 +73,12 @@ export const UserProjects = types
     },
   }))
   .actions((self) => ({
+    setProjectDeleteActiveRequest(active: boolean) {
+      self.projectDeleteActiveRequest = active;
+    },
+    setCreateProjectActiveRequest(active: boolean) {
+      self.createProjectActiveRequest = active;
+    },
     clear() {
       self.projects.clear();
       self.activeProjectId = undefined;

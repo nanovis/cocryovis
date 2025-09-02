@@ -23,6 +23,8 @@ import {
 } from "@fluentui/react-icons";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import DeleteDialog from "../shared/DeleteDialog";
+import ToastContainer from "../../utils/ToastContainer";
+import { getErrorMessage } from "../../utils/Helpers";
 
 const enum WidgetIndices {
   Volume = 0,
@@ -35,24 +37,28 @@ const enum WidgetIndices {
 const SideControls = observer(() => {
   const globalClasses = globalStyles();
 
-  const { user, uiState } = useMst();
+  const { user, uiState, pageDisabled } = useMst();
   const activeProjectId = user?.userProjects.activeProjectId;
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleConfirmDelete = async () => {
+    const activeProjectId = user?.userProjects.activeProjectId;
+    if (!activeProjectId) {
+      return;
+    }
     try {
-      const activeProjectId = user?.userProjects.activeProjectId;
-      if (!activeProjectId) {
-        return;
-      }
+      user.userProjects.setProjectDeleteActiveRequest(true);
       await user.userProjects.deleteProject(activeProjectId);
       setIsDeleteDialogOpen(false);
     } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
       console.error("Error:", error);
     }
+    user.userProjects.setProjectDeleteActiveRequest(false);
   };
-
+  //LOL fix LabelIcon on Training and Inference
   return (
     <>
       <div
@@ -68,7 +74,7 @@ const SideControls = observer(() => {
             LabelIcon={Cube24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.Volume}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Volume)}
-            disabled={activeProjectId === undefined}
+            disabled={activeProjectId === undefined || pageDisabled}
           />
 
           <WidgetToggleButton
@@ -77,7 +83,7 @@ const SideControls = observer(() => {
             LabelIcon={BrainCircuit24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.Models}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Models)}
-            disabled={activeProjectId === undefined}
+            disabled={activeProjectId === undefined || pageDisabled}
           />
 
           <WidgetToggleButton
@@ -86,7 +92,7 @@ const SideControls = observer(() => {
             LabelIcon={Cube24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.NanoOtzi}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.NanoOtzi)}
-            disabled={activeProjectId === undefined}
+            disabled={activeProjectId === undefined || pageDisabled}
           />
 
           <WidgetToggleButton
@@ -95,7 +101,7 @@ const SideControls = observer(() => {
             LabelIcon={Status24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.Status}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Status)}
-            disabled={user.isGuest}
+            disabled={user.isGuest || pageDisabled}
           />
 
           <WidgetToggleButton
@@ -104,6 +110,7 @@ const SideControls = observer(() => {
             LabelIcon={DesktopTower24Regular}
             isOpen={uiState.openLeftWidget === WidgetIndices.Local}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Local)}
+            disabled={user.isGuest || pageDisabled}
           />
 
           <Tooltip
@@ -122,7 +129,7 @@ const SideControls = observer(() => {
               style={{ marginTop: "auto", marginBottom: "16px" }}
               icon={<Delete24Regular />}
               onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={!activeProjectId}
+              disabled={!activeProjectId || pageDisabled}
             />
           </Tooltip>
         </div>
@@ -156,6 +163,7 @@ const SideControls = observer(() => {
         open={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
+        isActive={!!user.userProjects.projectDeleteActiveRequest}
       />
     </>
   );

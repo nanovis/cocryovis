@@ -26,6 +26,10 @@ export const VolumeResults = types
     results: types.map(Result),
     selectedResultId: types.maybe(types.integer),
   })
+  .volatile(() => ({
+    removeResultActiveRequest: false,
+  }))
+
   .views((self) => ({
     get selectedResult() {
       return self.selectedResultId
@@ -34,6 +38,9 @@ export const VolumeResults = types
     },
   }))
   .actions((self) => ({
+    setRemoveResultActiveRequest(active: boolean) {
+      self.removeResultActiveRequest = active;
+    },
     setSelectedResultId(resultId: number) {
       if (!self.results.has(resultId)) {
         throw new Error(`Result with id ${resultId} not found`);

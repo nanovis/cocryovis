@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import "./App.css";
 
 import MenuBar from "./components/topBar/MenuBar";
@@ -19,7 +19,6 @@ import * as Utils from "./utils/Helpers";
 import { useServerListener } from "./hooks/useServerListener";
 import { observer } from "mobx-react-lite";
 import { useMst } from "./stores/RootStore";
-import { UserDB } from "./stores/userState/UserModel";
 import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import { getLoggedUserData, login, register } from "./api/users";
@@ -66,27 +65,24 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
       return JSON.parse(cookieData);
     };
 
-    const setupUser = async (user: UserDB) => {
-      uiState.setOpenSignUpPage(false);
-      uiState.setOpenSignInPage(false);
-      return await rootStore.login(user);
-    };
-
-    const [LoginInit, setLoginInit] = useState(true);
-
     const getIsUserAuth = async () => {
-      if (!LoginInit) return;
-
-      setLoginInit(false);
+      if (rootStore.triedReloadingSession) return;
+      rootStore.setTriedReloadingSession(true);
       const cookieData = fetchAuthCookieData();
       if (cookieData) {
+        const toastContainer = new ToastContainer();
         try {
+          rootStore.setReloadingSession(true);
+          toastContainer.loading("Restoring previous session.");
           const userData = await getLoggedUserData();
-          await setupUser(userData);
+          await rootStore.login(userData);
+          toastContainer.success("Session restored.");
         } catch {
           Cookies.remove(CookieName);
           await rootStore.logout();
           uiState.setOpenSignInPage(true);
+        } finally {
+          rootStore.setReloadingSession(false);
         }
       }
 
@@ -130,7 +126,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
 
     const handleSignIn = async (credentials: SignInCredentials) => {
       const userData = await login(credentials);
-      await setupUser(userData);
+      await rootStore.login(userData);
     };
 
     const handleSignUp = async (userData: SignUpCredentials) => {
@@ -143,7 +139,7 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
         password: userData.password,
         email: userData.email,
       });
-      await setupUser(contents);
+      await rootStore.login(contents);
     };
 
     useEffect(() => {
@@ -205,10 +201,12 @@ const App: React.FC<{ toggleTheme: () => void }> = observer(
           toggleTheme={toggleTheme}
           connectionStatus={connectionStatus}
         />
+
         <div id="main-panel" className={classes.mainPanel}>
           {!uiState.openSignInPage && !uiState.openSignUpPage && (
             <SideControls />
           )}
+
           <div
             id="rendering"
             onContextMenu={(e) => e.preventDefault()}

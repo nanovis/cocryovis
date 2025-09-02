@@ -26,7 +26,7 @@ const enum WidgetIndices {
 }
 
 const SideControls = observer(() => {
-  const { uiState } = useMst();
+  const { uiState, pageDisabled } = useMst();
   const globalClasses = globalStyles();
 
   const [isVisDialogOpen, setIsVisDialogOpen] = useState(false);
@@ -156,6 +156,7 @@ const SideControls = observer(() => {
               className={globalClasses.widgetButton}
               icon={<ArrowUpload24Regular />}
               onClick={() => setIsVisDialogOpen(true)}
+              disabled={pageDisabled}
             />
           </Tooltip>
 
@@ -167,7 +168,7 @@ const SideControls = observer(() => {
             onClick={() =>
               uiState.setOpenRightWidget(WidgetIndices.Visualization)
             }
-            disabled={!uiState.visualizedVolume}
+            disabled={!uiState.visualizedVolume || pageDisabled}
           />
 
           <WidgetToggleButton
@@ -178,6 +179,7 @@ const SideControls = observer(() => {
             onClick={() =>
               uiState.setOpenRightWidget(WidgetIndices.RenderSettings)
             }
+            disabled={pageDisabled}
           />
 
           <WidgetToggleButton
@@ -186,6 +188,7 @@ const SideControls = observer(() => {
             LabelIcon={Info24Regular}
             isOpen={uiState.openRightWidget === WidgetIndices.About}
             onClick={() => uiState.setOpenRightWidget(WidgetIndices.About)}
+            disabled={pageDisabled}
           />
         </div>
       </div>

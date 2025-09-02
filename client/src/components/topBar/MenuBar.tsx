@@ -11,9 +11,11 @@ import {
   PeopleAdd20Filled,
 } from "@fluentui/react-icons";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../stores/RootStore";
+import { rootStore, useMst } from "../../stores/RootStore";
 import ShareProject from "./ShareProject";
 import KaustLogo from "./icons/kaust_logo.svg";
+import ToastContainer from "../../utils/ToastContainer";
+import { getErrorMessage } from "../../utils/Helpers";
 
 const useStyles = makeStyles({
   menubar: {
@@ -76,29 +78,33 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
   };
 
   const handleConfirmCreate = async () => {
+    if (projectName.length === 0) {
+      alert("Project name must not be empty.");
+      return;
+    }
+
+    if (user.isGuest) {
+      return;
+    }
+    const toastContainer = new ToastContainer();
+
     try {
-      if (projectName.length === 0) {
-        alert("Project name must not be empty.");
-        return;
-      }
-
-      if (user.isGuest) {
-        return;
-      }
-
+      user.userProjects.setCreateProjectActiveRequest(true);
       await user.userProjects.createProject(projectName, projectDescription);
-
+      toastContainer.success("Project created.");
       handleCloseCreateDialog();
     } catch (error) {
+      toastContainer.error(getErrorMessage(error));
       console.error("Error:", error);
     }
+    user.userProjects.setCreateProjectActiveRequest(false);
   };
 
   return (
     <div className={classes.menubar}>
       <div style={{ display: "flex", alignItems: "center" }}>
         <Image src={KaustLogo} className={classes.logoIcon} />
-        {!user.isGuest && (
+        {!user.isGuest && !rootStore.pageDisabled && (
           <MenuBarItem
             label="Select Project"
             children={[
@@ -111,7 +117,7 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
             ]}
           />
         )}
-        {user.userProjects.activeProjectId && (
+        {user.userProjects.activeProjectId && !rootStore.pageDisabled && (
           <div style={{ display: "flex", alignItems: "center" }}>
             <Label style={{ marginLeft: "20px" }}>
               {"Active Project: "} {user.userProjects.activeProject?.name}
@@ -146,14 +152,14 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
             style={{ marginLeft: "50px" }}
             appearance="subtle"
             onClick={() => user.userProjects.loadDemoProject()}
-            disabled={uiState.isSignInOrSignUpInProgress}
+            disabled={rootStore.pageDisabled}
           >
             Open Demo Project
           </Button>
         </Tooltip>
       </div>
       <div style={{ display: "flex" }}>
-        {!user.isGuest ? (
+        {!user.isGuest && !rootStore.pageDisabled ? (
           <div style={{ display: "flex", minHeight: "34px" }}>
             <div className={classes.userStatus} style={{ minHeight: "20px" }}>
               <Text weight="bold">{user.name}</Text>
@@ -204,14 +210,14 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
               style={{ marginRight: "5px" }}
               appearance="subtle"
               onClick={() => uiState.toggleSignInPage()}
-              disabled={uiState.isSignInOrSignUpInProgress}
+              disabled={rootStore.pageDisabled}
             >
               Sign In
             </Button>
             <Button
               appearance="subtle"
               onClick={() => uiState.toggleSignUpPage()}
-              disabled={uiState.isSignInOrSignUpInProgress}
+              disabled={rootStore.pageDisabled}
             >
               Sign Up
             </Button>
@@ -240,7 +246,8 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
         projectName={projectName}
         setProjectName={setProjectName}
         projectDescription={projectDescription}
-        setProjectDescription={setProjectDescription} // Pass the state setter to the dialog
+        setProjectDescription={setProjectDescription}
+        isActive={user.userProjects.createProjectActiveRequest}
       />
 
       {/* Render OpenProjectDialog */}

@@ -110,6 +110,8 @@ const Local = observer(({ open, close }: Props) => {
       toastContainer.success("Data successfully processed!");
     } catch (error) {
       console.error("Error:", error);
+
+      toastContainer.error(Utils.getErrorMessage(error));
       throw error;
     } finally {
       setTiltSeriesProccessing(false);
@@ -147,7 +149,7 @@ const Local = observer(({ open, close }: Props) => {
       setInferenceCheckpointFile(file);
     }
   };
-
+  
   const startInferenceLocal = async () => {
     if (
       !inferenceRawDataFile ||

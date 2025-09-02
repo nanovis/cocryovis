@@ -71,7 +71,7 @@ interface Props {
   title?: string | undefined;
   onDownload?: React.MouseEventHandler<HTMLButtonElement>;
   onVisualize?: React.MouseEventHandler<HTMLButtonElement>;
-  onDelete?: () => void;
+  onDelete?: () => Promise<void>;
   onEdit?: React.MouseEventHandler<HTMLButtonElement>;
   onColorChange?: (color: string) => void;
   onEnabled?: React.MouseEventHandler<HTMLButtonElement>;
@@ -84,6 +84,7 @@ interface Props {
   inactive?: boolean;
   preventChanges?: boolean;
   highlighted?: boolean;
+  isActive?: boolean;
 }
 
 const ItemTitleDownloadDelete = ({
@@ -103,16 +104,19 @@ const ItemTitleDownloadDelete = ({
   inactive = false,
   preventChanges = false,
   highlighted = false,
+  isActive = false,
 }: Props) => {
   const classes = useStyles();
   const globalClasses = globalStyles();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [colorValue, setColorValue] = useState("#ffffff");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = async () => {
     if (!onDelete) return;
-    onDelete();
-    setIsDialogOpen(false);
+    await onDelete();
+    if (!isActive) {
+      setIsDialogOpen(false);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -246,6 +250,7 @@ const ItemTitleDownloadDelete = ({
           open={isDialogOpen}
           onClose={handleCloseDialog}
           onConfirm={handleDeleteClick}
+          isActive={isActive}
         />
       </div>
       {onColorChange != undefined && (

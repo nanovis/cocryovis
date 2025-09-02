@@ -13,52 +13,74 @@ const RootStore = types
     uiState: types.optional(UiState, {}),
     wasmLoaded: types.optional(types.boolean, false),
   })
-  // .views((self) => ({
-  //   get isAdminPanelOpen() {
-  //     return self.uiState.openAdminPanel && self.user.isAdmin
-  //   }
-  // }))
+  .volatile(() => ({
+    reloadingSession: false,
+    triedReloadingSession: false,
+    setingUpUser: false,
+  }))
+
+  .views((self) => ({
+    // get isAdminPanelOpen() {
+    //   return self.uiState.openAdminPanel && self.user.isAdmin
+    // }
+    get pageDisabled() {
+      return (
+        self.reloadingSession ||
+        self.setingUpUser ||
+        self.uiState.isSignInOrSignUpInProgress
+      );
+    },
+  }))
   .actions((self) => ({
+    setReloadingSession(loading: boolean) {
+      self.reloadingSession = loading;
+    },
+    setTriedReloadingSession(loading: boolean) {
+      self.triedReloadingSession = loading;
+    },
+
     setWasmLoaded(loaded: boolean) {
       self.wasmLoaded = loaded;
     },
     login: flow(function* login(userData: UserDB) {
-      self.uiState.visualizedVolume = undefined;
-      self.user = User.create({
-        ...userData,
-        userProjects: {},
-        status: {},
-      });
-      const expirationTime = new Date(new Date().getTime() + 60 * 1000 * 24);
-      Cookies.set(CookieName, JSON.stringify(userData), {
-        expires: expirationTime,
-      });
-      yield self.user.userProjects.fetchProjects();
-      if (!isAlive(self)) {
-        return;
-      }
-      if (self.user.status) {
-        yield self.user.status.fetchStatus();
+      try {
+        self.setingUpUser = true;
+        self.uiState.visualizedVolume = undefined;
+        self.user = User.create({
+          ...userData,
+          userProjects: {},
+          status: {},
+        });
+        const expirationTime = new Date(new Date().getTime() + 60 * 1000 * 24);
+        Cookies.set(CookieName, JSON.stringify(userData), {
+          expires: expirationTime,
+        });
+        yield self.user.userProjects.fetchProjects();
         if (!isAlive(self)) {
           return;
         }
+        if (self.user.status) {
+          yield self.user.status.fetchStatus();
+          if (!isAlive(self)) {
+            return;
+          }
+        }
+        self.uiState.setOpenSignUpPage(false);
+        self.uiState.setOpenSignInPage(false);
+      } finally {
+        self.setingUpUser = false;
       }
-      return;
     }),
 
     logout: flow(function* logout() {
-      try {
-        yield Api.logout();
-        if (!isAlive(self)) {
-          return;
-        }
-        self.user = User.create({});
-        self.uiState.visualizedVolume = undefined;
-        Cookies.remove(CookieName);
-        window.location.reload();
-      } catch (error) {
-        console.error(error);
+      yield Api.logout();
+      if (!isAlive(self)) {
+        return;
       }
+      self.user = User.create({});
+      self.uiState.visualizedVolume = undefined;
+      Cookies.remove(CookieName);
+      window.location.reload();
     }),
   }));
 
