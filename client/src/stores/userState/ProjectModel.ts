@@ -58,7 +58,9 @@ export const UserProjects = types
     projects: types.map(Project),
     activeProjectId: types.maybe(types.integer),
   })
+
   .volatile(() => ({
+    fetchProjectsActiveRequest: false,
     projectDeleteActiveRequest: false,
     createProjectActiveRequest: false,
   }))
@@ -111,7 +113,11 @@ export const UserProjects = types
       }
     }),
     fetchProjects: flow(function* fetchProjects() {
+      if (self.fetchProjectsActiveRequest) {
+        return;
+      }
       try {
+        self.fetchProjectsActiveRequest = true;
         const projects: z.infer<typeof projectsSchemaDeepRes> =
           yield ProjectApi.getAllUserProjectsDeep();
         if (!isAlive(self)) {
@@ -139,8 +145,8 @@ export const UserProjects = types
         if (!foundProjectId) {
           self.activeProjectId = undefined;
         }
-      } catch (error) {
-        console.error("Failed to fetch projects", error);
+      } finally {
+        self.fetchProjectsActiveRequest = false;
       }
     }),
     createProject: flow(function* createProject(

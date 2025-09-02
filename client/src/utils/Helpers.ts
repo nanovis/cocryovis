@@ -32,6 +32,7 @@ export async function sendApiRequest(
     const content = isJson ? await response.json() : await response.text();
 
     errorMsg = isJson ? content.message : content;
+
     console.error(
       `Error when calling ${url}: (${response.status}) ${errorMsg}`
     );
@@ -39,37 +40,6 @@ export async function sendApiRequest(
   }
   return response;
 }
-
-// export async function sendRequestWithToast(
-//   url: string,
-//   options: RequestInit,
-//   {
-//     successText = null as string | null,
-//     pendingTextOverride = null as string | null,
-//   } = {}
-// ) {
-//   const errorRender = (messageData: { data: { message: string } }) => {
-//     return messageData.data.message;
-//   };
-
-//   const toastParameters: ToastPromiseParams<unknown, { message: string }> = {
-//     pending: pendingTextOverride ?? "Processing request...",
-//     error: {
-//       render: errorRender,
-//     },
-//   };
-
-//   if (successText) {
-//     toastParameters.success = successText;
-//   }
-
-//   return toast.promise(
-//     sendReq(url, options).then((response) => {
-//       return response;
-//     }),
-//     toastParameters
-//   ) as Promise<Response>;
-// }
 
 export function getFileNameFromPath(path: string | null | undefined) {
   return path?.replace(/^.*[\\/]/, "");

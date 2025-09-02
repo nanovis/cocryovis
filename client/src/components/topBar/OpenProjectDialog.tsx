@@ -11,15 +11,17 @@ import {
   mergeClasses,
   Option,
   tokens,
+  Tooltip,
 } from "@fluentui/react-components";
 import ComboboxSearch from "../shared/ComboboxSearch";
 import globalStyles from "../GlobalStyles";
-import { People16Filled } from "@fluentui/react-icons";
+import { ArrowSync24Regular, People16Filled } from "@fluentui/react-icons";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
 import { JSX } from "react/jsx-runtime";
 import { ProjectInstance } from "../../stores/userState/ProjectModel";
 import ToastContainer from "../../utils/ToastContainer";
+import { getErrorMessage } from "../../utils/Helpers";
 
 const useStyles = makeStyles({
   combobox: {
@@ -106,12 +108,28 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
     return undefined;
   };
 
+  async function handleRefreshProjects() {
+    try {
+      await user.userProjects.fetchProjects();
+    } catch (error) {
+      console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(getErrorMessage(error));
+    }
+  }
+
   return (
     <Dialog open={open}>
       <DialogSurface>
         <DialogBody>
           <DialogTitle>Open Project</DialogTitle>
-          <DialogContent style={{ paddingTop: "15px", paddingBottom: "15px" }}>
+          <DialogContent
+            style={{
+              paddingTop: "15px",
+              paddingBottom: "15px",
+              display: "flex",
+            }}
+          >
             <ComboboxSearch
               selectionList={createSelectionList()}
               selectedOption={getSelectedOption()}
@@ -143,14 +161,41 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
                 </Option>
               )}
             />
+            <Tooltip
+              content="Refresh Volume Data"
+              relationship="label"
+              hideDelay={0}
+            >
+              <Button
+                className={globalClasses.sideActionButton}
+                appearance="subtle"
+                icon={
+                  <ArrowSync24Regular
+                    className={mergeClasses(
+                      user.userProjects.fetchProjectsActiveRequest &&
+                        "spinning-icon"
+                    )}
+                  />
+                }
+                disabled={user.userProjects.fetchProjectsActiveRequest}
+                onClick={handleRefreshProjects}
+              />
+            </Tooltip>
           </DialogContent>
 
           <DialogActions style={{ marginTop: "35px" }}>
-            <Button appearance="secondary" onClick={onClose}>
+            <Button
+              appearance="secondary"
+              onClick={onClose}
+              disabled={user.userProjects.fetchProjectsActiveRequest}
+            >
               Cancel
             </Button>
             <Button
-              disabled={!selectedProjectId}
+              disabled={
+                !selectedProjectId ||
+                user.userProjects.fetchProjectsActiveRequest
+              }
               appearance="primary"
               onClick={handleSelectProject}
             >

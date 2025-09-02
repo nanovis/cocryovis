@@ -4,6 +4,8 @@ import { createContext, useContext } from "react";
 import Cookies from "js-cookie";
 import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
+import ToastContainer from "../utils/ToastContainer";
+import { getErrorMessage } from "../utils/Helpers";
 
 const CookieName = "LoggedUser";
 
@@ -42,7 +44,7 @@ const RootStore = types
     setWasmLoaded(loaded: boolean) {
       self.wasmLoaded = loaded;
     },
-    login: flow(function* login(userData: UserDB) {
+    login(userData: UserDB) {
       try {
         self.setingUpUser = true;
         self.uiState.visualizedVolume = undefined;
@@ -55,22 +57,22 @@ const RootStore = types
         Cookies.set(CookieName, JSON.stringify(userData), {
           expires: expirationTime,
         });
-        yield self.user.userProjects.fetchProjects();
-        if (!isAlive(self)) {
-          return;
-        }
+        self.user.userProjects.fetchProjects().catch((error) => {
+          const toastContainer = new ToastContainer();
+          toastContainer.error(getErrorMessage(error));
+        });
         if (self.user.status) {
-          yield self.user.status.fetchStatus();
-          if (!isAlive(self)) {
-            return;
-          }
+          self.user.status.fetchStatus().catch((error) => {
+            const toastContainer = new ToastContainer();
+            toastContainer.error(getErrorMessage(error));
+          });
         }
         self.uiState.setOpenSignUpPage(false);
         self.uiState.setOpenSignInPage(false);
       } finally {
         self.setingUpUser = false;
       }
-    }),
+    },
 
     logout: flow(function* logout() {
       yield Api.logout();
