@@ -39,9 +39,8 @@ export async function createModel(
 
 export async function removeModelFromProject(
   idModel: number,
-  idProject: number
 ) {
-  await Utils.sendApiRequest(`project/${idProject}/model/${idModel}`, {
+  await Utils.sendApiRequest(`/model/${idModel}`, {
     method: "DELETE",
     credentials: "include",
   });

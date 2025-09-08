@@ -68,7 +68,7 @@ export default class Checkpoint extends DatabaseModel {
                 },
             },
         });
-
+        
         return checkpoints;
     }
 

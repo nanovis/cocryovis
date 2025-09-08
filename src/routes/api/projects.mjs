@@ -180,7 +180,7 @@ projectsApi.post(`/project/:idProject/model/:idModel/clone`, restrictApi, ModelC
 projectsApi.get(`/model/:idModel`, restrictReadModelAccess, ModelController.getModel);
 
 // Remove Model
-projectsApi.delete(`/project/:idProject/model/:idModel`, restrictApi, ModelController.removeFromProject);
+projectsApi.delete(`/model/:idModel`, restrictApi, ModelController.deleteModel);
 
 /////// CHECKPOINTS
 

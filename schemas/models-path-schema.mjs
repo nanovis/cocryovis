@@ -14,7 +14,7 @@ import { stringToBoolean } from "./componentSchemas/string-to-boolean.mjs";
 
 export const getModelQuerySchema = z.object({
     checkpoints: stringToBoolean.optional(),
-    projects: stringToBoolean.optional(),
+    project: stringToBoolean.optional(),
 });
 
 export const getModelsSchema = z.array(
@@ -155,11 +155,9 @@ export const modelsPath = {
                 ...defaultError,
             },
         },
-    },
-    "/project/{idProject}/model/{idModel}params": {
         delete: {
             requestParams: {
-                path: idModelAndidProject,
+                path: idModel,
             },
 
             responses: {

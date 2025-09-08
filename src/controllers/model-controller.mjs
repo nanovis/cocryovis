@@ -90,14 +90,12 @@ export default class ModelController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async removeFromProject(req, res) {
+    static async deleteModel(req, res) {
         const { params } = validateSchema(req, {
-            paramsSchema: idModelAndidProject,
+            paramsSchema: idModel,
         });
 
-        const projectId = params.idProject;
-
-        await Model.removeFromProject(params.idModel, projectId);
+        await Model.del(params.idModel);
 
         res.sendStatus(204);
     }

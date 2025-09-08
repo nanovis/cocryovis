@@ -232,17 +232,11 @@ export async function restrictReadResultAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToModel(modelId, userId) {
-    const model = await Model.getById(modelId, { projects: true });
+    const model = await Model.getById(modelId, { project: true });
     if (!model) {
         throw new ApiError(404, `Volume ${modelId} not found!`);
     }
-    for (const project of model.projects) {
-        if (await userHasReadAccessToProject(project, userId)) {
-            return true;
-        }
-    }
-
-    return false;
+    return await userHasReadAccessToProject(model.project, userId);
 }
 
 /**

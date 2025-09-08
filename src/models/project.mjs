@@ -455,10 +455,8 @@ export default class Project extends DatabaseModel {
                             },
                             models: {
                                 where: {
-                                    projects: {
-                                        every: {
-                                            id: id,
-                                        },
+                                    project: {
+                                        id: id,
                                     },
                                 },
                                 include: {
@@ -468,11 +466,6 @@ export default class Project extends DatabaseModel {
                         },
                     });
                 });
-
-                await Model.deleteZombies(
-                    project.models.map((m) => m.id),
-                    tx
-                );
 
                 const allResults = [];
                 project.volumes.forEach((v) => allResults.push(...v.results));

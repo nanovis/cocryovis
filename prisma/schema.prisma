@@ -164,7 +164,8 @@ model Model {
   description String
   creator     User?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId   Int?
-  projects    Project[]
+  project     Project       @relation(fields: [projectId], references: [id])
+  projectId   Int
   checkpoints Checkpoint[]
   TaskHistory TaskHistory[]
 }

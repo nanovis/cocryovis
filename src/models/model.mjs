@@ -2,16 +2,15 @@
 
 import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import Checkpoint from "./checkpoint.mjs";
-import fsPromises from "fs/promises";
-import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
-import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
+import { MissingResourceError } from "../tools/error-handler.mjs";
 
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
- * @typedef {{checkpoints?: boolean, projects?: boolean }} Options
+ * @import z from "zod"
+ * @import { getModelQuerySchema } from "#schemas/models-path-schema.mjs";
+ * @typedef {z.infer<typeof getModelQuerySchema>} Options
  */
 
 export default class Model extends DatabaseModel {
@@ -26,12 +25,12 @@ export default class Model extends DatabaseModel {
      * @param {number} id
      * @param {Options} options
      */
-    static async getById(id, { checkpoints = false, projects = false } = {}) {
+    static async getById(id, { checkpoints = false, project = false } = {}) {
         const entry = await this.db.findUniqueOrThrow({
             where: { id: id },
             include: {
                 checkpoints: checkpoints,
-                projects: projects,
+                project: project,
             },
         });
         if (entry === null) {
@@ -54,19 +53,17 @@ export default class Model extends DatabaseModel {
      */
     static async getModelsFromProject(
         projectId,
-        { checkpoints = false, projects = false } = {}
+        { checkpoints = false, project = false } = {}
     ) {
         return await this.db.findMany({
             where: {
-                projects: {
-                    some: {
-                        id: projectId,
-                    },
+                project: {
+                    id: projectId,
                 },
             },
             include: {
                 checkpoints: checkpoints,
-                projects: projects,
+                project: project,
             },
         });
     }
@@ -85,9 +82,7 @@ export default class Model extends DatabaseModel {
                     name: name,
                     description: description,
                     creatorId: creatorId,
-                    projects: {
-                        connect: { id: projectId },
-                    },
+                    projectId,
                 },
             });
         });
@@ -132,9 +127,7 @@ export default class Model extends DatabaseModel {
             name: sourceModel.name,
             description: sourceModel.description,
             creatorId: creatorId,
-            projects: {
-                connect: { id: projectId },
-            },
+            projectId,
         };
 
         if (projectId != null) {
@@ -160,150 +153,96 @@ export default class Model extends DatabaseModel {
     }
 
     /**
-     * @param {number} id
-     * @returns {Promise<ModelDB>}
-     */
-    static async del(id) {
-        return this.#del(id);
-    }
-
-    /**
-     * @param {number} id
-     * @param {number} projectId
-     * @returns {Promise<ModelDB>}
-     */
-    static async removeFromProject(id, projectId) {
-        return Project.withWriteLock(projectId, [this.modelName], () => {
-            return this.#del(id, projectId);
-        });
-    }
-
-    /**
      * @param {number} modelId
-     * @param {number?} projectId
      * @returns { Promise<ModelDB> }
      */
-    static async #del(modelId, projectId = null) {
-        const fileDeleteStack = [];
-
-        const model = await prismaManager.db.$transaction(
-            async (tx) => {
-                let model = await tx.model.findUnique({
-                    where: { id: modelId },
-                    include: {
-                        projects: projectId !== null,
-                        checkpoints: {
-                            include: {
-                                labels: true,
-                            },
-                        },
-                    },
-                });
-
-                if (
-                    projectId &&
-                    !model.projects.some((m) => m.id === projectId)
-                ) {
-                    throw new ApiError(
-                        400,
-                        "Model is not part of the project."
-                    );
-                }
-
-                if (projectId && model.projects.length > 1) {
-                    await tx.model.update({
-                        where: {
-                            id: modelId,
-                        },
-                        data: {
-                            projects: {
-                                disconnect: { id: projectId },
-                            },
-                        },
-                    });
-                } else {
-                    await this.withWriteLock(modelId, null, async () => {
-                        return tx.model.delete({
-                            where: { id: modelId },
-                        });
-                    });
-
-                    fileDeleteStack.push(
-                        ...(await Checkpoint.deleteZombies(
-                            model.checkpoints.map((m) => m.id),
-                            tx
-                        ))
-                    );
-
-                    const allPseudoVolumes = [];
-                    model.checkpoints.forEach((v) =>
-                        allPseudoVolumes.push(...v.labels)
-                    );
-                    fileDeleteStack.push(
-                        ...(await PseudoLabeledVolumeData.deleteZombies(
-                            allPseudoVolumes,
-                            tx
-                        ))
-                    );
-
-                    return model;
-                }
-
-                return model;
-            },
-            {
-                timeout: 60000,
-            }
-        );
-
-        for (const file of fileDeleteStack) {
-            fsPromises
-                .rm(file, { recursive: true, force: true })
-                .catch((error) => {
-                    console.error(`Failed to delete ${file}: ${error}`);
-                });
-        }
-
-        return model;
-    }
-
-    /**
-     * @param {number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @returns {Promise<void>}
-     */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return;
-        }
-
-        const models = await tx.model.findMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    projects: {
-                        none: {},
-                    },
-                },
-            },
-        });
-
-        if (models.length === 0) {
-            return;
-        }
-
-        const idsToDelete = models.map((m) => m.id);
-
-        await this.withWriteLocks(idsToDelete, null, async () => {
-            return tx.model.deleteMany({
-                where: {
-                    id: {
-                        in: idsToDelete,
-                    },
-                },
+    static async del(modelId) {
+        return await this.withWriteLock(modelId, null, async () => {
+            return this.db.delete({
+                where: { id: modelId },
             });
         });
+
+        // const fileDeleteStack = [];
+
+        // const model = await prismaManager.db.$transaction(
+        //     async (tx) => {
+        //         let model = await tx.model.findUnique({
+        //             where: { id: modelId },
+        //             include: {
+        //                 project: projectId !== null,
+        //                 checkpoints: {
+        //                     include: {
+        //                         labels: true,
+        //                     },
+        //                 },
+        //             },
+        //         });
+
+        //         if (
+        //             projectId &&
+        //             !model.projects.some((m) => m.id === projectId)
+        //         ) {
+        //             throw new ApiError(
+        //                 400,
+        //                 "Model is not part of the project."
+        //             );
+        //         }
+
+        //         if (projectId && model.projects.length > 1) {
+        //             await tx.model.update({
+        //                 where: {
+        //                     id: modelId,
+        //                 },
+        //                 data: {
+        //                     projects: {
+        //                         disconnect: { id: projectId },
+        //                     },
+        //                 },
+        //             });
+        //         } else {
+        //             await this.withWriteLock(modelId, null, async () => {
+        //                 return tx.model.delete({
+        //                     where: { id: modelId },
+        //                 });
+        //             });
+
+        //             fileDeleteStack.push(
+        //                 ...(await Checkpoint.deleteZombies(
+        //                     model.checkpoints.map((m) => m.id),
+        //                     tx
+        //                 ))
+        //             );
+
+        //             const allPseudoVolumes = [];
+        //             model.checkpoints.forEach((v) =>
+        //                 allPseudoVolumes.push(...v.labels)
+        //             );
+        //             fileDeleteStack.push(
+        //                 ...(await PseudoLabeledVolumeData.deleteZombies(
+        //                     allPseudoVolumes,
+        //                     tx
+        //                 ))
+        //             );
+
+        //             return model;
+        //         }
+
+        //         return model;
+        //     },
+        //     {
+        //         timeout: 60000,
+        //     }
+        // );
+
+        // for (const file of fileDeleteStack) {
+        //     fsPromises
+        //         .rm(file, { recursive: true, force: true })
+        //         .catch((error) => {
+        //             console.error(`Failed to delete ${file}: ${error}`);
+        //         });
+        // }
+
+        // return model;
     }
 }
