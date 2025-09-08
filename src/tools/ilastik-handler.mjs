@@ -17,7 +17,10 @@ import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
 
+
 /**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
@@ -218,7 +221,7 @@ export default class IlastikHandler {
 
             IlastikHandler.#checkVolumeProperties(volume);
 
-            const settings = JSON.parse(volume.rawData.settings);
+            const settings = RawVolumeData.toSettingSchema(volume.rawData);
 
             const rawH5FileName =
                 Utils.stripExtension(volume.rawData.rawFilePath) + ".h5";
@@ -314,7 +317,7 @@ export default class IlastikHandler {
     /**
      * @param {RawVolumeDataDB} rawData
      * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
-     * @param {import("../models/volume-data.mjs").VolumeDataSettings} settings
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {string} rawOutputPath
      * @param {string} labelsOutputPath
      * @param {LogFile} logFile
@@ -408,7 +411,7 @@ export default class IlastikHandler {
             }
         }
 
-        const settings = JSON.parse(volume.rawData.settings);
+        const settings = RawVolumeData.toSettingSchema(volume.rawData);
         if (!Object.hasOwn(settings, "size")) {
             throw new ApiError(
                 400,
@@ -417,7 +420,7 @@ export default class IlastikHandler {
         }
         const dimensions = settings.size;
         for (const sparseLabel of volume.sparseVolumes) {
-            const settings = JSON.parse(sparseLabel.settings);
+            const settings = RawVolumeData.toSettingSchema(sparseLabel);
             if (
                 !Object.hasOwn(settings, "bytesPerVoxel") ||
                 settings.bytesPerVoxel != 1

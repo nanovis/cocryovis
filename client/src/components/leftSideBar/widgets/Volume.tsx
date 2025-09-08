@@ -218,12 +218,10 @@ const Volume = observer(({ open, close }: Props) => {
           throw new Error("Missing volume settings.");
         }
 
-        volumeSettings.file = pendingFile.name;
         volumeSettings.checkValidity();
 
-        const volumeSettingsFile = volumeSettings.toFile();
         await Utils.waitForNextFrame();
-        await selectedVolume?.uploadRawVolume(pendingFile, volumeSettingsFile);
+        await selectedVolume?.uploadRawVolume(pendingFile, volumeSettings);
       }
       toastContainer.success("Data uploaded!");
     } catch (error) {
@@ -546,7 +544,7 @@ const Volume = observer(({ open, close }: Props) => {
 
   const handleSparseLabelFileChange = async (event: FileChangeEvent) => {
     const toastContainer = new ToastContainer();
-
+//LOL
     try {
       if (!event.target.files) {
         throw Error("No files selected.");

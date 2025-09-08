@@ -11,6 +11,8 @@ import { ApiError } from "../tools/error-handler.mjs";
 import { PendingUpload } from "../tools/file-handler.mjs";
 
 /**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  */
 
@@ -50,14 +52,22 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload[]} files
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {boolean?} skipLock
      * @returns {Promise<PseudoVolumeDataDB>}
      */
-    static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
+    static async createFromFiles(
+        creatorId,
+        volumeId,
+        files,
+        settings,
+        skipLock = false
+    ) {
         return await super.createFromFiles(
             creatorId,
             volumeId,
             files,
+            settings,
             skipLock
         );
     }
@@ -226,7 +236,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {number} originalLabelId
-     * @param {string} settings
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {import("@prisma/client").Prisma.TransactionClient} client
      * @returns {Promise<PseudoVolumeDataDB>}
      */
@@ -242,7 +252,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
             data: {
                 creatorId: creatorId,
                 originalLabelId: originalLabelId,
-                settings: settings,
+                ...PseudoLabeledVolumeData.fromSettingSchema(settings),
                 volumes: {
                     connect: { id: volumeId },
                 },

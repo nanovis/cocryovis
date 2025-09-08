@@ -1,6 +1,6 @@
 import * as Utils from "./Helpers";
 
-type Vector3 = { x: number; y: number; z: number };
+export type Vector3 = { x: number; y: number; z: number };
 
 export class VolumeSettings {
   file?: string;

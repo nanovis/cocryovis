@@ -13,23 +13,13 @@ import { ApiError } from "../tools/error-handler.mjs";
 import archiver from "archiver";
 
 /**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
  * @typedef { RawVolumeDataDB | SparseLabelVolumeDataDB | PseudoLabelVolumeDataDB } VolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB
- * @typedef {object} VolumeDataSettings
- * @property {string} file
- * @property {{x: number, y: number, z: number}} size
- * @property {{x: number, y: number, z: number}} ratio
- * @property {number} bytesPerVoxel
- * @property {number} usedBits
- * @property {number} skipBytes
- * @property {boolean} isLittleEndian
- * @property {boolean} isSigned
- * @property {number} addValue
- * @property {string?} transferFunction
- * @property {string?} name
  */
 
 /**
@@ -43,6 +33,52 @@ export default class VolumeData extends DatabaseModel {
         this.settingFileExtensions
     );
 
+    /**
+     * @param {VolumeDataDB} volumeData
+     * @returns {z.infer<typeof volumeSettings>}
+     */
+    static toSettingSchema(volumeData) {
+        return {
+            file: path.basename(volumeData.rawFilePath),
+            size: {
+                x: volumeData.sizeX,
+                y: volumeData.sizeY,
+                z: volumeData.sizeZ,
+            },
+            ratio: {
+                x: volumeData.ratioX,
+                y: volumeData.ratioY,
+                z: volumeData.ratioZ,
+            },
+            bytesPerVoxel: volumeData.bytesPerVoxel,
+            usedBits: volumeData.usedBits,
+            skipBytes: volumeData.skipBytes,
+            isLittleEndian: volumeData.isLittleEndian,
+            isSigned: volumeData.isSigned,
+            addValue: volumeData.addValue,
+        };
+    }
+
+    /**
+     * @param {z.infer<typeof volumeSettings>} settings
+     */
+    static fromSettingSchema(settings) {
+        return {
+            sizeX: settings.size.x,
+            sizeY: settings.size.y,
+            sizeZ: settings.size.z,
+            ratioX: settings.ratio.x,
+            ratioY: settings.ratio.y,
+            ratioZ: settings.ratio.z,
+            bytesPerVoxel: settings.bytesPerVoxel,
+            usedBits: settings.usedBits,
+            skipBytes: settings.skipBytes,
+            isLittleEndian: settings.isLittleEndian,
+            isSigned: settings.isSigned,
+            addValue: settings.addValue,
+        };
+    }
+    
     /**
      * @returns {string}
      */
@@ -135,43 +171,37 @@ export default class VolumeData extends DatabaseModel {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload[]} files
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {boolean?} skipLock
      * @returns {Promise<object>}
      */
-    static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
+    static async createFromFiles(
+        creatorId,
+        volumeId,
+        files,
+        settings,
+        skipLock = false
+    ) {
         return await Volume.withWriteLock(
             volumeId,
             [this.modelName],
             async () => {
-                let rawFile = null;
-                let settingsFile = null;
+                let rawFile;
 
-                for (const unpackedFile of files) {
-                    if (
-                        !rawFile &&
-                        Utils.isFileExtensionAccepted(
-                            unpackedFile.fileName,
-                            this.rawFileExtensions
-                        )
-                    ) {
-                        rawFile = unpackedFile;
-                    } else if (
-                        !settingsFile &&
-                        Utils.isFileExtensionAccepted(
-                            unpackedFile.fileName,
-                            this.settingFileExtensions
-                        )
-                    ) {
-                        settingsFile = unpackedFile;
-                    }
-                }
+                rawFile = files.find((f) =>
+                    Utils.isFileExtensionAccepted(
+                        f.fileName,
+                        this.rawFileExtensions
+                    )
+                );
 
-                if (!rawFile || !settingsFile) {
+                if (!rawFile) {
                     throw new ApiError(
                         400,
-                        "Volume data requires both a .raw file and a settings file to create."
+                        "Volume data requires a .raw file create."
                     );
                 }
+                
 
                 return await prismaManager.db.$transaction(
                     async (tx) => {
@@ -182,6 +212,7 @@ export default class VolumeData extends DatabaseModel {
                                 volumes: {
                                     connect: { id: volumeId },
                                 },
+                                ...VolumeData.fromSettingSchema(settings)
                             },
                         });
                         let folderPath = null;
@@ -191,19 +222,12 @@ export default class VolumeData extends DatabaseModel {
                             );
                             const rawFilePath =
                                 await rawFile.saveAs(folderPath);
-                            const settingFileContents =
-                                await settingsFile.getData();
-                            const settings = await this.parseSettings(
-                                settingFileContents.toString("utf-8"),
-                                rawFilePath
-                            );
 
                             volumeData = await tx[this.modelName].update({
                                 where: { id: volumeData.id },
                                 data: {
                                     path: folderPath,
                                     rawFilePath: rawFilePath,
-                                    settings: settings,
                                 },
                             });
                         } catch (error) {
@@ -459,15 +483,11 @@ export default class VolumeData extends DatabaseModel {
                         volumeData.path,
                         fileNameOverride
                     );
-                    const settings = await this.parseSettings(
-                        volumeData.settings,
-                        newRawFilePath
-                    );
+
                     return await tx[this.modelName].update({
                         where: { id: volumeData.id },
                         data: {
                             rawFilePath: newRawFilePath,
-                            settings: settings,
                         },
                     });
                 } catch (error) {

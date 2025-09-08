@@ -126,7 +126,7 @@ export default class CheckpointController {
 
         /** @type {fileUpload.UploadedFile} */
         const checkpointFile = req.files.checkpoint;
-        //FIXME bad error output 
+        //FIXME bad error output
         const checkpointTxt = await Utils.ckptToText(
             checkpointFile.tempFilePath
         );

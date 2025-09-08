@@ -17,7 +17,7 @@ import {
     rawVolumeDataUpdateSchema,
 } from "./componentSchemas/raw-volume-data-schema.mjs";
 import {
-    multipleFileSchema,
+    fileSchema,
     singleFileSchema,
 } from "./componentSchemas/file-schema.mjs";
 import { annotationsSchema } from "./volume-path-schema.mjs";
@@ -130,6 +130,11 @@ export const idVolumeVolumeDataTypeParams = z
             },
         ],
     });
+//LOL 1 or array of files
+export const createFromFilesSchema = z.object({
+    volumeSettings,
+    rawFile: fileSchema,
+});
 
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject
@@ -210,10 +215,11 @@ export const volumeDataPath = {
             requestParams: {
                 path: idVolumeAndType,
             },
+
             requestBody: {
                 content: {
                     "multipart/form-data": {
-                        schema: multipleFileSchema,
+                        schema: createFromFilesSchema,
                     },
                 },
             },

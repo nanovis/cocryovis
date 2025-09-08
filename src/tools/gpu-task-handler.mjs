@@ -153,9 +153,10 @@ export default class GPUTaskHandler {
                 volume.rawData.path,
                 `${Utils.stripExtension(volume.rawData.rawFilePath)}.json`
             );
+            const settings = RawVolumeData.toSettingSchema(volume.rawData);
             await fsPromises.writeFile(
                 tempSettingsPath,
-                volume.rawData.settings,
+                JSON.stringify(settings),
                 "utf8"
             );
 
@@ -788,10 +789,10 @@ export default class GPUTaskHandler {
                     "NanoOetzi inference error: One or more inputs are missing raw data."
                 );
             }
-            if (!reference.rawData.rawFilePath || !reference.rawData.settings) {
+            if (!reference.rawData.rawFilePath) {
                 throw new ApiError(
                     400,
-                    "NanoOetzi inference error: One or more raw data volumes are missing either a raw file or settings."
+                    "NanoOetzi inference error: raw data volume is missing."
                 );
             }
             if (reference.pseudoVolumes.length == 0) {
@@ -801,7 +802,9 @@ export default class GPUTaskHandler {
                 );
             }
 
-            const volumeSettings = JSON.parse(reference.rawData.settings);
+            const volumeSettings = RawVolumeData.toSettingSchema(
+                reference.rawData
+            );
             if (
                 Object.hasOwn(volumeSettings, "usedBits") &&
                 volumeSettings["usedBits"] != 8
@@ -837,13 +840,15 @@ export default class GPUTaskHandler {
             };
 
             for (const pseudoVolume of reference.pseudoVolumes) {
-                if (!pseudoVolume.rawFilePath || !pseudoVolume.settings) {
+                if (!pseudoVolume.rawFilePath) {
                     throw new ApiError(
                         400,
-                        "NanoOetzi inference error: One or more pseudo labeled volumes are missing either a raw file or settings."
+                        "NanoOetzi inference error: One or more pseudo labeled volumes are missing a raw file."
                     );
                 }
-                const pseudoVolumeSettings = JSON.parse(pseudoVolume.settings);
+                const pseudoVolumeSettings =
+                    RawVolumeData.toSettingSchema(pseudoVolume);
+
                 if (
                     Object.hasOwn(pseudoVolumeSettings, "usedBits") &&
                     pseudoVolumeSettings["usedBits"] != 8
@@ -895,12 +900,7 @@ export default class GPUTaskHandler {
                 `Inference: Raw Volume Data Volume must contain a raw file.`
             );
         }
-        if (!volume.rawData.settings) {
-            throw new ApiError(
-                400,
-                `Inference: Raw Volume Data Volume must contain a settings file.`
-            );
-        }
+
         if (!fileSystem.existsSync(checkpoint.filePath)) {
             throw new ApiError(
                 400,
@@ -1116,21 +1116,12 @@ export default class GPUTaskHandler {
             );
 
             const rawFilePath = path.join(outputPath, rawFileName);
-            const settingsFilePath = path.join(outputPath, "settings.json");
-
-            await fsPromises.writeFile(
-                settingsFilePath,
-                JSON.stringify(settings),
-                "utf8"
-            );
 
             const rawData = await RawVolumeData.createFromFiles(
                 userId,
                 volumeId,
-                [
-                    new PendingLocalFile(rawFilePath),
-                    new PendingLocalFile(settingsFilePath),
-                ],
+                [new PendingLocalFile(rawFilePath)],
+                settings,
                 true
             );
 

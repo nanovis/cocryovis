@@ -1,16 +1,17 @@
 // @ts-check
 
 import z from "zod";
+import { volumeSettings } from "./volume-settings-schema.mjs";
 
 export const pseudoLabelVolumeDataSchema = z.object({
-    id: z.number(),
+    id: z.int(),
     path: z.string().nullable(),
-    creatorId: z.number().nullable(),
+    creatorId: z.int().nullable(),
     rawFilePath: z.string().nullable(),
-    settings: z.string().nullable(),
-    originalLabelId: z.number().nullable(),
+    ...volumeSettings.shape,
+    originalLabelId: z.int().nullable(),
 });
 
 export const pseudoLabelVolumeDataUpdateSchema = z.object({
-    settings: z.string().nullable().optional(),
+    ...volumeSettings.shape,
 });

@@ -74,7 +74,7 @@ export interface SignUpCredentials {
 }
 
 interface Props {
-  onSignUp: (userData: SignUpCredentials) => void;
+  onSignUp: (userData: SignUpCredentials) => Promise<void>;
 }
 
 const SignUpPage = ({ onSignUp }: Props) => {
@@ -89,7 +89,7 @@ const SignUpPage = ({ onSignUp }: Props) => {
   const [errorMessage, setErrorMessage] = useState("");
   const classes = useStyles();
 
-  const handleSubmit = async (): Promise<void>  =>  {
+  const handleSubmit = async ()  =>  {
     uiState.setIsActive(true);
     setShowSpinner(true);
     setErrorMessage("");
@@ -101,7 +101,6 @@ const SignUpPage = ({ onSignUp }: Props) => {
       email,
     };
     try {
-      //LOL
       await onSignUp(userData);
     } catch (error) {
       setErrorMessage(getErrorMessage(error));

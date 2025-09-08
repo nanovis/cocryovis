@@ -10,11 +10,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
-import {
-    PendingData,
-    PendingLocalFile,
-    unpackFiles,
-} from "../tools/file-handler.mjs";
+import { PendingLocalFile, unpackFiles } from "../tools/file-handler.mjs";
 import fsPromises from "node:fs/promises";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import appConfig from "../tools/config.mjs";
@@ -27,8 +23,11 @@ import {
     updateAnnotationsSchema,
     volumeDataUpdate,
 } from "#schemas/volume-data-path-schema.mjs";
+import VolumeData from "../models/volume-data.mjs";
 
 /**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("express").Request } Request
  * @typedef { import("express").Response } Response
  */
@@ -115,13 +114,6 @@ export default class VolumeDataController {
             );
         }
 
-        if (!volumeData.settings) {
-            throw new ApiError(
-                400,
-                "Visualisation requires the volume data to contain a settings file."
-            );
-        }
-
         const archive = archiver("zip", {
             zlib: { level: appConfig.compressionLevel },
         });
@@ -135,7 +127,7 @@ export default class VolumeDataController {
 
         await Utils.packVisualizationArchive(
             archive,
-            [JSON.parse(volumeData.settings)],
+            [VolumeData.toSettingSchema(volumeData)],
             [volumeData.rawFilePath]
         );
 
@@ -149,13 +141,14 @@ export default class VolumeDataController {
     static async createFromFiles(req, res) {
         const { params } = validateSchema(req, {
             paramsSchema: idVolumeAndType,
+            // bodySchema: volumeSettings,
         });
 
-        if (!req.files || !req.files.files) {
-            throw new ApiError(400, "No file uploaded");
+        if (!req.files || !req.files.rawFile) {
+            throw new ApiError(400, "s");
         }
 
-        let files = req.files.files;
+        let files = req.files.rawFile;
         if (!Array.isArray(files)) {
             files = [files];
         }
@@ -168,11 +161,14 @@ export default class VolumeDataController {
             files,
             VolumeDataClass.acceptedFileExtensions
         );
+        /** @type {z.infer<typeof volumeSettings>} */
+        const settings = JSON.parse(req.body.settings);
 
         const volumeData = await VolumeDataClass.createFromFiles(
             req.session.user.id,
             params.idVolume,
-            unpackedFiles
+            unpackedFiles,
+            settings
         );
 
         res.status(201).json(volumeData);
@@ -225,7 +221,6 @@ export default class VolumeDataController {
     static async createFromUrl(req, res) {
         const { params, body } = validateSchema(req, {
             paramsSchema: idVolumeAndType,
-            //LOL
             bodySchema: fromUrlSchema,
         });
 
@@ -251,15 +246,13 @@ export default class VolumeDataController {
                     file
                 );
             } else {
-                const settingsFile = new PendingData(
-                    Buffer.from(JSON.stringify(body.volumeSettings)),
-                    "volume-settings.json"
-                );
+                const settings = body.volumeSettings;
 
                 volumeData = await RawVolumeData.createFromFiles(
                     req.session.user.id,
                     params.idVolume,
-                    [file, settingsFile]
+                    [file],
+                    settings
                 );
             }
 

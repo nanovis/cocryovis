@@ -12,6 +12,8 @@ import Utils from "../tools/utils.mjs";
 import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 
 /**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
 
@@ -51,14 +53,22 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload[]} files
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {boolean?} skipLock
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
-    static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
+    static async createFromFiles(
+        creatorId,
+        volumeId,
+        files,
+        settings,
+        skipLock = false
+    ) {
         return await super.createFromFiles(
             creatorId,
             volumeId,
             files,
+            settings,
             skipLock
         );
     }
@@ -192,7 +202,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @param {string} filePath
      * @param {number} creatorId
      * @param {number} volumeId
-     * @param {string} settings
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
@@ -209,6 +219,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
                 volumes: {
                     connect: { id: volumeId },
                 },
+                ...SparseLabeledVolumeData.fromSettingSchema(settings),
             },
         });
 
@@ -223,7 +234,6 @@ export default class SparseLabeledVolumeData extends VolumeData {
                 data: {
                     path: folderPath,
                     rawFilePath: newFilePath,
-                    settings: settings,
                 },
             });
         } catch (error) {
@@ -274,7 +284,8 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     const volumeData =
                         await SparseLabeledVolumeData.getById(labelId);
 
-                    const volumeDataSettings = JSON.parse(volumeData.settings);
+                    const volumeDataSettings =
+                        SparseLabeledVolumeData.toSettingSchema(volumeData);
 
                     tempFolderPath = Utils.createTemporaryFolder(
                         Volume.annotationsTempDirectory

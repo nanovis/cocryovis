@@ -4,7 +4,7 @@ import { SparseLabelVolume, SparseVolumeSnapshotIn } from "./SparseVolumeModel";
 import { PseudoLabelVolume, PseudoVolumeSnapshotIn } from "./PseudoVolumeModel";
 import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
-import { VolumeSettings } from "../../utils/VolumeSettings";
+import { Vector3, VolumeSettings } from "../../utils/VolumeSettings";
 import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import z from "zod";
 import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
@@ -130,14 +130,23 @@ export const Volume = types
     },
     uploadRawVolume: flow(function* uploadRawVolume(
       rawFile: File,
-      settingsFile: File
+      settings: VolumeSettings
     ) {
-      const formData = new FormData();
-      formData.append("files", rawFile);
-      formData.append("files", settingsFile);
-
       const rawData: z.infer<typeof rawVolumeDataSchema> =
-        yield createFromFiles("RawVolumeData", self.id, formData);
+        yield createFromFiles("RawVolumeData", self.id, {
+          rawFile,
+          volumeSettings: {
+            file: settings.file as string,
+            size: settings.size as Vector3,
+            ratio: settings.ratio,
+            bytesPerVoxel: settings.bytesPerVoxel as number,
+            usedBits: settings.usedBits as number,
+            isLittleEndian: settings.isLittleEndian as boolean,
+            isSigned: settings.isSigned as boolean,
+            skipBytes: settings.skipBytes,
+            addValue: settings.addValue,
+          },
+        });
       if (!isAlive(self)) {
         return;
       }
@@ -168,9 +177,6 @@ export const Volume = types
       volumeSettings?: VolumeSettings
     ) {
       if (!Utils.isValidHttpUrl(url)) {
-        const toastContainer = new ToastContainer();
-        toastContainer.error(`Invalid URL.`);
-
         throw new Error("Invalid URL.");
       }
 
@@ -207,25 +213,15 @@ export const Volume = types
       parsedSettings: any,
       fileData: ArrayBuffer
     ) {
-      const formData = new FormData();
-      formData.append(
-        "files",
-        new Blob([fileData], {
-          type: "application/octet-stream",
-        }),
-        parsedSettings.file
-      );
-
-      formData.append(
-        "files",
-        new Blob([JSON.stringify(parsedSettings)], {
-          type: "application/json",
-        }),
-        "settings.json"
-      );
+      const rawFile = new File([fileData], parsedSettings.file, {
+        type: "application/octet-stream",
+      });
 
       const rawData: z.infer<typeof rawVolumeDataSchema> =
-        yield createFromFiles("RawVolumeData", self.id, formData);
+        yield createFromFiles("RawVolumeData", self.id, {
+          rawFile,
+          volumeSettings: parsedSettings,
+        });
       if (!isAlive(self)) {
         return;
       }
@@ -235,20 +231,17 @@ export const Volume = types
     uploadSparseLabelVolume: flow(function* uploadSparseLabelVolume(
       files: FileList
     ) {
-      const fileMap = yield Utils.unpackAndcreateFileMap(files);
+      const fileMap: Utils.FileMap = yield Utils.unpackAndcreateFileMap(files);
       if (!isAlive(self)) {
         return;
       }
-
-      const validatedFiles = Utils.validateRawFileUpload(fileMap);
-
-      const formData = new FormData();
-      validatedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
+      const { rawFile, settings } = yield Utils.validateRawFileUpload(fileMap);
 
       const volume: z.infer<typeof sparseLabelVolumeDataSchema> =
-        yield createFromFiles("SparseLabeledVolumeData", self.id, formData);
+        yield createFromFiles("SparseLabeledVolumeData", self.id, {
+          rawFile,
+          volumeSettings: settings,
+        });
       if (!isAlive(self)) {
         return;
       }
@@ -262,16 +255,13 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
-
-      const validatedFiles = Utils.validateRawFileUpload(fileMap);
-
-      const formData = new FormData();
-      validatedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
+      const { rawFile, settings } = yield Utils.validateRawFileUpload(fileMap);
 
       const volume: z.infer<typeof pseudoLabelVolumeDataSchema> =
-        yield createFromFiles("PseudoLabeledVolumeData", self.id, formData);
+        yield createFromFiles("PseudoLabeledVolumeData", self.id, {
+          rawFile,
+          volumeSettings: settings,
+        });
       if (!isAlive(self)) {
         return;
       }

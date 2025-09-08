@@ -16,6 +16,7 @@ import ResultFile from "./resultFile.mjs";
 import fileUpload from "express-fileupload";
 import { PendingFile } from "../tools/file-handler.mjs";
 import Utils from "../tools/utils.mjs";
+import VolumeData from "./volume-data.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -315,21 +316,15 @@ export default class Result extends DatabaseModel {
             );
         }
 
-        if (!volumeData.settings) {
-            throw new ApiError(
-                400,
-                "Source Volume Data is missing a settings file."
-            );
-        }
-
         const pendingFiles = files.map((file) => new PendingFile(file));
 
-        const settings = JSON.parse(volumeData.settings);
+        const settings = VolumeData.toSettingSchema(volumeData);
 
         const resultsFolderPath = path.join(
             appConfig.dataPath,
             this.resultsFolder
         );
+
         fsPromises.mkdir(resultsFolderPath, {
             recursive: true,
         });
@@ -390,7 +385,10 @@ export default class Result extends DatabaseModel {
                     let rawVolumeChannel = null;
 
                     for (const [i, pendingFile] of pendingFiles.entries()) {
-                        const settingFile = { ...settings };
+                        const settingFile = {
+                            ...settings,
+                            transferFunction: "",
+                        };
                         settingFile.file = pendingFile.filteredFileName;
                         settingFile.transferFunction = Result.#getTFName(
                             volumeDescriptors[i].name
@@ -432,7 +430,10 @@ export default class Result extends DatabaseModel {
                             volumeData.rawFilePath
                         )}_mean3_inverted.raw`;
 
-                        const settingFile = { ...settings };
+                        const settingFile = {
+                            ...settings,
+                            transferFunction: "",
+                        };
                         settingFile.file = meanFilteredFileName;
                         settingFile.transferFunction =
                             Result.#getTFName(volumeName);

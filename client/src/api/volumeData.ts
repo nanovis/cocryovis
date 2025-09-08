@@ -5,6 +5,7 @@ import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-la
 import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
 import { typeSchema } from "#schemas/componentSchemas/volume-data-schema.mjs";
 import {
+  createFromFilesSchema,
   fromUrlSchema,
   updateAnnotationsSchema,
   volumeDataUpdate,
@@ -78,14 +79,17 @@ export async function getVolumeVisualizationFiles<
 export async function createFromFiles<T extends keyof VolumeDataMap>(
   type: T,
   id: number,
-  request: FormData
+  request: z.input<typeof createFromFilesSchema>
 ) {
+  const formData = new FormData();
+  formData.append("rawFile", request.rawFile);
+  formData.append("settings", JSON.stringify(request.volumeSettings));
   const response = await Utils.sendApiRequest(
     `volume/${id}/volumeData/${type}/from-files`,
     {
       method: "POST",
       credentials: "include",
-      body: request,
+      body: formData,
     }
   );
   const volumeData: VolumeDataMap[T] = await response.json();

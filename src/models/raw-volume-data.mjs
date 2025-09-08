@@ -13,6 +13,8 @@ import appConfig from "../tools/config.mjs";
 import archiver from "archiver";
 
 /**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  */
 
@@ -53,14 +55,22 @@ export default class RawVolumeData extends VolumeData {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload[]} files
+     * @param {z.infer<typeof volumeSettings>} settings
      * @param {boolean?} skipLock
      * @returns {Promise<RawVolumeDataDB>}
      */
-    static async createFromFiles(creatorId, volumeId, files, skipLock = false) {
+    static async createFromFiles(
+        creatorId,
+        volumeId,
+        files,
+        settings,
+        skipLock = false
+    ) {
         return await super.createFromFiles(
             creatorId,
             volumeId,
             files,
+            settings,
             skipLock
         );
     }
@@ -101,6 +111,7 @@ export default class RawVolumeData extends VolumeData {
                                     volumes: {
                                         connect: { id: volumeId },
                                     },
+                                    ...RawVolumeData.fromSettingSchema(settings)
                                 },
                             });
                             let folderPath = null;
@@ -130,7 +141,6 @@ export default class RawVolumeData extends VolumeData {
                                     data: {
                                         path: folderPath,
                                         rawFilePath: rawFilePath,
-                                        settings: JSON.stringify(settings),
                                         mrcFilePath: mrcFilePath,
                                     },
                                 });
@@ -268,9 +278,8 @@ export default class RawVolumeData extends VolumeData {
             });
             hasFiles = true;
         }
-        if (downloadSettingsFile && volumeData.settings != null) {
-            const settings = JSON.parse(volumeData.settings);
-            delete settings.transferFunction;
+        if (downloadSettingsFile) {
+            const settings = RawVolumeData.toSettingSchema(volumeData);
             const settingsJSON = JSON.stringify(settings, null, 4);
             archive.append(settingsJSON, {
                 name: `${Utils.stripExtension(volumeData.rawFilePath)}.json`,

@@ -252,7 +252,7 @@ export function pickDefaultTF(currentIndex: number, blank = false) {
   return { tfName: tfName, tfDefinition: tfDefinition };
 }
 
-export function validateRawFileUpload(files: FileMap | null) {
+export async function validateRawFileUpload(files: FileMap | null) {
   try {
     if (!files || files.size == 0) {
       throw new Error("No files silected.");
@@ -264,31 +264,29 @@ export function validateRawFileUpload(files: FileMap | null) {
       );
     }
 
-    let rawFileFound = false;
-    let settingsFileFound = false;
-    files.forEach((file) => {
-      if (file.name.endsWith(".raw")) {
-        rawFileFound = true;
-      } else if (file.name.endsWith(".json")) {
-        settingsFileFound = true;
-      } else if (file.name.endsWith(".zip")) {
-        rawFileFound = true;
-        settingsFileFound = true;
+    let settings: any = undefined;
+    let rawFile: File | undefined = undefined;
+    for (const [fileName, file] of files.entries()) {
+      if (fileName.endsWith(".raw")) {
+        rawFile = file;
+      } else if (fileName.endsWith(".json")) {
+        const fileText = await file.text();
+        settings = JSON.parse(fileText);
       }
-    });
+    }
 
-    if (!rawFileFound) {
+    if (rawFile === undefined) {
       throw new Error(
         "Missing .raw data file. Volume Data requires both a raw data file and settings file."
       );
     }
-    if (!settingsFileFound) {
+    if (settings === undefined) {
       throw new Error(
         "Missing volume settings file. Volume Data requires both a raw data file and settings file."
       );
     }
 
-    return files;
+    return { rawFile, settings };
   } catch (error) {
     const toastContainer = new ToastContainer();
     toastContainer.error(getErrorMessage(error));

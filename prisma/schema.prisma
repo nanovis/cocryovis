@@ -25,9 +25,8 @@ model User {
   models                Model[]
   checkpoints           Checkpoint[]
   results               Result[]
-
-  projectAccess ProjectAccess[]
-  TaskHistory   TaskHistory[]
+  projectAccess         ProjectAccess[]
+  TaskHistory           TaskHistory[]
 
   @@index(fields: [username])
 }
@@ -73,27 +72,65 @@ model Volume {
 }
 
 model RawVolumeData {
-  id          Int      @id @default(autoincrement())
-  path        String?
-  creator     User?    @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId   Int?
-  rawFilePath String?
-  settings    String?
-  mrcFilePath String?
-  volumes     Volume[]
-  results     Result[]
+  id             Int      @id @default(autoincrement())
+  path           String?
+  creator        User?    @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId      Int?
+  rawFilePath    String?
+  sizeX          Int
+  sizeY          Int
+  sizeZ          Int
+  ratioX         Float
+  ratioY         Float
+  ratioZ         Float
+  skipBytes      Int
+  isLittleEndian Boolean
+  isSigned       Boolean
+  addValue       Int
+  bytesPerVoxel  Int
+  usedBits       Int
+  mrcFilePath    String?
+  volumes        Volume[]
+  results        Result[]
+  // BytesPerVoxel   BytesPerVoxel? @relation(fields: [bytesPerVoxelId], references: [id])
+  // bytesPerVoxelId Int?
+  // UsedBits        UsedBits?      @relation(fields: [usedBitsId], references: [id])
+  // usedBitsId      Int?
 }
 
+// model BytesPerVoxel {
+//   id   Int             @id
+//   name String
+//   data RawVolumeData[]
+// }
+
+// model UsedBits {
+//   id   Int             @id
+//   name String
+//   data RawVolumeData[]
+// }
+
 model SparseLabelVolumeData {
-  id            Int                     @id @default(autoincrement())
-  path          String?
-  creator       User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId     Int?
-  rawFilePath   String?
-  settings      String?
-  volumes       Volume[]
-  derivedLabels PseudoLabelVolumeData[]
-  color         String?
+  id             Int                     @id @default(autoincrement())
+  path           String?
+  creator        User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId      Int?
+  rawFilePath    String?
+  sizeX          Int
+  sizeY          Int
+  sizeZ          Int
+  ratioX         Float
+  ratioY         Float
+  ratioZ         Float
+  skipBytes      Int
+  isLittleEndian Boolean
+  isSigned       Boolean
+  addValue       Int
+  bytesPerVoxel  Int
+  usedBits       Int
+  volumes        Volume[]
+  derivedLabels  PseudoLabelVolumeData[]
+  color          String?
 }
 
 model PseudoLabelVolumeData {
@@ -102,7 +139,18 @@ model PseudoLabelVolumeData {
   creator         User?                  @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId       Int?
   rawFilePath     String?
-  settings        String?
+  sizeX           Int
+  sizeY           Int
+  sizeZ           Int
+  ratioX          Float
+  ratioY          Float
+  ratioZ          Float
+  skipBytes       Int
+  isLittleEndian  Boolean
+  isSigned        Boolean
+  addValue        Int
+  bytesPerVoxel   Int
+  usedBits        Int
   volumes         Volume[]
   checkpoints     Checkpoint[]
   originalLabel   SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id], onDelete: SetNull)

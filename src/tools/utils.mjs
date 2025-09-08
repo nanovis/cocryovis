@@ -9,6 +9,10 @@ import { promisify } from "node:util";
 import fs from "fs";
 const execPromise = promisify(exec);
 
+/**
+ * @import z from "zod"
+ * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
+ */
 export default class Utils {
     /**
      * @param {string} name
@@ -52,9 +56,11 @@ export default class Utils {
         //     path.join(outputPath, "mrc-to-raw.log"),
         //     `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
         // );
+
+        /** @type z.infer<typeof volumeSettings> */
         const data = JSON.parse(stdout);
         return {
-            rawFileName: data["file"],
+            rawFileName: data.file,
             settings: data,
         };
     }
@@ -69,9 +75,11 @@ export default class Utils {
             "analyze-to-raw.py"
         )}" -i "${inputFile}" -o "${outputPath}"`;
         const { stdout } = await execPromise(command);
+
+        /** @type z.infer<typeof volumeSettings> */
         const data = JSON.parse(stdout);
         return {
-            rawFileName: data["file"],
+            rawFileName: data.file,
             settings: data,
         };
     }
@@ -235,7 +243,7 @@ export default class Utils {
 
     /**
      * @param {import("archiver").Archiver} archive
-     * @param {import("../models/volume-data.mjs").VolumeDataSettings[]} settings
+     * @param {z.infer<typeof volumeSettings>[]} settings
      * @param {string[]} rawFilePaths
      * @param {number?} rawVolumeChannel
      * @returns {Promise<any>}
@@ -255,22 +263,23 @@ export default class Utils {
         const settingsFileNames = [];
 
         for (const volumeSettings of settings) {
-            if (volumeSettings.transferFunction) {
-                const publicTFPath = path.join(
-                    "transfer-functions",
-                    volumeSettings.transferFunction
-                );
-                if (fileSystem.existsSync(publicTFPath)) {
-                    archive.file(publicTFPath, {
-                        name: path.join(
-                            "transfer-functions",
-                            volumeSettings.transferFunction
-                        ),
-                    });
-                } else {
-                    delete volumeSettings.transferFunction;
-                }
-            }
+            // TODO restore transfer functions
+            // if (volumeSettings.transferFunction) {
+            //     const publicTFPath = path.join(
+            //         "transfer-functions",
+            //         volumeSettings.transferFunction
+            //     );
+            //     if (fileSystem.existsSync(publicTFPath)) {
+            //         archive.file(publicTFPath, {
+            //             name: path.join(
+            //                 "transfer-functions",
+            //                 volumeSettings.transferFunction
+            //             ),
+            //         });
+            //     } else {
+            //         delete volumeSettings.transferFunction;
+            //     }
+            // }
 
             const settingsFileName =
                 Utils.stripExtension(volumeSettings.file) + ".json";

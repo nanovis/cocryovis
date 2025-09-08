@@ -470,7 +470,7 @@ export default class Volume extends DatabaseModel {
                                     outputPath,
                                     creatorId,
                                     volume.id,
-                                    JSON.stringify(settings),
+                                    settings,
                                     tx
                                 );
 
@@ -540,18 +540,13 @@ export default class Volume extends DatabaseModel {
                 try {
                     for (let i = 0; i < files.length; i++) {
                         const filePath = path.join(folderPath, files[i]);
-                        const settingsJSON = JSON.parse(
-                            originalLabels[i].settings
-                        );
-                        settingsJSON.file = files[i];
-                        const settings = JSON.stringify(settingsJSON);
                         const pseudoLabelVolumeData =
                             await PseudoLabeledVolumeData.fromRawFile(
                                 filePath,
                                 creatorId,
                                 volumeId,
                                 originalLabels[i].id,
-                                settings,
+                                VolumeData.toSettingSchema(originalLabels[i]),
                                 tx
                             );
                         newFolders.push(pseudoLabelVolumeData.path);
