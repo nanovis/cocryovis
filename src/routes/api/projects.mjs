@@ -112,7 +112,7 @@ projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.cr
 projectsApi.get(`/volume/:idVolume`, restrictReadVolumeAccess, VolumeController.getVolume);
 
 // Remove Volume
-projectsApi.delete(`/project/:idProject/volume/:idVolume`, restrictApi, VolumeController.removeFromProject);
+projectsApi.delete(`/volume/:idVolume`, restrictApi, VolumeController.deleteVolume);
 
 // Process Manual Labels
 projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, VolumeController.addAnnotations);

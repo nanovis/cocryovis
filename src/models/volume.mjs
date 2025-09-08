@@ -2,11 +2,9 @@
 
 import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import RawVolumeData from "./raw-volume-data.mjs";
 import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
-import Result from "./result.mjs";
 import appConfig from "../tools/config.mjs";
 import Utils from "../tools/utils.mjs";
 import path from "path";
@@ -14,6 +12,7 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
+import VolumeData from "./volume-data.mjs";
 
 /**
  * @import z from "zod"
@@ -46,7 +45,7 @@ export default class Volume extends DatabaseModel {
             sparseVolumes: false,
             pseudoVolumes: false,
             results: false,
-            projects: false,
+            project: false,
         }
     ) {
         const entry = await this.db.findUnique({
@@ -56,7 +55,7 @@ export default class Volume extends DatabaseModel {
                 sparseVolumes: options.sparseVolumes,
                 pseudoVolumes: options.pseudoVolumes,
                 results: options.results,
-                projects: options.projects,
+                project: options.project,
             },
         });
         if (entry === null) {
@@ -76,15 +75,13 @@ export default class Volume extends DatabaseModel {
             sparseVolumes: false,
             pseudoVolumes: false,
             results: false,
-            projects: false,
+            project: false,
         }
     ) {
         return await this.db.findMany({
             where: {
-                projects: {
-                    some: {
-                        id: projectId,
-                    },
+                project: {
+                    id: projectId,
                 },
             },
             include: {
@@ -92,7 +89,7 @@ export default class Volume extends DatabaseModel {
                 sparseVolumes: options.sparseVolumes,
                 pseudoVolumes: options.pseudoVolumes,
                 results: options.results,
-                projects: options.projects,
+                project: options.project,
             },
         });
     }
@@ -103,10 +100,8 @@ export default class Volume extends DatabaseModel {
     static async getVolumesFromProjectDeep(projectId) {
         return await this.db.findMany({
             where: {
-                projects: {
-                    some: {
-                        id: projectId,
-                    },
+                project: {
+                    id: projectId,
                 },
             },
             include: {
@@ -166,9 +161,7 @@ export default class Volume extends DatabaseModel {
                     name: name,
                     description: description,
                     creatorId: creatorId,
-                    projects: {
-                        connect: { id: projectId },
-                    },
+                    projectId,
                 },
             });
         });
@@ -218,12 +211,12 @@ export default class Volume extends DatabaseModel {
         if (!sourceVolume) {
             throw MissingResourceError.fromId(sourceId, this.modelName);
         }
-
         const newVolumeData = {
             name: sourceVolume.name,
             description: sourceVolume.description,
             creatorId: creatorId,
             rawDataId: sourceVolume.rawDataId,
+            projectId: projectId,
             sparseVolumes: {
                 connect: sourceVolume.sparseVolumes,
             },
@@ -258,161 +251,102 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {number} id
-     * @returns {Promise<VolumeDB>}
-     */
-    static async del(id) {
-        return this.#del(id);
-    }
-
-    /**
-     * @param {number} id
-     * @param {number} projectId
-     * @returns {Promise<VolumeDB>}
-     */
-    static async removeFromProject(id, projectId) {
-        return Project.withWriteLock(projectId, [this.modelName], () => {
-            return this.#del(id, projectId);
-        });
-    }
-
-    // @param { import("@prisma/client").Prisma.VolumeDelegate } db
-
-    /**
      * @param {number} volumeId
-     * @param {number?} projectId
      * @returns { Promise<VolumeDB> }
      */
-    static async #del(volumeId, projectId = null) {
-        const fileDeleteStack = [];
-
-        const volume = await prismaManager.db.$transaction(
-            async (tx) => {
-                const volume = await tx.volume.findUnique({
-                    where: { id: volumeId },
-                    include: {
-                        projects: projectId !== null,
-                        sparseVolumes: true,
-                        pseudoVolumes: true,
-                        results: true,
-                    },
-                });
-
-                if (
-                    projectId &&
-                    !volume.projects.some((m) => m.id === projectId)
-                ) {
-                    throw new ApiError(
-                        400,
-                        "Volume is not part of the project."
-                    );
-                }
-
-                if (projectId && volume.projects.length > 1) {
-                    await tx.volume.update({
-                        where: {
-                            id: volumeId,
-                        },
-                        data: {
-                            projects: {
-                                disconnect: { id: projectId },
-                            },
-                        },
-                    });
-                } else {
-                    await this.withWriteLock(volumeId, null, () => {
-                        return tx.volume.delete({
-                            where: { id: volumeId },
-                        });
-                    });
-
-                    fileDeleteStack.push(
-                        ...(await Result.deleteZombies(
-                            volume.results.map((r) => r.id),
-                            tx
-                        ))
-                    );
-
-                    if (volume.rawDataId) {
-                        fileDeleteStack.push(
-                            ...(await RawVolumeData.deleteZombies(
-                                [volume.rawDataId],
-                                tx
-                            ))
-                        );
-                    }
-
-                    fileDeleteStack.push(
-                        ...(await SparseLabeledVolumeData.deleteZombies(
-                            volume.sparseVolumes.map((r) => r.id),
-                            tx
-                        ))
-                    );
-
-                    fileDeleteStack.push(
-                        ...(await PseudoLabeledVolumeData.deleteZombies(
-                            volume.pseudoVolumes.map((r) => r.id),
-                            tx
-                        ))
-                    );
-                }
-
-                return volume;
-            },
-            {
-                timeout: 60000,
-            }
-        );
-
-        for (const file of fileDeleteStack) {
-            fsPromises
-                .rm(file, { recursive: true, force: true })
-                .catch((error) => {
-                    console.error(`Failed to delete ${file}: ${error}`);
-                });
-        }
-
-        return volume;
-    }
-
-    /**
-     * @param {number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @returns {Promise<void>}
-     */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return;
-        }
-
-        const volumes = await tx.volume.findMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    projects: {
-                        none: {},
-                    },
-                },
-            },
-        });
-
-        if (volumes.length === 0) {
-            return;
-        }
-
-        const idsToDelete = volumes.map((v) => v.id);
-
-        await this.withWriteLocks(idsToDelete, null, async () => {
-            return tx.volume.deleteMany({
-                where: {
-                    id: {
-                        in: idsToDelete,
-                    },
-                },
+    static async del(volumeId) {
+        return await this.withWriteLock(volumeId, null, () => {
+            return this.db.delete({
+                where: { id: volumeId },
             });
         });
+
+        // const fileDeleteStack = [];
+
+        // const volume = await prismaManager.db.$transaction(
+        //     async (tx) => {
+        //         const volume = await tx.volume.findUnique({
+        //             where: { id: volumeId },
+        //             include: {
+        //                 project: projectId !== null,
+        //                 sparseVolumes: true,
+        //                 pseudoVolumes: true,
+        //                 results: true,
+        //             },
+        //         });
+
+        //         if (projectId && volume.project.id !== projectId) {
+        //             throw new ApiError(
+        //                 400,
+        //                 "Volume is not part of the project."
+        //             );
+        //         }
+
+        //         if (projectId && volume.projects.length > 1) {
+        //             await tx.volume.update({
+        //                 where: {
+        //                     id: volumeId,
+        //                 },
+        //                 data: {
+        //                     projects: {
+        //                         disconnect: { id: projectId },
+        //                     },
+        //                 },
+        //             });
+        //         }
+
+        //         await this.withWriteLock(volumeId, null, () => {
+        //             return tx.volume.delete({
+        //                 where: { id: volumeId },
+        //             });
+        //         });
+
+        //         fileDeleteStack.push(
+        //             ...(await Result.deleteZombies(
+        //                 volume.results.map((r) => r.id),
+        //                 tx
+        //             ))
+        //         );
+
+        //         if (volume.rawDataId) {
+        //             fileDeleteStack.push(
+        //                 ...(await RawVolumeData.deleteZombies(
+        //                     [volume.rawDataId],
+        //                     tx
+        //                 ))
+        //             );
+        //         }
+
+        //         fileDeleteStack.push(
+        //             ...(await SparseLabeledVolumeData.deleteZombies(
+        //                 volume.sparseVolumes.map((r) => r.id),
+        //                 tx
+        //             ))
+        //         );
+
+        //         fileDeleteStack.push(
+        //             ...(await PseudoLabeledVolumeData.deleteZombies(
+        //                 volume.pseudoVolumes.map((r) => r.id),
+        //                 tx
+        //             ))
+        //         );
+
+        //         return volume;
+        //     },
+        //     {
+        //         timeout: 60000,
+        //     }
+        // );
+
+        // for (const file of fileDeleteStack) {
+        //     fsPromises
+        //         .rm(file, { recursive: true, force: true })
+        //         .catch((error) => {
+        //             console.error(`Failed to delete ${file}: ${error}`);
+        //         });
+        // }
+
+        // return volume;
     }
 
     /**

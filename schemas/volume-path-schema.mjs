@@ -20,7 +20,7 @@ export const volumeQuerySchema = z.object({
     sparseVolumes: stringToBoolean.optional(),
     pseudoVolumes: stringToBoolean.optional(),
     results: stringToBoolean.optional(),
-    projects: stringToBoolean.optional(),
+    project: stringToBoolean.optional(),
 });
 
 export const deepVolumeSchema = volumeSchema.extend({
@@ -136,11 +136,10 @@ export const volumePath = {
                 ...defaultError,
             },
         },
-    },
-    "/project/{idProject}/volume/{idVolume}": {
+
         delete: {
             requestParams: {
-                path: idProjectAndVolume,
+                path: idVolume,
             },
             responses: {
                 204: {},

@@ -41,32 +41,26 @@ export async function getVolumeWithSparseVolumes(Id: number) {
     {
       method: "GET",
     },
-    {query}
+    { query }
   );
   const volume: z.infer<typeof getVolumeSchema> = await response.json();
   return volume;
 }
 
-export async function removeFromProject(projectId: number, volumeId: number) {
-  await Utils.sendApiRequest(
-    `project/${projectId}/volume/${volumeId}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    },
-  );
+export async function deleteVolume(volumeId: number) {
+  await Utils.sendApiRequest(`/volume/${volumeId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }
 
 export async function addAnnotations(id: number, request: string) {
-  const response = await Utils.sendApiRequest(
-    `volume/${id}/add-annotations`,
-    {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: request,
-    },
-  );
+  const response = await Utils.sendApiRequest(`volume/${id}/add-annotations`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: request,
+  });
   const sparseLabel: z.infer<typeof sparseLabelVolumeDataSchema> =
     await response.json();
   return sparseLabel;

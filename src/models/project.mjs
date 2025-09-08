@@ -442,10 +442,8 @@ export default class Project extends DatabaseModel {
                         include: {
                             volumes: {
                                 where: {
-                                    projects: {
-                                        every: {
-                                            id: id,
-                                        },
+                                    project: {
+                                        id: id,
                                     },
                                 },
                                 include: {
@@ -471,10 +469,6 @@ export default class Project extends DatabaseModel {
                     });
                 });
 
-                await Volume.deleteZombies(
-                    project.volumes.map((v) => v.id),
-                    tx
-                );
                 await Model.deleteZombies(
                     project.models.map((m) => m.id),
                     tx

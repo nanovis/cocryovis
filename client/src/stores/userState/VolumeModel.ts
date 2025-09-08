@@ -383,7 +383,7 @@ export const ProjectVolumes = types
       return volume;
     }),
     removeVolume: flow(function* removeVolume(volumeId: number) {
-      yield volumeApi.removeFromProject(self.projectId, volumeId);
+      yield volumeApi.deleteVolume(volumeId);
       if (!isAlive(self)) {
         return;
       }

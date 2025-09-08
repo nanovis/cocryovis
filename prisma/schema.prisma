@@ -62,7 +62,8 @@ model Volume {
   description   String
   creator       User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId     Int?
-  projects      Project[]
+  project       Project                 @relation(fields: [projectId], references: [id])
+  projectId     Int
   rawData       RawVolumeData?          @relation(fields: [rawDataId], references: [id])
   rawDataId     Int?
   sparseVolumes SparseLabelVolumeData[]

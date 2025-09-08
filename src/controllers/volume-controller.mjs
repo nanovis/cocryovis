@@ -7,7 +7,6 @@ import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
     createVolumeReq,
-    idProjectAndVolume,
     volumeQuerySchema,
 } from "#schemas/volume-path-schema.mjs";
 
@@ -96,12 +95,12 @@ export default class VolumeController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async removeFromProject(req, res) {
+    static async deleteVolume(req, res) {
         const { params } = validateSchema(req, {
-            paramsSchema: idProjectAndVolume,
+            paramsSchema: idVolume,
         });
 
-        await Volume.removeFromProject(params.idVolume, params.idProject);
+        await Volume.del(params.idVolume);
 
         res.sendStatus(204);
     }

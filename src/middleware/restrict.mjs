@@ -117,17 +117,12 @@ export async function restrictReadProjectAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToVolume(volumeId, userId) {
-    const volume = await Volume.getById(volumeId, { projects: true });
+    const volume = await Volume.getById(volumeId, { project: true });
     if (!volume) {
         throw new ApiError(404, `Volume ${volumeId} not found!`);
     }
-    for (const project of volume.projects) {
-        if (await userHasReadAccessToProject(project, userId)) {
-            return true;
-        }
-    }
 
-    return false;
+    return await userHasReadAccessToProject(volume.project, userId);
 }
 
 /**
