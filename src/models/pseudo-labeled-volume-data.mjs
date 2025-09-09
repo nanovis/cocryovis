@@ -2,12 +2,10 @@
 
 import VolumeData from "./volume-data.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
 import path from "path";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
-import Volume from "./volume.mjs";
-import { ApiError } from "../tools/error-handler.mjs";
+
 import { PendingUpload } from "../tools/file-handler.mjs";
 
 /**
@@ -82,85 +80,19 @@ export default class PseudoLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {number} id
-     * @returns {Promise<PseudoVolumeDataDB>}
-     */
-    static async del(id) {
-        return this.#del(id);
-    }
-
-    /**
-     * @param {number} id
-     * @param {number} volumeId
-     * @returns {Promise<PseudoVolumeDataDB>}
-     */
-    static async removeFromVolume(id, volumeId) {
-        return Volume.withWriteLock(volumeId, null, () => {
-            return this.#del(id, volumeId);
-        });
-    }
-
-    /**
      * @param {number} volumeDataId
-     * @param {number?} volumeId
      * @returns {Promise<PseudoVolumeDataDB>}
      */
-    static async #del(volumeDataId, volumeId = null) {
+    static async del(volumeDataId) {
         const fileDeleteStack = [];
 
         const volumeData = await prismaManager.db.$transaction(
             async (tx) => {
-                let volumeData = await tx.pseudoLabelVolumeData.findUnique({
+                const volumeData = await tx.pseudoLabelVolumeData.delete({
                     where: { id: volumeDataId },
-                    include: {
-                        volumes: volumeId !== null,
-                        checkpoints: true,
-                    },
                 });
 
-                if (
-                    volumeId &&
-                    !volumeData.volumes.some((v) => v.id === volumeId)
-                ) {
-                    throw new ApiError(
-                        400,
-                        "Volume Data is not part of the volume."
-                    );
-                }
-
-                if (
-                    volumeId &&
-                    (volumeData.volumes.length > 1 ||
-                        volumeData.checkpoints.length > 0)
-                ) {
-                    await tx.pseudoLabelVolumeData.update({
-                        where: {
-                            id: volumeDataId,
-                        },
-                        data: {
-                            volumes: {
-                                disconnect: { id: volumeId },
-                            },
-                        },
-                    });
-                } else {
-                    await this.withWriteLock(volumeDataId, null, () => {
-                        return tx.pseudoLabelVolumeData.delete({
-                            where: { id: volumeDataId },
-                        });
-                    });
-
-                    if (volumeData.originalLabelId) {
-                        fileDeleteStack.push(
-                            ...(await SparseLabeledVolumeData.deleteZombies(
-                                [volumeData.originalLabelId],
-                                tx
-                            ))
-                        );
-                    }
-
-                    await this.deleteVolumeDataFiles(volumeData);
-                }
+                await this.deleteVolumeDataFiles(volumeData);
                 return volumeData;
             },
             {
@@ -177,58 +109,6 @@ export default class PseudoLabeledVolumeData extends VolumeData {
         }
 
         return volumeData;
-    }
-
-    /**
-     * @param {number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @returns {Promise<string[]>}
-     */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return [];
-        }
-
-        const pseudoVolumes = await tx.pseudoLabelVolumeData.findMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    volumes: {
-                        none: {},
-                    },
-                    checkpoints: {
-                        none: {},
-                    },
-                },
-            },
-        });
-
-        if (pseudoVolumes.length === 0) {
-            return [];
-        }
-
-        const idsToDelete = pseudoVolumes.map((v) => v.id);
-
-        return this.withWriteLocks(idsToDelete, null, async () => {
-            await tx.pseudoLabelVolumeData.deleteMany({
-                where: {
-                    id: {
-                        in: pseudoVolumes.map((v) => v.id),
-                    },
-                },
-            });
-
-            /** @type {string[]} */
-            const fileDeleteStack = [];
-
-            pseudoVolumes.forEach((v) =>
-                fileDeleteStack.push(...this.getFilePaths(v))
-            );
-
-            return fileDeleteStack;
-        });
     }
 
     /**
@@ -253,9 +133,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                 creatorId: creatorId,
                 originalLabelId: originalLabelId,
                 ...PseudoLabeledVolumeData.fromSettingSchema(settings),
-                volumes: {
-                    connect: { id: volumeId },
-                },
+                volumeId,
             },
         });
 

@@ -173,11 +173,11 @@ export default class Volume extends DatabaseModel {
      * @param {number} projectId
      * @returns {Promise<VolumeDB>}
      */
-    static async clone(sourceId, creatorId, projectId) {
-        return await prismaManager.db.$transaction(async (tx) => {
-            return this.cloneTransaction(tx, sourceId, creatorId, projectId);
-        });
-    }
+    // static async clone(sourceId, creatorId, projectId) {
+    //     return await prismaManager.db.$transaction(async (tx) => {
+    //         return this.cloneTransaction(tx, sourceId, creatorId, projectId);
+    //     });
+    // }
 
     /**
      * @param {import("@prisma/client").Prisma.TransactionClient} tx
@@ -186,60 +186,61 @@ export default class Volume extends DatabaseModel {
      * @param {number?} projectId
      * @returns {Promise<VolumeDB>}
      */
-    static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
-        const sourceVolume = await tx.volume.findUnique({
-            where: { id: sourceId },
-            include: {
-                sparseVolumes: {
-                    select: {
-                        id: true,
-                    },
-                },
-                pseudoVolumes: {
-                    select: {
-                        id: true,
-                    },
-                },
-                results: {
-                    select: {
-                        id: true,
-                    },
-                },
-            },
-        });
+    // static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
+    //     const sourceVolume = await tx.volume.findUnique({
+    //         where: { id: sourceId },
+    //         include: {
+    //             sparseVolumes: {
+    //                 select: {
+    //                     id: true,
+    //                 },
+    //             },
+    //             pseudoVolumes: {
+    //                 select: {
+    //                     id: true,
+    //                 },
+    //             },
+    //             results: {
+    //                 select: {
+    //                     id: true,
+    //                 },
+    //             },
+    //         },
+    //     });
+    
+    //     if (!sourceVolume) {
+    //         throw MissingResourceError.fromId(sourceId, this.modelName);
+    //     }
+    //     //LOL volume needs to have rawvolueDataId
+    //     const newVolumeData = {
+    //         name: sourceVolume.name,
+    //         description: sourceVolume.description,
+    //         creatorId: creatorId,
+    //         rawDataId: sourceVolume.rawDataId,
+    //         projectId: projectId,
+    //         sparseVolumes: {
+    //             connect: sourceVolume.sparseVolumes,
+    //         },
+    //         pseudoVolumes: {
+    //             connect: sourceVolume.pseudoVolumes,
+    //         },
+    //         results: {
+    //             connect: sourceVolume.results,
+    //         },
+    //     };
 
-        if (!sourceVolume) {
-            throw MissingResourceError.fromId(sourceId, this.modelName);
-        }
-        const newVolumeData = {
-            name: sourceVolume.name,
-            description: sourceVolume.description,
-            creatorId: creatorId,
-            rawDataId: sourceVolume.rawDataId,
-            projectId: projectId,
-            sparseVolumes: {
-                connect: sourceVolume.sparseVolumes,
-            },
-            pseudoVolumes: {
-                connect: sourceVolume.pseudoVolumes,
-            },
-            results: {
-                connect: sourceVolume.results,
-            },
-        };
+    //     if (projectId != null) {
+    //         newVolumeData.projects = {
+    //             connect: { id: projectId },
+    //         };
+    //     }
 
-        if (projectId != null) {
-            newVolumeData.projects = {
-                connect: { id: projectId },
-            };
-        }
+    //     const newVolume = await tx.volume.create({
+    //         data: newVolumeData,
+    //     });
 
-        const newVolume = await tx.volume.create({
-            data: newVolumeData,
-        });
-
-        return newVolume;
-    }
+    //     return newVolume;
+    // }
 
     /**
      * @param {number} id

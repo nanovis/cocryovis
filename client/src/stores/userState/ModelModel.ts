@@ -85,7 +85,6 @@ export const ProjectModels = types
       });
     },
     createModel: flow(function* createModel(name: string, description: string) {
-
       self.setCreateModelActiveRequest(true);
       const model: z.infer<typeof modelSchema> = yield modelApi.createModel(
         self.projectId,
@@ -102,7 +101,7 @@ export const ProjectModels = types
     }),
     removeModel: flow(function* removeModel(modelId: number) {
       self.setDeleteModelActiveRequest(true);
-      yield modelApi.removeModelFromProject(modelId);
+      yield modelApi.deleteModel(modelId);
       if (!isAlive(self)) {
         return;
       }

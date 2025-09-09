@@ -20,7 +20,7 @@ import {
   createFromFiles,
   createFromMrcFile,
   createFromUrl,
-  removeFromVolume,
+  deleteVolumeData,
 } from "../../api/volumeData";
 import { FileTypeOptions } from "../uiState/UploadDialog";
 import ToastContainer from "../../utils/ToastContainer";
@@ -36,7 +36,6 @@ export const Volume = types
     description: types.string,
     creatorId: types.maybeNull(types.integer),
     rawData: types.maybeNull(RawVolume),
-    rawDataId: types.maybeNull(types.integer),
     sparseVolumes: types.map(SparseLabelVolume),
     pseudoVolumes: types.map(PseudoLabelVolume),
     volumeResults: VolumeResults,
@@ -263,7 +262,7 @@ export const Volume = types
       dataType: LabeledVolumeTypes,
       dataId: number
     ) {
-      yield removeFromVolume(dataType, self.id, dataId);
+      yield deleteVolumeData(dataType, self.id, dataId);
       if (!isAlive(self)) {
         return;
       }
@@ -334,7 +333,6 @@ export const ProjectVolumes = types
         description: volume.description,
         creatorId: volume.creatorId,
         rawData: volume?.rawData ?? null,
-        rawDataId: volume.rawDataId,
         sparseVolumes: {},
         pseudoVolumes: {},
         volumeResults: { volumeId: volume.id },
@@ -374,7 +372,6 @@ export const ProjectVolumes = types
         description: volume.description,
         creatorId: volume.creatorId,
         rawData: null,
-        rawDataId: volume.rawDataId,
         sparseVolumes: {},
         pseudoVolumes: {},
         volumeResults: { volumeId: volume.id },

@@ -128,19 +128,18 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       if (!volume) {
         throw new Error("Volume not found!");
       }
-
-      if (volume.rawDataId === null) {
+      if (volume.rawData?.id === null || volume.rawData?.id === undefined) {
         throw new Error("volume missing raw data");
       }
 
       toastContainer.loading("Fetching raw data...");
-
+      
       const rawData = await getVolumeDataById(
         "RawVolumeData",
-        volume.rawDataId
+        volume.rawData.id
       );
       const arrayBuffer = await getVolumeData("RawVolumeData", rawData.id);
-      
+
       const rawDataFile = new Uint8Array(arrayBuffer);
 
       const settings = Utils.toSettingSchema(rawData);

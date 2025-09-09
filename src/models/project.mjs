@@ -1,12 +1,7 @@
 // @ts-check
 
 import DatabaseModel from "./database-model.mjs";
-import Volume from "./volume.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import Model from "./model.mjs";
-import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
-import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
-import RawVolumeData from "./raw-volume-data.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
@@ -364,56 +359,56 @@ export default class Project extends DatabaseModel {
      * @param {number} ownerId
      * @returns {Promise<ProjectDB>}
      */
-    static async deepClone(sourceId, ownerId) {
-        return await prismaManager.db.$transaction(async (tx) => {
-            const sourceProject = await tx.project.findUnique({
-                where: { id: sourceId },
-                include: {
-                    volumes: {
-                        select: {
-                            id: true,
-                        },
-                    },
-                    models: {
-                        select: {
-                            id: true,
-                        },
-                    },
-                },
-            });
+    // static async deepClone(sourceId, ownerId) {
+    //     return await prismaManager.db.$transaction(async (tx) => {
+    //         const sourceProject = await tx.project.findUnique({
+    //             where: { id: sourceId },
+    //             include: {
+    //                 volumes: {
+    //                     select: {
+    //                         id: true,
+    //                     },
+    //                 },
+    //                 models: {
+    //                     select: {
+    //                         id: true,
+    //                     },
+    //                 },
+    //             },
+    //         });
 
-            if (!sourceProject) {
-                throw MissingResourceError.fromId(sourceId, this.modelName);
-            }
+    //         if (!sourceProject) {
+    //             throw MissingResourceError.fromId(sourceId, this.modelName);
+    //         }
 
-            const volumes = await Promise.all(
-                sourceProject.volumes.map(async (v) =>
-                    Volume.cloneTransaction(tx, v.id, ownerId)
-                )
-            );
-            const models = await Promise.all(
-                sourceProject.models.map(async (v) =>
-                    Model.cloneTransaction(tx, v.id, ownerId)
-                )
-            );
+    //         const volumes = await Promise.all(
+    //             sourceProject.volumes.map(async (v) =>
+    //                 Volume.cloneTransaction(tx, v.id, ownerId)
+    //             )
+    //         );
+    //         const models = await Promise.all(
+    //             sourceProject.models.map(async (v) =>
+    //                 Model.cloneTransaction(tx, v.id, ownerId)
+    //             )
+    //         );
 
-            const newProject = await tx.project.create({
-                data: {
-                    name: sourceProject.name,
-                    description: sourceProject.description,
-                    ownerId: ownerId,
-                    volumes: {
-                        connect: volumes,
-                    },
-                    models: {
-                        connect: models,
-                    },
-                },
-            });
+    //         const newProject = await tx.project.create({
+    //             data: {
+    //                 name: sourceProject.name,
+    //                 description: sourceProject.description,
+    //                 ownerId: ownerId,
+    //                 volumes: {
+    //                     connect: volumes,
+    //                 },
+    //                 models: {
+    //                     connect: models,
+    //                 },
+    //             },
+    //         });
 
-            return newProject;
-        });
-    }
+    //         return newProject;
+    //     });
+    // }
 
     /**
      * @param {number} id
@@ -483,30 +478,15 @@ export default class Project extends DatabaseModel {
                 project.volumes.forEach(
                     (v) => v.rawData && allRawVolumes.push(v.rawData.id)
                 );
-                fileDeleteStack.push(
-                    ...(await RawVolumeData.deleteZombies(allRawVolumes, tx))
-                );
 
                 const allSparseVolumes = [];
                 project.volumes.forEach((v) =>
                     allSparseVolumes.push(...v.sparseVolumes)
                 );
-                fileDeleteStack.push(
-                    ...(await SparseLabeledVolumeData.deleteZombies(
-                        allSparseVolumes.map((v) => v.id),
-                        tx
-                    ))
-                );
 
                 const allPseudoVolumes = [];
                 project.volumes.forEach((v) =>
                     allPseudoVolumes.push(...v.pseudoVolumes)
-                );
-                fileDeleteStack.push(
-                    ...(await PseudoLabeledVolumeData.deleteZombies(
-                        allPseudoVolumes.map((v) => v.id),
-                        tx
-                    ))
                 );
 
                 return project;

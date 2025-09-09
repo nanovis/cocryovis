@@ -91,114 +91,6 @@ export default class SparseLabeledVolumeData extends VolumeData {
     }
 
     /**
-     * @param {number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @returns {Promise<string[]>}
-     */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return [];
-        }
-
-        const sparseVolumes = await tx.sparseLabelVolumeData.findMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    volumes: {
-                        none: {},
-                    },
-                    derivedLabels: {
-                        none: {},
-                    },
-                },
-            },
-        });
-
-        if (sparseVolumes.length === 0) {
-            return [];
-        }
-
-        const idsToDelete = sparseVolumes.map((v) => v.id);
-
-        return this.withWriteLocks(idsToDelete, null, async () => {
-            await tx.sparseLabelVolumeData.deleteMany({
-                where: {
-                    id: {
-                        in: idsToDelete,
-                    },
-                },
-            });
-
-            /** @type {string[]} */
-            const fileDeleteStack = [];
-
-            sparseVolumes.forEach((v) =>
-                fileDeleteStack.push(...this.getFilePaths(v))
-            );
-
-            return fileDeleteStack;
-        });
-    }
-
-    /**
-     * @param {number} id
-     * @param {number} volumeId
-     * @returns {Promise<SparseLabelVolumeDataDB>}
-     */
-    static async removeFromVolume(id, volumeId) {
-        return Volume.withWriteLock(volumeId, [this.modelName], () => {
-            return prismaManager.db.$transaction(
-                async (tx) => {
-                    let volumeData = await tx.sparseLabelVolumeData.findUnique({
-                        where: { id: id },
-                        include: {
-                            volumes: true,
-                            derivedLabels: true,
-                        },
-                    });
-
-                    if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                        throw new ApiError(
-                            400,
-                            "Volume Data is not part of the volume."
-                        );
-                    }
-
-                    if (
-                        volumeData.volumes.length > 1 ||
-                        volumeData.derivedLabels.length > 0
-                    ) {
-                        await tx.sparseLabelVolumeData.update({
-                            where: {
-                                id: id,
-                            },
-                            data: {
-                                volumes: {
-                                    disconnect: { id: volumeId },
-                                },
-                            },
-                        });
-                    } else {
-                        await this.withWriteLock(id, null, () => {
-                            return tx.sparseLabelVolumeData.delete({
-                                where: { id: id },
-                            });
-                        });
-
-                        await this.deleteVolumeDataFiles(volumeData);
-                    }
-                    return volumeData;
-                },
-                {
-                    timeout: 60000,
-                }
-            );
-        });
-    }
-
-    /**
      * @param {string} filePath
      * @param {number} creatorId
      * @param {number} volumeId
@@ -216,9 +108,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
         let sparseVolume = await tx.sparseLabelVolumeData.create({
             data: {
                 creatorId: creatorId,
-                volumes: {
-                    connect: { id: volumeId },
-                },
+                volumeId,
                 ...SparseLabeledVolumeData.fromSettingSchema(settings),
             },
         });

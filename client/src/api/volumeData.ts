@@ -170,16 +170,18 @@ export async function downloadRawFile(id: number) {
   return rawFile;
 }
 
-export async function removeFromVolume<T extends keyof VolumeDataMap>(
+export async function deleteVolumeData<T extends keyof VolumeDataMap>(
   type: T,
   idVolume: number,
   idVolumeData: number
 ) {
-  await Utils.sendApiRequest(
+  const response = await Utils.sendApiRequest(
     `volume/${idVolume}/volumeData/${type}/${idVolumeData}`,
     {
       method: "DELETE",
       credentials: "include",
     }
   );
+  const volumeData: VolumeDataMap[T] = await response.json();
+  return volumeData;
 }

@@ -18,6 +18,7 @@ export const RawVolume = types.model({
   bytesPerVoxel: types.integer,
   usedBits: types.integer,
   mrcFilePath: types.maybeNull(types.string),
+  volumeId: types.maybeNull(types.integer),
 });
 
 export interface RawVolumeInstance extends Instance<typeof RawVolume> {}

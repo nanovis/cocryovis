@@ -4,19 +4,22 @@ import {
   modelSchema,
   modelSchemaWithCheckpoint,
 } from "#schemas/componentSchemas/model-schema.mjs";
-import { createModelSchema, getModelQuerySchema } from "#schemas/models-path-schema.mjs";
+import {
+  createModelSchema,
+  getModelQuerySchema,
+} from "#schemas/models-path-schema.mjs";
 
 export async function getModelsFromProjectWithCheckpoints(id: number) {
-    const query: z.input<typeof getModelQuerySchema> = {
-      checkpoints: "true",
-    };
+  const query: z.input<typeof getModelQuerySchema> = {
+    checkpoints: "true",
+  };
   const response = await Utils.sendApiRequest(
     `project/${id}/models`,
     {
       method: "GET",
       credentials: "include",
     },
-    {query}
+    { query }
   );
   const models: z.infer<typeof modelSchemaWithCheckpoint>[] =
     await response.json();
@@ -33,15 +36,15 @@ export async function createModel(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const Model: z.infer<typeof modelSchema> = await response.json();
-  return Model;
+  const model: z.infer<typeof modelSchema> = await response.json();
+  return model;
 }
 
-export async function removeModelFromProject(
-  idModel: number,
-) {
-  await Utils.sendApiRequest(`/model/${idModel}`, {
+export async function deleteModel(idModel: number) {
+  const response = await Utils.sendApiRequest(`/model/${idModel}`, {
     method: "DELETE",
     credentials: "include",
   });
+  const model: z.infer<typeof modelSchema> = await response.json();
+  return model;
 }

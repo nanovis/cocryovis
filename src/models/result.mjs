@@ -631,15 +631,6 @@ export default class Result extends DatabaseModel {
                     //     }
                     // }
 
-                    if (result.volumeData) {
-                        fileDeleteStack.push(
-                            ...(await RawVolumeData.deleteZombies(
-                                [result.volumeData.id],
-                                tx
-                            ))
-                        );
-                    }
-
                     if (result.folderPath) {
                         fsPromises.rm(result.folderPath, {
                             force: true,

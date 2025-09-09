@@ -78,7 +78,7 @@ export default class VolumeData extends DatabaseModel {
             addValue: settings.addValue,
         };
     }
-    
+
     /**
      * @returns {string}
      */
@@ -88,7 +88,7 @@ export default class VolumeData extends DatabaseModel {
 
     /**
      * @param {number} id
-     * @returns {Promise<object>}
+     * @returns {Promise<any>}
      */
     static async getById(id) {
         return await super.getById(id);
@@ -110,20 +110,6 @@ export default class VolumeData extends DatabaseModel {
             return false;
         }
         return true;
-    }
-
-    /**
-     * @param {number} id
-     * @returns {Promise<VolumeDB[]>}
-     */
-    static async getVolumes(id) {
-        const volumeData = await this.db.findUnique({
-            where: { id: id },
-            include: {
-                volumes: true,
-            },
-        });
-        return volumeData?.volumes;
     }
 
     /**
@@ -201,18 +187,15 @@ export default class VolumeData extends DatabaseModel {
                         "Volume data requires a .raw file create."
                     );
                 }
-                
 
                 return await prismaManager.db.$transaction(
                     async (tx) => {
                         /** @type {VolumeDataDB} */
                         let volumeData = await tx[this.modelName].create({
                             data: {
-                                creatorId: creatorId,
-                                volumes: {
-                                    connect: { id: volumeId },
-                                },
-                                ...VolumeData.fromSettingSchema(settings)
+                                creatorId,
+                                volumeId,
+                                ...VolumeData.fromSettingSchema(settings),
                             },
                         });
                         let folderPath = null;
@@ -271,58 +254,6 @@ export default class VolumeData extends DatabaseModel {
             await this.deleteVolumeDataFiles(volumeData);
 
             return volumeData;
-        });
-    }
-
-    /**
-     * @param {number} id
-     * @param {number} volumeId
-     * @returns {Promise<object>}
-     */
-    static async removeFromVolume(id, volumeId) {
-        return Volume.withWriteLock(volumeId, [this.modelName], () => {
-            return prismaManager.db.$transaction(
-                async (tx) => {
-                    /** @type {VolumeDataDB & {volumes: VolumeDB[]}} */
-                    let volumeData = await tx[this.modelName].findUnique({
-                        where: { id: id },
-                        include: {
-                            volumes: true,
-                        },
-                    });
-
-                    if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                        throw new ApiError(
-                            400,
-                            "Volume Data is not part of the volume."
-                        );
-                    }
-
-                    if (volumeData.volumes.length > 1) {
-                        await tx[this.modelName].update({
-                            where: {
-                                id: id,
-                            },
-                            data: {
-                                volumes: {
-                                    disconnect: { id: volumeId },
-                                },
-                            },
-                        });
-                    } else {
-                        this.withWriteLock(id, null, () => {
-                            return tx[this.modelName].delete({
-                                where: { id: id },
-                            });
-                        });
-                        await this.deleteVolumeDataFiles(volumeData);
-                    }
-                    return volumeData;
-                },
-                {
-                    timeout: 60000,
-                }
-            );
         });
     }
 
@@ -437,9 +368,8 @@ export default class VolumeData extends DatabaseModel {
             });
             hasFiles = true;
         }
-        if (downloadSettingsFile && volumeData.settings != null) {
-            const settings = JSON.parse(volumeData.settings);
-            delete settings.transferFunction;
+        if (downloadSettingsFile) {
+            const settings = VolumeData.toSettingSchema(volumeData);
             const settingsJSON = JSON.stringify(settings, null, 4);
             archive.append(settingsJSON, {
                 name: `${Utils.stripExtension(volumeData.rawFilePath)}.json`,

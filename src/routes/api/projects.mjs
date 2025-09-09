@@ -122,19 +122,19 @@ projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, VolumeControll
 const readVolumeDataPrefix = "/volumeData/:type/:idVolumeData";
 
 // Get Raw Data
-projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess,   VolumeDataController.getById);
+projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess, VolumeDataController.getById);
 
 // Update Raw Data
 projectsApi.put(`${readVolumeDataPrefix}`, restrictApi, VolumeDataController.update);
 
 // Get Raw Data Files
-projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess,VolumeDataController.getData);
+projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess, VolumeDataController.getData);
 
 // Visualize
 projectsApi.get(`${readVolumeDataPrefix}/visualization-data`, restrictReadVolumeDataAccess, VolumeDataController.getVolumeVisualizationFiles);
 
 // Create from Files
-projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi,VolumeDataController.createFromFiles);
+projectsApi.post(`/volume/:idVolume/volumeData/:type/from-files`, restrictApi, VolumeDataController.createFromFiles);
 
 // Create from Mrc File
 projectsApi.post(`/volume/:idVolume/volumeData/:type/from-mrc-file`, restrictApi, VolumeDataController.createFromMrcFile);
@@ -147,6 +147,7 @@ projectsApi.put(`/volume/:idVolume/volumeData/:type/:idVolumeData/update-annotat
 
     
 // Download Raw Volume Data
+
 projectsApi.get(`${readVolumeDataPrefix}/download-full`, 
 VolumeDataController.downloadFullVolumeData);
 
@@ -158,7 +159,7 @@ projectsApi.get(`${readVolumeDataPrefix}/download-mrc-file`, restrictReadVolumeD
 
 // Delete Volume Data
 projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi,
-VolumeDataController.removeFromVolume);
+VolumeDataController.delete);
   
 // CryoET Tomogram Metadata
 projectsApi.get(`/cryoet/:idTomogram/`, 

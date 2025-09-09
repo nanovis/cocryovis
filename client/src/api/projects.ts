@@ -32,12 +32,9 @@ export async function createProject(
 }
 
 export async function getAccessInfo(id: number) {
-  const response = await Utils.sendApiRequest(
-    `project/${id}/access`,
-    {
-      method: "GET",
-    },
-  );
+  const response = await Utils.sendApiRequest(`project/${id}/access`, {
+    method: "GET",
+  });
   const accessInfo: z.infer<typeof projectAccessInfoSchema> =
     await response.json();
   return accessInfo;
@@ -55,22 +52,21 @@ export async function setAccess(
   id: number,
   request: z.input<typeof setAccessSchemaReq>
 ) {
-  const response = await Utils.sendApiRequest(
-    `project/${id}/access`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
-    },
-  );
+  const response = await Utils.sendApiRequest(`project/${id}/access`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
   const accessInfoChanges: z.infer<typeof setAccessSchemaRes> =
     await response.json();
   return accessInfoChanges;
 }
 
 export async function deleteProject(id: number) {
-  await Utils.sendApiRequest(`project/${id}`, {
+  const response = await Utils.sendApiRequest(`project/${id}`, {
     method: "DELETE",
   });
+  const project: z.infer<typeof projectSchema> = await response.json();
+  return project;
 }

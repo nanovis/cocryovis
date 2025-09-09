@@ -9,7 +9,6 @@ export const volumeSchema = z.object({
     name: z.string(),
     description: z.string(),
     creatorId: z.number().nullable(),
-    rawDataId: z.number().nullable(),
 });
 
 export const idVolume = z

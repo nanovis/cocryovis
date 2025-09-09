@@ -24,6 +24,7 @@ export const SparseLabelVolume = types
     bytesPerVoxel: types.integer,
     usedBits: types.integer,
     color: types.maybeNull(types.string),
+    volumeId: types.integer,
   })
   .actions((self) => ({
     setColor: flow(function* setColor(

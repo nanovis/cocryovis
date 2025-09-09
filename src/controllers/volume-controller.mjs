@@ -82,14 +82,14 @@ export default class VolumeController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async cloneVolume(req, res) {
-        const volume = await Volume.clone(
-            Number(req.params.idVolume),
-            req.session.user.id,
-            Number(req.params.idProject)
-        );
-        res.status(201).json(volume);
-    }
+    // static async cloneVolume(req, res) {
+    //     const volume = await Volume.clone(
+    //         Number(req.params.idVolume),
+    //         req.session.user.id,
+    //         Number(req.params.idProject)
+    //     );
+    //     res.status(201).json(volume);
+    // }
 
     /**
      * @param {Request} req

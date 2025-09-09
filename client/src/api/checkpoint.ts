@@ -1,12 +1,17 @@
-import { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
+import {
+  checkpointSchema,
+  checkpointSchemaArray,
+} from "#schemas/componentSchemas/checkpoint-schema.mjs";
 import z from "zod";
 import * as Utils from "../utils/Helpers";
 
 export async function deleteCheckpoint(idCheckpoint: number) {
-  await Utils.sendApiRequest(`checkpoint/${idCheckpoint}`, {
+  const response = await Utils.sendApiRequest(`checkpoint/${idCheckpoint}`, {
     method: "DELETE",
     credentials: "include",
   });
+  const checkpoint: z.infer<typeof checkpointSchema> = await response.json();
+  return checkpoint;
 }
 
 export async function getCheckpointsFromModel(id: number) {

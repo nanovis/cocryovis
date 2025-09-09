@@ -64,8 +64,7 @@ model Volume {
   creatorId     Int?
   project       Project                 @relation(fields: [projectId], references: [id])
   projectId     Int
-  rawData       RawVolumeData?          @relation(fields: [rawDataId], references: [id])
-  rawDataId     Int?
+  rawData       RawVolumeData?
   sparseVolumes SparseLabelVolumeData[]
   pseudoVolumes PseudoLabelVolumeData[]
   results       Result[]
@@ -91,7 +90,8 @@ model RawVolumeData {
   bytesPerVoxel  Int
   usedBits       Int
   mrcFilePath    String?
-  volumes        Volume[]
+  volume         Volume   @relation(fields: [volumeId], references: [id])
+  volumeId       Int      @unique
   results        Result[]
   // BytesPerVoxel   BytesPerVoxel? @relation(fields: [bytesPerVoxelId], references: [id])
   // bytesPerVoxelId Int?
@@ -129,7 +129,8 @@ model SparseLabelVolumeData {
   addValue       Int
   bytesPerVoxel  Int
   usedBits       Int
-  volumes        Volume[]
+  volume         Volume                  @relation(fields: [volumeId], references: [id])
+  volumeId       Int
   derivedLabels  PseudoLabelVolumeData[]
   color          String?
 }
@@ -152,7 +153,8 @@ model PseudoLabelVolumeData {
   addValue        Int
   bytesPerVoxel   Int
   usedBits        Int
-  volumes         Volume[]
+  volume          Volume                 @relation(fields: [volumeId], references: [id])
+  volumeId        Int
   checkpoints     Checkpoint[]
   originalLabel   SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id], onDelete: SetNull)
   originalLabelId Int?

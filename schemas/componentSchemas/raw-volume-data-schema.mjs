@@ -20,6 +20,7 @@ export const rawVolumeDataSchema = z.object({
     bytesPerVoxel: z.int(),
     usedBits: z.int(),
     mrcFilePath: z.string().nullable(),
+    volumeId: z.int().nullable(),
 });
 
 export const rawVolumeDataUpdateSchema = z.object({

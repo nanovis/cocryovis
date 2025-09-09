@@ -152,20 +152,13 @@ async function userHasReadAccessToVolumeData(
     volumeDataType,
     userId
 ) {
-    const volumes =
-        await VolumeDataFactory.getClass(volumeDataType).getVolumes(
-            volumeDataId
-        );
-    if (!volumes) {
+    const volumeData =
+        await VolumeDataFactory.getClass(volumeDataType).getById(volumeDataId);
+    if (!volumeData) {
         return false;
     }
-    for (const volume of volumes) {
-        if (await userHasReadAccessToVolume(volume.id, userId)) {
-            return true;
-        }
-    }
 
-    return false;
+    return await userHasReadAccessToVolume(volumeData.volumeId, userId);
 }
 
 /**

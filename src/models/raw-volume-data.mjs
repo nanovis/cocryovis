@@ -108,10 +108,10 @@ export default class RawVolumeData extends VolumeData {
                             const volumeData = await tx.rawVolumeData.create({
                                 data: {
                                     creatorId: creatorId,
-                                    volumes: {
-                                        connect: { id: volumeId },
-                                    },
-                                    ...RawVolumeData.fromSettingSchema(settings)
+                                    volumeId,
+                                    ...RawVolumeData.fromSettingSchema(
+                                        settings
+                                    ),
                                 },
                             });
                             let folderPath = null;
@@ -179,55 +179,21 @@ export default class RawVolumeData extends VolumeData {
 
     /**
      * @param {number} id
-     * @param {number} volumeId
      * @returns {Promise<RawVolumeDataDB>}
      */
-    static async removeFromVolume(id, volumeId) {
-        return Volume.withWriteLock(volumeId, [this.modelName], () => {
-            return prismaManager.db.$transaction(
-                async (tx) => {
-                    let volumeData = await tx.rawVolumeData.findUnique({
-                        where: { id: id },
-                        include: {
-                            volumes: true,
-                            results: true,
-                        },
-                    });
-
-                    if (!volumeData.volumes.some((m) => m.id === volumeId)) {
-                        throw new ApiError(
-                            400,
-                            "Volume Data is not part of the volume."
-                        );
-                    }
-
-                    if (
-                        volumeData.volumes.length > 1 ||
-                        volumeData.results.length > 0
-                    ) {
-                        await tx.rawVolumeData.update({
-                            where: {
-                                id: id,
-                            },
-                            data: {
-                                volumes: {
-                                    disconnect: { id: volumeId },
-                                },
-                            },
-                        });
-                    } else {
-                        await tx.rawVolumeData.delete({
-                            where: { id: id },
-                        });
-                        await this.deleteVolumeDataFiles(volumeData);
-                    }
-                    return volumeData;
-                },
-                {
-                    timeout: 60000,
-                }
-            );
-        });
+    static async del(id) {
+        return prismaManager.db.$transaction(
+            async (tx) => {
+                const rawVolumeData = await tx.rawVolumeData.delete({
+                    where: { id: id },
+                });
+                await this.deleteVolumeDataFiles(rawVolumeData);
+                return rawVolumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
     }
 
     /**
@@ -306,56 +272,5 @@ export default class RawVolumeData extends VolumeData {
             archive: archive,
         };
     }
-
-    /**
-     * @param {number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @returns {Promise<string[]>}
-     */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return [];
-        }
-
-        const rawVolumes = await tx.rawVolumeData.findMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    volumes: {
-                        none: {},
-                    },
-                    results: {
-                        none: {},
-                    },
-                },
-            },
-        });
-
-        if (rawVolumes.length === 0) {
-            return [];
-        }
-
-        const idsToDelete = rawVolumes.map((v) => v.id);
-
-        return this.withWriteLocks(idsToDelete, null, async () => {
-            await tx.rawVolumeData.deleteMany({
-                where: {
-                    id: {
-                        in: rawVolumes.map((v) => v.id),
-                    },
-                },
-            });
-
-            /** @type {string[]} */
-            const fileDeleteStack = [];
-
-            rawVolumes.forEach((v) =>
-                fileDeleteStack.push(...RawVolumeData.getFilePaths(v))
-            );
-
-            return fileDeleteStack;
-        });
-    }
+   
 }

@@ -20,6 +20,7 @@ export const sparseLabelVolumeDataSchema = z.object({
     bytesPerVoxel: z.int(),
     usedBits: z.int(),
     color: z.string().nullable(),
+    volumeId: z.int(),
 });
 
 export const sparseLabelVolumeDataUpdateSchema = z.object({

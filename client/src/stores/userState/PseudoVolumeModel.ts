@@ -17,6 +17,7 @@ export const PseudoLabelVolume = types.model({
   addValue: types.integer,
   bytesPerVoxel: types.integer,
   usedBits: types.integer,
+  volumeId: types.integer,
 });
 
 export interface PseudoVolumeInstance

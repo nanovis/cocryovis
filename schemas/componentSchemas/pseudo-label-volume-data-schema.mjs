@@ -20,6 +20,7 @@ export const pseudoLabelVolumeDataSchema = z.object({
     bytesPerVoxel: z.int(),
     usedBits: z.int(),
     originalLabelId: z.int().nullable(),
+    volumeId: z.int(),
 });
 
 export const pseudoLabelVolumeDataUpdateSchema = z.object({
