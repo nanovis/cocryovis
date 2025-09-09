@@ -261,17 +261,8 @@ export async function restrictReadModelAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToCheckpoint(checkpointId, userId) {
-    const models = await Checkpoint.getModels(checkpointId);
-    if (!models) {
-        return false;
-    }
-    for (const model of models) {
-        if (await userHasReadAccessToModel(model.id, userId)) {
-            return true;
-        }
-    }
-
-    return false;
+    const checkpoint = await Checkpoint.getById(checkpointId);
+    return await userHasReadAccessToModel(checkpoint.modelId, userId);
 }
 
 /**

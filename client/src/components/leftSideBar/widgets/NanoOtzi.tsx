@@ -139,18 +139,18 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         "RawVolumeData",
         volume.rawDataId
       );
-      if (!rawData.settings) {
-        throw new Error("Settings missing in raw data!");
-      }
-
       const arrayBuffer = await getVolumeData("RawVolumeData", rawData.id);
+      
       const rawDataFile = new Uint8Array(arrayBuffer);
 
-      const settings = JSON.parse(rawData.settings);
+      const settings = Utils.toSettingSchema(rawData);
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
-      window.WasmModule?.FS.writeFile(settingsFileName, rawData.settings);
+      window.WasmModule?.FS.writeFile(
+        settingsFileName,
+        JSON.stringify(rawData)
+      );
 
       window.WasmModule?.FS.writeFile(settings.file, rawDataFile);
 

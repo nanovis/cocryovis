@@ -1,17 +1,38 @@
 // @ts-check
 
 import z from "zod";
-import { volumeSettings } from "./volume-settings-schema.mjs";
 
 export const pseudoLabelVolumeDataSchema = z.object({
     id: z.int(),
     path: z.string().nullable(),
     creatorId: z.int().nullable(),
     rawFilePath: z.string().nullable(),
-    ...volumeSettings.shape,
+    sizeX: z.int(),
+    sizeZ: z.int(),
+    sizeY: z.int(),
+    ratioX: z.number(),
+    ratioY: z.number(),
+    ratioZ: z.number(),
+    skipBytes: z.int(),
+    isLittleEndian: z.boolean(),
+    isSigned: z.boolean(),
+    addValue: z.int(),
+    bytesPerVoxel: z.int(),
+    usedBits: z.int(),
     originalLabelId: z.int().nullable(),
 });
 
 export const pseudoLabelVolumeDataUpdateSchema = z.object({
-    ...volumeSettings.shape,
+    sizeX: z.int().optional(),
+    sizeZ: z.int().optional(),
+    sizeY: z.int().optional(),
+    ratioX: z.number().optional(),
+    ratioY: z.number().optional(),
+    ratioZ: z.number().optional(),
+    skipBytes: z.int().optional(),
+    isLittleEndian: z.boolean().optional(),
+    isSigned: z.boolean().optional(),
+    addValue: z.int().optional(),
+    bytesPerVoxel: z.int().optional(),
+    usedBits: z.int().optional(),
 });

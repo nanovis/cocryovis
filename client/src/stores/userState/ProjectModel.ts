@@ -1,6 +1,6 @@
 import { flow, getParent, Instance, isAlive, types } from "mobx-state-tree";
-import { ModelDB, ProjectModels } from "./ModelModel";
-import { ProjectVolumes, VolumeDB } from "./VolumeModel";
+import { ProjectModels } from "./ModelModel";
+import { ProjectVolumes } from "./VolumeModel";
 import * as Utils from "../../utils/Helpers";
 import { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
 import z from "zod";
@@ -12,16 +12,7 @@ import * as ProjectApi from "../../api/projects";
 import { getDemo } from "../../api/demo";
 import ToastContainer from "../../utils/ToastContainer";
 
-interface ProjectDB {
-  id: number;
-  name: string;
-  description: string;
-  ownerId: number;
-  publicAccess: number;
-  accessLevel: number;
-  volumes: VolumeDB[];
-  models: ModelDB[];
-}
+type ProjectDB = z.infer<typeof projectSchemaDeepRes>;
 
 export const Project = types
   .model({

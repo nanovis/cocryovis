@@ -130,7 +130,6 @@ export const idVolumeVolumeDataTypeParams = z
             },
         ],
     });
-//LOL 1 or array of files
 export const createFromFilesSchema = z.object({
     volumeSettings,
     rawFile: fileSchema,

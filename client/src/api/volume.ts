@@ -48,7 +48,7 @@ export async function getVolumeWithSparseVolumes(Id: number) {
 }
 
 export async function deleteVolume(volumeId: number) {
-  await Utils.sendApiRequest(`/volume/${volumeId}`, {
+  await Utils.sendApiRequest(`volume/${volumeId}`, {
     method: "DELETE",
     credentials: "include",
   });

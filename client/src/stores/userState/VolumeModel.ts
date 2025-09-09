@@ -2,13 +2,16 @@ import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { RawVolume, RawVolumeSnapshotIn } from "./RawVolumeModel";
 import { SparseLabelVolume, SparseVolumeSnapshotIn } from "./SparseVolumeModel";
 import { PseudoLabelVolume, PseudoVolumeSnapshotIn } from "./PseudoVolumeModel";
-import { ResultSnapshotIn, VolumeResults } from "./ResultModel";
+import { VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
 import { Vector3, VolumeSettings } from "../../utils/VolumeSettings";
 import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import z from "zod";
 import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
-import { volumesDeepSchemaRes } from "#schemas/volume-path-schema.mjs";
+import {
+  deepVolumeSchema,
+  volumesDeepSchemaRes,
+} from "#schemas/volume-path-schema.mjs";
 import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
 import { getVolumesFromProjectDeep } from "../../api/volume";
@@ -21,18 +24,6 @@ import {
 } from "../../api/volumeData";
 import { FileTypeOptions } from "../uiState/UploadDialog";
 import ToastContainer from "../../utils/ToastContainer";
-
-export interface VolumeDB {
-  id: number;
-  name: string;
-  description: string;
-  creatorId: number | null;
-  rawData?: RawVolumeSnapshotIn | null;
-  rawDataId: number | null;
-  sparseVolumes?: SparseVolumeSnapshotIn[];
-  pseudoVolumes?: PseudoVolumeSnapshotIn[];
-  results?: ResultSnapshotIn[];
-}
 
 export type LabeledVolumeTypes =
   | "SparseLabeledVolumeData"
@@ -336,13 +327,13 @@ export const ProjectVolumes = types
       }
       self.selectedVolumeId = volumeId;
     },
-    addVolume(volume: VolumeDB) {
+    addVolume(volume: z.infer<typeof deepVolumeSchema>) {
       self.volumes.set(volume.id, {
         id: volume.id,
         name: volume.name,
         description: volume.description,
         creatorId: volume.creatorId,
-        rawData: volume.rawData ?? null,
+        rawData: volume?.rawData ?? null,
         rawDataId: volume.rawDataId,
         sparseVolumes: {},
         pseudoVolumes: {},
@@ -355,7 +346,7 @@ export const ProjectVolumes = types
     },
   }))
   .actions((self) => ({
-    setVolumes(volumes: VolumeDB[]) {
+    setVolumes(volumes: z.infer<typeof deepVolumeSchema>[]) {
       self.volumes.clear();
 
       volumes.forEach((volume) => {
@@ -377,7 +368,17 @@ export const ProjectVolumes = types
         return;
       }
 
-      self.addVolume(volume);
+      self.volumes.set(volume.id, {
+        id: volume.id,
+        name: volume.name,
+        description: volume.description,
+        creatorId: volume.creatorId,
+        rawData: null,
+        rawDataId: volume.rawDataId,
+        sparseVolumes: {},
+        pseudoVolumes: {},
+        volumeResults: { volumeId: volume.id },
+      });
       self.selectedVolumeId = volume.id;
 
       return volume;

@@ -2,14 +2,8 @@ import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
 import { updateVolumeData } from "../../api/volumeData";
 import ToastContainer from "../../utils/ToastContainer";
-
-async function updateSparseVolume(
-  id: number,
-  params: Partial<SparseVolumeInstance>
-): Promise<SparseVolumeSnapshotIn> {
-  const update = await updateVolumeData("SparseLabeledVolumeData", id, params);
-  return update;
-}
+import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import z from "zod";
 
 export const SparseLabelVolume = types
   .model({
@@ -17,7 +11,18 @@ export const SparseLabelVolume = types
     path: types.maybeNull(types.string),
     creatorId: types.maybeNull(types.integer),
     rawFilePath: types.maybeNull(types.string),
-    settings: types.maybeNull(types.string),
+    sizeX: types.integer,
+    sizeY: types.integer,
+    sizeZ: types.integer,
+    ratioX: types.number,
+    ratioY: types.number,
+    ratioZ: types.number,
+    skipBytes: types.integer,
+    isLittleEndian: types.boolean,
+    isSigned: types.boolean,
+    addValue: types.integer,
+    bytesPerVoxel: types.integer,
+    usedBits: types.integer,
     color: types.maybeNull(types.string),
   })
   .actions((self) => ({
@@ -28,11 +33,11 @@ export const SparseLabelVolume = types
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Updating label color...");
-        const sparselabel = yield updateSparseVolume(self.id, {
-          color: color,
-        });
+        const sparselabel: z.infer<typeof sparseLabelVolumeDataSchema> =
+          yield updateVolumeData("SparseLabeledVolumeData", self.id, {
+            color: color,
+          });
 
-        self.settings = sparselabel.settings;
         self.color = sparselabel.color;
 
         if (index !== undefined && window.WasmModule && self.color) {

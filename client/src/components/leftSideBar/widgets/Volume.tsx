@@ -544,7 +544,6 @@ const Volume = observer(({ open, close }: Props) => {
 
   const handleSparseLabelFileChange = async (event: FileChangeEvent) => {
     const toastContainer = new ToastContainer();
-//LOL
     try {
       if (!event.target.files) {
         throw Error("No files selected.");

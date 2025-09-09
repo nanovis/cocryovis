@@ -1,6 +1,9 @@
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../DefaultTransferFunctions";
 import ToastContainer from "./ToastContainer";
+import { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
+import { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
+import { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
 
 export type FileMap = Map<string, File>;
 
@@ -444,4 +447,31 @@ export async function loadScript(src: string): Promise<void> {
     script.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(script);
   });
+}
+
+export function toSettingSchema(
+  volumeData: RawVolumeInstance | SparseVolumeInstance | PseudoVolumeInstance
+) {
+  if (volumeData.rawFilePath === null) {
+    throw new Error("Missing row volume data path.");
+  }
+  return {
+    file: volumeData.rawFilePath.replace(/^.*[\\/]/, ""),
+    size: {
+      x: volumeData.sizeX,
+      y: volumeData.sizeY,
+      z: volumeData.sizeZ,
+    },
+    ratio: {
+      x: volumeData.ratioX,
+      y: volumeData.ratioY,
+      z: volumeData.ratioZ,
+    },
+    bytesPerVoxel: volumeData.bytesPerVoxel,
+    usedBits: volumeData.usedBits,
+    skipBytes: volumeData.skipBytes,
+    isLittleEndian: volumeData.isLittleEndian,
+    isSigned: volumeData.isSigned,
+    addValue: volumeData.addValue,
+  };
 }

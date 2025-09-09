@@ -8,7 +8,6 @@ import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
 import { idCheckpoint } from "#schemas/componentSchemas/checkpoint-schema.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
-import { idModelAndidcheckpointParam } from "#schemas/checkpoint-path-schema.mjs";
 import { idModel } from "#schemas/componentSchemas/model-schema.mjs";
 
 /**
@@ -80,12 +79,12 @@ export default class CheckpointController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async removeFromModel(req, res) {
+    static async deleteCheckpoint(req, res) {
         const { params } = validateSchema(req, {
-            paramsSchema: idModelAndidcheckpointParam,
+            paramsSchema: idCheckpoint,
         });
 
-        await Checkpoint.removeFromModel(params.idCheckpoint, params.idModel);
+        await Checkpoint.del(params.idCheckpoint);
 
         res.sendStatus(204);
     }

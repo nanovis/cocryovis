@@ -7,7 +7,6 @@ import Model from "./model.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
-import Checkpoint from "./checkpoint.mjs";
 import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
@@ -480,13 +479,6 @@ export default class Project extends DatabaseModel {
                 project.models.forEach((m) =>
                     allCheckpoints.push(...m.checkpoints)
                 );
-                fileDeleteStack.push(
-                    ...(await Checkpoint.deleteZombies(
-                        allCheckpoints.map((c) => c.id),
-                        tx
-                    ))
-                );
-
                 const allRawVolumes = [];
                 project.volumes.forEach(
                     (v) => v.rawData && allRawVolumes.push(v.rawData.id)

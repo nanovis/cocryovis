@@ -5,7 +5,18 @@ export const PseudoLabelVolume = types.model({
   path: types.maybeNull(types.string),
   creatorId: types.maybeNull(types.integer),
   rawFilePath: types.maybeNull(types.string),
-  settings: types.maybeNull(types.string),
+  sizeX: types.integer,
+  sizeY: types.integer,
+  sizeZ: types.integer,
+  ratioX: types.number,
+  ratioY: types.number,
+  ratioZ: types.number,
+  skipBytes: types.integer,
+  isLittleEndian: types.boolean,
+  isSigned: types.boolean,
+  addValue: types.integer,
+  bytesPerVoxel: types.integer,
+  usedBits: types.integer,
 });
 
 export interface PseudoVolumeInstance

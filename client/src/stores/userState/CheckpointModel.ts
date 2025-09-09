@@ -95,7 +95,7 @@ export const ModelCheckpoints = types
       }
     }),
     removeCheckpoint: flow(function* removeCheckpoint(checkpointId: number) {
-      yield checkpointApi.removeFromModel(self.modelId, checkpointId);
+      yield checkpointApi.deleteCheckpoint(checkpointId);
       if (!isAlive(self)) {
         return;
       }

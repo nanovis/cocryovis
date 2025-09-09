@@ -102,7 +102,7 @@ export const ProjectModels = types
     }),
     removeModel: flow(function* removeModel(modelId: number) {
       self.setDeleteModelActiveRequest(true);
-      yield modelApi.removeModelFromProject(modelId, self.projectId);
+      yield modelApi.removeModelFromProject(modelId);
       if (!isAlive(self)) {
         return;
       }

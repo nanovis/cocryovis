@@ -5,18 +5,11 @@ import {
     idProject,
     projectSchema,
 } from "./componentSchemas/project-schema.mjs";
-import { volumeSchema } from "./componentSchemas/volume-schema.mjs";
 import { modelSchemaWithCheckpoint } from "./componentSchemas/model-schema.mjs";
 import { projectAccessSchema } from "./componentSchemas/project-access-schema.mjs";
 import { userAccessSchema } from "./componentSchemas/user-access-schema.mjs";
 import { defaultError } from "./error-path-schema.mjs";
 import { deepVolumeSchema } from "./volume-path-schema.mjs";
-
-export const projectDeepSchemaRes = projectSchema.extend({
-    volumes: z.array(volumeSchema),
-    models: z.array(modelSchemaWithCheckpoint),
-    projectAccess: z.array(projectAccessSchema),
-});
 
 export const projectCreateSchemaReq = z.object({
     name: z.string(),

@@ -61,11 +61,10 @@ export const checkPointPath = {
                 ...defaultError,
             },
         },
-    },
-    "/model/{idModel}/checkpoint/{idCheckpoint}": {
+
         delete: {
             requestParams: {
-                path: idModelAndidcheckpointParam,
+                path: idCheckpoint,
             },
             responses: {
                 204: {},

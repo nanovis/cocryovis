@@ -2,14 +2,11 @@ import { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-sche
 import z from "zod";
 import * as Utils from "../utils/Helpers";
 
-export async function removeFromModel(idModel: number, idCheckpoint: number) {
-  await Utils.sendApiRequest(
-    `model/${idModel}/checkpoint/${idCheckpoint}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    }
-  );
+export async function deleteCheckpoint(idCheckpoint: number) {
+  await Utils.sendApiRequest(`checkpoint/${idCheckpoint}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }
 
 export async function getCheckpointsFromModel(id: number) {
@@ -34,25 +31,19 @@ export async function uploadCheckpoints(id: number, request: FormData) {
 }
 
 export async function checkpointToText(id: number) {
-  const response = await Utils.sendApiRequest(
-    `checkpoint/${id}/as-text`,
-    {
-      method: "GET",
-      credentials: "include",
-    },
-  );
+  const response = await Utils.sendApiRequest(`checkpoint/${id}/as-text`, {
+    method: "GET",
+    credentials: "include",
+  });
   const checkpointTxt = await response.text();
   return checkpointTxt;
 }
 
 export async function checkpointFileToText(request: FormData) {
-  const response = await Utils.sendApiRequest(
-    `checkpoint/to-text`,
-    {
-      method: "POST",
-      body: request,
-    },
-  );
+  const response = await Utils.sendApiRequest(`checkpoint/to-text`, {
+    method: "POST",
+    body: request,
+  });
   const checkpointTxt = await response.text();
   return checkpointTxt;
 }

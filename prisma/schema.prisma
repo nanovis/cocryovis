@@ -176,7 +176,8 @@ model Checkpoint {
   folderPath  String?
   creator     User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId   Int?
-  models      Model[]
+  model       Model                   @relation(fields: [modelId], references: [id])
+  modelId     Int
   results     Result[]
   labels      PseudoLabelVolumeData[]
   TaskHistory TaskHistory[]

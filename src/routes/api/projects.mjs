@@ -188,7 +188,7 @@ projectsApi.delete(`/model/:idModel`, restrictApi, ModelController.deleteModel);
 projectsApi.get(`/checkpoint/:idCheckpoint`, restrictReadCheckpointAccess,CheckpointController.getCheckpoint);
 
 // Delete checkpoint
-projectsApi.delete(`/model/:idModel/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.removeFromModel);
+projectsApi.delete(`/checkpoint/:idCheckpoint`, restrictApi, CheckpointController.deleteCheckpoint);
 
 // Get checkpoints from model
 projectsApi.get(`/model/:idModel/checkpoints`, restrictReadModelAccess, CheckpointController.getCheckpointsFromModel);

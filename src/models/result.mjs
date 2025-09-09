@@ -6,8 +6,6 @@ import fsPromises from "node:fs/promises";
 import appConfig from "../tools/config.mjs";
 import path from "path";
 import fileSystem from "fs";
-import Checkpoint from "./checkpoint.mjs";
-import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Volume from "./volume.mjs";
@@ -615,23 +613,23 @@ export default class Result extends DatabaseModel {
                         });
                     });
 
-                    if (result.checkpoint) {
-                        const checkpointFiles = await Checkpoint.deleteZombies(
-                            [result.checkpoint.id],
-                            tx
-                        );
+                    // if (result.checkpoint) {
+                    //     const checkpointFiles = await Checkpoint.deleteZombies(
+                    //         [result.checkpoint.id],
+                    //         tx
+                    //     );
 
-                        if (checkpointFiles.length > 0) {
-                            fileDeleteStack.push(...checkpointFiles);
+                    //     if (checkpointFiles.length > 0) {
+                    //         fileDeleteStack.push(...checkpointFiles);
 
-                            fileDeleteStack.push(
-                                ...(await PseudoLabeledVolumeData.deleteZombies(
-                                    result.checkpoint.labels.map((l) => l.id),
-                                    tx
-                                ))
-                            );
-                        }
-                    }
+                    //         fileDeleteStack.push(
+                    //             ...(await PseudoLabeledVolumeData.deleteZombies(
+                    //                 result.checkpoint.labels.map((l) => l.id),
+                    //                 tx
+                    //             ))
+                    //         );
+                    //     }
+                    // }
 
                     if (result.volumeData) {
                         fileDeleteStack.push(

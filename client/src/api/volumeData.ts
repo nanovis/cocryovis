@@ -38,7 +38,7 @@ export async function updateVolumeData<T extends keyof VolumeDataMap>(
   id: number,
   request: z.input<typeof volumeDataUpdate>
 ) {
-  const response = await Utils.sendApiRequest(`/volumeData/${type}/${id}`, {
+  const response = await Utils.sendApiRequest(`volumeData/${type}/${id}`, {
     method: "PUT",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
