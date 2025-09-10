@@ -102,6 +102,9 @@ export default class Checkpoint extends DatabaseModel {
             files,
             this.acceptedFileExtensions
         );
+        if (unpackedFiles.length === 0) {
+            throw new Error("No valid checkpint files found");
+        }
         /** @type {CheckpointDB[]} */
         const result = [];
 
