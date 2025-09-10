@@ -6,6 +6,7 @@ import TaskHistory from "../models/task-history.mjs";
 import appConfig from "../tools/config.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
+    idUserSchema,
     loginSchemaReq,
     registerSchema,
     statusQuery,
@@ -125,9 +126,13 @@ export default class UserController {
      */
     static async getStatus(req, res) {
         const { query } = validateSchema(req, {
-           querySchema: statusQuery,
+            querySchema: statusQuery,
         });
-        const taskHistory = await TaskHistory.getFromUser(req.session.user.id, query.pageNumber, query.pageSize);
+        const taskHistory = await TaskHistory.getFromUser(
+            req.session.user.id,
+            query.pageNumber,
+            query.pageSize
+        );
         const cpuTaskQueue = await TaskHistory.getCPUTaskQueue();
         const gpuTaskQueue = await TaskHistory.getGPUTaskQueue();
 
@@ -153,5 +158,27 @@ export default class UserController {
         req.session.user = userData;
         await UserController.#saveSession(req);
         res.json(userData);
+    }
+
+    /**
+     * @param {Request} req
+     * @param {Response} res
+     */
+    static async deleteUser(req, res) {
+        await User.del(req.session.user.id);
+
+        res.sendStatus(204);
+    }
+
+    /**
+     * @param {Request} req
+     * @param {Response} res
+     */
+    static async adminDeleteUser(req, res) {
+        const { body } = validateSchema(req, { bodySchema: idUserSchema });
+
+        await User.del(body.id);
+
+        res.sendStatus(204);
     }
 }

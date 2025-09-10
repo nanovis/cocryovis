@@ -184,7 +184,6 @@ export async function restrictReadVolumeDataAccess(req, res, next) {
 }
 
 // RESULT
-
 /**
  * @param {number} resultId
  * @param {number | undefined} userId

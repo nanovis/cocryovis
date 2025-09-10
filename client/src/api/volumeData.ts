@@ -175,13 +175,11 @@ export async function deleteVolumeData<T extends keyof VolumeDataMap>(
   idVolume: number,
   idVolumeData: number
 ) {
-  const response = await Utils.sendApiRequest(
+  await Utils.sendApiRequest(
     `volume/${idVolume}/volumeData/${type}/${idVolumeData}`,
     {
       method: "DELETE",
       credentials: "include",
     }
   );
-  const volumeData: VolumeDataMap[T] = await response.json();
-  return volumeData;
 }

@@ -48,12 +48,10 @@ export async function getVolumeWithSparseVolumes(Id: number) {
 }
 
 export async function deleteVolume(volumeId: number) {
-  const response = await Utils.sendApiRequest(`volume/${volumeId}`, {
+  await Utils.sendApiRequest(`volume/${volumeId}`, {
     method: "DELETE",
     credentials: "include",
   });
-  const volume: z.infer<typeof volumeSchema> = await response.json();
-  return volume;
 }
 
 export async function addAnnotations(id: number, request: string) {

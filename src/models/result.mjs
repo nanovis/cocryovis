@@ -8,7 +8,6 @@ import path from "path";
 import fileSystem from "fs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
-import Volume from "./volume.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 import ResultFile from "./resultFile.mjs";
 import fileUpload from "express-fileupload";

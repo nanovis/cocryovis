@@ -154,7 +154,37 @@ export default class User extends DatabaseModel {
      * @param {number} id
      */
     static async del(id) {
-        return await super.del(id);
+        const projectIds = await prismaManager.db.project.findMany({
+            where: { ownerId: id },
+            select: { id: true },
+        });
+
+        for (const project of projectIds) {
+            const newOwner = await prismaManager.db.projectAccess.findFirst({
+                where: {
+                    projectId: project.id,
+                    accessLevel: 1,
+                },
+                select: {
+                    userId: true,
+                },
+            });
+
+            if (newOwner) {
+                await prismaManager.db.project.update({
+                    where: { id: project.id },
+                    data: { ownerId: newOwner.userId },
+                });
+            } else {
+                await prismaManager.db.project.delete({
+                    where: { id: project.id },
+                });
+            }
+        }
+
+        return prismaManager.db.user.delete({
+            where: { id: id },
+        });
     }
 
     /**

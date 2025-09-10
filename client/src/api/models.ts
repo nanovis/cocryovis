@@ -41,10 +41,9 @@ export async function createModel(
 }
 
 export async function deleteModel(idModel: number) {
-  const response = await Utils.sendApiRequest(`/model/${idModel}`, {
+  await Utils.sendApiRequest(`/model/${idModel}`, {
     method: "DELETE",
     credentials: "include",
   });
-  const model: z.infer<typeof modelSchema> = await response.json();
-  return model;
+
 }

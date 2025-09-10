@@ -2,7 +2,6 @@
 
 import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import Result from "./result.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 
@@ -431,7 +430,7 @@ export default class Project extends DatabaseModel {
                 const project = await this.withWriteLock(id, null, () => {
                     return tx.project.delete({
                         where: {
-                            id: id,
+                            id: id, 
                         },
                         include: {
                             volumes: {
@@ -460,15 +459,6 @@ export default class Project extends DatabaseModel {
                         },
                     });
                 });
-
-                const allResults = [];
-                project.volumes.forEach((v) => allResults.push(...v.results));
-                fileDeleteStack.push(
-                    ...(await Result.deleteZombies(
-                        allResults.map((r) => r.id),
-                        tx
-                    ))
-                );
 
                 const allCheckpoints = [];
                 project.models.forEach((m) =>

@@ -76,7 +76,7 @@ export const publicUser = z.object({
     username: z.string(),
     name: z.string(),
     email: z.email(),
-    admin: z.boolean()
+    admin: z.boolean(),
 });
 
 export const statusQuery = z.object({
@@ -88,6 +88,10 @@ export const statusQuery = z.object({
         description:
             "The maximum number of items to return per page. If omitted while page is provided, the default value is 10. If both pageSize and page are omitted, the API returns all available items (no pagination applied).",
     }),
+});
+
+export const idUserSchema = z.object({
+    id: z.int(),
 });
 
 export const usersArray = z.array(publicUser);
@@ -218,6 +222,27 @@ export const userPath = {
                 },
                 ...defaultError,
                 ...generateErrors([400]),
+            },
+        },
+        delete: {
+            responses: {
+                204: {},
+                ...defaultError,
+            },
+        },
+    },
+    "/user-admin": {
+        get: {
+            requestBody: {
+                content: {
+                    "application/json": {
+                        schema: idUserSchema,
+                    },
+                },
+            },
+            responses: {
+                200: {},
+                ...defaultError,
             },
         },
     },

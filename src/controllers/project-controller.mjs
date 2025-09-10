@@ -151,18 +151,18 @@ export default class ProjectController {
         res.status(201).json(project);
     }
 
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async deepCloneProject(req, res) {
-        const project = await Project.deepClone(
-            Number(req.params.idProject),
-            req.session.user.id
-        );
+    // /**
+    //  * @param {Request} req
+    //  * @param {Response} res
+    //  */
+    // static async deepCloneProject(req, res) {
+    //     const project = await Project.deepClone(
+    //         Number(req.params.idProject),
+    //         req.session.user.id
+    //     );
 
-        res.status(201).json(project);
-    }
+    //     res.status(201).json(project);
+    // }
 
     /**
      * @param {Request} req

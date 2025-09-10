@@ -1,4 +1,5 @@
 import {
+  idUserSchema,
   loginSchemaReq,
   publicUser,
   registerSchema,
@@ -90,11 +91,11 @@ export async function deleteUser() {
   });
 }
 
-export async function AdminDeleteUser(id: number) {
+export async function adminDeleteUser(user: z.input<typeof idUserSchema>) {
   await Utils.sendApiRequest("user-admin", {
     method: "DELETE",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(id),
+    body: JSON.stringify(user),
   });
 }

@@ -64,9 +64,7 @@ export async function setAccess(
 }
 
 export async function deleteProject(id: number) {
-  const response = await Utils.sendApiRequest(`project/${id}`, {
+  await Utils.sendApiRequest(`project/${id}`, {
     method: "DELETE",
   });
-  const project: z.infer<typeof projectSchema> = await response.json();
-  return project;
 }

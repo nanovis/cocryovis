@@ -3,7 +3,7 @@
 import express, { Router } from 'express';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
 import GPUTaskHandler from '../../tools/gpu-task-handler.mjs';
-import { restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadResultAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
+import { restrictAdminAccess, restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadResultAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
 import ProjectController from '../../controllers/project-controller.mjs';
 import VolumeController from '../../controllers/volume-controller.mjs';
@@ -39,6 +39,8 @@ projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserD
 projectsApi.get('/users', restrictApi, UserController.getAllUsers);
 projectsApi.get(`/status`, restrictApi, UserController.getStatus);
 projectsApi.put(`/user`, restrictApi, UserController.updateUser);
+projectsApi.delete(`/user`, restrictApi, UserController.deleteUser);
+projectsApi.delete(`/user-admin`, restrictAdminAccess , UserController.adminDeleteUser);
 
 
 ///////////////////////
