@@ -45,12 +45,15 @@ const SideControls = observer(() => {
 
   const handleConfirmDelete = async () => {
     const activeProjectId = user?.userProjects.activeProjectId;
+    const toastContainer = new ToastContainer();
+
     if (!activeProjectId) {
       return;
     }
     try {
       user.userProjects.setProjectDeleteActiveRequest(true);
       await user.userProjects.deleteProject(activeProjectId);
+      toastContainer.success("Project Deleted.");
       setIsDeleteDialogOpen(false);
     } catch (error) {
       const toastContainer = new ToastContainer();

@@ -160,6 +160,7 @@ const Models = observer(({ open, close }: Props) => {
 
   // Function to remove the selected checkpoint
   const handleRemoveCheckpoint = async () => {
+    const toastContainer = new ToastContainer();
     if (!selectedCheckpointId) {
       return;
     }
@@ -170,12 +171,12 @@ const Models = observer(({ open, close }: Props) => {
       modelCheckpoints.setDeleteModelCheckpointActiveRequset(true);
 
       await modelCheckpoints?.removeCheckpoint(selectedCheckpointId);
+      toastContainer.success("Checkpoint deleted!");
     } catch (error) {
       console.error("Error:", error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     }
-    modelCheckpoints.setDeleteModelCheckpointActiveRequset(true);
+    modelCheckpoints.setDeleteModelCheckpointActiveRequset(false);
     setDeleteCheckpointDialogOpen(false);
   };
 
