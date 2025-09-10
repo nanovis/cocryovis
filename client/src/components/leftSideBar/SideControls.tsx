@@ -53,7 +53,7 @@ const SideControls = observer(() => {
     try {
       user.userProjects.setProjectDeleteActiveRequest(true);
       await user.userProjects.deleteProject(activeProjectId);
-      toastContainer.success("Project Deleted.");
+      toastContainer.success("Project Deleted!");
       setIsDeleteDialogOpen(false);
     } catch (error) {
       const toastContainer = new ToastContainer();

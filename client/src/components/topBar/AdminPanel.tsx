@@ -99,12 +99,14 @@ const AdminPanel = observer(() => {
       return;
     }
     setAdminPageActiveRequest(true);
+    const toastContainer = new ToastContainer();
+
     try {
       const usersData: z.infer<typeof usersArray> = await getAllUsers();
       setUsers(usersData);
+      toastContainer.success("User deleted!");
     } catch (error) {
       console.error(error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
       setAdminPageActiveRequest(false);
@@ -114,12 +116,14 @@ const AdminPanel = observer(() => {
   //LOL DELETE user-admin user doesn't exist
   const deleteUser = async () => {
     user.setDeleteUserActiveRequset(true);
+    const toastContainer = new ToastContainer();
+
     try {
       await adminDeleteUser({ id: users[userDeleteIndex].id });
       await getUserData();
+      toastContainer.error(getErrorMessage("User deleted!"));
     } catch (error) {
       console.error(error);
-      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
       user.setDeleteUserActiveRequset(false);
