@@ -1,9 +1,4 @@
-type User = {
-  id: number;
-  username: string;
-  name: string;
-  email: string;
-};
+type User = z.infer<typeof publicUser>;
 import {
   Button,
   createTableColumn,
@@ -28,7 +23,7 @@ import GlobalStyles from "../GlobalStyles";
 import { useEffect, useState } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
-import { usersArray } from "#schemas/user-path-schema.mjs";
+import { publicUser } from "#schemas/user-path-schema.mjs";
 import z from "zod";
 import { adminDeleteUser, getAllUsers } from "../../api/users";
 import { useMst } from "../../stores/RootStore";
@@ -99,14 +94,13 @@ const AdminPanel = observer(() => {
       return;
     }
     setAdminPageActiveRequest(true);
-    const toastContainer = new ToastContainer();
 
     try {
-      const usersData: z.infer<typeof usersArray> = await getAllUsers();
+      const usersData = await getAllUsers();
       setUsers(usersData);
-      toastContainer.success("User deleted!");
     } catch (error) {
       console.error(error);
+      const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
       setAdminPageActiveRequest(false);
@@ -121,7 +115,7 @@ const AdminPanel = observer(() => {
     try {
       await adminDeleteUser({ id: users[userDeleteIndex].id });
       await getUserData();
-      toastContainer.error(getErrorMessage("User deleted!"));
+      toastContainer.success("User deleted!");
     } catch (error) {
       console.error(error);
       toastContainer.error(getErrorMessage(error));
@@ -147,6 +141,10 @@ const AdminPanel = observer(() => {
       columnId: "email",
       compare: (a, b) => a.email.localeCompare(b.email),
     }),
+    // createTableColumn<User>({
+    //   columnId: "privlages",
+    //   compare: (a, b) => a.admin.localeCompare(b.admin),
+    // }),
   ];
 
   const {
@@ -204,6 +202,12 @@ const AdminPanel = observer(() => {
               >
                 Email
               </TableHeaderCell>
+              {/* <TableHeaderCell
+                className={classes.tableHeaderCell}
+                {...headerSortProps("privileges")}
+              >
+                Administrator
+              </TableHeaderCell> */}
               <TableHeaderCell className={classes.tableHeaderCell}>
                 Action
               </TableHeaderCell>
@@ -227,6 +231,9 @@ const AdminPanel = observer(() => {
                   <TableCell>
                     <TableCellLayout>{item.email}</TableCellLayout>
                   </TableCell>
+                  {/* <TableCell>
+                    <TableCellLayout>{item.admin}</TableCellLayout>
+                  </TableCell> */}
                   <TableCell>
                     <TableCellLayout>
                       <Button
@@ -238,6 +245,7 @@ const AdminPanel = observer(() => {
                           setShowDialogPage(true);
                           setUserDeleteIndex(Number(rowId));
                         }}
+                        disabled={item.admin}
                       >
                         <div
                           className={globalClasses.actionButtonIconContainer}

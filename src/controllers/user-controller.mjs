@@ -176,7 +176,19 @@ export default class UserController {
      */
     static async adminDeleteUser(req, res) {
         const { body } = validateSchema(req, { bodySchema: idUserSchema });
-
+        if (req.session.user.id === body.id) {
+            throw new ApiError(
+                400,
+                "This action cannot be used to delete your own account."
+            );
+        }
+        const user = await User.getById(body.id);
+        if (user.admin) {
+            throw new ApiError(
+                400,
+                "This action cannot be used to delete an administrator account."
+            );
+        }
         await User.del(body.id);
 
         res.sendStatus(204);

@@ -154,36 +154,40 @@ export default class User extends DatabaseModel {
      * @param {number} id
      */
     static async del(id) {
-        const projectIds = await prismaManager.db.project.findMany({
-            where: { ownerId: id },
-            select: { id: true },
-        });
-
-        for (const project of projectIds) {
-            const newOwner = await prismaManager.db.projectAccess.findFirst({
-                where: {
-                    projectId: project.id,
-                    accessLevel: 1,
-                },
-                select: {
-                    userId: true,
-                },
+        return await prismaManager.db.$transaction(async (tx) => {
+            const projectIds = await tx.project.findMany({
+                where: { ownerId: id },
+                select: { id: true },
             });
 
-            if (newOwner) {
-                await prismaManager.db.project.update({
-                    where: { id: project.id },
-                    data: { ownerId: newOwner.userId },
-                });
-            } else {
-                await prismaManager.db.project.delete({
-                    where: { id: project.id },
-                });
-            }
-        }
+            for (const project of projectIds) {
+                const newOwner = await tx.projectAccess.findFirst(
+                    {
+                        where: {
+                            projectId: project.id,
+                            accessLevel: 1,
+                        },
+                        select: {
+                            userId: true,
+                        },
+                    }
+                );
 
-        return prismaManager.db.user.delete({
-            where: { id: id },
+                if (newOwner) {
+                    await tx.project.update({
+                        where: { id: project.id },
+                        data: { ownerId: newOwner.userId },
+                    });
+                } else {
+                    await tx.project.delete({
+                        where: { id: project.id },
+                    });
+                }
+            }
+
+            return tx.user.delete({
+                where: { id: id },
+            });
         });
     }
 
