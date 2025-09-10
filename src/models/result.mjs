@@ -39,30 +39,11 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {number} id
-     * @returns {Promise<import("./volume.mjs").VolumeDB[]>}
-     */
-    static async getVolumes(id) {
-        const result = await this.db.findUnique({
-            where: {
-                id: id,
-            },
-            include: {
-                volumes: true,
-            },
-        });
-        if (result === null) {
-            throw new ApiError(400, `Result with id ${id} not found.`);
-        }
-        return result.volumes;
-    }
-
-    /**
      * @param {number} volumeId
      * @param {object} options
      * @param {boolean} [options.checkpoint]
      * @param {boolean} [options.volumeData]
-     * @param {boolean} [options.volumes]
+     * @param {boolean} [options.volume]
      * @param {boolean} [options.files]
      */
     static async getFromVolume(
@@ -70,22 +51,18 @@ export default class Result extends DatabaseModel {
         {
             checkpoint = false,
             volumeData = false,
-            volumes = false,
+            volume = false,
             files = false,
         }
     ) {
         const results = await this.db.findMany({
             where: {
-                volumes: {
-                    some: {
-                        id: volumeId,
-                    },
-                },
+                volumeId,
             },
             include: {
                 checkpoint: checkpoint,
                 volumeData: volumeData,
-                volumes: volumes,
+                volume: volume,
                 files: files,
             },
         });
@@ -117,7 +94,7 @@ export default class Result extends DatabaseModel {
             include: {
                 checkpoint: checkpoint,
                 volumeData: volumeData,
-                volumes: volumes,
+                volume: volumes,
                 files: files,
             },
         });
@@ -139,11 +116,7 @@ export default class Result extends DatabaseModel {
                 creatorId: creatorId,
                 checkpointId: checkpointId,
                 volumeDataId: volumeDataId,
-                volumes: {
-                    connect: {
-                        id: volumeId,
-                    },
-                },
+                volumeId: volumeId,
             },
         });
     }
@@ -193,11 +166,7 @@ export default class Result extends DatabaseModel {
                             creatorId: creatorId,
                             checkpointId: checkpointId,
                             volumeDataId: volumeDataId,
-                            volumes: {
-                                connect: {
-                                    id: volumeId,
-                                },
-                            },
+                            volumeId: volumeId,
                         },
                     });
 
@@ -367,11 +336,7 @@ export default class Result extends DatabaseModel {
                             creatorId: creatorId,
                             checkpointId: checkpointId,
                             volumeDataId: volumeDataId,
-                            volumes: {
-                                connect: {
-                                    id: volumeId,
-                                },
-                            },
+                            volumeId: volumeId,
                         },
                     });
 
@@ -544,116 +509,29 @@ export default class Result extends DatabaseModel {
     }
 
     /**
-     * @param {number} id
-     * @returns {Promise<ResultDB>}
-     */
-    static async del(id) {
-        return this.#del(id);
-    }
-
-    /**
      * @param {number} resultId
-     * @param {number} volumeId
      * @returns {Promise<ResultDB>}
      */
-    static async removeFromVolume(resultId, volumeId) {
-        return Volume.withWriteLock(volumeId, [this.modelName], () => {
-            return this.#del(resultId, volumeId);
-        });
-    }
-
-    /**
-     * @param {number} resultId
-     * @param {number?} volumeId
-     * @returns {Promise<ResultDB>}
-     */
-    static async #del(resultId, volumeId = null) {
-        const fileDeleteStack = [];
-
-        const result = await prismaManager.db.$transaction(
+    static async del(resultId) {
+        return await prismaManager.db.$transaction(
             async (tx) => {
-                let result = await tx.result.findUnique({
+                const result = await tx.result.delete({
                     where: { id: resultId },
-                    include: {
-                        volumes: volumeId !== null,
-                        checkpoint: {
-                            include: {
-                                labels: true,
-                            },
-                        },
-                        volumeData: true,
-                    },
                 });
 
-                if (
-                    volumeId &&
-                    !result.volumes.some((v) => v.id === volumeId)
-                ) {
-                    throw new ApiError(
-                        400,
-                        "Result is not part of the volume."
-                    );
+                if (result.folderPath) {
+                    fsPromises.rm(result.folderPath, {
+                        force: true,
+                        recursive: true,
+                    });
                 }
 
-                if (volumeId && result.volumes.length > 1) {
-                    await tx.result.update({
-                        where: {
-                            id: resultId,
-                        },
-                        data: {
-                            volumes: {
-                                disconnect: { id: volumeId },
-                            },
-                        },
-                    });
-                } else {
-                    await this.withWriteLock(resultId, null, () => {
-                        return tx.result.delete({
-                            where: { id: resultId },
-                        });
-                    });
-
-                    // if (result.checkpoint) {
-                    //     const checkpointFiles = await Checkpoint.deleteZombies(
-                    //         [result.checkpoint.id],
-                    //         tx
-                    //     );
-
-                    //     if (checkpointFiles.length > 0) {
-                    //         fileDeleteStack.push(...checkpointFiles);
-
-                    //         fileDeleteStack.push(
-                    //             ...(await PseudoLabeledVolumeData.deleteZombies(
-                    //                 result.checkpoint.labels.map((l) => l.id),
-                    //                 tx
-                    //             ))
-                    //         );
-                    //     }
-                    // }
-
-                    if (result.folderPath) {
-                        fsPromises.rm(result.folderPath, {
-                            force: true,
-                            recursive: true,
-                        });
-                    }
-                }
                 return result;
             },
             {
                 timeout: 60000,
             }
         );
-
-        for (const file of fileDeleteStack) {
-            fsPromises
-                .rm(file, { recursive: true, force: true })
-                .catch((error) => {
-                    console.error(`Failed to delete ${file}: ${error}`);
-                });
-        }
-
-        return result;
     }
 
     /**
@@ -692,54 +570,5 @@ export default class Result extends DatabaseModel {
         }
 
         return folderPath;
-    }
-
-    /**
-     * @param {number[]} ids
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @returns {Promise<string[]>}
-     */
-    static async deleteZombies(ids, tx) {
-        if (ids.length === 0) {
-            return [];
-        }
-
-        const results = await tx.result.findMany({
-            where: {
-                AND: {
-                    id: {
-                        in: ids,
-                    },
-                    volumes: {
-                        none: {},
-                    },
-                },
-            },
-        });
-
-        if (results.length === 0) {
-            return [];
-        }
-
-        const idsToDelete = results.map((r) => r.id);
-
-        return this.withWriteLocks(idsToDelete, null, async () => {
-            await tx.result.deleteMany({
-                where: {
-                    id: {
-                        in: results.map((r) => r.id),
-                    },
-                },
-            });
-
-            /** @type {string[]} */
-            const fileDeleteStack = [];
-
-            results.forEach((r) =>
-                fileDeleteStack.push(...Result.getFilePaths(r))
-            );
-
-            return fileDeleteStack;
-        });
     }
 }

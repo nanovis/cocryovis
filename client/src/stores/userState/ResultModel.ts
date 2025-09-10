@@ -2,10 +2,7 @@ import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { Checkpoint } from "./CheckpointModel";
 import { getResultSchema } from "#schemas/result-path-schema.mjs";
 import z from "zod";
-import {
-  getResultsFromVolume,
-  removeResultFromVolume,
-} from "../../api/results";
+import { getResultsFromVolume, deleteResult } from "../../api/results";
 
 export const Result = types.model({
   id: types.identifierNumber,
@@ -15,6 +12,7 @@ export const Result = types.model({
   logFile: types.maybeNull(types.string),
   creatorId: types.maybeNull(types.integer),
   checkpoint: types.maybeNull(Checkpoint),
+  volumeId: types.integer,
 });
 
 export interface ResultInstance extends Instance<typeof Result> {}
@@ -59,7 +57,7 @@ export const VolumeResults = types
       });
     },
     removeResult: flow(function* removeResult(resultId: number) {
-      yield removeResultFromVolume(self.volumeId, resultId);
+      yield deleteResult(self.volumeId);
       if (!isAlive(self)) {
         return;
       }

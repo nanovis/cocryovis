@@ -177,6 +177,15 @@ export const volumeDataPath = {
                 ...defaultError,
             },
         },
+        delete: {
+            requestParams: {
+                path: idVolumeDataAndType,
+            },
+            responses: {
+                204: {},
+                ...defaultError,
+            },
+        },
     },
     "/volumeData/{type}/{idVolumeData}/data": {
         get: {
@@ -371,17 +380,6 @@ export const volumeDataPath = {
                         },
                     },
                 },
-                ...defaultError,
-            },
-        },
-    },
-    "/volume/{idVolume}/volumeData/{type}/{idVolumeData}": {
-        delete: {
-            requestParams: {
-                path: idVolumeVolumeDataTypeParams,
-            },
-            responses: {
-                204: {},
                 ...defaultError,
             },
         },

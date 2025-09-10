@@ -68,6 +68,15 @@ export const resultPath = {
                 ...defaultError,
             },
         },
+        delete: {
+            requestParams: {
+                path: idResult,
+            },
+            responses: {
+                204: {},
+                ...defaultError,
+            },
+        },
     },
     // "/result/{idResult}/details": {
     //     get: {
@@ -126,17 +135,7 @@ export const resultPath = {
             },
         },
     },
-    "/volume/{idVolume}/result/{idResult}": {
-        delete: {
-            requestParams: {
-                path: idVolumeAndIdResultParams,
-            },
-            responses: {
-                204: {},
-                ...defaultError,
-            },
-        },
-    },
+
     "/result/{idResult}/data": {
         get: {
             requestParams: {

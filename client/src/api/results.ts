@@ -15,28 +15,19 @@ export async function getResultsFromVolume(id: number) {
 }
 
 export async function createResultFromFiles(id: number, request: FormData) {
-  const response = await Utils.sendApiRequest(
-    `volume/${id}/results`,
-    {
-      method: "POST",
-      body: request,
-    },
-  );
+  const response = await Utils.sendApiRequest(`volume/${id}/results`, {
+    method: "POST",
+    body: request,
+  });
   const Result: z.infer<typeof resultFilesSchema> = await response.json();
   return Result;
 }
 
-export async function removeResultFromVolume(
-  idVolume: number,
-  idResult: number
-) {
-  await Utils.sendApiRequest(
-    `volume/${idVolume}/result/${idResult}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    },
-  );
+export async function deleteResult(idResult: number) {
+  await Utils.sendApiRequest(`result/${idResult}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }
 
 export async function getResultData(id: number) {

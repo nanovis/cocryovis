@@ -376,7 +376,7 @@ export default class VolumeDataController {
      */
     static async delete(req, res) {
         const { params } = validateSchema(req, {
-            paramsSchema: idVolumeVolumeDataTypeParams,
+            paramsSchema: idVolumeDataAndType,
         });
 
         await VolumeDataFactory.getClass(

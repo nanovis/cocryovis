@@ -10,7 +10,6 @@ import appConfig from "../tools/config.mjs";
 import { idResult } from "#schemas/componentSchemas/result-schema.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
 import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
-import { idVolumeAndIdResultParams } from "#schemas/result-path-schema.mjs";
 
 /**
  * @typedef { import("express").Request } Request
@@ -61,12 +60,12 @@ export default class ResultController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async removeFromVolume(req, res) {
+    static async delete(req, res) {
         const { params } = validateSchema(req, {
-            paramsSchema: idVolumeAndIdResultParams,
+            paramsSchema: idResult,
         });
 
-        await Result.removeFromVolume(params.idResult, params.idVolume);
+        await Result.del(params.idResult);
 
         res.sendStatus(204);
     }

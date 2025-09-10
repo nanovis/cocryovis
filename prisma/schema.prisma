@@ -197,7 +197,8 @@ model Result {
   checkpointId     Int
   volumeData       RawVolumeData @relation(fields: [volumeDataId], references: [id])
   volumeDataId     Int
-  volumes          Volume[]
+  volume           Volume        @relation(fields: [volumeId], references: [id])
+  volumeId         Int
 }
 
 model ResultFile {

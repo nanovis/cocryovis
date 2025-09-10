@@ -190,17 +190,11 @@ export async function restrictReadVolumeDataAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToResult(resultId, userId) {
-    const volumes = await Result.getVolumes(resultId);
-    if (!volumes) {
-        return false;
+    const result = await Result.getById(resultId);
+    if (!result) {
+        throw new ApiError(404, `Volume ${result.volumeId} not found!`);
     }
-    for (const volume of volumes) {
-        if (await userHasReadAccessToVolume(volume.id, userId)) {
-            return true;
-        }
-    }
-
-    return false;
+    return await userHasReadAccessToVolume(result.volumeId, userId);
 }
 
 /**

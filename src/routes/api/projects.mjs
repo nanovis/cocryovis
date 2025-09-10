@@ -158,8 +158,7 @@ projectsApi.get(`${readVolumeDataPrefix}/download-settings-file`, restrictReadVo
 projectsApi.get(`${readVolumeDataPrefix}/download-mrc-file`, restrictReadVolumeDataAccess, VolumeDataController.downloadMrcFile);
 
 // Delete Volume Data
-projectsApi.delete(`/volume/:idVolume/volumeData/:type/:idVolumeData`, restrictApi,
-VolumeDataController.delete);
+projectsApi.delete(`/volumeData/:type/:idVolumeData`, restrictApi, VolumeDataController.delete);
   
 // CryoET Tomogram Metadata
 projectsApi.get(`/cryoet/:idTomogram/`, 
@@ -220,7 +219,7 @@ projectsApi.get(`/volume/:idVolume/results`, restrictReadVolumeAccess,ResultCont
 projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
 
 // Remove Result
-projectsApi.delete(`/volume/:idVolume/result/:idResult`, restrictApi,ResultController.removeFromVolume);
+projectsApi.delete(`/result/:idResult`, restrictApi,ResultController.delete);
 
 // Result vizualization data
 projectsApi.get(`/result/:idResult/data`, restrictReadResultAccess,ResultController.getResultData);
