@@ -12,6 +12,8 @@ import validateSchema from "../tools/validate-schema.mjs";
 import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
 
 /**
+ * @import { createFromFilesSchema } from "#schemas/result-path-schema.mjs"
+ * @import z from "zod"
  * @typedef { import("express").Request } Request
  * @typedef { import("express").Response } Response
  */
@@ -140,13 +142,12 @@ export default class ResultController {
         if (!Array.isArray(files)) {
             files = [files];
         }
-
+        /** @type {z.infer<typeof createFromFilesSchema> }    */
         const data = JSON.parse(req.body.data);
 
         const result = await Result.createFromFiles(
             req.session.user.id,
             data.idCheckpoint,
-            data.idVolumeData,
             params.idVolume,
             data.volumeDescriptors,
             files

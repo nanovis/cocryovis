@@ -133,7 +133,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       }
 
       toastContainer.loading("Fetching raw data...");
-      
+
       const rawData = await getVolumeDataById(
         "RawVolumeData",
         volume.rawData.id
@@ -216,7 +216,6 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       formData.append(
         "data",
         JSON.stringify({
-          idVolumeData: rawData.id,
           idCheckpoint: inferenceCheckpointId,
           volumeDescriptors: volumeDescriptors,
         })

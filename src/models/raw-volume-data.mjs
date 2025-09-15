@@ -43,6 +43,17 @@ export default class RawVolumeData extends VolumeData {
     }
 
     /**
+     * @param {number} id
+     * @returns {Promise<RawVolumeDataDB>}
+     */
+    static async getFromVolumeId(id) {
+        const volumeData = await this.db.findUnique({
+            where: { volumeId: id },
+        });
+        return volumeData;
+    }
+
+    /**
      * @param {number} creatorId
      * @param {number} volumeId
      * @returns {Promise<RawVolumeDataDB>}
@@ -272,5 +283,4 @@ export default class RawVolumeData extends VolumeData {
             archive: archive,
         };
     }
-   
 }

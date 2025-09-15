@@ -114,7 +114,7 @@ export const UiState = types
     },
   }))
   .actions((self) => ({
-    visualizeVolume: flow(function* visualizeVolume(
+     visualizeVolume: flow(function* visualizeVolume(
       filesMap: Map<string, Blob>,
       visualizedObject: visualizedObjectInstances
     ) {

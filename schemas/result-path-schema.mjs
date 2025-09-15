@@ -48,6 +48,17 @@ export const getResultSchema = z.array(
     })
 );
 
+export const volumeDescriptors = z.object({
+    name: z.string(),
+    index: z.number(),
+});
+
+export const createFromFilesSchema = z.object({
+    idCheckpoint: z.int(),
+    volumeDescriptors: z.array(volumeDescriptors),
+    files: multipleFileSchema,
+});
+
 /**
  * @type import("zod-openapi").ZodOpenApiPathsObject
  */
@@ -119,7 +130,7 @@ export const resultPath = {
             requestBody: {
                 content: {
                     "multipart/form-data": {
-                        schema: multipleFileSchema,
+                        schema: createFromFilesSchema,
                     },
                 },
             },

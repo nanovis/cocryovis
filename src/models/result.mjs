@@ -41,18 +41,12 @@ export default class Result extends DatabaseModel {
      * @param {number} volumeId
      * @param {object} options
      * @param {boolean} [options.checkpoint]
-     * @param {boolean} [options.volumeData]
      * @param {boolean} [options.volume]
      * @param {boolean} [options.files]
      */
     static async getFromVolume(
         volumeId,
-        {
-            checkpoint = false,
-            volumeData = false,
-            volume = false,
-            files = false,
-        }
+        { checkpoint = false, volume = false, files = false }
     ) {
         const results = await this.db.findMany({
             where: {
@@ -60,7 +54,6 @@ export default class Result extends DatabaseModel {
             },
             include: {
                 checkpoint: checkpoint,
-                volumeData: volumeData,
                 volume: volume,
                 files: files,
             },
@@ -73,18 +66,12 @@ export default class Result extends DatabaseModel {
      * @param {number} id
      * @param {object} options
      * @param {boolean} [options.checkpoint]
-     * @param {boolean} [options.volumeData]
-     * @param {boolean} [options.volumes]
+     * @param {boolean} [options.volume]
      * @param {boolean} [options.files]
      */
     static async getByIdDeep(
         id,
-        {
-            checkpoint = false,
-            volumeData = false,
-            volumes = false,
-            files = false,
-        }
+        { checkpoint = false, volume = false, files = false }
     ) {
         const result = await this.db.findUnique({
             where: {
@@ -92,8 +79,7 @@ export default class Result extends DatabaseModel {
             },
             include: {
                 checkpoint: checkpoint,
-                volumeData: volumeData,
-                volume: volumes,
+                volume: volume,
                 files: files,
             },
         });
@@ -106,15 +92,13 @@ export default class Result extends DatabaseModel {
     /**
      * @param {number} creatorId
      * @param {number} checkpointId
-     * @param {number} volumeDataId
      * @param {number} volumeId
      */
-    static async create(creatorId, checkpointId, volumeDataId, volumeId) {
+    static async create(creatorId, checkpointId, volumeId) {
         return await this.db.create({
             data: {
                 creatorId: creatorId,
                 checkpointId: checkpointId,
-                volumeDataId: volumeDataId,
                 volumeId: volumeId,
             },
         });
@@ -123,7 +107,6 @@ export default class Result extends DatabaseModel {
     /**
      * @param {number} creatorId
      * @param {number} checkpointId
-     * @param {number} volumeDataId
      * @param {number} volumeId
      * @typedef {object} Config
      * @property {string} name
@@ -138,7 +121,6 @@ export default class Result extends DatabaseModel {
     static async createFromFolder(
         creatorId,
         checkpointId,
-        volumeDataId,
         volumeId,
         config,
         folderPath,
@@ -164,7 +146,6 @@ export default class Result extends DatabaseModel {
                         data: {
                             creatorId: creatorId,
                             checkpointId: checkpointId,
-                            volumeDataId: volumeDataId,
                             volumeId: volumeId,
                         },
                     });
@@ -260,20 +241,18 @@ export default class Result extends DatabaseModel {
     /**
      * @param {number} creatorId
      * @param {number} checkpointId
-     * @param {number} volumeDataId
      * @param {number} volumeId
-     * @param {{name: string, index: number, rawVolumeChannel: boolean?}[]} volumeDescriptors
+     * @param {{name: string, index: number, rawVolumeChannel?: boolean}[]} volumeDescriptors
      * @param {fileUpload.UploadedFile[]} files
      */
     static async createFromFiles(
         creatorId,
         checkpointId,
-        volumeDataId,
         volumeId,
         volumeDescriptors,
         files
     ) {
-        const volumeData = await RawVolumeData.getById(volumeDataId);
+        const volumeData = await RawVolumeData.getFromVolumeId(volumeId);
 
         if (!volumeData.rawFilePath) {
             throw new ApiError(
@@ -334,7 +313,6 @@ export default class Result extends DatabaseModel {
                         data: {
                             creatorId: creatorId,
                             checkpointId: checkpointId,
-                            volumeDataId: volumeDataId,
                             volumeId: volumeId,
                         },
                     });

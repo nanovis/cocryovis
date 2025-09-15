@@ -11,7 +11,6 @@ export const resultSchema = z.object({
     logFile: z.string().nullable(),
     checkpointId: z.number(),
     creatorId: z.int().nullable(),
-    volumeDataId: z.int(),
     volumeId: z.int(),
 });
 

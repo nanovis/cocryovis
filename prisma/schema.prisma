@@ -73,9 +73,9 @@ model Volume {
 }
 
 model RawVolumeData {
-  id             Int      @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   path           String?
-  creator        User?    @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creator        User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId      Int?
   rawFilePath    String?
   sizeX          Int
@@ -91,9 +91,8 @@ model RawVolumeData {
   bytesPerVoxel  Int
   usedBits       Int
   mrcFilePath    String?
-  volume         Volume   @relation(fields: [volumeId], references: [id], onDelete: Cascade)
-  volumeId       Int      @unique
-  results        Result[]
+  volume         Volume  @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  volumeId       Int     @unique
   // BytesPerVoxel   BytesPerVoxel? @relation(fields: [bytesPerVoxelId], references: [id])
   // bytesPerVoxelId Int?
   // UsedBits        UsedBits?      @relation(fields: [usedBitsId], references: [id])
@@ -187,18 +186,16 @@ model Checkpoint {
 }
 
 model Result {
-  id               Int           @id @default(autoincrement())
+  id               Int          @id @default(autoincrement())
   folderPath       String?
   files            ResultFile[]
   rawVolumeChannel Int?
   logFile          String?
-  creator          User?         @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creator          User?        @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId        Int?
-  checkpoint       Checkpoint    @relation(fields: [checkpointId], references: [id], onDelete: Restrict)
+  checkpoint       Checkpoint   @relation(fields: [checkpointId], references: [id], onDelete: Restrict)
   checkpointId     Int
-  volumeData       RawVolumeData @relation(fields: [volumeDataId], references: [id], onDelete: Restrict)
-  volumeDataId     Int
-  volume           Volume        @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  volume           Volume       @relation(fields: [volumeId], references: [id], onDelete: Cascade)
   volumeId         Int
 }
 
