@@ -252,9 +252,9 @@ export default class Result extends DatabaseModel {
         volumeDescriptors,
         files
     ) {
-        const volumeData = await RawVolumeData.getFromVolumeId(volumeId);
+        const volumeData = await RawVolumeData.getFromVolumeIdWithData(volumeId);
 
-        if (!volumeData.rawFilePath) {
+        if (!volumeData.dataFile.rawFilePath) {
             throw new ApiError(
                 400,
                 "Source Volume Data is missing a raw file."
@@ -297,7 +297,7 @@ export default class Result extends DatabaseModel {
                 "tmp_mean_filtered.raw"
             );
             await Utils.meanFilter(
-                volumeData.rawFilePath,
+                volumeData.dataFile.rawFilePath,
                 settings.size.x,
                 settings.size.y,
                 settings.size.z,
@@ -367,7 +367,7 @@ export default class Result extends DatabaseModel {
                     if (meanFilteredFilePath !== null) {
                         const volumeName = "Mean3-Inverted";
                         const meanFilteredFileName = `${Utils.stripExtension(
-                            volumeData.rawFilePath
+                            volumeData.dataFile.rawFilePath
                         )}_mean3_inverted.raw`;
 
                         const settingFile = {
@@ -380,7 +380,7 @@ export default class Result extends DatabaseModel {
 
                         fsPromises.rename(
                             meanFilteredFilePath,
-                            path.join(resultPath, meanFilteredFileName)
+                            path.join(resultPath, meanFilteredFileName) 
                         );
 
                         const settingFileName = `${Utils.stripExtension(

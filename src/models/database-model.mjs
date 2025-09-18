@@ -6,6 +6,22 @@ import WriteLockManager, {
     WriteMultiLock,
 } from "../tools/write-lock-manager.mjs";
 import { MissingResourceError } from "../tools/error-handler.mjs";
+import prismaManager from "../tools/prisma-manager.mjs";
+
+/**
+ * @template T
+ * @param {Prisma.TransactionClient | undefined} client
+ * @param {(tx: Prisma.TransactionClient) => Promise<T>} callback
+ * @returns {Promise<T>}
+ */
+export async function withTransaction(client, callback) {
+    if (client !== undefined) {
+        return await callback(client);
+    }
+    return prismaManager.db.$transaction(async (tx) => {
+        return await callback(tx);
+    });
+}
 
 export default class DatabaseModel {
     /**

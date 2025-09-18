@@ -11,6 +11,7 @@ import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import appConfig from "../tools/config.mjs";
 import archiver from "archiver";
+import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 
 /**
  * @import z from "zod"
@@ -23,15 +24,13 @@ import archiver from "archiver";
  */
 export default class RawVolumeData extends VolumeData {
     static modelName = "rawVolumeData";
+    static fileModelName = "rawVolumeDataFile";
     static lockManager = new WriteLockManager(this.modelName);
     static mrcTempDirectory = path.join(appConfig.tempPath, "mrc");
+    static fileClass = RawVolumeDataFile;
 
     static get db() {
         return prismaManager.db.rawVolumeData;
-    }
-
-    static get folderPath() {
-        return "raw-data";
     }
 
     /**
@@ -44,11 +43,35 @@ export default class RawVolumeData extends VolumeData {
 
     /**
      * @param {number} id
+     */
+    static async getWithData(id) {
+        const volumeData = await this.db.findUniqueOrThrow({
+            where: { id: id },
+            include: {
+                dataFile: true,
+            },
+        });
+        return volumeData;
+    }
+
+    /**
+     * @param {number} id
      * @returns {Promise<RawVolumeDataDB>}
      */
     static async getFromVolumeId(id) {
         const volumeData = await this.db.findUnique({
             where: { volumeId: id },
+        });
+        return volumeData;
+    }
+
+    /**
+     * @param {number} id
+     */
+    static async getFromVolumeIdWithData(id) {
+        const volumeData = await this.db.findUnique({
+            where: { volumeId: id },
+            include: { dataFile: true },
         });
         return volumeData;
     }
@@ -118,18 +141,29 @@ export default class RawVolumeData extends VolumeData {
                             /** @type {RawVolumeDataDB} */
                             const volumeData = await tx.rawVolumeData.create({
                                 data: {
-                                    creatorId: creatorId,
-                                    volumeId,
+                                    creator: {
+                                        connect: {
+                                            id: creatorId,
+                                        },
+                                    },
+                                    volume: {
+                                        connect: {
+                                            id: volumeId,
+                                        },
+                                    },
                                     ...RawVolumeData.fromSettingSchema(
                                         settings
                                     ),
+                                    dataFile: {},
+                                    name: Utils.stripExtension(rawFileName),
                                 },
                             });
                             let folderPath = null;
                             try {
-                                folderPath = await this.createVolumeDataFolder(
-                                    volumeData.id
-                                );
+                                folderPath =
+                                    await RawVolumeDataFile.createVolumeDataFolder(
+                                        volumeData.dataFileId
+                                    );
                                 const mrcFilePath = path.join(
                                     folderPath,
                                     path.basename(mrcFilePathTemp)
@@ -147,8 +181,10 @@ export default class RawVolumeData extends VolumeData {
                                     rawFilePath
                                 );
 
-                                return await tx.rawVolumeData.update({
-                                    where: { id: volumeData.id },
+                                return await tx.rawVolumeDataFile.update({
+                                    where: {
+                                        id: volumeData.dataFileId,
+                                    },
                                     data: {
                                         path: folderPath,
                                         rawFilePath: rawFilePath,
@@ -198,35 +234,24 @@ export default class RawVolumeData extends VolumeData {
                 const rawVolumeData = await tx.rawVolumeData.delete({
                     where: { id: id },
                 });
-                await this.deleteVolumeDataFiles(rawVolumeData);
+
+                const dataFile = await tx.rawVolumeDataFile.delete({
+                    where: {
+                        id: rawVolumeData.dataFileId,
+                        rawVolumeData: {
+                            none: {},
+                        },
+                    },
+                });
+                if (dataFile) {
+                    await RawVolumeDataFile.removeFilesFromDisc(dataFile);
+                }
                 return rawVolumeData;
             },
             {
                 timeout: 60000,
             }
         );
-    }
-
-    /**
-     * @param {RawVolumeDataDB} volumeData
-     * @returns {string[]}
-     */
-    static getFilePaths(volumeData) {
-        const files = super.getFilePaths(volumeData);
-        if (volumeData.mrcFilePath) {
-            files.push(volumeData.mrcFilePath);
-        }
-        return files;
-    }
-
-    static async deleteVolumeDataFiles(volumeData) {
-        if (volumeData.mrcFilePath) {
-            await fsPromises.rm(volumeData.mrcFilePath, {
-                recursive: true,
-                force: true,
-            });
-        }
-        super.deleteVolumeDataFiles(volumeData);
     }
 
     /**
@@ -241,7 +266,7 @@ export default class RawVolumeData extends VolumeData {
         downloadSettingsFile = true,
         downloadMrcFile = false
     ) {
-        const volumeData = await this.getById(id);
+        const volumeData = await RawVolumeData.getWithData(id);
 
         let hasFiles = false;
 
@@ -249,9 +274,9 @@ export default class RawVolumeData extends VolumeData {
             zlib: { level: appConfig.compressionLevel },
         });
 
-        if (downloadRawFile && volumeData.rawFilePath != null) {
-            archive.file(volumeData.rawFilePath, {
-                name: path.basename(volumeData.rawFilePath),
+        if (downloadRawFile && volumeData.dataFile.rawFilePath != null) {
+            archive.file(volumeData.dataFile.rawFilePath, {
+                name: path.basename(volumeData.dataFile.rawFilePath),
             });
             hasFiles = true;
         }
@@ -259,13 +284,13 @@ export default class RawVolumeData extends VolumeData {
             const settings = RawVolumeData.toSettingSchema(volumeData);
             const settingsJSON = JSON.stringify(settings, null, 4);
             archive.append(settingsJSON, {
-                name: `${Utils.stripExtension(volumeData.rawFilePath)}.json`,
+                name: `${Utils.stripExtension(volumeData.dataFile.rawFilePath)}.json`,
             });
             hasFiles = true;
         }
-        if (downloadMrcFile && volumeData.mrcFilePath != null) {
-            archive.file(volumeData.mrcFilePath, {
-                name: path.basename(volumeData.mrcFilePath),
+        if (downloadMrcFile && volumeData.dataFile.mrcFilePath != null) {
+            archive.file(volumeData.dataFile.mrcFilePath, {
+                name: path.basename(volumeData.dataFile.mrcFilePath),
             });
             hasFiles = true;
         }
@@ -275,7 +300,7 @@ export default class RawVolumeData extends VolumeData {
         }
 
         const outputFileName = `${this.modelName}_${Utils.stripExtension(
-            volumeData.path
+            volumeData.dataFile.path
         )}`;
 
         return {

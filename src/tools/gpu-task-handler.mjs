@@ -29,7 +29,7 @@ import appConfig from "./config.mjs";
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").Result } ResultDB
  * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
- * @typedef { VolumeDB & {rawData: RawVolumeDataDB, pseudoVolumes: PseudoVolumeDataDB[]} } DeepVolume
+ * @typedef { VolumeDB & {rawData: import("../models/volume-data.mjs").RawVolumeDataWithFileDB, pseudoVolumes: import("../models/volume-data.mjs").PseudoVolumeDataWithFileDB[]} } DeepVolume
  */
 
 export default class GPUTaskHandler {
@@ -73,10 +73,10 @@ export default class GPUTaskHandler {
             );
         }
 
-        const volume = await Volume.getById(volumeId, { rawData: true });
+        const rawVolumeData = await RawVolumeData.getWithData(volumeId);
         const checkpoint = await Checkpoint.getById(checkpointId);
 
-        GPUTaskHandler.#checkInferenceInput(volume, checkpoint);
+        GPUTaskHandler.#checkInferenceInput(rawVolumeData, checkpoint);
 
         if (!outputPath) {
             outputPath = this.createTemporaryOutputPath();
@@ -142,18 +142,17 @@ export default class GPUTaskHandler {
                 logFile: logFile.fileName,
             });
 
-            const volume = await Volume.getById(volumeId, {
-                rawData: true,
-            });
+            const rawVolumeData =
+                await RawVolumeData.getFromVolumeIdWithData(volumeId);
             const checkpoint = await Checkpoint.getById(checkpointId);
 
-            GPUTaskHandler.#checkInferenceInput(volume, checkpoint);
+            GPUTaskHandler.#checkInferenceInput(rawVolumeData, checkpoint);
 
             tempSettingsPath = path.join(
-                volume.rawData.path,
-                `${Utils.stripExtension(volume.rawData.rawFilePath)}.json`
+                rawVolumeData.dataFile.path,
+                `${Utils.stripExtension(rawVolumeData.dataFile.rawFilePath)}.json`
             );
-            const settings = RawVolumeData.toSettingSchema(volume.rawData);
+            const settings = RawVolumeData.toSettingSchema(rawVolumeData);
             await fsPromises.writeFile(
                 tempSettingsPath,
                 JSON.stringify(settings),
@@ -208,7 +207,6 @@ export default class GPUTaskHandler {
             const result = await Result.createFromFolder(
                 userId,
                 checkpointId,
-                volume.rawData.id,
                 volumeId,
                 JSON.parse(outputFile.toString()),
                 outputPath,
@@ -515,18 +513,12 @@ export default class GPUTaskHandler {
 
             await logFile.writeLog(`Creating training configuration file...\n`);
 
-            const trainingVolumes = await Volume.getMultipleByIdDeep(
-                trainingVolumesIds,
-                { rawData: true, pseudoVolumes: true }
-            );
-            const validationVolumes = await Volume.getMultipleByIdDeep(
-                validationVolumesIds,
-                { rawData: true, pseudoVolumes: true }
-            );
-            const testingVolumes = await Volume.getMultipleByIdDeep(
-                testingVolumesIds,
-                { rawData: true, pseudoVolumes: true }
-            );
+            const trainingVolumes =
+                await Volume.getMultipleByIdWithFileDeep(trainingVolumesIds);
+            const validationVolumes =
+                await Volume.getMultipleByIdWithFileDeep(validationVolumesIds);
+            const testingVolumes =
+                await Volume.getMultipleByIdWithFileDeep(testingVolumesIds);
 
             const configPath = await this.#writeTrainingConfigFile(
                 trainingVolumes,
@@ -789,7 +781,7 @@ export default class GPUTaskHandler {
                     "NanoOetzi inference error: One or more inputs are missing raw data."
                 );
             }
-            if (!reference.rawData.rawFilePath) {
+            if (!reference.rawData.dataFile.rawFilePath) {
                 throw new ApiError(
                     400,
                     "NanoOetzi inference error: raw data volume is missing."
@@ -835,12 +827,12 @@ export default class GPUTaskHandler {
             }
             const volumeInput = {
                 name: reference.name,
-                rawDataPath: reference.rawData.rawFilePath,
+                rawDataPath: reference.rawData.dataFile.rawFilePath,
                 labels: [],
             };
 
             for (const pseudoVolume of reference.pseudoVolumes) {
-                if (!pseudoVolume.rawFilePath) {
+                if (!pseudoVolume.dataFile.rawFilePath) {
                     throw new ApiError(
                         400,
                         "NanoOetzi inference error: One or more pseudo labeled volumes are missing a raw file."
@@ -862,7 +854,7 @@ export default class GPUTaskHandler {
                     pseudoVolumeSettings["size"],
                     properties.dimensions
                 );
-                volumeInput.labels.push(pseudoVolume.rawFilePath);
+                volumeInput.labels.push(pseudoVolume.dataFile.rawFilePath);
             }
 
             configDataArray.push(volumeInput);
@@ -884,17 +876,17 @@ export default class GPUTaskHandler {
     }
 
     /**
-     * @param {VolumeDB & {rawData: RawVolumeDataDB}} volume
+     * @param {import("../models/volume-data.mjs").RawVolumeDataWithFileDB} rawVolumeData
      * @param {CheckpointDB} checkpoint
      */
-    static #checkInferenceInput(volume, checkpoint) {
-        if (!volume.rawData) {
+    static #checkInferenceInput(rawVolumeData, checkpoint) {
+        if (!rawVolumeData) {
             throw new ApiError(
                 400,
                 `Inference: Selected Volume must contain Raw Volume Data.`
             );
         }
-        if (!volume.rawData.rawFilePath) {
+        if (!rawVolumeData.dataFile.rawFilePath) {
             throw new ApiError(
                 400,
                 `Inference: Raw Volume Data Volume must contain a raw file.`

@@ -5,6 +5,9 @@ import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
+import RawVolumeDataFile from "./raw-volume-data-file.mjs";
+import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
+import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 
 /**
  * @import { publicUser } from "#schemas/user-path-schema.mjs"
@@ -161,17 +164,15 @@ export default class User extends DatabaseModel {
             });
 
             for (const project of projectIds) {
-                const newOwner = await tx.projectAccess.findFirst(
-                    {
-                        where: {
-                            projectId: project.id,
-                            accessLevel: 1,
-                        },
-                        select: {
-                            userId: true,
-                        },
-                    }
-                );
+                const newOwner = await tx.projectAccess.findFirst({
+                    where: {
+                        projectId: project.id,
+                        accessLevel: 1,
+                    },
+                    select: {
+                        userId: true,
+                    },
+                });
 
                 if (newOwner) {
                     await tx.project.update({
@@ -184,6 +185,10 @@ export default class User extends DatabaseModel {
                     });
                 }
             }
+
+            await RawVolumeDataFile.deleteZombies(tx);
+            await SparseVolumeDataFile.deleteZombies(tx);
+            await PseudoVolumeDataFile.deleteZombies(tx);
 
             return tx.user.delete({
                 where: { id: id },

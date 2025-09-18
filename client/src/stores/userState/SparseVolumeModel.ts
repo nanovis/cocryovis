@@ -8,9 +8,8 @@ import z from "zod";
 export const SparseLabelVolume = types
   .model({
     id: types.identifierNumber,
-    path: types.maybeNull(types.string),
     creatorId: types.maybeNull(types.integer),
-    rawFilePath: types.maybeNull(types.string),
+    name: types.string,
     sizeX: types.integer,
     sizeY: types.integer,
     sizeZ: types.integer,

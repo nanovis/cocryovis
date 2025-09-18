@@ -13,6 +13,9 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 import VolumeData from "./volume-data.mjs";
+import RawVolumeDataFile from "./raw-volume-data-file.mjs";
+import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
+import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 
 /**
  * @import z from "zod"
@@ -56,6 +59,24 @@ export default class Volume extends DatabaseModel {
                 pseudoVolumes: options.pseudoVolumes,
                 results: options.results,
                 project: options.project,
+            },
+        });
+        if (entry === null) {
+            throw MissingResourceError.fromId(id, this.modelName);
+        }
+        return entry;
+    }
+
+    /**
+     * @param {number} id
+     */
+    static async getByIdWithFileDeep(id) {
+        const entry = await this.db.findUnique({
+            where: { id: id },
+            include: {
+                rawData: { include: { dataFile: true } },
+                sparseVolumes: { include: { dataFile: true } },
+                pseudoVolumes: { include: { dataFile: true } },
             },
         });
         if (entry === null) {
@@ -148,6 +169,19 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
+     * @param {number[]} ids
+     */
+    static async getMultipleByIdWithFileDeep(ids) {
+        return await this.db.findMany({
+            where: { id: { in: ids } },
+            include: {
+                rawData: { include: { dataFile: true } },
+                pseudoVolumes: { include: { dataFile: true } },
+            },
+        });
+    }
+
+    /**
      * @param {string} name
      * @param {string} description
      * @param {number} creatorId
@@ -168,81 +202,6 @@ export default class Volume extends DatabaseModel {
     }
 
     /**
-     * @param {number} sourceId
-     * @param {number} creatorId
-     * @param {number} projectId
-     * @returns {Promise<VolumeDB>}
-     */
-    // static async clone(sourceId, creatorId, projectId) {
-    //     return await prismaManager.db.$transaction(async (tx) => {
-    //         return this.cloneTransaction(tx, sourceId, creatorId, projectId);
-    //     });
-    // }
-
-    /**
-     * @param {import("@prisma/client").Prisma.TransactionClient} tx
-     * @param {number} sourceId
-     * @param {number} creatorId
-     * @param {number?} projectId
-     * @returns {Promise<VolumeDB>}
-     */
-    // static async cloneTransaction(tx, sourceId, creatorId, projectId = null) {
-    //     const sourceVolume = await tx.volume.findUnique({
-    //         where: { id: sourceId },
-    //         include: {
-    //             sparseVolumes: {
-    //                 select: {
-    //                     id: true,
-    //                 },
-    //             },
-    //             pseudoVolumes: {
-    //                 select: {
-    //                     id: true,
-    //                 },
-    //             },
-    //             results: {
-    //                 select: {
-    //                     id: true,
-    //                 },
-    //             },
-    //         },
-    //     });
-    
-    //     if (!sourceVolume) {
-    //         throw MissingResourceError.fromId(sourceId, this.modelName);
-    //     }
-    //     //LOL volume needs to have rawvolueDataId
-    //     const newVolumeData = {
-    //         name: sourceVolume.name,
-    //         description: sourceVolume.description,
-    //         creatorId: creatorId,
-    //         rawDataId: sourceVolume.rawDataId,
-    //         projectId: projectId,
-    //         sparseVolumes: {
-    //             connect: sourceVolume.sparseVolumes,
-    //         },
-    //         pseudoVolumes: {
-    //             connect: sourceVolume.pseudoVolumes,
-    //         },
-    //         results: {
-    //             connect: sourceVolume.results,
-    //         },
-    //     };
-
-    //     if (projectId != null) {
-    //         newVolumeData.projects = {
-    //             connect: { id: projectId },
-    //         };
-    //     }
-
-    //     const newVolume = await tx.volume.create({
-    //         data: newVolumeData,
-    //     });
-
-    //     return newVolume;
-    // }
-
-    /**
      * @param {number} id
      * @param {import("@prisma/client").Prisma.VolumeUpdateInput} changes
      * @returns {Promise<VolumeDB>}
@@ -257,97 +216,19 @@ export default class Volume extends DatabaseModel {
      */
     static async del(volumeId) {
         return await this.withWriteLock(volumeId, null, () => {
-            return this.db.delete({
-                where: { id: volumeId },
-            });
+            return prismaManager.db.$transaction(
+                async (tx) => {
+                    const deletedVolume = await tx.volume.delete({
+                        where: { id: volumeId },
+                    });
+                    await RawVolumeDataFile.deleteZombies(tx);
+                    await SparseVolumeDataFile.deleteZombies(tx);
+                    await PseudoVolumeDataFile.deleteZombies(tx);
+                    return deletedVolume;
+                },
+                { timeout: 60000 }
+            );
         });
-
-        // const fileDeleteStack = [];
-
-        // const volume = await prismaManager.db.$transaction(
-        //     async (tx) => {
-        //         const volume = await tx.volume.findUnique({
-        //             where: { id: volumeId },
-        //             include: {
-        //                 project: projectId !== null,
-        //                 sparseVolumes: true,
-        //                 pseudoVolumes: true,
-        //                 results: true,
-        //             },
-        //         });
-
-        //         if (projectId && volume.project.id !== projectId) {
-        //             throw new ApiError(
-        //                 400,
-        //                 "Volume is not part of the project."
-        //             );
-        //         }
-
-        //         if (projectId && volume.projects.length > 1) {
-        //             await tx.volume.update({
-        //                 where: {
-        //                     id: volumeId,
-        //                 },
-        //                 data: {
-        //                     projects: {
-        //                         disconnect: { id: projectId },
-        //                     },
-        //                 },
-        //             });
-        //         }
-
-        //         await this.withWriteLock(volumeId, null, () => {
-        //             return tx.volume.delete({
-        //                 where: { id: volumeId },
-        //             });
-        //         });
-
-        //         fileDeleteStack.push(
-        //             ...(await Result.deleteZombies(
-        //                 volume.results.map((r) => r.id),
-        //                 tx
-        //             ))
-        //         );
-
-        //         if (volume.rawDataId) {
-        //             fileDeleteStack.push(
-        //                 ...(await RawVolumeData.deleteZombies(
-        //                     [volume.rawDataId],
-        //                     tx
-        //                 ))
-        //             );
-        //         }
-
-        //         fileDeleteStack.push(
-        //             ...(await SparseLabeledVolumeData.deleteZombies(
-        //                 volume.sparseVolumes.map((r) => r.id),
-        //                 tx
-        //             ))
-        //         );
-
-        //         fileDeleteStack.push(
-        //             ...(await PseudoLabeledVolumeData.deleteZombies(
-        //                 volume.pseudoVolumes.map((r) => r.id),
-        //                 tx
-        //             ))
-        //         );
-
-        //         return volume;
-        //     },
-        //     {
-        //         timeout: 60000,
-        //     }
-        // );
-
-        // for (const file of fileDeleteStack) {
-        //     fsPromises
-        //         .rm(file, { recursive: true, force: true })
-        //         .catch((error) => {
-        //             console.error(`Failed to delete ${file}: ${error}`);
-        //         });
-        // }
-
-        // return volume;
     }
 
     /**
@@ -439,7 +320,7 @@ export default class Volume extends DatabaseModel {
      * @param {string} folderPath
      * @param {number} creatorId
      * @param {number} volumeId
-     * @param {SparseLabelVolumeDataDB[]} originalLabels
+     * @param {import("./volume-data.mjs").SparseVolumeDataWithFileDB[] } originalLabels
      * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
     static async addPseudoLabelsFromFolder(
@@ -484,7 +365,7 @@ export default class Volume extends DatabaseModel {
                                 VolumeData.toSettingSchema(originalLabels[i]),
                                 tx
                             );
-                        newFolders.push(pseudoLabelVolumeData.path);
+                        newFolders.push(pseudoLabelVolumeData.dataFile.path);
                         newPseudoLabels.push(pseudoLabelVolumeData);
                     }
 

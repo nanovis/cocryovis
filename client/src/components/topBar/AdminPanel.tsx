@@ -107,7 +107,6 @@ const AdminPanel = observer(() => {
     }
   };
 
-  //LOL DELETE user-admin user doesn't exist
   const deleteUser = async () => {
     user.setDeleteUserActiveRequset(true);
     const toastContainer = new ToastContainer();

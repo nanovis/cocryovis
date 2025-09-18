@@ -17,7 +17,6 @@ import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
 
-
 /**
  * @import z from "zod"
  * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
@@ -59,11 +58,7 @@ export default class IlastikHandler {
             );
         }
 
-        const volume = await Volume.getById(volumeId, {
-            rawData: true,
-            sparseVolumes: true,
-            pseudoVolumes: true,
-        });
+        const volume = await Volume.getByIdWithFileDeep(volumeId);
 
         IlastikHandler.#checkVolumeProperties(volume);
 
@@ -211,11 +206,7 @@ export default class IlastikHandler {
                 logFile: logFile.fileName,
             });
 
-            const volume = await Volume.getById(volumeId, {
-                rawData: true,
-                sparseVolumes: true,
-                pseudoVolumes: true,
-            });
+            const volume = await Volume.getByIdWithFileDeep(volumeId);
 
             await logFile.writeLog("Stating label generation process\n\n");
 
@@ -224,9 +215,11 @@ export default class IlastikHandler {
             const settings = RawVolumeData.toSettingSchema(volume.rawData);
 
             const rawH5FileName =
-                Utils.stripExtension(volume.rawData.rawFilePath) + ".h5";
+                Utils.stripExtension(volume.rawData.dataFile.rawFilePath) +
+                ".h5";
             const labelsH5FileName =
-                Utils.stripExtension(volume.rawData.rawFilePath) + "_labels.h5";
+                Utils.stripExtension(volume.rawData.dataFile.rawFilePath) +
+                "_labels.h5";
 
             const rawH5Path = path.join(outputPath, rawH5FileName);
             const labelsH5Path = path.join(outputPath, labelsH5FileName);
@@ -315,8 +308,8 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {RawVolumeDataDB} rawData
-     * @param {SparseLabelVolumeDataDB[]} sparseLabelsStack
+     * @param {import("../models/volume-data.mjs").RawVolumeDataWithFileDB} rawData
+     * @param {import("../models/volume-data.mjs").SparseVolumeDataWithFileDB[]} sparseLabelsStack
      * @param {z.infer<typeof volumeSettings>} settings
      * @param {string} rawOutputPath
      * @param {string} labelsOutputPath
@@ -342,7 +335,7 @@ export default class IlastikHandler {
         }
 
         await rawToH5(
-            rawData.rawFilePath,
+            rawData.dataFile.rawFilePath,
             settings.size,
             settings.usedBits,
             settings.isSigned,
@@ -352,7 +345,7 @@ export default class IlastikHandler {
             logFile
         );
         await labelsToH5(
-            sparseLabelsStack.map((l) => l.rawFilePath),
+            sparseLabelsStack.map((l) => l.dataFile.rawFilePath),
             settings.size,
             labelsOutputPath,
             IlastikHandler.labelsDataset,
@@ -375,7 +368,7 @@ export default class IlastikHandler {
     }
 
     /**
-     * @param {VolumeDB & {rawData: RawVolumeDataDB, sparseVolumes: SparseLabelVolumeDataDB[], pseudoVolumes: PseudoLabelVolumeDataDB[]}} volume
+     * @param {VolumeDB & {rawData: import("../models/volume-data.mjs").RawVolumeDataWithFileDB, sparseVolumes: import("../models/volume-data.mjs").SparseVolumeDataWithFileDB[], pseudoVolumes: import("../models/volume-data.mjs").PseudoVolumeDataWithFileDB[]}} volume
      */
     static #checkVolumeProperties(volume) {
         if (volume.sparseVolumes.length < 2) {
@@ -395,7 +388,7 @@ export default class IlastikHandler {
             );
         }
 
-        if (!volume.rawData || !volume.rawData.rawFilePath) {
+        if (!volume.rawData || !volume.rawData.dataFile.rawFilePath) {
             throw new ApiError(
                 400,
                 "Pseudo Labels Generation error: Raw Data is missing."
@@ -403,7 +396,7 @@ export default class IlastikHandler {
         }
 
         for (const sparseLabel of volume.sparseVolumes) {
-            if (!sparseLabel || !sparseLabel.rawFilePath) {
+            if (!sparseLabel || !sparseLabel.dataFile.rawFilePath) {
                 throw new ApiError(
                     400,
                     "Pseudo Labels Generation error: Manual Label Data is missing."

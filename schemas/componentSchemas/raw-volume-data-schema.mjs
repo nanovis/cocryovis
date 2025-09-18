@@ -4,9 +4,8 @@ import z from "zod";
 
 export const rawVolumeDataSchema = z.object({
     id: z.int(),
-    path: z.string().nullable(),
     creatorId: z.int().nullable(),
-    rawFilePath: z.string().nullable(),
+    name: z.string(),
     sizeX: z.int(),
     sizeY: z.int(),
     sizeZ: z.int(),
@@ -19,7 +18,6 @@ export const rawVolumeDataSchema = z.object({
     addValue: z.int(),
     bytesPerVoxel: z.int(),
     usedBits: z.int(),
-    mrcFilePath: z.string().nullable(),
     volumeId: z.int().nullable(),
 });
 

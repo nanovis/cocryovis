@@ -42,6 +42,7 @@ export default class Utils {
         return path.parse(fileName).name;
     }
 
+
     /**
      * @param {string} inputFile
      * @param {string} outputPath

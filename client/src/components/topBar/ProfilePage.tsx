@@ -126,7 +126,7 @@ const ProfilePage = observer(() => {
       toastContainer.error(getErrorMessage(error));
     }
   };
-  //LOL deleteUser user doesn't exist in API
+  
   const deleteUser = async () => {
     try {
       user.setDeleteUserActiveRequset(true);

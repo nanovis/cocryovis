@@ -10,6 +10,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 import { PendingLocalFile, PendingUpload } from "../tools/file-handler.mjs";
 import Utils from "../tools/utils.mjs";
 import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
+import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 
 /**
  * @import z from "zod"
@@ -22,14 +23,12 @@ import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
  */
 export default class SparseLabeledVolumeData extends VolumeData {
     static modelName = "sparseLabelVolumeData";
+    static fileModelName = "sparseVolumeDataFile";
     static lockManager = new WriteLockManager(this.modelName);
+    static fileClass = SparseVolumeDataFile;
 
     static get db() {
         return prismaManager.db.sparseLabelVolumeData;
-    }
-
-    static get folderPath() {
-        return "sparse-labeled-volume-data";
     }
 
     /**
@@ -38,6 +37,19 @@ export default class SparseLabeledVolumeData extends VolumeData {
      */
     static async getById(id) {
         return await super.getById(id);
+    }
+
+    /**
+     * @param {number} id
+     */
+    static async getWithData(id) {
+        const volumeData = await this.db.findUniqueOrThrow({
+            where: { id: id },
+            include: {
+                dataFile: true,
+            },
+        });
+        return volumeData;
     }
 
     /**
@@ -87,7 +99,29 @@ export default class SparseLabeledVolumeData extends VolumeData {
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async del(id) {
-        return await super.del(id);
+        return prismaManager.db.$transaction(
+            async (tx) => {
+                const VolumeData = await tx.sparseLabelVolumeData.delete({
+                    where: { id: id },
+                });
+
+                const dataFile = await tx.sparseVolumeDataFile.delete({
+                    where: {
+                        id: VolumeData.dataFileId,
+                        sparseLabelVolumeData: {
+                            none: {},
+                        },
+                    },
+                });
+                if (dataFile) {
+                    await SparseVolumeDataFile.removeFilesFromDisc(dataFile);
+                }
+                return VolumeData;
+            },
+            {
+                timeout: 60000,
+            }
+        );
     }
 
     /**
@@ -105,21 +139,33 @@ export default class SparseLabeledVolumeData extends VolumeData {
         settings,
         tx = prismaManager.db
     ) {
+        const fileName = path.basename(filePath);
         let sparseVolume = await tx.sparseLabelVolumeData.create({
             data: {
-                creatorId: creatorId,
-                volumeId,
+                creator: {
+                    connect: {
+                        id: creatorId,
+                    },
+                },
+                volume: {
+                    connect: {
+                        id: volumeId,
+                    },
+                },
                 ...SparseLabeledVolumeData.fromSettingSchema(settings),
+                dataFile: {},
+                name: Utils.stripExtension(fileName),
             },
         });
 
-        const folderPath = await this.createVolumeDataFolder(sparseVolume.id);
-        const fileName = path.basename(filePath);
+        const folderPath = await SparseVolumeDataFile.createVolumeDataFolder(
+            sparseVolume.dataFileId
+        );
         const newFilePath = path.join(folderPath, fileName);
         await fsPromises.rename(filePath, newFilePath);
-
+        let dataFile = null;
         try {
-            sparseVolume = await tx.sparseLabelVolumeData.update({
+            dataFile = await tx.sparseVolumeDataFile.update({
                 where: { id: sparseVolume.id },
                 data: {
                     path: folderPath,
@@ -128,7 +174,9 @@ export default class SparseLabeledVolumeData extends VolumeData {
             });
         } catch (error) {
             try {
-                await this.deleteVolumeDataFiles(sparseVolume);
+                if (dataFile) {
+                    await SparseVolumeDataFile.removeFilesFromDisc(dataFile);
+                }
             } catch (err) {
                 console.error(
                     `Failed to delete volume data folder on failed operation:\n${err}`
@@ -143,12 +191,43 @@ export default class SparseLabeledVolumeData extends VolumeData {
     /**
      * @param {number} id
      * @param {PendingUpload} file
-     * @returns {Promise<SparseLabelVolumeDataDB>}
      */
     static async setRawData(id, file) {
-        /** @type any */
-        const rawData = await super.setRawData(id, file);
-        return rawData;
+        return await prismaManager.db.$transaction(
+            async (tx) => {
+                const volumeData =
+                    await tx.sparseLabelVolumeData.findUniqueOrThrow({
+                        where: { id: id },
+                        include: {
+                            dataFile: {
+                                include: { sparseLabelVolumeData: true },
+                            },
+                        },
+                    });
+                if (volumeData.dataFile.sparseLabelVolumeData.length === 1) {
+                    await SparseVolumeDataFile.updateFromFile(
+                        file,
+                        volumeData.dataFile,
+                        tx
+                    );
+                    return volumeData;
+                } else {
+                    const fileData = await SparseVolumeDataFile.createFromFile(
+                        file,
+                        tx
+                    );
+                    return await tx.sparseLabelVolumeData.update({
+                        where: { id: id },
+                        data: {
+                            id: fileData.id,
+                        },
+                    });
+                }
+            },
+            {
+                timeout: 60000,
+            }
+        );
     }
 
     /**
@@ -172,8 +251,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
             async () => {
                 try {
                     const volumeData =
-                        await SparseLabeledVolumeData.getById(labelId);
-
+                        await SparseLabeledVolumeData.getWithData(labelId);
                     const volumeDataSettings =
                         SparseLabeledVolumeData.toSettingSchema(volumeData);
 
@@ -190,7 +268,7 @@ export default class SparseLabeledVolumeData extends VolumeData {
 
                     if (!saveAsNew) {
                         const currentData = await new PendingLocalFile(
-                            volumeData.rawFilePath
+                            volumeData.dataFile.rawFilePath
                         ).getData();
                         settings = await annotationsToVolume(
                             annotations,

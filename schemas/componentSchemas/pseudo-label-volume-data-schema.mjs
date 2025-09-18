@@ -4,9 +4,8 @@ import z from "zod";
 
 export const pseudoLabelVolumeDataSchema = z.object({
     id: z.int(),
-    path: z.string().nullable(),
     creatorId: z.int().nullable(),
-    rawFilePath: z.string().nullable(),
+    name: z.string(),
     sizeX: z.int(),
     sizeZ: z.int(),
     sizeY: z.int(),

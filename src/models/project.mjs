@@ -4,6 +4,9 @@ import DatabaseModel from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
+import RawVolumeDataFile from "./raw-volume-data-file.mjs";
+import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
+import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 
 /**
  * @import z from "zod"
@@ -430,7 +433,7 @@ export default class Project extends DatabaseModel {
                 const project = await this.withWriteLock(id, null, () => {
                     return tx.project.delete({
                         where: {
-                            id: id, 
+                            id: id,
                         },
                         include: {
                             volumes: {
@@ -478,6 +481,10 @@ export default class Project extends DatabaseModel {
                 project.volumes.forEach((v) =>
                     allPseudoVolumes.push(...v.pseudoVolumes)
                 );
+
+                await RawVolumeDataFile.deleteZombies(tx);
+                await SparseVolumeDataFile.deleteZombies(tx);
+                await PseudoVolumeDataFile.deleteZombies(tx);
 
                 return project;
             },

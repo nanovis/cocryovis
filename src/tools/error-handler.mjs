@@ -68,7 +68,7 @@ export class MissingResourceError extends ApiError {
  * @param {NextFunction} next
  */
 export function logErrors(err, req, res, next) {
-    console.error(err.message);
+    console.error(err);
     next(err);
 }
 

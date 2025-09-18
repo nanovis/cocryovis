@@ -55,8 +55,6 @@ model ProjectAccess {
 
   @@id([userId, projectId])
 }
-
-//LOL
 model Volume {
   id            Int                     @id @default(autoincrement())
   name          String
@@ -73,11 +71,10 @@ model Volume {
 }
 
 model RawVolumeData {
-  id             Int     @id @default(autoincrement())
-  path           String?
-  creator        User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  id             Int               @id @default(autoincrement())
+  creator        User?             @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId      Int?
-  rawFilePath    String?
+  name           String
   sizeX          Int
   sizeY          Int
   sizeZ          Int
@@ -90,9 +87,10 @@ model RawVolumeData {
   addValue       Int
   bytesPerVoxel  Int
   usedBits       Int
-  mrcFilePath    String?
-  volume         Volume  @relation(fields: [volumeId], references: [id], onDelete: Cascade)
-  volumeId       Int     @unique
+  volume         Volume            @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  volumeId       Int               @unique
+  dataFile       RawVolumeDataFile @relation(fields: [dataFileId], references: [id], onDelete: Restrict)
+  dataFileId     Int
   // BytesPerVoxel   BytesPerVoxel? @relation(fields: [bytesPerVoxelId], references: [id])
   // bytesPerVoxelId Int?
   // UsedBits        UsedBits?      @relation(fields: [usedBitsId], references: [id])
@@ -110,13 +108,19 @@ model RawVolumeData {
 //   name String
 //   data RawVolumeData[]
 // }
+model RawVolumeDataFile {
+  id            Int             @id @default(autoincrement())
+  path          String?
+  rawFilePath   String?
+  mrcFilePath   String?
+  rawVolumeData RawVolumeData[]
+}
 
 model SparseLabelVolumeData {
   id             Int                     @id @default(autoincrement())
-  path           String?
   creator        User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId      Int?
-  rawFilePath    String?
+  name           String
   sizeX          Int
   sizeY          Int
   sizeZ          Int
@@ -133,14 +137,22 @@ model SparseLabelVolumeData {
   volumeId       Int
   derivedLabels  PseudoLabelVolumeData[]
   color          String?
+  dataFile       SparseVolumeDataFile    @relation(fields: [dataFileId], references: [id], onDelete: Restrict)
+  dataFileId     Int
+}
+
+model SparseVolumeDataFile {
+  id                    Int                     @id @default(autoincrement())
+  path                  String?
+  rawFilePath           String?
+  sparseLabelVolumeData SparseLabelVolumeData[]
 }
 
 model PseudoLabelVolumeData {
   id              Int                    @id @default(autoincrement())
-  path            String?
   creator         User?                  @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId       Int?
-  rawFilePath     String?
+  name            String
   sizeX           Int
   sizeY           Int
   sizeZ           Int
@@ -158,6 +170,15 @@ model PseudoLabelVolumeData {
   checkpoints     Checkpoint[]
   originalLabel   SparseLabelVolumeData? @relation(fields: [originalLabelId], references: [id], onDelete: SetNull)
   originalLabelId Int?
+  dataFile        PseudoVolumeDataFile   @relation(fields: [dataFileId], references: [id], onDelete: Restrict)
+  dataFileId      Int
+}
+
+model PseudoVolumeDataFile {
+  id                    Int                     @id @default(autoincrement())
+  path                  String?
+  rawFilePath           String?
+  pseudoLabelVolumeData PseudoLabelVolumeData[]
 }
 
 model Model {

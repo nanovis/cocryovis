@@ -2,9 +2,8 @@ import { Instance, SnapshotIn, types } from "mobx-state-tree";
 
 export const RawVolume = types.model({
   id: types.identifierNumber,
-  path: types.maybeNull(types.string),
   creatorId: types.maybeNull(types.integer),
-  rawFilePath: types.maybeNull(types.string),
+  name: types.string,
   sizeX: types.integer,
   sizeY: types.integer,
   sizeZ: types.integer,
@@ -17,7 +16,6 @@ export const RawVolume = types.model({
   addValue: types.integer,
   bytesPerVoxel: types.integer,
   usedBits: types.integer,
-  mrcFilePath: types.maybeNull(types.string),
   volumeId: types.maybeNull(types.integer),
 });
 

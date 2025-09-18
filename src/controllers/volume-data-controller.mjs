@@ -75,18 +75,18 @@ export default class VolumeDataController {
         });
         const volumeData = await VolumeDataFactory.getClass(
             VolumeDataType.mapName(params.type)
-        ).getById(params.idVolumeData);
+        ).getWithData(params.idVolumeData);
 
-        if (!volumeData.rawFilePath) {
+        if (!volumeData.dataFile.rawFilePath) {
             throw new ApiError(400, "Volume Data is missing a raw file.");
         }
 
         res.setHeader("Content-Type", "application/octet-stream");
         res.setHeader(
             "Content-Disposition",
-            `attachment; filename="${path.basename(volumeData.rawFilePath)}"`
+            `attachment; filename="${path.basename(volumeData.dataFile.rawFilePath)}"`
         );
-        const fileStream = fileSystem.createReadStream(volumeData.rawFilePath);
+        const fileStream = fileSystem.createReadStream(volumeData.dataFile.rawFilePath);
         fileStream.pipe(res);
 
         fileStream.on("error", (err) => {
@@ -106,8 +106,8 @@ export default class VolumeDataController {
 
         const volumeData = await VolumeDataFactory.getClass(
             VolumeDataType.mapName(params.type)
-        ).getById(params.idVolumeData);
-        if (!volumeData.rawFilePath) {
+        ).getWithData(params.idVolumeData);
+        if (!volumeData.dataFile.rawFilePath) {
             throw new ApiError(
                 400,
                 "Visualisation requires the volume data to contain a .raw file."
@@ -128,7 +128,7 @@ export default class VolumeDataController {
         await Utils.packVisualizationArchive(
             archive,
             [VolumeData.toSettingSchema(volumeData)],
-            [volumeData.rawFilePath]
+            [volumeData.dataFile.rawFilePath]
         );
 
         archive.finalize();
@@ -384,38 +384,6 @@ export default class VolumeDataController {
         ).del(params.idVolumeData);
 
         res.sendStatus(204);
-    }
-
-    /**
-     * @param {VolumeDataType} type
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async setRawData(type, req, res) {
-        if (!req.files || !req.files.file) {
-            throw new ApiError(400, "No annotations file found.");
-        }
-        if (Array.isArray(req.files.file)) {
-            throw new ApiError(400, "To many files uploaded.");
-        }
-
-        const VolumeDataClass = VolumeDataFactory.getClass(type);
-
-        const unpackedFiles = await unpackFiles(
-            [req.files.file],
-            VolumeDataClass.acceptedFileExtensions
-        );
-
-        if (unpackedFiles.length > 1) {
-            throw new ApiError(400, "To many files uploaded.");
-        }
-
-        const volumeData = await VolumeDataClass.setRawData(
-            Number(req.params.idVolumeData),
-            unpackedFiles[0]
-        );
-
-        res.status(200).json(volumeData);
     }
 
     /**

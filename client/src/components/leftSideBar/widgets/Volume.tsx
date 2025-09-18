@@ -184,7 +184,7 @@ const Volume = observer(({ open, close }: Props) => {
       projectVolumes.setCreateVolumeActiveRequest(true);
       await projectVolumes.createVolume(name, description);
       closeCreateDialog();
-      toastContainer.success("Volume created!")
+      toastContainer.success("Volume created!");
     } catch (error) {
       console.error("Error:", error);
       toastContainer.error(Utils.getErrorMessage(error));
@@ -1152,9 +1152,7 @@ const Volume = observer(({ open, close }: Props) => {
               {selectedVolume &&
               index < selectedVolume?.sparseVolumeArray.length ? (
                 <ItemTitleDownloadDelete
-                  title={Utils.getFileNameFromPath(
-                    selectedVolume.sparseVolumeArray[index].rawFilePath
-                  )}
+                  title={selectedVolume.sparseVolumeArray[index].name}
                   highlighted={
                     visualizedVolume?.labelEditingMode &&
                     visualizedVolume?.manualLabelIndex === index
@@ -1181,9 +1179,7 @@ const Volume = observer(({ open, close }: Props) => {
                   onEdit={() => handleAnnotationEdit(index)}
                   canEdit={canEditAnnotations}
                   canChangeColor={canEditAnnotations}
-                  deleteQuestion={Utils.getFileNameFromPath(
-                    selectedVolume.sparseVolumeArray[index].rawFilePath
-                  )}
+                  deleteQuestion={selectedVolume.sparseVolumeArray[index].name}
                   deleteTitle={"Remove Sparse Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
                   color={
@@ -1400,9 +1396,7 @@ const Volume = observer(({ open, close }: Props) => {
               {selectedVolume &&
               index < selectedVolume?.pseudoVolumeArray.length ? (
                 <ItemTitleDownloadDelete
-                  title={Utils.getFileNameFromPath(
-                    selectedVolume?.pseudoVolumeArray[index].rawFilePath
-                  )}
+                  title={selectedVolume?.pseudoVolumeArray[index].name}
                   onDownload={() =>
                     handleDownloadVolumeData(
                       "PseudoLabeledVolumeData",
@@ -1422,9 +1416,7 @@ const Volume = observer(({ open, close }: Props) => {
                       selectedVolume?.pseudoVolumeArray[index].id
                     )
                   }
-                  deleteQuestion={Utils.getFileNameFromPath(
-                    selectedVolume?.pseudoVolumeArray[index].rawFilePath
-                  )}
+                  deleteQuestion={selectedVolume?.pseudoVolumeArray[index].name}
                   deleteTitle={"Remove Pseudo Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
                   isActive={
