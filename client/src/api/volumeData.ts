@@ -172,11 +172,10 @@ export async function downloadRawFile(id: number) {
 
 export async function deleteVolumeData<T extends keyof VolumeDataMap>(
   type: T,
-  idVolume: number,
   idVolumeData: number
 ) {
   await Utils.sendApiRequest(
-    `volume/${idVolume}/volumeData/${type}/${idVolumeData}`,
+    `volumeData/${type}/${idVolumeData}`,
     {
       method: "DELETE",
       credentials: "include",

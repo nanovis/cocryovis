@@ -262,7 +262,7 @@ export const Volume = types
       dataType: LabeledVolumeTypes,
       dataId: number
     ) {
-      yield deleteVolumeData(dataType, self.id, dataId);
+      yield deleteVolumeData(dataType, dataId);
       if (!isAlive(self)) {
         return;
       }
