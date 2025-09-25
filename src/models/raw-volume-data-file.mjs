@@ -81,10 +81,11 @@ export default class RawVolumeDataFile extends DatabaseModel {
 
     /**
      * @param {number} id
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns { Promise<RawVolumeDataFileDB> }
      */
-    static async del(id) {
-        return prismaManager.db.$transaction(async (tx) => {
+    static async del(id, client) {
+        return await withTransaction(client, async (tx) => {
             const dataFile = await tx.rawVolumeDataFile.delete({
                 where: {
                     id: id,

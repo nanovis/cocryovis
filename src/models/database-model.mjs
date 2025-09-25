@@ -12,15 +12,21 @@ import prismaManager from "../tools/prisma-manager.mjs";
  * @template T
  * @param {Prisma.TransactionClient | undefined} client
  * @param {(tx: Prisma.TransactionClient) => Promise<T>} callback
+ * @param {{ maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }} [options]
  * @returns {Promise<T>}
  */
-export async function withTransaction(client, callback) {
+export async function withTransaction(
+    client,
+    callback,
+    options = { timeout: 6000 }
+) {
     if (client !== undefined) {
         return await callback(client);
     }
+
     return prismaManager.db.$transaction(async (tx) => {
         return await callback(tx);
-    });
+    }, options);
 }
 
 export default class DatabaseModel {

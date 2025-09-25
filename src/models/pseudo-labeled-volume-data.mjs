@@ -9,6 +9,8 @@ import WriteLockManager from "../tools/write-lock-manager.mjs";
 import { PendingUpload } from "../tools/file-handler.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 import Utils from "../tools/utils.mjs";
+import { Prisma } from "@prisma/client";
+import { withTransaction } from "./database-model.mjs";
 
 /**
  * @import z from "zod"
@@ -94,31 +96,27 @@ export default class PseudoLabeledVolumeData extends VolumeData {
 
     /**
      * @param {number} id
+     * @param {Prisma.TransactionClient | undefined} [client]
      */
-    static async del(id) {
-        return prismaManager.db.$transaction(
-            async (tx) => {
-                const volumeData = await tx.pseudoLabelVolumeData.delete({
-                    where: { id: id },
-                });
+    static async del(id, client) {
+        return await withTransaction(client, async (tx) => {
+            const volumeData = await tx.pseudoLabelVolumeData.delete({
+                where: { id: id },
+            });
 
-                const dataFile = await tx.pseudoVolumeDataFile.delete({
-                    where: {
-                        id: volumeData.dataFileId,
-                        pseudoLabelVolumeData: {
-                            none: {},
-                        },
+            const dataFile = await tx.pseudoVolumeDataFile.delete({
+                where: {
+                    id: volumeData.dataFileId,
+                    pseudoLabelVolumeData: {
+                        none: {},
                     },
-                });
-                if (dataFile) {
-                    await PseudoVolumeDataFile.removeFilesFromDisc(dataFile);
-                }
-                return volumeData;
-            },
-            {
-                timeout: 60000,
+                },
+            });
+            if (dataFile) {
+                await PseudoVolumeDataFile.removeFilesFromDisc(dataFile);
             }
-        );
+            return volumeData;
+        });
     }
 
     /**

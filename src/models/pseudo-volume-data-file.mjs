@@ -82,9 +82,10 @@ export default class PseudoVolumeDataFile extends DatabaseModel {
     /**
      * @param {number} id
      * @returns { Promise<PseudoVolumeDataFileDB> }
+     * @param {Prisma.TransactionClient | undefined} [client]
      */
-    static async del(id) {
-        return prismaManager.db.$transaction(async (tx) => {
+    static async del(id, client) {
+        return await withTransaction(client, async (tx) => {
             const dataFile = await tx.pseudoVolumeDataFile.delete({
                 where: {
                     id: id,

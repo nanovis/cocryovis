@@ -64,40 +64,36 @@ export default class SparseVolumeDataFile extends DatabaseModel {
 
     /**
      * @param {import("@prisma/client").Prisma.SparseVolumeDataFileCreateInput} data
+     * @param {Prisma.TransactionClient | undefined} [client]
      */
-    static async create(data) {
-        return await prismaManager.db.$transaction(
-            async (tx) => {
-                let fileData = await tx.sparseVolumeDataFile.create({
+    static async create(data, client) {
+        return await withTransaction(client, async (tx) => {
+            let fileData = await tx.sparseVolumeDataFile.create({
+                data: {
+                    rawFilePath: data.rawFilePath,
+                },
+            });
+            let folderPath = null;
+            try {
+                folderPath = await this.createVolumeDataFolder(fileData.id);
+
+                await tx.sparseVolumeDataFile.update({
+                    where: { id: fileData.id },
                     data: {
-                        rawFilePath: data.rawFilePath,
+                        path: folderPath,
                     },
                 });
-                let folderPath = null;
-                try {
-                    folderPath = await this.createVolumeDataFolder(fileData.id);
-
-                    await tx.sparseVolumeDataFile.update({
-                        where: { id: fileData.id },
-                        data: {
-                            path: folderPath,
-                        },
+            } catch (error) {
+                if (folderPath != null) {
+                    await fs.promises.rm(folderPath, {
+                        recursive: true,
+                        force: true,
                     });
-                } catch (error) {
-                    if (folderPath != null) {
-                        await fs.promises.rm(folderPath, {
-                            recursive: true,
-                            force: true,
-                        });
-                    }
-                    throw error;
                 }
-                return fileData;
-            },
-            {
-                timeout: 60000,
+                throw error;
             }
-        );
+            return fileData;
+        });
     }
 
     /**
@@ -183,10 +179,11 @@ export default class SparseVolumeDataFile extends DatabaseModel {
 
     /**
      * @param {number} id
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns { Promise<SparseVolumeDataFileDB> }
      */
-    static async del(id) {
-        return prismaManager.db.$transaction(async (tx) => {
+    static async del(id, client) {
+        return await withTransaction(client, async (tx) => {
             const dataFile = await tx.sparseVolumeDataFile.delete({
                 where: {
                     id: id,

@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./database-model.mjs";
+import DatabaseModel, { withTransaction } from "./database-model.mjs";
 import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
@@ -8,6 +8,7 @@ import { ApiError } from "../tools/error-handler.mjs";
 import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
+import { Prisma } from "@prisma/client";
 
 /**
  * @import { publicUser } from "#schemas/user-path-schema.mjs"
@@ -155,9 +156,10 @@ export default class User extends DatabaseModel {
 
     /**
      * @param {number} id
+     * @param {Prisma.TransactionClient | undefined} [client]
      */
-    static async del(id) {
-        return await prismaManager.db.$transaction(async (tx) => {
+    static async del(id, client) {
+        return await withTransaction(client, async (tx) => {
             const projectIds = await tx.project.findMany({
                 where: { ownerId: id },
                 select: { id: true },

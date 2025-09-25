@@ -1,6 +1,6 @@
 // @ts-check
 
-import DatabaseModel from "./database-model.mjs";
+import DatabaseModel, { withTransaction } from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
@@ -16,6 +16,7 @@ import VolumeData from "./volume-data.mjs";
 import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
+import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
@@ -212,22 +213,20 @@ export default class Volume extends DatabaseModel {
 
     /**
      * @param {number} volumeId
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns { Promise<VolumeDB> }
      */
-    static async del(volumeId) {
+    static async del(volumeId, client) {
         return await this.withWriteLock(volumeId, null, () => {
-            return prismaManager.db.$transaction(
-                async (tx) => {
-                    const deletedVolume = await tx.volume.delete({
-                        where: { id: volumeId },
-                    });
-                    await RawVolumeDataFile.deleteZombies(tx);
-                    await SparseVolumeDataFile.deleteZombies(tx);
-                    await PseudoVolumeDataFile.deleteZombies(tx);
-                    return deletedVolume;
-                },
-                { timeout: 60000 }
-            );
+            return withTransaction(client, async (tx) => {
+                const deletedVolume = await tx.volume.delete({
+                    where: { id: volumeId },
+                });
+                await RawVolumeDataFile.deleteZombies(tx);
+                await SparseVolumeDataFile.deleteZombies(tx);
+                await PseudoVolumeDataFile.deleteZombies(tx);
+                return deletedVolume;
+            });
         });
     }
 
@@ -239,9 +238,10 @@ export default class Volume extends DatabaseModel {
      * @property {number} y
      * @property {number} z
      * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<SparseLabelVolumeDataDB>}
      */
-    static async addAnnotations(id, creatorId, annotations) {
+    static async addAnnotations(id, creatorId, annotations, client) {
         let tempFolderPath = null;
 
         return this.withWriteLock(
@@ -261,8 +261,8 @@ export default class Volume extends DatabaseModel {
                         annotations,
                         outputPath
                     );
-
-                    const sparseVolume = await prismaManager.db.$transaction(
+                    return await withTransaction(
+                        client,
                         async (tx) => {
                             const volume = await tx.volume.findUnique({
                                 where: { id: id },
@@ -292,12 +292,8 @@ export default class Volume extends DatabaseModel {
 
                             return sparseVolume;
                         },
-                        {
-                            timeout: 60000,
-                        }
                     );
 
-                    return sparseVolume;
                 } finally {
                     if (tempFolderPath !== null) {
                         try {
@@ -321,71 +317,68 @@ export default class Volume extends DatabaseModel {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {import("./volume-data.mjs").SparseVolumeDataWithFileDB[] } originalLabels
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<PseudoLabelVolumeDataDB[]>}
      */
     static async addPseudoLabelsFromFolder(
         folderPath,
         creatorId,
         volumeId,
-        originalLabels
+        originalLabels,
+        client
     ) {
-        return await prismaManager.db.$transaction(
-            async (tx) => {
-                const volume = await tx.volume.findUnique({
-                    where: { id: volumeId },
-                    include: {
-                        sparseVolumes: true,
-                        pseudoVolumes: true,
-                    },
-                });
+        return await withTransaction(client, async (tx) => {
+            const volume = await tx.volume.findUnique({
+                where: { id: volumeId },
+                include: {
+                    sparseVolumes: true,
+                    pseudoVolumes: true,
+                },
+            });
 
-                if (
-                    volume.sparseVolumes.length + volume.pseudoVolumes.length >
-                    appConfig.maxVolumeChannels
-                ) {
-                    throw new ApiError(
-                        400,
-                        "Volume does not have enough space to generate pseudo labels from manual label set."
-                    );
-                }
-
-                const newFolders = [];
-                const files = await fsPromises.readdir(folderPath);
-
-                const newPseudoLabels = [];
-                try {
-                    for (let i = 0; i < files.length; i++) {
-                        const filePath = path.join(folderPath, files[i]);
-                        const pseudoLabelVolumeData =
-                            await PseudoLabeledVolumeData.fromRawFile(
-                                filePath,
-                                creatorId,
-                                volumeId,
-                                originalLabels[i].id,
-                                VolumeData.toSettingSchema(originalLabels[i]),
-                                tx
-                            );
-                        newFolders.push(pseudoLabelVolumeData.dataFile.path);
-                        newPseudoLabels.push(pseudoLabelVolumeData);
-                    }
-
-                    return newPseudoLabels;
-                } catch {
-                    newFolders.forEach((folder) => {
-                        try {
-                            fsPromises.rm(folder, {
-                                recursive: true,
-                                force: true,
-                            });
-                        } catch (error) {
-                            console.log(error);
-                        }
-                    });
-                }
-            },
-            {
-                timeout: 60000,
+            if (
+                volume.sparseVolumes.length + volume.pseudoVolumes.length >
+                appConfig.maxVolumeChannels
+            ) {
+                throw new ApiError(
+                    400,
+                    "Volume does not have enough space to generate pseudo labels from manual label set."
+                );
             }
-        );
+
+            const newFolders = [];
+            const files = await fsPromises.readdir(folderPath);
+
+            const newPseudoLabels = [];
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const filePath = path.join(folderPath, files[i]);
+                    const pseudoLabelVolumeData =
+                        await PseudoLabeledVolumeData.fromRawFile(
+                            filePath,
+                            creatorId,
+                            volumeId,
+                            originalLabels[i].id,
+                            VolumeData.toSettingSchema(originalLabels[i]),
+                            tx
+                        );
+                    newFolders.push(pseudoLabelVolumeData.dataFile.path);
+                    newPseudoLabels.push(pseudoLabelVolumeData);
+                }
+
+                return newPseudoLabels;
+            } catch {
+                newFolders.forEach((folder) => {
+                    try {
+                        fsPromises.rm(folder, {
+                            recursive: true,
+                            force: true,
+                        });
+                    } catch (error) {
+                        console.log(error);
+                    }
+                });
+            }
+        });
     }
 }

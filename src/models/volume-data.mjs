@@ -3,14 +3,14 @@
 import path from "path";
 import fsPromises from "node:fs/promises";
 import fileSystem from "fs";
-import DatabaseModel from "./database-model.mjs";
+import DatabaseModel, { withTransaction } from "./database-model.mjs";
 import appConfig from "../tools/config.mjs";
-import prismaManager from "../tools/prisma-manager.mjs";
 import Utils from "../tools/utils.mjs";
 import { PendingUpload } from "../tools/file-handler.mjs";
 import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import archiver from "archiver";
+import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
@@ -141,6 +141,7 @@ export default class VolumeData extends DatabaseModel {
      * @param {PendingUpload[]} files
      * @param {z.infer<typeof volumeSettings>} settings
      * @param {boolean?} skipLock
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<object>}
      */
     static async createFromFiles(
@@ -148,7 +149,8 @@ export default class VolumeData extends DatabaseModel {
         volumeId,
         files,
         settings,
-        skipLock = false
+        skipLock = false,
+        client
     ) {
         return await Volume.withWriteLock(
             volumeId,
@@ -168,51 +170,45 @@ export default class VolumeData extends DatabaseModel {
                     );
                 }
 
-                return await prismaManager.db.$transaction(
-                    async (tx) => {
-                        /** @type {VolumeDataDB} */
-                        const volumeData = await tx[this.modelName].create({
+                return await withTransaction(client, async (tx) => {
+                    /** @type {VolumeDataDB} */
+                    const volumeData = await tx[this.modelName].create({
+                        data: {
+                            creator: { connect: { id: creatorId } },
+                            volume: { connect: { id: volumeId } },
+                            ...VolumeData.fromSettingSchema(settings),
+                            dataFile: {
+                                create: {},
+                            },
+                            name: Utils.stripExtension(rawFile.fileName),
+                        },
+                    });
+                    let folderPath = null;
+                    try {
+                        folderPath =
+                            await this.fileClass.createVolumeDataFolder(
+                                volumeData.id
+                            );
+                        const rawFilePath = await rawFile.saveAs(folderPath);
+
+                        await tx[this.fileModelName].update({
+                            where: { id: volumeData.dataFileId },
                             data: {
-                                creator: { connect: { id: creatorId } },
-                                volume: { connect: { id: volumeId } },
-                                ...VolumeData.fromSettingSchema(settings),
-                                dataFile: {
-                                    create: {},
-                                },
-                                name: Utils.stripExtension(rawFile.fileName)
+                                path: folderPath,
+                                rawFilePath: rawFilePath,
                             },
                         });
-                        let folderPath = null;
-                        try {
-                            folderPath =
-                                await this.fileClass.createVolumeDataFolder(
-                                    volumeData.id
-                                );
-                            const rawFilePath =
-                                await rawFile.saveAs(folderPath);
-
-                            await tx[this.fileModelName].update({
-                                where: { id: volumeData.dataFileId },
-                                data: {
-                                    path: folderPath,
-                                    rawFilePath: rawFilePath,
-                                },
+                    } catch (error) {
+                        if (folderPath != null) {
+                            await fsPromises.rm(folderPath, {
+                                recursive: true,
+                                force: true,
                             });
-                        } catch (error) {
-                            if (folderPath != null) {
-                                await fsPromises.rm(folderPath, {
-                                    recursive: true,
-                                    force: true,
-                                });
-                            }
-                            throw error;
                         }
-                        return volumeData;
-                    },
-                    {
-                        timeout: 60000,
+                        throw error;
                     }
-                );
+                    return volumeData;
+                });
             },
             skipLock
         );

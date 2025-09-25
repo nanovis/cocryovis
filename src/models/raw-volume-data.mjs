@@ -12,6 +12,8 @@ import { ApiError } from "../tools/error-handler.mjs";
 import appConfig from "../tools/config.mjs";
 import archiver from "archiver";
 import RawVolumeDataFile from "./raw-volume-data-file.mjs";
+import { withTransaction } from "./database-model.mjs";
+import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
@@ -113,9 +115,10 @@ export default class RawVolumeData extends VolumeData {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload} file
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<object>}
      */
-    static async createFromMrcFile(creatorId, volumeId, file) {
+    static async createFromMrcFile(creatorId, volumeId, file, client) {
         return await Volume.withWriteLock(
             volumeId,
             [this.modelName],
@@ -135,76 +138,68 @@ export default class RawVolumeData extends VolumeData {
                         mrcFilePathTemp,
                         tempDirectory
                     );
+                    return await withTransaction(client, async (tx) => {
+                        /** @type {RawVolumeDataDB} */
+                        const volumeData = await tx.rawVolumeData.create({
+                            data: {
+                                creator: {
+                                    connect: {
+                                        id: creatorId,
+                                    },
+                                },
+                                volume: {
+                                    connect: {
+                                        id: volumeId,
+                                    },
+                                },
+                                ...RawVolumeData.fromSettingSchema(settings),
+                                dataFile: {},
+                                name: Utils.stripExtension(rawFileName),
+                            },
+                        });
+                        let folderPath = null;
+                        try {
+                            folderPath =
+                                await RawVolumeDataFile.createVolumeDataFolder(
+                                    volumeData.dataFileId
+                                );
+                            const mrcFilePath = path.join(
+                                folderPath,
+                                path.basename(mrcFilePathTemp)
+                            );
+                            await fsPromises.rename(
+                                mrcFilePathTemp,
+                                mrcFilePath
+                            );
+                            const rawFilePath = path.join(
+                                folderPath,
+                                rawFileName
+                            );
+                            await fsPromises.rename(
+                                path.join(tempDirectory, rawFileName),
+                                rawFilePath
+                            );
 
-                    return await prismaManager.db.$transaction(
-                        async (tx) => {
-                            /** @type {RawVolumeDataDB} */
-                            const volumeData = await tx.rawVolumeData.create({
+                            return await tx.rawVolumeDataFile.update({
+                                where: {
+                                    id: volumeData.dataFileId,
+                                },
                                 data: {
-                                    creator: {
-                                        connect: {
-                                            id: creatorId,
-                                        },
-                                    },
-                                    volume: {
-                                        connect: {
-                                            id: volumeId,
-                                        },
-                                    },
-                                    ...RawVolumeData.fromSettingSchema(
-                                        settings
-                                    ),
-                                    dataFile: {},
-                                    name: Utils.stripExtension(rawFileName),
+                                    path: folderPath,
+                                    rawFilePath: rawFilePath,
+                                    mrcFilePath: mrcFilePath,
                                 },
                             });
-                            let folderPath = null;
-                            try {
-                                folderPath =
-                                    await RawVolumeDataFile.createVolumeDataFolder(
-                                        volumeData.dataFileId
-                                    );
-                                const mrcFilePath = path.join(
-                                    folderPath,
-                                    path.basename(mrcFilePathTemp)
-                                );
-                                await fsPromises.rename(
-                                    mrcFilePathTemp,
-                                    mrcFilePath
-                                );
-                                const rawFilePath = path.join(
-                                    folderPath,
-                                    rawFileName
-                                );
-                                await fsPromises.rename(
-                                    path.join(tempDirectory, rawFileName),
-                                    rawFilePath
-                                );
-
-                                return await tx.rawVolumeDataFile.update({
-                                    where: {
-                                        id: volumeData.dataFileId,
-                                    },
-                                    data: {
-                                        path: folderPath,
-                                        rawFilePath: rawFilePath,
-                                        mrcFilePath: mrcFilePath,
-                                    },
+                        } catch (error) {
+                            if (folderPath != null) {
+                                await fsPromises.rm(folderPath, {
+                                    recursive: true,
+                                    force: true,
                                 });
-                            } catch (error) {
-                                if (folderPath != null) {
-                                    await fsPromises.rm(folderPath, {
-                                        recursive: true,
-                                        force: true,
-                                    });
-                                }
-                                throw error;
                             }
-                        },
-                        {
-                            timeout: 60000,
+                            throw error;
                         }
-                    );
+                    });
                 } finally {
                     await fsPromises.rm(tempDirectory, {
                         recursive: true,
@@ -226,32 +221,28 @@ export default class RawVolumeData extends VolumeData {
 
     /**
      * @param {number} id
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<RawVolumeDataDB>}
      */
-    static async del(id) {
-        return prismaManager.db.$transaction(
-            async (tx) => {
-                const rawVolumeData = await tx.rawVolumeData.delete({
-                    where: { id: id },
-                });
+    static async del(id, client) {
+        return await withTransaction(client, async (tx) => {
+            const rawVolumeData = await tx.rawVolumeData.delete({
+                where: { id: id },
+            });
 
-                const dataFile = await tx.rawVolumeDataFile.delete({
-                    where: {
-                        id: rawVolumeData.dataFileId,
-                        rawVolumeData: {
-                            none: {},
-                        },
+            const dataFile = await tx.rawVolumeDataFile.delete({
+                where: {
+                    id: rawVolumeData.dataFileId,
+                    rawVolumeData: {
+                        none: {},
                     },
-                });
-                if (dataFile) {
-                    await RawVolumeDataFile.removeFilesFromDisc(dataFile);
-                }
-                return rawVolumeData;
-            },
-            {
-                timeout: 60000,
+                },
+            });
+            if (dataFile) {
+                await RawVolumeDataFile.removeFilesFromDisc(dataFile);
             }
-        );
+            return rawVolumeData;
+        });
     }
 
     /**

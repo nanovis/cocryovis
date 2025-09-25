@@ -1,12 +1,13 @@
 // @ts-check
 
-import DatabaseModel from "./database-model.mjs";
+import DatabaseModel, { withTransaction } from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "fs/promises";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
+import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
@@ -234,92 +235,88 @@ export default class Project extends DatabaseModel {
     /**
      * @param {number} id
      * @param {{publicAccess: number, userAccess: Array<UserAccessInfo>}} accessInfo
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<{publicAccess: number, userAccess: UserAccessInfo[]}>}
      */
-    static async setAccess(id, accessInfo) {
-        return await prismaManager.db.$transaction(
-            async (tx) => {
-                let project = await tx.project.findUnique({
+    static async setAccess(id, accessInfo, client) {
+        return await withTransaction(client, async (tx) => {
+            let project = await tx.project.findUnique({
+                where: { id: id },
+            });
+
+            if (!project) {
+                throw ApiError.fromId(id, this.modelName);
+            }
+
+            accessInfo.userAccess = accessInfo.userAccess.filter(
+                (info) => info.userId !== project.ownerId
+            );
+
+            if (
+                accessInfo.publicAccess !== undefined &&
+                accessInfo.publicAccess !== project.publicAccess
+            ) {
+                project = await tx.project.update({
                     where: { id: id },
+                    data: {
+                        publicAccess: accessInfo.publicAccess,
+                    },
                 });
+            }
 
-                if (!project) {
-                    throw ApiError.fromId(id, this.modelName);
-                }
-
-                accessInfo.userAccess = accessInfo.userAccess.filter(
-                    (info) => info.userId !== project.ownerId
-                );
-
-                if (
-                    accessInfo.publicAccess !== undefined &&
-                    accessInfo.publicAccess !== project.publicAccess
-                ) {
-                    project = await tx.project.update({
-                        where: { id: id },
-                        data: {
-                            publicAccess: accessInfo.publicAccess,
+            for (const accessInstance of accessInfo.userAccess) {
+                if (accessInstance.accessLevel < 0) {
+                    await tx.projectAccess.delete({
+                        where: {
+                            userId_projectId: {
+                                userId: accessInstance.userId,
+                                projectId: project.id,
+                            },
+                        },
+                        select: {
+                            userId: true,
+                            accessLevel: true,
+                        },
+                    });
+                } else {
+                    await tx.projectAccess.upsert({
+                        where: {
+                            userId_projectId: {
+                                userId: accessInstance.userId,
+                                projectId: project.id,
+                            },
+                        },
+                        update: {
+                            accessLevel: accessInstance.accessLevel,
+                        },
+                        create: {
+                            projectId: project.id,
+                            userId: accessInstance.userId,
+                            accessLevel: accessInstance.accessLevel,
+                        },
+                        select: {
+                            userId: true,
+                            accessLevel: true,
                         },
                     });
                 }
-
-                for (const accessInstance of accessInfo.userAccess) {
-                    if (accessInstance.accessLevel < 0) {
-                        await tx.projectAccess.delete({
-                            where: {
-                                userId_projectId: {
-                                    userId: accessInstance.userId,
-                                    projectId: project.id,
-                                },
-                            },
-                            select: {
-                                userId: true,
-                                accessLevel: true,
-                            },
-                        });
-                    } else {
-                        await tx.projectAccess.upsert({
-                            where: {
-                                userId_projectId: {
-                                    userId: accessInstance.userId,
-                                    projectId: project.id,
-                                },
-                            },
-                            update: {
-                                accessLevel: accessInstance.accessLevel,
-                            },
-                            create: {
-                                projectId: project.id,
-                                userId: accessInstance.userId,
-                                accessLevel: accessInstance.accessLevel,
-                            },
-                            select: {
-                                userId: true,
-                                accessLevel: true,
-                            },
-                        });
-                    }
-                }
-
-                const userAccess = await tx.projectAccess.findMany({
-                    where: {
-                        projectId: id,
-                    },
-                    select: {
-                        userId: true,
-                        accessLevel: true,
-                    },
-                });
-
-                return {
-                    publicAccess: project.publicAccess,
-                    userAccess: userAccess,
-                };
-            },
-            {
-                timeout: 60000,
             }
-        );
+
+            const userAccess = await tx.projectAccess.findMany({
+                where: {
+                    projectId: id,
+                },
+                select: {
+                    userId: true,
+                    accessLevel: true,
+                },
+            });
+
+            return {
+                publicAccess: project.publicAccess,
+                userAccess: userAccess,
+            };
+        });
     }
 
     /**
@@ -423,75 +420,71 @@ export default class Project extends DatabaseModel {
 
     /**
      * @param {number} id
+     * @param {Prisma.TransactionClient | undefined} [client]
      * @returns { Promise<ProjectDB> }
      */
-    static async del(id) {
+    static async del(id, client) {
         const fileDeleteStack = [];
 
-        const project = await prismaManager.db.$transaction(
-            async (tx) => {
-                const project = await this.withWriteLock(id, null, () => {
-                    return tx.project.delete({
-                        where: {
-                            id: id,
-                        },
-                        include: {
-                            volumes: {
-                                where: {
-                                    project: {
-                                        id: id,
-                                    },
-                                },
-                                include: {
-                                    rawData: true,
-                                    sparseVolumes: true,
-                                    pseudoVolumes: true,
-                                    results: true,
+        const project = await withTransaction(client, async (tx) => {
+            const project = await this.withWriteLock(id, null, () => {
+                return tx.project.delete({
+                    where: {
+                        id: id,
+                    },
+                    include: {
+                        volumes: {
+                            where: {
+                                project: {
+                                    id: id,
                                 },
                             },
-                            models: {
-                                where: {
-                                    project: {
-                                        id: id,
-                                    },
-                                },
-                                include: {
-                                    checkpoints: true,
-                                },
+                            include: {
+                                rawData: true,
+                                sparseVolumes: true,
+                                pseudoVolumes: true,
+                                results: true,
                             },
                         },
-                    });
+                        models: {
+                            where: {
+                                project: {
+                                    id: id,
+                                },
+                            },
+                            include: {
+                                checkpoints: true,
+                            },
+                        },
+                    },
                 });
+            });
 
-                const allCheckpoints = [];
-                project.models.forEach((m) =>
-                    allCheckpoints.push(...m.checkpoints)
-                );
-                const allRawVolumes = [];
-                project.volumes.forEach(
-                    (v) => v.rawData && allRawVolumes.push(v.rawData.id)
-                );
+            const allCheckpoints = [];
+            project.models.forEach((m) =>
+                allCheckpoints.push(...m.checkpoints)
+            );
+            const allRawVolumes = [];
+            project.volumes.forEach(
+                (v) => v.rawData && allRawVolumes.push(v.rawData.id)
+            );
 
-                const allSparseVolumes = [];
-                project.volumes.forEach((v) =>
-                    allSparseVolumes.push(...v.sparseVolumes)
-                );
+            const allSparseVolumes = [];
+            project.volumes.forEach((v) =>
+                allSparseVolumes.push(...v.sparseVolumes)
+            );
 
-                const allPseudoVolumes = [];
-                project.volumes.forEach((v) =>
-                    allPseudoVolumes.push(...v.pseudoVolumes)
-                );
+            const allPseudoVolumes = [];
+            project.volumes.forEach((v) =>
+                allPseudoVolumes.push(...v.pseudoVolumes)
+            );
 
-                await RawVolumeDataFile.deleteZombies(tx);
-                await SparseVolumeDataFile.deleteZombies(tx);
-                await PseudoVolumeDataFile.deleteZombies(tx);
+            await RawVolumeDataFile.deleteZombies(tx);
+            await SparseVolumeDataFile.deleteZombies(tx);
+            await PseudoVolumeDataFile.deleteZombies(tx);
 
-                return project;
-            },
-            {
-                timeout: 60000,
-            }
-        );
+            return project;
+        });
 
         for (const file of fileDeleteStack) {
             fsPromises
