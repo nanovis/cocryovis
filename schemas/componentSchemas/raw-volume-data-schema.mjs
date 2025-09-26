@@ -22,6 +22,7 @@ export const rawVolumeDataSchema = z.object({
 });
 
 export const rawVolumeDataUpdateSchema = z.object({
+    name: z.string().optional(),
     sizeX: z.int().optional(),
     sizeY: z.int().optional(),
     sizeZ: z.int().optional(),

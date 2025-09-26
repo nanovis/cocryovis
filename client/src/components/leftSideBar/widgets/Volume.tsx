@@ -1198,6 +1198,12 @@ const Volume = observer(({ open, close }: Props) => {
                   isActive={
                     selectedVolume?.volumeDataConfirmDeleteActiveRequest
                   }
+                  editVolumeData={async (newTitle) => {
+                    await handleRenameSparseData(
+                      selectedVolume.sparseVolumeArray[index],
+                      newTitle
+                    );
+                  }}
                 />
               ) : (
                 <ItemTitleDownloadDelete
@@ -1422,6 +1428,12 @@ const Volume = observer(({ open, close }: Props) => {
                   isActive={
                     !!selectedVolume?.volumeDataConfirmDeleteActiveRequest
                   }
+                  editVolumeData={async (newTitle) => {
+                    await handleRenamePseudoData(
+                      selectedVolume.pseudoVolumeArray[index],
+                      newTitle
+                    );
+                  }}
                 />
               ) : (
                 <ItemTitleDownloadDelete inactive={true} />

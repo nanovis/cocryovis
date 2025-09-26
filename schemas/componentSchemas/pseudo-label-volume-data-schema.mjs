@@ -23,6 +23,7 @@ export const pseudoLabelVolumeDataSchema = z.object({
 });
 
 export const pseudoLabelVolumeDataUpdateSchema = z.object({
+    name: z.string().optional(),
     sizeX: z.int().optional(),
     sizeZ: z.int().optional(),
     sizeY: z.int().optional(),

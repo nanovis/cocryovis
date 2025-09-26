@@ -26,6 +26,13 @@ export const SparseLabelVolume = types
     volumeId: types.integer,
   })
   .actions((self) => ({
+    updateName: flow(function* updateName(name: string) {
+      const sparselabel: z.infer<typeof sparseLabelVolumeDataSchema> =
+        yield updateVolumeData("SparseLabeledVolumeData", self.id, {
+          name: name,
+        });
+      self.name = sparselabel.name;
+    }),
     setColor: flow(function* setColor(
       color: string,
       index: number

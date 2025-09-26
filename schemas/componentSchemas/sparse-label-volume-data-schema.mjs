@@ -23,6 +23,7 @@ export const sparseLabelVolumeDataSchema = z.object({
 });
 
 export const sparseLabelVolumeDataUpdateSchema = z.object({
+    name: z.string().optional(),
     sizeX: z.int().optional(),
     sizeY: z.int().optional(),
     sizeZ: z.int().optional(),

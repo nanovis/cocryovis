@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Label, mergeClasses } from "@fluentui/react-components";
+import { Button, Input, Label, mergeClasses } from "@fluentui/react-components";
 
 import {
   Delete24Regular,
@@ -65,6 +65,15 @@ const useStyles = makeStyles({
       cursor: "not-allowed",
     },
   },
+  hover: {
+    padding: "4px 8px",
+    borderRadius: "4px",
+
+    ":hover": {
+      backgroundColor: tokens.colorNeutralBackground2Hover,
+      color: tokens.colorNeutralForeground1,
+    },
+  },
 });
 
 interface Props {
@@ -75,6 +84,7 @@ interface Props {
   onEdit?: React.MouseEventHandler<HTMLButtonElement>;
   onColorChange?: (color: string) => void;
   onEnabled?: React.MouseEventHandler<HTMLButtonElement>;
+  editVolumeData?: (newTitle: string) => Promise<void>;
   color?: string;
   isEnabled?: boolean;
   canChangeColor?: boolean;
@@ -95,6 +105,7 @@ const ItemTitleDownloadDelete = ({
   onEdit = undefined,
   onColorChange = undefined,
   onEnabled = undefined,
+  editVolumeData = async () => {},
   color = undefined,
   isEnabled = true,
   canChangeColor = false,
@@ -110,6 +121,22 @@ const ItemTitleDownloadDelete = ({
   const globalClasses = globalStyles();
   const [colorValue, setColorValue] = useState("#ffffff");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showInput, setShowInput] = useState(false);
+  const [inputValue, setInputValue] = useState(title);
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setInputValue(title);
+    if (e.key === "Enter") {
+      if (editVolumeData && inputValue) {
+        await editVolumeData(inputValue);
+      }
+      setShowInput(false);
+    }
+    if (e.key === "Escape") {
+      setInputValue(title);
+      setShowInput(false);
+    }
+  };
 
   const handleDeleteClick = async () => {
     if (!onDelete) return;
@@ -132,7 +159,24 @@ const ItemTitleDownloadDelete = ({
           highlighted && classes.highlighted
         )}
       >
-        <Label>{title?.substring(0, 50)}</Label>
+        {showInput ? (
+          <>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+            />
+          </>
+        ) : (
+          <div
+            className={classes.hover}
+            onDoubleClick={() => setShowInput(true)}
+          >
+            <Label>{title?.substring(0, 50)}</Label>
+          </div>
+        )}
+
         <div
           style={{
             marginLeft: "auto",
