@@ -7,7 +7,10 @@ import * as Utils from "../../utils/Helpers";
 import { Vector3, VolumeSettings } from "../../utils/VolumeSettings";
 import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import z from "zod";
-import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
+import {
+  volumeSchema,
+  volumeUpdateSchema,
+} from "#schemas/componentSchemas/volume-schema.mjs";
 import {
   deepVolumeSchema,
   volumesDeepSchemaRes,
@@ -50,6 +53,7 @@ export const Volume = types
   })
   .volatile(() => ({
     volumeDataConfirmDeleteActiveRequest: false,
+    updateVolumeActiveRequest: false,
   }))
 
   .views((self) => ({
@@ -271,6 +275,23 @@ export const Volume = types
         self.sparseVolumes.delete(dataId.toString());
       } else if (dataType == "PseudoLabeledVolumeData") {
         self.pseudoVolumes.delete(dataId.toString());
+      }
+    }),
+    updateVolume: flow(function* updateVolume(
+      changes: z.infer<typeof volumeUpdateSchema>
+    ) {
+      if (self.updateVolumeActiveRequest) {
+        return;
+      }
+      try {
+        self.updateVolumeActiveRequest = true;
+        const volume: z.infer<typeof volumeSchema> =
+          yield volumeApi.updateVolume(self.id, changes);
+        return volume;
+      } finally {
+        if (isAlive(self)) {
+          self.updateVolumeActiveRequest = false;
+        }
       }
     }),
   }));

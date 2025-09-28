@@ -3,7 +3,10 @@
 import Volume from "../models/volume.mjs";
 import { annotationsSchema } from "#schemas/volume-path-schema.mjs";
 import { idProject } from "#schemas/componentSchemas/project-schema.mjs";
-import { idVolume } from "#schemas/componentSchemas/volume-schema.mjs";
+import {
+    idVolume,
+    volumeUpdateSchema,
+} from "#schemas/componentSchemas/volume-schema.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
     createVolumeReq,
@@ -122,5 +125,19 @@ export default class VolumeController {
         );
 
         res.json(sparseLabel);
+    }
+
+    /**
+     * @param {Request} req
+     * @param {Response} res
+     */
+    static async update(req, res) {
+        const { params, body } = validateSchema(req, {
+            paramsSchema: idVolume,
+            bodySchema: volumeUpdateSchema,
+        });
+
+        const volume = await Volume.update(params.idVolume, body);
+        res.status(201).json(volume);
     }
 }

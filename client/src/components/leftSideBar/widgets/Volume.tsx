@@ -22,6 +22,7 @@ import {
   ArrowUpload20Regular,
   Checkmark16Filled,
   Delete20Regular,
+  Edit24Regular,
   EditSettings24Regular,
   ErrorCircle16Filled,
   ProjectionScreen20Regular,
@@ -67,6 +68,7 @@ import {
 import { getResultData } from "../../../api/results";
 import { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
 import ToastContainer from "../../../utils/ToastContainer";
+import EditDialog from "./elements/EditDialog";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -77,6 +79,29 @@ const useStyles = makeStyles({
   },
   uploadDownloadButtom: {
     width: "188px",
+  },
+  titleRow: {
+    display: "flex",
+  },
+  buttonRow: {
+    display: "flex",
+    gap: "15px",
+  },
+  button: {
+    height: "20px",
+    minWidth: "50px",
+  },
+  actionButton: {
+    width: "32px",
+    height: "32px",
+    minWidth: "32px",
+    "&.fui-Button__icon": {
+      color: tokens.colorBrandForeground1,
+    },
+    ":disabled &.fui-Button__icon": {
+      opacity: 0.5,
+      pointerEvents: "none",
+    },
   },
 });
 
@@ -104,6 +129,7 @@ const Volume = observer(({ open, close }: Props) => {
   const globalClasses = globalStyles();
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [isDeleteResultDialogOpen, setDeleteResultDialogOpen] = useState(false);
   const [isLoadingResults, setLoadingResults] = useState(false);
   const [isLoadingVolumes, setLoadingVolumes] = useState(false);
@@ -124,18 +150,12 @@ const Volume = observer(({ open, close }: Props) => {
     );
   };
 
-  const handleVolumeSelect = async (value: string | null) => {
-    try {
-      if (!value) {
-        return;
-      }
+  const editVolumeDialogOpen = () => {
+    setEditDialogOpen(true);
+  };
 
-      projectVolumes?.setSelectedVolumeId(Number(value));
-    } catch (error) {
-      console.error(error);
-      const toastContainer = new ToastContainer();
-      toastContainer.error(Utils.getErrorMessage(error));
-    }
+  const editVolumeDialogClose = () => {
+    setEditDialogOpen(false);
   };
 
   const createVolume = () => {
@@ -156,6 +176,68 @@ const Volume = observer(({ open, close }: Props) => {
 
   const handleCloseCheckpointDialog = () => {
     setDeleteResultDialogOpen(false);
+  };
+
+  const handleEditDialog = async (name: string, description: string) => {
+    if (!selectedVolume) {
+      return;
+    }
+    const toastContainer = new ToastContainer();
+    try {
+      toastContainer.loading("Updating volume...");
+      await selectedVolume.updateVolume({ name, description });
+      editVolumeDialogClose();
+      toastContainer.success("Updated volume!");
+    } catch (error) {
+      console.error(error);
+      toastContainer.error(Utils.getErrorMessage(error));
+    }
+  };
+
+  const handleVolumeSelect = async (value: string | null) => {
+    try {
+      if (!value) {
+        return;
+      }
+
+      projectVolumes?.setSelectedVolumeId(Number(value));
+    } catch (error) {
+      console.error(error);
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
+    }
+  };
+
+  const handleRenameSparseData = async (
+    volumeData: SparseVolumeInstance,
+    newName: string
+  ) => {
+    const toastContainer = new ToastContainer();
+    try {
+      toastContainer.loading("Changing name...");
+
+      await volumeData.updateName(newName);
+      toastContainer.success("Label name changed!");
+    } catch (error) {
+      console.error("Error:", error);
+      toastContainer.error(Utils.getErrorMessage(error));
+    }
+  };
+
+  const handleRenamePseudoData = async (
+    volumeData: PseudoVolumeInstance,
+    newName: string
+  ) => {
+    const toastContainer = new ToastContainer();
+    try {
+      toastContainer.loading("Changing name...");
+
+      await volumeData.updateName(newName);
+      toastContainer.success("Label name changed!");
+    } catch (error) {
+      console.error("Error:", error);
+      toastContainer.error(Utils.getErrorMessage(error));
+    }
   };
 
   const confirmDeleteVolume = async () => {
@@ -796,8 +878,36 @@ const Volume = observer(({ open, close }: Props) => {
           </div>
         </div>
         <div className={globalClasses.siderbarBody}>
-          <h2 className={globalClasses.sectionTitle}>Volume</h2>
-
+          <div className={classes.buttonRow}>
+            <h2>Volume</h2>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Tooltip
+                content={
+                  <WriteAccessTooltipContentWrapper
+                    content={"Edit name and description"}
+                    hasWriteAccess={activeProject?.hasWriteAccess}
+                  />
+                }
+                relationship="label"
+                hideDelay={0}
+                appearance="inverted"
+              >
+                <Button
+                  appearance="secondary"
+                  icon={
+                    <Edit24Regular
+                      className={mergeClasses(
+                        globalClasses.successIcon,
+                        !selectedVolumeId && globalClasses.disabledIcon
+                      )}
+                    />
+                  }
+                  onClick={editVolumeDialogOpen}
+                  disabled={!selectedVolumeId || !activeProject?.hasWriteAccess}
+                />
+              </Tooltip>
+            </div>
+          </div>
           {/* Dropdown for selecting project volumes */}
           <div className={globalClasses.drowdownActionsContainer}>
             <ComboboxSearch
@@ -1566,7 +1676,16 @@ const Volume = observer(({ open, close }: Props) => {
         isActive={!!projectVolumes?.removeVolumeActiveRequest}
       />
 
-      {/* Create Volume Dialog */}
+      <EditDialog
+        open={isEditDialogOpen}
+        title="Edit Volume"
+        onClose={editVolumeDialogClose}
+        onEdit={handleEditDialog}
+        isActive={!!selectedVolume?.updateVolumeActiveRequest}
+        defaultName={selectedVolume?.name ?? ""}
+        defaultDescription={selectedVolume?.description ?? ""}
+      />
+
       <CreateVolumeDialog
         open={isCreateDialogOpen}
         onClose={closeCreateDialog}
@@ -1574,7 +1693,6 @@ const Volume = observer(({ open, close }: Props) => {
         isActive={!!projectVolumes?.createVolumeActiveRequest}
       />
 
-      {/* Remove Result Dialog */}
       <DeleteDialog
         TitleText={"Remove Result?"}
         BodyText={

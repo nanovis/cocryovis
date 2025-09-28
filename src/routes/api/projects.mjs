@@ -107,6 +107,10 @@ projectsApi.get(`/project/:idProject/volumes/deep`, restrictReadProjectAccess, V
 // Create New Volume
 projectsApi.post(`/project/:idProject/volumes`, restrictApi, VolumeController.createVolume);
 
+// Update Volume
+projectsApi.put(`/volume/:idVolume`, restrictApi, VolumeController.update);
+
+
 // Clone Volume
 // projectsApi.post(`/project/:idProject/volume/:idVolume/clone`, restrictApi, VolumeController.cloneVolume);
 

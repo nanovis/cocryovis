@@ -7,7 +7,11 @@ import { sparseLabelVolumeDataSchema } from "./componentSchemas/sparse-label-vol
 import { pseudoLabelVolumeDataSchema } from "./componentSchemas/pseudo-label-volume-data-schema.mjs";
 import { resultSchemaWithCheckpoint } from "./componentSchemas/result-schema.mjs";
 import { defaultError } from "./error-path-schema.mjs";
-import { idVolume, volumeSchema } from "./componentSchemas/volume-schema.mjs";
+import {
+    idVolume,
+    volumeSchema,
+    volumeUpdateSchema,
+} from "./componentSchemas/volume-schema.mjs";
 import {
     idProject,
     projectSchema,
@@ -119,6 +123,7 @@ export const volumePath = {
             },
         },
     },
+
     "/volume/{idVolume}": {
         get: {
             requestParams: {
@@ -130,6 +135,28 @@ export const volumePath = {
                     content: {
                         "application/json": {
                             schema: getVolumeSchema,
+                        },
+                    },
+                },
+                ...defaultError,
+            },
+        },
+        put: {
+            requestParams: {
+                path: idVolume,
+            },
+            requestBody: {
+                content: {
+                    "application/json": {
+                        schema: volumeUpdateSchema,
+                    },
+                },
+            },
+            responses: {
+                201: {
+                    content: {
+                        "application/json": {
+                            schema: volumeSchema,
                         },
                     },
                 },

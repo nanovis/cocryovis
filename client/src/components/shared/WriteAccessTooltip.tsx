@@ -44,6 +44,7 @@ export const WriteAccessTooltipContent = ({ hasWriteAccess }: Props) => {
           </Text>
         </div>
       )}
+      
     </>
   );
 };

@@ -6,7 +6,10 @@ import {
   volumeQuerySchema,
   volumesDeepSchemaRes,
 } from "#schemas/volume-path-schema.mjs";
-import { volumeSchema } from "#schemas/componentSchemas/volume-schema.mjs";
+import {
+  volumeSchema,
+  volumeUpdateSchema,
+} from "#schemas/componentSchemas/volume-schema.mjs";
 import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 
 export async function getVolumesFromProjectDeep(id: number) {
@@ -64,4 +67,18 @@ export async function addAnnotations(id: number, request: string) {
   const sparseLabel: z.infer<typeof sparseLabelVolumeDataSchema> =
     await response.json();
   return sparseLabel;
+}
+
+export async function updateVolume(
+  id: number,
+  request: z.input<typeof volumeUpdateSchema>
+) {
+  const response = await Utils.sendApiRequest(`/volume/${id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  const volume: z.infer<typeof volumeSchema> = await response.json();
+  return volume;
 }
