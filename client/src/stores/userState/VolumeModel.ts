@@ -287,6 +287,8 @@ export const Volume = types
         self.updateVolumeActiveRequest = true;
         const volume: z.infer<typeof volumeSchema> =
           yield volumeApi.updateVolume(self.id, changes);
+        self.name = volume.name;
+        self.description = volume.description;
         return volume;
       } finally {
         if (isAlive(self)) {

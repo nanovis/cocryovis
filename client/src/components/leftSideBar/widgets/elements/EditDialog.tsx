@@ -17,7 +17,7 @@ interface Props {
   open: boolean;
   title: string;
   onClose: () => void;
-  onEdit: (name: string, description: string) => void;
+  onEdit: (name: string, description: string) => Promise<void>;
   isActive: boolean;
   defaultName: string;
   defaultDescription: string;
@@ -34,6 +34,7 @@ const EditDialog = ({
 }: Props) => {
   const [name, setName] = useState(defaultName);
   const [description, setDescription] = useState(defaultDescription);
+  const [inProgress, setInProgress] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -42,10 +43,17 @@ const EditDialog = ({
     }
   }, [open]);
 
-  const handleEdit = () => {
-    onEdit(name, description);
-    setName("");
-    setDescription("");
+  const handleEdit = async () => {
+    setInProgress(true);
+    try {
+      await onEdit(name, description);
+      setName("");
+      setDescription("");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setInProgress(false);
+    }
   };
 
   return (
@@ -91,7 +99,11 @@ const EditDialog = ({
                 <Button appearance="secondary" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button appearance="primary" onClick={handleEdit}>
+                <Button
+                  appearance="primary"
+                  onClick={handleEdit}
+                  disabled={inProgress || !open}
+                >
                   Update
                 </Button>
               </div>
