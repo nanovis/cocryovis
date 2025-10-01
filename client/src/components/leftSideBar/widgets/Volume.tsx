@@ -1308,12 +1308,24 @@ const Volume = observer(({ open, close }: Props) => {
                   isActive={
                     selectedVolume?.volumeDataConfirmDeleteActiveRequest
                   }
-                  editVolumeData={async (newTitle) => {
+                  onEditVolumeData={async (newTitle) => {
                     await handleRenameSparseData(
                       selectedVolume.sparseVolumeArray[index],
                       newTitle
                     );
                   }}
+                  isEditVolumeData={
+                    selectedVolume.sparseVolumeArray[index] ===
+                    selectedVolume.editingSparseVolumeData
+                  }
+                  onStartEditVolumeData={() =>
+                    selectedVolume.setEditingSparseVolumeData(
+                      selectedVolume.sparseVolumeArray[index]
+                    )
+                  }
+                  onStopEditVolumeData={() =>
+                    selectedVolume.setEditingSparseVolumeData(undefined)
+                  }
                 />
               ) : (
                 <ItemTitleDownloadDelete
@@ -1538,12 +1550,24 @@ const Volume = observer(({ open, close }: Props) => {
                   isActive={
                     !!selectedVolume?.volumeDataConfirmDeleteActiveRequest
                   }
-                  editVolumeData={async (newTitle) => {
+                  onEditVolumeData={async (newTitle) => {
                     await handleRenamePseudoData(
                       selectedVolume.pseudoVolumeArray[index],
                       newTitle
                     );
                   }}
+                  isEditVolumeData={
+                    selectedVolume.pseudoVolumeArray[index] ===
+                    selectedVolume.editingPseudoVolumeData
+                  }
+                  onStartEditVolumeData={() =>
+                    selectedVolume.setEditingPseudoVolumeData(
+                      selectedVolume.pseudoVolumeArray[index]
+                    )
+                  }
+                  onStopEditVolumeData={() =>
+                    selectedVolume.setEditingPseudoVolumeData(undefined)
+                  }
                 />
               ) : (
                 <ItemTitleDownloadDelete inactive={true} />

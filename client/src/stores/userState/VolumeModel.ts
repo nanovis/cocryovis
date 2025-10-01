@@ -1,7 +1,15 @@
 import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
 import { RawVolume, RawVolumeSnapshotIn } from "./RawVolumeModel";
-import { SparseLabelVolume, SparseVolumeSnapshotIn } from "./SparseVolumeModel";
-import { PseudoLabelVolume, PseudoVolumeSnapshotIn } from "./PseudoVolumeModel";
+import {
+  SparseLabelVolume,
+  SparseVolumeInstance,
+  SparseVolumeSnapshotIn,
+} from "./SparseVolumeModel";
+import {
+  PseudoLabelVolume,
+  PseudoVolumeInstance,
+  PseudoVolumeSnapshotIn,
+} from "./PseudoVolumeModel";
 import { VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
 import { Vector3, VolumeSettings } from "../../utils/VolumeSettings";
@@ -50,6 +58,8 @@ export const Volume = types
       types.array(types.boolean),
       new Array(4).fill(false)
     ),
+    editingSparseVolumeData: types.safeReference(SparseLabelVolume),
+    editingPseudoVolumeData: types.safeReference(PseudoLabelVolume),
   })
   .volatile(() => ({
     volumeDataConfirmDeleteActiveRequest: false,
@@ -65,6 +75,14 @@ export const Volume = types
     },
   }))
   .actions((self) => ({
+    setEditingSparseVolumeData(volumeData: SparseVolumeInstance | undefined) {
+      self.editingSparseVolumeData = volumeData;
+      self.editingPseudoVolumeData = undefined;
+    },
+    setEditingPseudoVolumeData(volumeData: PseudoVolumeInstance | undefined) {
+      self.editingPseudoVolumeData = volumeData;
+      self.editingSparseVolumeData = undefined;
+    },
     setVolumeDataConfirmDeleteActiveRequest(active: boolean) {
       self.volumeDataConfirmDeleteActiveRequest = active;
     },
@@ -346,6 +364,10 @@ export const ProjectVolumes = types
     setSelectedVolumeId(volumeId: number | undefined) {
       if (volumeId && !self.volumes.has(volumeId)) {
         throw new Error(`Volume with id ${volumeId} not found`);
+      }
+      if (self.selectedVolume) {
+        self.selectedVolume.setEditingPseudoVolumeData(undefined);
+        self.selectedVolume.setEditingSparseVolumeData(undefined);
       }
       self.selectedVolumeId = volumeId;
     },

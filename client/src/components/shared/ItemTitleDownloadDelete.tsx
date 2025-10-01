@@ -14,6 +14,7 @@ import { makeStyles, tokens, Tooltip } from "@fluentui/react-components";
 import DeleteDialog from "./DeleteDialog";
 import { WriteAccessTooltipContentWrapper } from "./WriteAccessTooltip";
 import globalStyles from "../GlobalStyles";
+import { observer } from "mobx-react-lite";
 
 const useStyles = makeStyles({
   container: {
@@ -84,7 +85,9 @@ interface Props {
   onEdit?: React.MouseEventHandler<HTMLButtonElement>;
   onColorChange?: (color: string) => void;
   onEnabled?: React.MouseEventHandler<HTMLButtonElement>;
-  editVolumeData?: (newTitle: string) => Promise<void>;
+  onEditVolumeData?: (newTitle: string) => Promise<void>;
+  onStopEditVolumeData?: () => void;
+  onStartEditVolumeData?: () => void;
   color?: string;
   isEnabled?: boolean;
   canChangeColor?: boolean;
@@ -95,236 +98,259 @@ interface Props {
   preventChanges?: boolean;
   highlighted?: boolean;
   isActive?: boolean;
+  isEditVolumeData?: boolean;
 }
 
-const ItemTitleDownloadDelete = ({
-  title = undefined,
-  onDownload = undefined,
-  onVisualize = undefined,
-  onDelete = undefined,
-  onEdit = undefined,
-  onColorChange = undefined,
-  onEnabled = undefined,
-  editVolumeData = async () => {},
-  color = undefined,
-  isEnabled = true,
-  canChangeColor = false,
-  canEdit = false,
-  deleteTitle = undefined,
-  deleteQuestion = undefined,
-  inactive = false,
-  preventChanges = false,
-  highlighted = false,
-  isActive = false,
-}: Props) => {
-  const classes = useStyles();
-  const globalClasses = globalStyles();
-  const [colorValue, setColorValue] = useState("#ffffff");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [showInput, setShowInput] = useState(false);
-  const [inputValue, setInputValue] = useState(title);
+const ItemTitleDownloadDelete = observer(
+  ({
+    title = undefined,
+    onDownload = undefined,
+    onVisualize = undefined,
+    onDelete = undefined,
+    onEdit = undefined,
+    onColorChange = undefined,
+    onEnabled = undefined,
+    onStartEditVolumeData = undefined,
+    onStopEditVolumeData = undefined,
+    onEditVolumeData = undefined,
+    isEditVolumeData = false,
+    color = undefined,
+    isEnabled = true,
+    canChangeColor = false,
+    canEdit = false,
+    deleteTitle = undefined,
+    deleteQuestion = undefined,
+    inactive = false,
+    preventChanges = false,
+    highlighted = false,
+    isActive = false,
+  }: Props) => {
+    const classes = useStyles();
+    const globalClasses = globalStyles();
+    const [colorValue, setColorValue] = useState("#ffffff");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [inputValue, setInputValue] = useState(title);
+    const [isRenaming, setIsRenaming] = useState(false);
 
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    setInputValue(title);
-    if (e.key === "Enter") {
-      if (editVolumeData && inputValue) {
-        await editVolumeData(inputValue);
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!isEditVolumeData) {
+        return;
       }
-      setShowInput(false);
-    }
-    if (e.key === "Escape") {
+      if (e.key === "Enter") {
+        if (onEditVolumeData && inputValue) {
+          setIsRenaming(true);
+          await onEditVolumeData(inputValue);
+        }
+        if (onStopEditVolumeData) {
+          onStopEditVolumeData();
+          setIsRenaming(false);
+        }
+      }
+
+      if (e.key === "Escape") {
+        setInputValue(title);
+        if (onStopEditVolumeData) {
+          onStopEditVolumeData();
+        }
+      }
+    };
+
+    const handleDeleteClick = async () => {
+      if (!onDelete) return;
+      await onDelete();
+      if (!isActive) {
+        setIsDialogOpen(false);
+      }
+    };
+    const onDoubleClick = () => {
+      if (!onStartEditVolumeData) {
+        return;
+      }
       setInputValue(title);
-      setShowInput(false);
-    }
-  };
+      onStartEditVolumeData();
+    };
 
-  const handleDeleteClick = async () => {
-    if (!onDelete) return;
-    await onDelete();
-    if (!isActive) {
+    const handleCloseDialog = () => {
       setIsDialogOpen(false);
-    }
-  };
+    };
 
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-  };
+    return (
+      <div style={{ display: "flex", flex: "1", gap: "12px" }}>
+        <div
+          className={mergeClasses(
+            classes.container,
+            inactive && classes.inactive,
+            highlighted && classes.highlighted
+          )}
+        >
+          {isEditVolumeData ? (
+            <>
+              <Input
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
+                autoFocus
+                disabled={isRenaming}
+              />
+            </>
+          ) : (
+            <div className={classes.hover} onDoubleClick={onDoubleClick}>
+              <Label>{title?.substring(0, 50)}</Label>
+            </div>
+          )}
 
-  return (
-    <div style={{ display: "flex", flex: "1", gap: "12px" }}>
-      <div
-        className={mergeClasses(
-          classes.container,
-          inactive && classes.inactive,
-          highlighted && classes.highlighted
-        )}
-      >
-        {showInput ? (
-          <>
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoFocus
-            />
-          </>
-        ) : (
           <div
-            className={classes.hover}
-            onDoubleClick={() => setShowInput(true)}
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              gap: "6px",
+            }}
           >
-            <Label>{title?.substring(0, 50)}</Label>
+            {onEdit != undefined && (
+              <Tooltip
+                content="Edit"
+                relationship="label"
+                appearance="inverted"
+                positioning={"before"}
+              >
+                <Button
+                  size="large"
+                  appearance="subtle"
+                  className={classes.actionButton}
+                  disabled={!canEdit}
+                  onClick={onEdit}
+                  icon={
+                    <Edit24Regular
+                      className={mergeClasses(
+                        classes.icon,
+                        !canEdit && globalClasses.disabledIcon
+                      )}
+                    />
+                  }
+                />
+              </Tooltip>
+            )}
+
+            {(inactive || onDownload != undefined) && (
+              <Tooltip
+                content="Download"
+                relationship="label"
+                appearance="inverted"
+              >
+                <Button
+                  size="large"
+                  appearance="subtle"
+                  className={classes.actionButton}
+                  disabled={inactive}
+                  onClick={onDownload}
+                  icon={
+                    <ArrowDownload24Regular
+                      className={mergeClasses(
+                        classes.icon,
+                        inactive && globalClasses.disabledIcon
+                      )}
+                    />
+                  }
+                />
+              </Tooltip>
+            )}
+
+            {(inactive || onVisualize != undefined) && (
+              <Tooltip
+                content="Visualize"
+                relationship="label"
+                appearance="inverted"
+              >
+                <Button
+                  size="large"
+                  appearance="subtle"
+                  className={classes.actionButton}
+                  disabled={inactive}
+                  onClick={onVisualize}
+                  icon={
+                    <ProjectionScreen24Regular
+                      className={mergeClasses(
+                        classes.icon,
+                        inactive && globalClasses.disabledIcon
+                      )}
+                    />
+                  }
+                />
+              </Tooltip>
+            )}
+
+            {(inactive || onDelete != undefined) && (
+              <Tooltip
+                content={
+                  <WriteAccessTooltipContentWrapper
+                    content={"Delete"}
+                    hasWriteAccess={!preventChanges}
+                  />
+                }
+                relationship="label"
+                appearance="inverted"
+              >
+                <Button
+                  size="large"
+                  appearance="subtle"
+                  className={classes.actionButton}
+                  disabled={inactive || preventChanges}
+                  onClick={() => setIsDialogOpen(true)}
+                  icon={
+                    <Delete24Regular
+                      className={mergeClasses(
+                        classes.icon,
+                        (inactive || preventChanges) &&
+                          globalClasses.disabledIcon
+                      )}
+                    />
+                  }
+                />
+              </Tooltip>
+            )}
+          </div>
+
+          {/* Render the DeleteDialog */}
+          <DeleteDialog
+            TitleText={deleteTitle ?? ""}
+            BodyText={deleteQuestion ?? ""}
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            onConfirm={handleDeleteClick}
+            isActive={isActive}
+          />
+        </div>
+        {onColorChange != undefined && (
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <input
+              className={classes.colorPicker}
+              type="color"
+              disabled={!canChangeColor}
+              value={color ?? "#ffffff"}
+              onChange={(event) => setColorValue(event.target.value)}
+              onBlur={() => onColorChange(colorValue)}
+            />
+            <Button
+              size="large"
+              appearance="subtle"
+              className={globalClasses.mainActionButton}
+              disabled={!canChangeColor}
+              onClick={onEnabled}
+              icon={
+                isEnabled ? (
+                  <Eye24Regular className={classes.icon} />
+                ) : (
+                  <EyeOff24Regular className={classes.icon} />
+                )
+              }
+            />
           </div>
         )}
-
-        <div
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            gap: "6px",
-          }}
-        >
-          {onEdit != undefined && (
-            <Tooltip
-              content="Edit"
-              relationship="label"
-              appearance="inverted"
-              positioning={"before"}
-            >
-              <Button
-                size="large"
-                appearance="subtle"
-                className={classes.actionButton}
-                disabled={!canEdit}
-                onClick={onEdit}
-                icon={
-                  <Edit24Regular
-                    className={mergeClasses(
-                      classes.icon,
-                      !canEdit && globalClasses.disabledIcon
-                    )}
-                  />
-                }
-              />
-            </Tooltip>
-          )}
-
-          {(inactive || onDownload != undefined) && (
-            <Tooltip
-              content="Download"
-              relationship="label"
-              appearance="inverted"
-            >
-              <Button
-                size="large"
-                appearance="subtle"
-                className={classes.actionButton}
-                disabled={inactive}
-                onClick={onDownload}
-                icon={
-                  <ArrowDownload24Regular
-                    className={mergeClasses(
-                      classes.icon,
-                      inactive && globalClasses.disabledIcon
-                    )}
-                  />
-                }
-              />
-            </Tooltip>
-          )}
-
-          {(inactive || onVisualize != undefined) && (
-            <Tooltip
-              content="Visualize"
-              relationship="label"
-              appearance="inverted"
-            >
-              <Button
-                size="large"
-                appearance="subtle"
-                className={classes.actionButton}
-                disabled={inactive}
-                onClick={onVisualize}
-                icon={
-                  <ProjectionScreen24Regular
-                    className={mergeClasses(
-                      classes.icon,
-                      inactive && globalClasses.disabledIcon
-                    )}
-                  />
-                }
-              />
-            </Tooltip>
-          )}
-
-          {(inactive || onDelete != undefined) && (
-            <Tooltip
-              content={
-                <WriteAccessTooltipContentWrapper
-                  content={"Delete"}
-                  hasWriteAccess={!preventChanges}
-                />
-              }
-              relationship="label"
-              appearance="inverted"
-            >
-              <Button
-                size="large"
-                appearance="subtle"
-                className={classes.actionButton}
-                disabled={inactive || preventChanges}
-                onClick={() => setIsDialogOpen(true)}
-                icon={
-                  <Delete24Regular
-                    className={mergeClasses(
-                      classes.icon,
-                      (inactive || preventChanges) && globalClasses.disabledIcon
-                    )}
-                  />
-                }
-              />
-            </Tooltip>
-          )}
-        </div>
-
-        {/* Render the DeleteDialog */}
-        <DeleteDialog
-          TitleText={deleteTitle ?? ""}
-          BodyText={deleteQuestion ?? ""}
-          open={isDialogOpen}
-          onClose={handleCloseDialog}
-          onConfirm={handleDeleteClick}
-          isActive={isActive}
-        />
       </div>
-      {onColorChange != undefined && (
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <input
-            className={classes.colorPicker}
-            type="color"
-            disabled={!canChangeColor}
-            value={color ?? "#ffffff"}
-            onChange={(event) => setColorValue(event.target.value)}
-            onBlur={() => onColorChange(colorValue)}
-          />
-          <Button
-            size="large"
-            appearance="subtle"
-            className={globalClasses.mainActionButton}
-            disabled={!canChangeColor}
-            onClick={onEnabled}
-            icon={
-              isEnabled ? (
-                <Eye24Regular className={classes.icon} />
-              ) : (
-                <EyeOff24Regular className={classes.icon} />
-              )
-            }
-          />
-        </div>
-      )}
-    </div>
-  );
-};
+    );
+  }
+);
 
 export default ItemTitleDownloadDelete;
