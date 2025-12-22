@@ -198,9 +198,11 @@ const SignUpPage = ({ onSignUp }: Props) => {
             <Button
               appearance="primary"
               type="submit"
-              onClick={handleSubmit}
+              onClick={() => {
+                handleSubmit().catch(console.error);
+              }}
               className={classes.button}
-              disabled={showSpinner || !passwordsMatch}
+              disabled={!passwordsMatch}
             >
               Sign Up
             </Button>
@@ -209,7 +211,6 @@ const SignUpPage = ({ onSignUp }: Props) => {
               type="button"
               onClick={handleReset}
               className={classes.buttonSecondary}
-              disabled={showSpinner}
             >
               Reset
             </Button>

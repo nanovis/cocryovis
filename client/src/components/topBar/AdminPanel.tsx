@@ -20,7 +20,7 @@ import {
 } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import GlobalStyles from "../GlobalStyles";
-import { useEffect, useState } from "react";
+import { useEffect, useState, MouseEvent } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
 import { publicUser } from "#schemas/user-path-schema.mjs";
@@ -85,7 +85,7 @@ const AdminPanel = observer(() => {
 
   useEffect(() => {
     if (uiState.openAdminPanel) {
-      getUserData();
+      getUserData().catch(console.error);
     }
   }, [uiState.openAdminPanel]);
 
@@ -162,7 +162,7 @@ const AdminPanel = observer(() => {
   );
 
   const headerSortProps = (columnId: TableColumnId) => ({
-    onClick: (e: React.MouseEvent) => {
+    onClick: (e: MouseEvent) => {
       toggleColumnSort(e, columnId);
     },
     sortDirection: getSortDirection(columnId),
@@ -274,7 +274,9 @@ const AdminPanel = observer(() => {
               setShowDialogPage(false);
             }}
             style={{ width: "500px" }}
-            onConfirm={deleteUser}
+            onConfirm={() => {
+              deleteUser().catch(console.error);
+            }}
             TitleText={
               <div>
                 Are you sure you want to delete{" "}
@@ -300,7 +302,9 @@ const AdminPanel = observer(() => {
           <Button
             appearance="secondary"
             className={classes.refreshButton}
-            onClick={getUserData}
+            onClick={() => {
+              getUserData().catch(console.error);
+            }}
             disabled={adminPageActiveRequest}
           >
             Refresh

@@ -1,6 +1,6 @@
 import * as Utils from "./Helpers";
 
-export type Vector3 = { x: number; y: number; z: number };
+export interface Vector3 { x: number; y: number; z: number }
 
 export class VolumeSettings {
   file?: string;
@@ -21,10 +21,12 @@ export class VolumeSettings {
   }
 
   static fromJSON(json: string): VolumeSettings {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return new VolumeSettings(JSON.parse(json));
   }
 
   toJSON(): string {
+    // eslint-disable-next-line @typescript-eslint/no-misused-spread
     return JSON.stringify({ ...this });
   }
 
@@ -64,7 +66,7 @@ export class VolumeSettings {
       throw new Error("Missing 'bytesPerVoxel' parameter.");
     if (isNaN(this.bytesPerVoxel))
       throw new Error("'bytesPerVoxel' must be a number.");
-    if (VolumeSettings.bytesPerVoxelOptions.indexOf(this.bytesPerVoxel) === -1)
+    if (!VolumeSettings.bytesPerVoxelOptions.includes(this.bytesPerVoxel))
       throw new Error(
         `'bytesPerVoxel' must be one of 
         ${VolumeSettings.bytesPerVoxelOptions.join(", ")}.`
@@ -73,7 +75,7 @@ export class VolumeSettings {
     if (this.usedBits === undefined)
       throw new Error("Missing 'usedBits' parameter.");
     if (isNaN(this.usedBits)) throw new Error("'usedBits' must be a number.");
-    if (VolumeSettings.bitOptions.indexOf(this.usedBits) === -1)
+    if (!VolumeSettings.bitOptions.includes(this.usedBits))
       throw new Error(
         `'usedBits' must be one of ${VolumeSettings.bitOptions.join(", ")}.`
       );

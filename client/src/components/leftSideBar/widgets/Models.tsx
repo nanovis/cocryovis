@@ -35,7 +35,7 @@ interface Props {
 const Models = observer(({ open, close }: Props) => {
   const { user } = useMst();
 
-  const activeProject = user?.userProjects.activeProject;
+  const activeProject = user.userProjects.activeProject;
   const projectModels = activeProject?.projectModels;
   const selectedModelId = projectModels?.selectedModelId;
   const selectedModel = projectModels?.selectedModel;
@@ -83,7 +83,7 @@ const Models = observer(({ open, close }: Props) => {
       return;
     }
     try {
-      if (projectModels?.createModelActiveRequest) {
+      if (projectModels.createModelActiveRequest) {
         throw new Error("Model deletion already in progress.");
       }
       projectModels.setCreateModelActiveRequest(true);
@@ -97,7 +97,7 @@ const Models = observer(({ open, close }: Props) => {
     projectModels.setCreateModelActiveRequest(false);
   };
 
-  const handleModelSelect = async (value: string | null) => {
+  const handleModelSelect = (value: string | null) => {
     try {
       if (!value) {
         return;
@@ -155,7 +155,7 @@ const Models = observer(({ open, close }: Props) => {
       console.error("Error:", error);
       toastContainer.error(getErrorMessage(error));
     }
-    projectModels?.setDeleteModelActiveRequest(false);
+    projectModels.setDeleteModelActiveRequest(false);
     setDeleteModelDialogOpen(false);
   };
 
@@ -171,7 +171,7 @@ const Models = observer(({ open, close }: Props) => {
       }
       modelCheckpoints.setDeleteModelCheckpointActiveRequset(true);
 
-      await modelCheckpoints?.removeCheckpoint(selectedCheckpointId);
+      await modelCheckpoints.removeCheckpoint(selectedCheckpointId);
       toastContainer.success("Checkpoint deleted!");
     } catch (error) {
       console.error("Error:", error);
@@ -231,7 +231,7 @@ const Models = observer(({ open, close }: Props) => {
           {model.description.length > 0 && (
             <>
               <br />
-              <b>Description:</b> {model?.description}
+              <b>Description:</b> {model.description}
             </>
           )}
         </div>
@@ -304,7 +304,7 @@ const Models = observer(({ open, close }: Props) => {
               noOptionsMessage="No models match your search."
               className={globalClasses.selectionDropdown}
               disabled={
-                isPageBusy() || !projectModels || projectModels?.models.size < 1
+                isPageBusy() || !projectModels || projectModels.models.size < 1
               }
             />
             <Tooltip

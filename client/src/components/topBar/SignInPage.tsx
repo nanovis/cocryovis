@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import {
   Button,
   Input,
@@ -78,7 +78,7 @@ const SignInPage = observer(({ onSignIn }: Props) => {
   const [errorMessage, setErrorMessage] = useState("");
   const classes = useStyles();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     uiState.setIsActive(true);
@@ -106,7 +106,13 @@ const SignInPage = observer(({ onSignIn }: Props) => {
   return (
     <div className={classes.container}>
       <h2 className={classes.signInHeader}>Sign In</h2>
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(event) =>
+          {
+            handleSubmit(event).catch(console.error);
+          }
+        }
+      >
         <div className={classes.inputContainer}>
           <label className={classes.label} htmlFor="username">
             Username:

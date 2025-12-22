@@ -151,7 +151,9 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
           <Button
             style={{ marginLeft: "50px" }}
             appearance="subtle"
-            onClick={() => user.userProjects.loadDemoProject()}
+            onClick={() => {
+              user.userProjects.loadDemoProject().catch(console.error);
+            }}
             disabled={rootStore.pageDisabled}
           >
             Open Demo Project
@@ -188,7 +190,12 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
                 </Tooltip>
               )}
             </div>
-            <Button appearance="subtle" onClick={logout}>
+            <Button
+              appearance="subtle"
+              onClick={() => {
+                logout().catch(console.error);
+              }}
+            >
               Logout
             </Button>
             <Button appearance="subtle" onClick={uiState.toggleOpenProfilePage}>
@@ -238,7 +245,9 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
       <CreateProjectDialog
         open={isCreateDialogOpen}
         onClose={handleCloseCreateDialog}
-        onConfirm={handleConfirmCreate}
+        onConfirm={() => {
+          handleConfirmCreate().catch(console.error);
+        }}
         projectName={projectName}
         setProjectName={setProjectName}
         projectDescription={projectDescription}

@@ -35,9 +35,9 @@ const DEFAULT_LOADING_PARAMETERS: ToastOptions = {
 } as const;
 
 export default class ToastContainer {
-  private toastId: ToastId;
-  private isActive: boolean = false;
-  private static currentId: number = 0;
+  private readonly toastId: ToastId;
+  private isActive = false;
+  private static currentId = 0;
   private static toastFunctions?: ToastFunctions;
 
   constructor() {

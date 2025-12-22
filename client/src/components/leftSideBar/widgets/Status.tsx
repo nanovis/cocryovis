@@ -66,7 +66,7 @@ const Status = observer(({ open, close }: Props) => {
   const classes = useStyles();
   const globalClasses = globalStyles();
 
-  const status = user?.status;
+  const status = user.status;
 
   const HistoryIcon = bundleIcon(HistoryFilled, HistoryRegular);
 

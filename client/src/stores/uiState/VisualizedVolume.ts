@@ -51,7 +51,7 @@ async function loadSparseLabelVolumesIntoAnnotations(
     const rawFileContent = await rawFile.arrayBuffer();
     const data = new Uint8Array(rawFileContent);
     const fileName = `SparseLabeledVolumeData-${sparseVolume.id}`;
-    window.WasmModule?.FS.writeFile(fileName, data);
+    window.WasmModule.FS.writeFile(fileName, data);
     volumeNames.push_back(fileName);
 
     let r = 1;
@@ -65,19 +65,19 @@ async function loadSparseLabelVolumesIntoAnnotations(
       b = color.b / 255;
     }
     volume.setShownAnnotation(i, true);
-    window.WasmModule?.set_annotation_color(i, r, g, b);
+    window.WasmModule.set_annotation_color(i, r, g, b);
   }
   for (let i = sparseVolumeArray.length; i < 4; i++) {
     const color = Utils.fromHexColor(volume.sparseLabelColors[i]);
     volume.setShownAnnotation(i, false);
-    window.WasmModule?.set_annotation_color(
+    window.WasmModule.set_annotation_color(
       i,
       color.r / 255,
       color.g / 255,
       color.b / 255
     );
   }
-  window.WasmModule?.load_volume_into_annotation(volumeNames);
+  window.WasmModule.load_volume_into_annotation(volumeNames);
 }
 
 export const VisualizedVolume = types
@@ -134,11 +134,11 @@ export const VisualizedVolume = types
       if (!window.WasmModule) {
         return;
       }
-      window.WasmModule?.chooseClippingPlane(parseInt(self.clippingPlane));
-      window.WasmModule?.set_fullscreen_mode(self.fullscreen);
-      window.WasmModule?.show_raw_data_on_clipping(self.showRawClippingPlane);
-      window.WasmModule?.set_annotation_mode(!self.eraseMode);
-      window.WasmModule?.enable_annotation_mode(false);
+      window.WasmModule.chooseClippingPlane(parseInt(self.clippingPlane));
+      window.WasmModule.set_fullscreen_mode(self.fullscreen);
+      window.WasmModule.show_raw_data_on_clipping(self.showRawClippingPlane);
+      window.WasmModule.set_annotation_mode(!self.eraseMode);
+      window.WasmModule.enable_annotation_mode(false);
     },
     setFullscreen(enable: boolean) {
       if (!window.WasmModule) {
@@ -148,7 +148,7 @@ export const VisualizedVolume = types
         return;
       }
       self.fullscreen = enable;
-      window.WasmModule?.set_fullscreen_mode(enable);
+      window.WasmModule.set_fullscreen_mode(enable);
     },
     setShowRawClippingPlane(enable: boolean) {
       if (!window.WasmModule) {
@@ -158,7 +158,7 @@ export const VisualizedVolume = types
         return;
       }
       self.showRawClippingPlane = enable;
-      window.WasmModule?.show_raw_data_on_clipping(enable);
+      window.WasmModule.show_raw_data_on_clipping(enable);
     },
     setEraseMode(enable: boolean) {
       if (!window.WasmModule) {
@@ -169,7 +169,7 @@ export const VisualizedVolume = types
       }
 
       self.eraseMode = enable;
-      window.WasmModule?.set_annotation_mode(!enable);
+      window.WasmModule.set_annotation_mode(!enable);
     },
   }))
   .actions((self) => ({
@@ -178,7 +178,7 @@ export const VisualizedVolume = types
         return;
       }
       self.manualLabelIndex = index;
-      window.WasmModule?.set_annotation_channel(index);
+      window.WasmModule.set_annotation_channel(index);
       self.volume?.setShownAnnotation(index, true);
     },
     setClippingPlane(clippingPlane: "0" | "1" | "2" | "3" | "4") {
@@ -186,7 +186,7 @@ export const VisualizedVolume = types
         return;
       }
       self.clippingPlane = clippingPlane;
-      window.WasmModule?.chooseClippingPlane(parseInt(clippingPlane));
+      window.WasmModule.chooseClippingPlane(parseInt(clippingPlane));
       if (self.fullscreen) {
         self.setFullscreen(false);
       }
@@ -200,7 +200,7 @@ export const VisualizedVolume = types
         return;
       }
       self.saveAsNew[self.manualLabelIndex] = true;
-      window.WasmModule?.clear_annotations(self.manualLabelIndex);
+      window.WasmModule.clear_annotations(self.manualLabelIndex);
     },
   }))
   .actions((self) => ({
@@ -237,7 +237,7 @@ export const VisualizedVolume = types
         }
 
         self.labelEditingMode = enable;
-        window.WasmModule?.enable_annotation_mode(true);
+        window.WasmModule.enable_annotation_mode(true);
         self.setManualLabelIndex(0);
 
         if (self.clippingPlane === "0") {

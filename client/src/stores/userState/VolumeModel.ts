@@ -12,7 +12,7 @@ import {
 } from "./PseudoVolumeModel";
 import { VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
-import { Vector3, VolumeSettings } from "../../utils/VolumeSettings";
+import { VolumeSettings } from "../../utils/VolumeSettings";
 import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import z from "zod";
 import {
@@ -97,7 +97,7 @@ export const Volume = types
     addPseudoVolumes(volumes: PseudoVolumeSnapshotIn[] | undefined) {
       if (!volumes) return;
 
-      volumes?.forEach((volume) => {
+      volumes.forEach((volume) => {
         self.pseudoVolumes.set(volume.id, volume);
       });
     },
@@ -130,7 +130,7 @@ export const Volume = types
       if (!volumes) return;
 
       self.sparseVolumes.clear();
-      volumes?.forEach((volume) => {
+      volumes.forEach((volume) => {
         self.addSparseVolume(volume);
       });
     },
@@ -148,13 +148,19 @@ export const Volume = types
         yield createFromFiles("RawVolumeData", self.id, {
           rawFile,
           volumeSettings: {
-            file: settings.file as string,
-            size: settings.size as Vector3,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            file: settings.file!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            size: settings.size!,
             ratio: settings.ratio,
-            bytesPerVoxel: settings.bytesPerVoxel as number,
-            usedBits: settings.usedBits as number,
-            isLittleEndian: settings.isLittleEndian as boolean,
-            isSigned: settings.isSigned as boolean,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            bytesPerVoxel: settings.bytesPerVoxel!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            usedBits: settings.usedBits!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            isLittleEndian: settings.isLittleEndian!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            isSigned: settings.isSigned!,
             skipBytes: settings.skipBytes,
             addValue: settings.addValue,
           },
@@ -165,7 +171,7 @@ export const Volume = types
       self.setRawVolume(rawData);
     }),
     uploadMrcVolume: flow(function* uploadMrcVolume(mrcFile: File) {
-      if (!mrcFile || !mrcFile.name.endsWith(".mrc")) {
+      if (!mrcFile.name.endsWith(".mrc")) {
         const toastContainer = new ToastContainer();
         toastContainer.error(`No MRC file selected.`);
         throw new Error("Too many files selected.");
@@ -202,13 +208,19 @@ export const Volume = types
           fileType: fileType,
           volumeSettings: volumeSettings
             ? {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 file: volumeSettings.file!,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 size: volumeSettings.size!,
-                ratio: volumeSettings.ratio!,
+                ratio: volumeSettings.ratio,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 bytesPerVoxel: volumeSettings.bytesPerVoxel! as 1 | 2 | 4 | 8,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 usedBits: volumeSettings.usedBits! as 8 | 16 | 32 | 64,
                 skipBytes: volumeSettings.skipBytes,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 isLittleEndian: volumeSettings.isLittleEndian!,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 isSigned: volumeSettings.isSigned!,
                 addValue: volumeSettings.addValue,
               }
@@ -225,6 +237,7 @@ export const Volume = types
       parsedSettings: any,
       fileData: ArrayBuffer
     ) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
       const rawFile = new File([fileData], parsedSettings.file, {
         type: "application/octet-stream",
       });
@@ -263,7 +276,7 @@ export const Volume = types
     uploadPseudoLabelVolume: flow(function* uploadPseudoLabelVolume(
       files: FileList
     ) {
-      const fileMap = yield Utils.unpackAndcreateFileMap(files);
+      const fileMap: Utils.FileMap = yield Utils.unpackAndcreateFileMap(files);
       if (!isAlive(self)) {
         return;
       }
@@ -291,7 +304,7 @@ export const Volume = types
 
       if (dataType == "SparseLabeledVolumeData") {
         self.sparseVolumes.delete(dataId.toString());
-      } else if (dataType == "PseudoLabeledVolumeData") {
+      } else {
         self.pseudoVolumes.delete(dataId.toString());
       }
     }),
@@ -377,7 +390,7 @@ export const ProjectVolumes = types
         name: volume.name,
         description: volume.description,
         creatorId: volume.creatorId,
-        rawData: volume?.rawData ?? null,
+        rawData: volume.rawData ?? null,
         sparseVolumes: {},
         pseudoVolumes: {},
         volumeResults: { volumeId: volume.id },

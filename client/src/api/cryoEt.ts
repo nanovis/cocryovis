@@ -14,7 +14,7 @@ export async function queueTiltSeriesReconstruction(request: FormData) {
 
 export async function getTomographyMetadataFromCryoETId(id: number) {
   const response = await Utils.sendApiRequest(
-    `cryoet/${id}`,
+    `cryoet/${id.toString()}`,
     {
       method: "GET",
       credentials: "include",

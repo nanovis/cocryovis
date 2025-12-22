@@ -6,13 +6,22 @@ import {
 } from "@fluentui/react-components";
 
 import { Tooltip } from "@fluentui/react-components";
-import { useEffect, useRef, useState } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+  MouseEvent,
+  KeyboardEvent,
+  FocusEvent,
+  ChangeEvent,
+} from "react";
 import TooltipWrapper from "./TooltipWrapper";
 import { JSX } from "react/jsx-runtime";
 
 interface Props<
   T extends {
-    children: React.ReactNode | string;
+    children: ReactNode | string;
     value: string;
     tooltip?: JSX.Element;
   },
@@ -32,7 +41,7 @@ interface Props<
 
 const ComboboxSearch = <
   T extends {
-    children: React.ReactNode | string;
+    children: ReactNode | string;
     value: string;
     tooltip?: JSX.Element;
   },
@@ -43,13 +52,13 @@ const ComboboxSearch = <
   placeholder,
   noOptionsMessage,
   optionToText = ({ children }) => children as string,
-  renderOption = undefined,
-  className = undefined,
+  renderOption,
+  className,
   showTooltip = true,
   disabled = false,
   clearable = false,
 }: Props<T>) => {
-  const [searchQuery, setSearchQuery] = useState(
+  const [searchQuery, setSearchQuery] = useState(() =>
     selectedOption ? optionToText(selectedOption) : ""
   );
 
@@ -78,15 +87,15 @@ const ComboboxSearch = <
       onOptionSelect(null);
       return;
     }
-    onOptionSelect(data.optionValue ?? null);
+    onOptionSelect(data.optionValue);
     blockClosed.current = true;
   };
 
   const handleOpenChange = (
     _e:
-      | React.MouseEvent<HTMLElement>
-      | React.KeyboardEvent<HTMLElement>
-      | React.FocusEvent<HTMLElement>,
+      | MouseEvent<HTMLElement>
+      | KeyboardEvent<HTMLElement>
+      | FocusEvent<HTMLElement>,
     data: { open: boolean }
   ) => {
     setOpen(data.open);
@@ -98,7 +107,7 @@ const ComboboxSearch = <
     blockClosed.current = false;
   };
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
@@ -121,9 +130,7 @@ const ComboboxSearch = <
         onChange={onChange}
         value={searchQuery}
         positioning={{ autoSize: "width" }}
-        selectedOptions={
-          selectedOption ? [selectedOption.value.toString()] : []
-        }
+        selectedOptions={selectedOption ? [selectedOption.value] : []}
         onOpenChange={handleOpenChange}
         open={open}
         disabled={disabled}
@@ -133,11 +140,14 @@ const ComboboxSearch = <
         clearable={clearable}
       >
         {selectionOptions.map((option) =>
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           showTooltip && option.props.tooltip ? (
             <Tooltip
               hideDelay={0}
               showDelay={0}
+              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
               key={option.props.value}
+              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
               content={option.props.tooltip}
               positioning="after"
               relationship={"description"}
@@ -145,6 +155,7 @@ const ComboboxSearch = <
               {option}
             </Tooltip>
           ) : (
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             <div key={option.props?.value ?? -1}>{option}</div>
           )
         )}

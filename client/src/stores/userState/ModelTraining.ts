@@ -233,8 +233,8 @@ export const ModelTraining = types
   }))
   .views((self) => ({
     get volumes(): VolumeInstance[] {
-      const userProjects = getParentOfType(self, User)?.userProjects;
-      return userProjects?.activeProject?.projectVolumes.volumeArray || [];
+      const userProjects = getParentOfType(self, User).userProjects;
+      return userProjects.activeProject?.projectVolumes.volumeArray || [];
     },
   }))
   .views((self) => ({
@@ -310,8 +310,7 @@ export const ModelTraining = types
 
         if (
           self.checkpointId === undefined &&
-          self.model &&
-          self.model?.modelCheckpoints.checkpoints.size > 0
+          self.model.modelCheckpoints.checkpoints.size > 0
         ) {
           throw new Error(
             "If a checkpoint is not selected, the chosen model must be empty"

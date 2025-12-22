@@ -287,7 +287,7 @@ export interface VectorString {
 }
 
 interface EmbindModule {
-  VectorString: { new (): VectorString };
+  VectorString: new () => VectorString;
   save_annotations(_0: EmbindString): any;
   get_annotations(): string;
   enable_annotation_mode(_0: boolean): void;

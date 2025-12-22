@@ -3,7 +3,7 @@ import z from "zod";
 import { statusSchema } from "#schemas/user-path-schema.mjs";
 import { getStatus } from "../../api/users";
 
-export type TaskHistoryItem = {
+export interface TaskHistoryItem {
   taskStatus: {
     id: number;
   };
@@ -27,9 +27,9 @@ export type TaskHistoryItem = {
   log: {
     path?: string;
   };
-};
+}
 
-export type TaskQueueItem = {
+export interface TaskQueueItem {
   taskStatus: {
     ongoing: boolean;
   };
@@ -45,7 +45,7 @@ export type TaskQueueItem = {
   startTime: {
     date?: Date;
   };
-};
+}
 
 export const TaskHistory = types.model({
   id: types.identifierNumber,

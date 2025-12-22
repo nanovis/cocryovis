@@ -131,7 +131,7 @@ const ProfilePage = observer(() => {
     try {
       user.setDeleteUserActiveRequset(true);
       await usersApi.deleteUser();
-      logout();
+      await logout();
     } catch (error) {
       console.error(error);
       const toastContainer = new ToastContainer();
@@ -200,7 +200,9 @@ const ProfilePage = observer(() => {
         {showChangePage ? (
           <Button
             appearance="primary"
-            onClick={changeUserInformation}
+            onClick={() => {
+              changeUserInformation().catch(console.error);
+            }}
             className={classes.button}
             disabled={allowChange()}
           >
@@ -253,7 +255,9 @@ const ProfilePage = observer(() => {
           setShowDialogPage(false);
         }}
         style={{ width: "500px", height: "" }}
-        onConfirm={deleteUser}
+        onConfirm={() => {
+          deleteUser().catch(console.error);
+        }}
         TitleText={"Are you sure you want to delete your account?"}
         BodyText={
           "This account will be permanently deleted and cannot be recovered!"

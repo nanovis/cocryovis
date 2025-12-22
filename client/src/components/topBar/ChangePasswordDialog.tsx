@@ -59,6 +59,8 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
     setIsMatchingPasswords(false);
     onClose();
   }
+
+  // TODO use new React 19 actions
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     const toastContainer = new ToastContainer();
 
@@ -89,7 +91,11 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
   return (
     <Dialog open={open}>
       <DialogSurface style={{ width: "400px" }}>
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={(event) => {
+            handleSubmit(event).catch(console.error);
+          }}
+        >
           <DialogBody>
             <DialogTitle>Change Password</DialogTitle>
             <DialogContent className={classes.dialogContent}>

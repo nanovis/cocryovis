@@ -19,7 +19,7 @@ import {
   EditFilled,
   EraserFilled,
 } from "@fluentui/react-icons";
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import * as Utils from "../../../utils/Helpers";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";
@@ -119,7 +119,7 @@ interface Props {
 const Visualization = observer(({ open, close }: Props) => {
   const { user, uiState } = useMst();
 
-  const activeProject = user?.userProjects.activeProject;
+  const activeProject = user.userProjects.activeProject;
   const visualizedVolume = uiState.visualizedVolume;
   const volVisSettings = visualizedVolume?.volVisSettings;
   const volumeSettings = visualizedVolume?.volumeSettings;
@@ -149,7 +149,7 @@ const Visualization = observer(({ open, close }: Props) => {
       }
 
       setProcessingSaveAnnotations(true);
-      const annotationData = window.WasmModule?.get_annotations();
+      const annotationData = window.WasmModule.get_annotations();
 
       if (
         visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
@@ -169,7 +169,7 @@ const Visualization = observer(({ open, close }: Props) => {
 
         const annotation = JSON.parse(annotationData);
 
-        updateAnnotations(volume.id, sparseLabelVolume.id, {
+        await updateAnnotations(volume.id, sparseLabelVolume.id, {
           annotation: annotation,
           saveAsNew:
             visualizedVolume.saveAsNew[visualizedVolume.manualLabelIndex],
@@ -192,8 +192,9 @@ const Visualization = observer(({ open, close }: Props) => {
     visualizedVolume?.clearActiveAnnotationChannel();
   };
 
-  const downloadTF = async (volVisSettings: VolVisSettingsInstance) => {
+  const downloadTF = (volVisSettings: VolVisSettingsInstance) => {
     const transferFunction = volVisSettings.transferFunction;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!transferFunction) {
       return;
     }
@@ -228,7 +229,7 @@ const Visualization = observer(({ open, close }: Props) => {
     volVisSettings: VolVisSettingsInstance
   ) => {
     try {
-      await volVisSettings.transferFunction?.handleTFUpload(event.target.files);
+      await volVisSettings.transferFunction.handleTFUpload(event.target.files);
     } catch (error) {
       const toastContainer = new ToastContainer();
       toastContainer.error(`Error: ${error}`);
@@ -241,14 +242,14 @@ const Visualization = observer(({ open, close }: Props) => {
   };
 
   const handleClippingChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement>,
     volumeSettings: VolVisSettingsInstance
   ) => {
     volumeSettings.setClipping(event.target.checked);
   };
 
   const handleChangeRW = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement>,
     upper: boolean
   ) => {
     if (!visualizedVolume?.rawSettings) {
@@ -256,18 +257,18 @@ const Visualization = observer(({ open, close }: Props) => {
     }
 
     if (!upper) {
-      visualizedVolume?.rawSettings.transferFunction.setRampLow(
+      visualizedVolume.rawSettings.transferFunction.setRampLow(
         Number(event.target.value)
       );
     } else {
-      visualizedVolume?.rawSettings.transferFunction.setRampHigh(
+      visualizedVolume.rawSettings.transferFunction.setRampHigh(
         Number(event.target.value)
       );
     }
   };
 
   const handleChangeShadows = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement>,
     upper: boolean
   ) => {
     if (!visualizedVolume?.shadowsSettings) {
@@ -294,7 +295,7 @@ const Visualization = observer(({ open, close }: Props) => {
       actionsDisabled() ||
       processingSaveAnnotations ||
       !visualizedVolume?.canEditLabels ||
-      !visualizedVolume?.labelEditingMode
+      !visualizedVolume.labelEditingMode
     );
   };
 
@@ -374,7 +375,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 <WriteAccessTooltipContentWrapper
                   content={
                     visualizedVolume?.manualLabelIndex
-                      ? `Saves annotations into Manual Label ${visualizedVolume?.manualLabelIndex}.`
+                      ? `Saves annotations into Manual Label ${visualizedVolume.manualLabelIndex}.`
                       : "Saves annotations into selected manual label."
                   }
                   hasWriteAccess={
@@ -484,7 +485,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 min={1}
                 max={200}
                 onChange={(_, data) =>
-                  uiState.setKernelSize(Number(data.value))
+                  uiState.setKernelSize(data.value)
                 }
               />
             </Field>
@@ -532,7 +533,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 }
                 checked={
                   visualizedVolume?.rawSettings !== undefined &&
-                  (visualizedVolume?.showRawClippingPlane ?? false)
+                  (visualizedVolume.showRawClippingPlane)
                 }
                 min={1}
                 max={200}
@@ -702,7 +703,7 @@ const Visualization = observer(({ open, close }: Props) => {
                       className={classes.colorPicker}
                       type="color"
                       value={settingsInstance.transferFunction.color}
-                      onChange={async (event) => {
+                      onChange={(event) => {
                         const color = Utils.fromHexColor(event.target.value);
                         settingsInstance.transferFunction.setColor(
                           color.r,
@@ -719,7 +720,7 @@ const Visualization = observer(({ open, close }: Props) => {
                         max={100}
                         onChange={(_, data) =>
                           settingsInstance.transferFunction.setRampLow(
-                            Number(data.value)
+                            data.value
                           )
                         }
                       />
@@ -732,7 +733,7 @@ const Visualization = observer(({ open, close }: Props) => {
                         max={100}
                         onChange={(_, data) =>
                           settingsInstance.transferFunction.setRampHigh(
-                            Number(data.value)
+                            data.value
                           )
                         }
                       />

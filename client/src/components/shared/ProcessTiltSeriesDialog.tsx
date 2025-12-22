@@ -80,9 +80,9 @@ const useStyles = makeStyles({
 });
 
 export interface TiltSeriesOptions {
-  alignment?: { [key: string]: any };
-  ctf?: { [key: string]: any };
-  motionCorrection?: { [key: string]: any };
+  alignment?: Record<string, any>;
+  ctf?: Record<string, any>;
+  motionCorrection?: Record<string, any>;
   reconstruction: { volume_depth: number; [key: string]: any };
 }
 
@@ -118,7 +118,7 @@ const ProcessTiltSeriesDialog = observer(
     const parseOptions = (
       optionsList: [string, NumberInputField | BooleanInputField][]
     ) => {
-      const options: { [key: string]: any } = {};
+      const options: Record<string, any> = {};
       for (const [key, input] of optionsList) {
         if (!input.isValid()) {
           throw new Error(`Invalid input for ${input.name}`);
@@ -182,15 +182,13 @@ const ProcessTiltSeriesDialog = observer(
     };
 
     const handleFileChange = (event: FileChangeEvent) => {
-      if (!event.target?.files || event.target.files.length < 1) {
+      if (!event.target.files || event.target.files.length < 1) {
         store.setPendingFile(null);
         return;
       }
 
       const file = event.target.files[0];
-      if (file) {
-        store.setPendingFile(file);
-      }
+      store.setPendingFile(file);
     };
 
     return (
@@ -263,8 +261,8 @@ const ProcessTiltSeriesDialog = observer(
                           value={OptionTabs.Alignment}
                           className={mergeClasses(
                             classes.checkboxOptionTab,
-                            store.optionsTab === OptionTabs.Alignment &&
-                              "activeTab"
+                            store.optionsTab ===
+                              (OptionTabs.Alignment as number) && "activeTab"
                           )}
                         >
                           Alignment
@@ -280,7 +278,8 @@ const ProcessTiltSeriesDialog = observer(
                           value={OptionTabs.CTF}
                           className={mergeClasses(
                             classes.checkboxOptionTab,
-                            store.optionsTab === OptionTabs.CTF && "activeTab"
+                            store.optionsTab === (OptionTabs.CTF as number) &&
+                              "activeTab"
                           )}
                         >
                           CTF Estimation
@@ -296,7 +295,8 @@ const ProcessTiltSeriesDialog = observer(
                           value={OptionTabs.MotionCorrection}
                           className={mergeClasses(
                             classes.checkboxOptionTab,
-                            store.optionsTab === OptionTabs.MotionCorrection &&
+                            store.optionsTab ===
+                              (OptionTabs.MotionCorrection as number) &&
                               "activeTab"
                           )}
                         >
@@ -315,26 +315,29 @@ const ProcessTiltSeriesDialog = observer(
                           value={OptionTabs.Reconstruction}
                           className={mergeClasses(
                             classes.nonCheckboxOptionTab,
-                            store.optionsTab === OptionTabs.Reconstruction &&
+                            store.optionsTab ===
+                              (OptionTabs.Reconstruction as number) &&
                               "activeTab"
                           )}
                         >
                           Reconstruction
                         </Tab>
                       </TabList>
-                      {store.optionsTab === OptionTabs.Alignment && (
+                      {store.optionsTab ===
+                        (OptionTabs.Alignment as number) && (
                         <OptionsTab
                           inputList={Object.values(store.alignmentInputs)}
                           disabled={isBusy || !store.alignmentEnabled}
                         />
                       )}
-                      {store.optionsTab === OptionTabs.CTF && (
+                      {store.optionsTab === (OptionTabs.CTF as number) && (
                         <OptionsTab
                           inputList={Object.values(store.ctfInputs)}
                           disabled={isBusy || !store.ctfEnabled}
                         />
                       )}
-                      {store.optionsTab === OptionTabs.MotionCorrection && (
+                      {store.optionsTab ===
+                        (OptionTabs.MotionCorrection as number) && (
                         <OptionsTab
                           inputList={Object.values(
                             store.motionCorrectionInputs
@@ -342,7 +345,8 @@ const ProcessTiltSeriesDialog = observer(
                           disabled={isBusy || !store.motionCorrectionEnabled}
                         />
                       )}
-                      {store.optionsTab === OptionTabs.Reconstruction && (
+                      {store.optionsTab ===
+                        (OptionTabs.Reconstruction as number) && (
                         <OptionsTab
                           inputList={Object.values(store.reconstructionInputs)}
                           disabled={isBusy}
@@ -409,7 +413,9 @@ const ProcessTiltSeriesDialog = observer(
                   isBusy
                 }
                 appearance="primary"
-                onClick={handleSubmit}
+                onClick={() => {
+                  handleSubmit().catch(console.error);
+                }}
               >
                 Submit
               </Button>
@@ -426,7 +432,7 @@ const OptionsTab = observer(
     inputList,
     disabled,
   }: {
-    inputList: Array<NumberInputField | BooleanInputField>;
+    inputList: (NumberInputField | BooleanInputField)[];
     disabled: boolean;
   }) => {
     return (

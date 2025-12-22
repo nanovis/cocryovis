@@ -3,7 +3,7 @@ import { Link, makeStyles, tokens } from "@fluentui/react-components";
 const useStyles = makeStyles({
   dnd: {
     "& path": {
-      fill: `${tokens.colorNeutralForeground2}`,
+      fill: tokens.colorNeutralForeground2,
     },
   },
 });

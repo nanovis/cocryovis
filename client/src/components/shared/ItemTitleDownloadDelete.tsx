@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { MouseEventHandler, useState, KeyboardEvent } from "react";
 import { Button, Input, Label, mergeClasses } from "@fluentui/react-components";
 
 import {
@@ -79,12 +79,12 @@ const useStyles = makeStyles({
 
 interface Props {
   title?: string | undefined;
-  onDownload?: React.MouseEventHandler<HTMLButtonElement>;
-  onVisualize?: React.MouseEventHandler<HTMLButtonElement>;
+  onDownload?: MouseEventHandler<HTMLButtonElement>;
+  onVisualize?: MouseEventHandler<HTMLButtonElement>;
   onDelete?: () => Promise<void>;
-  onEdit?: React.MouseEventHandler<HTMLButtonElement>;
+  onEdit?: MouseEventHandler<HTMLButtonElement>;
   onColorChange?: (color: string) => void;
-  onEnabled?: React.MouseEventHandler<HTMLButtonElement>;
+  onEnabled?: MouseEventHandler<HTMLButtonElement>;
   onEditVolumeData?: (newTitle: string) => Promise<void>;
   onStopEditVolumeData?: () => void;
   onStartEditVolumeData?: () => void;
@@ -103,23 +103,23 @@ interface Props {
 
 const ItemTitleDownloadDelete = observer(
   ({
-    title = undefined,
-    onDownload = undefined,
-    onVisualize = undefined,
-    onDelete = undefined,
-    onEdit = undefined,
-    onColorChange = undefined,
-    onEnabled = undefined,
-    onStartEditVolumeData = undefined,
-    onStopEditVolumeData = undefined,
-    onEditVolumeData = undefined,
+    title,
+    onDownload,
+    onVisualize,
+    onDelete,
+    onEdit,
+    onColorChange,
+    onEnabled,
+    onStartEditVolumeData,
+    onStopEditVolumeData,
+    onEditVolumeData,
     isEditVolumeData = false,
-    color = undefined,
+    color,
     isEnabled = true,
     canChangeColor = false,
     canEdit = false,
-    deleteTitle = undefined,
-    deleteQuestion = undefined,
+    deleteTitle,
+    deleteQuestion,
     inactive = false,
     preventChanges = false,
     highlighted = false,
@@ -132,7 +132,7 @@ const ItemTitleDownloadDelete = observer(
     const [inputValue, setInputValue] = useState(title);
     const [isRenaming, setIsRenaming] = useState(false);
 
-    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
       if (!isEditVolumeData) {
         return;
       }
@@ -190,7 +190,9 @@ const ItemTitleDownloadDelete = observer(
                 onChange={(e) => {
                   setInputValue(e.target.value);
                 }}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(event) => {
+                  handleKeyDown(event).catch(console.error);
+                }}
                 autoFocus
                 disabled={isRenaming}
               />
@@ -318,7 +320,7 @@ const ItemTitleDownloadDelete = observer(
             BodyText={deleteQuestion ?? ""}
             open={isDialogOpen}
             onClose={handleCloseDialog}
-            onConfirm={handleDeleteClick}
+            onConfirm={() => {handleDeleteClick().catch(console.error)}}
             isActive={isActive}
           />
         </div>

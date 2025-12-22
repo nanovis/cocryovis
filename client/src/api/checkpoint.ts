@@ -35,8 +35,7 @@ export async function checkpointToText(id: number) {
     method: "GET",
     credentials: "include",
   });
-  const checkpointTxt = await response.text();
-  return checkpointTxt;
+  return await response.text();
 }
 
 export async function checkpointFileToText(request: FormData) {
@@ -44,6 +43,5 @@ export async function checkpointFileToText(request: FormData) {
     method: "POST",
     body: request,
   });
-  const checkpointTxt = await response.text();
-  return checkpointTxt;
+  return await response.text();
 }

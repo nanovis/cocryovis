@@ -117,12 +117,12 @@ const VolumeUploadDialog = observer(
     const [isFileOver, setIsFileOver] = useState(false);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      onFilesUploaded(event.target.files);
+      onFilesUploaded(event.target.files).catch(console.error);
     };
 
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
-      onFilesUploaded(event.dataTransfer.files);
+      onFilesUploaded(event.dataTransfer.files).catch(console.error);
     };
 
     const onFilesUploaded = async (files: FileList | null) => {
@@ -148,7 +148,7 @@ const VolumeUploadDialog = observer(
           );
 
           if (descriptorFile && fileUploadInputs.isRawUpload) {
-            parseVolumeSettings(descriptorFile);
+            await parseVolumeSettings(descriptorFile);
             return;
           }
 
@@ -172,7 +172,7 @@ const VolumeUploadDialog = observer(
           file.name.toLowerCase().endsWith(".json")
         );
         if (descriptorFile) {
-          parseVolumeSettings(descriptorFile);
+          await parseVolumeSettings(descriptorFile);
         }
       } catch (error) {
         console.warn("Error parsing descriptor file:", error);
@@ -237,7 +237,7 @@ const VolumeUploadDialog = observer(
 
     const fetchCryoETMetadata = async () => {
       uploadDialogStore.setIsBusy(true);
-      cryoETUploadInputs.fetchCryoETMetadata();
+      await cryoETUploadInputs.fetchCryoETMetadata();
       uploadDialogStore.setIsBusy(false);
     };
 
@@ -282,13 +282,13 @@ const VolumeUploadDialog = observer(
         const settings = urlUploadInputs.toVolumeSettings();
         await onUrlConfirm(
           urlUploadInputs.url,
-          urlUploadInputs.fileType as FileTypeOptions,
+          urlUploadInputs.fileType,
           settings
         );
       } else {
         await onUrlConfirm(
           urlUploadInputs.url,
-          urlUploadInputs.fileType as FileTypeOptions
+          urlUploadInputs.fileType
         );
       }
     };

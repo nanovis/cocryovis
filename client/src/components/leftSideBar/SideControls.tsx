@@ -39,12 +39,12 @@ const SideControls = observer(() => {
   const globalClasses = globalStyles();
 
   const { user, uiState, pageDisabled } = useMst();
-  const activeProjectId = user?.userProjects.activeProjectId;
+  const activeProjectId = user.userProjects.activeProjectId;
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleConfirmDelete = async () => {
-    const activeProjectId = user?.userProjects.activeProjectId;
+    const activeProjectId = user.userProjects.activeProjectId;
     const toastContainer = new ToastContainer();
 
     if (!activeProjectId) {
@@ -75,7 +75,7 @@ const SideControls = observer(() => {
             title={"Data"}
             labelPositioning={"after"}
             LabelIcon={Cube24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.Volume}
+            isOpen={uiState.openLeftWidget === (WidgetIndices.Volume as number)}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Volume)}
             disabled={activeProjectId === undefined || pageDisabled}
           />
@@ -84,7 +84,7 @@ const SideControls = observer(() => {
             title={"Neural Models"}
             labelPositioning={"after"}
             LabelIcon={BrainCircuit24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.Models}
+            isOpen={uiState.openLeftWidget === (WidgetIndices.Models as number)}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Models)}
             disabled={activeProjectId === undefined || pageDisabled}
           />
@@ -93,7 +93,9 @@ const SideControls = observer(() => {
             title={"Training and Inference"}
             labelPositioning={"after"}
             LabelIcon={Molecule24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.NanoOtzi}
+            isOpen={
+              uiState.openLeftWidget === (WidgetIndices.NanoOtzi as number)
+            }
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.NanoOtzi)}
             disabled={activeProjectId === undefined || pageDisabled}
           />
@@ -102,7 +104,7 @@ const SideControls = observer(() => {
             title={"Status"}
             labelPositioning={"after"}
             LabelIcon={Status24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.Status}
+            isOpen={uiState.openLeftWidget === (WidgetIndices.Status as number)}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Status)}
             disabled={user.isGuest || pageDisabled}
           />
@@ -111,7 +113,7 @@ const SideControls = observer(() => {
             title={"Data"}
             labelPositioning={"after"}
             LabelIcon={DesktopTower24Regular}
-            isOpen={uiState.openLeftWidget === WidgetIndices.Local}
+            isOpen={uiState.openLeftWidget === (WidgetIndices.Local as number)}
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Local)}
             disabled={user.isGuest || pageDisabled}
           />
@@ -139,23 +141,23 @@ const SideControls = observer(() => {
       </div>
 
       <Volume
-        open={uiState.openLeftWidget === WidgetIndices.Volume}
+        open={uiState.openLeftWidget === (WidgetIndices.Volume as number)}
         close={uiState.closeLeftHandWidgets}
       />
       <Models
-        open={uiState.openLeftWidget === WidgetIndices.Models}
+        open={uiState.openLeftWidget === (WidgetIndices.Models as number)}
         close={uiState.closeLeftHandWidgets}
       />
       <NanoOtzi
-        open={uiState.openLeftWidget === WidgetIndices.NanoOtzi}
+        open={uiState.openLeftWidget === (WidgetIndices.NanoOtzi as number)}
         close={uiState.closeLeftHandWidgets}
       />
       <Status
-        open={uiState.openLeftWidget === WidgetIndices.Status}
+        open={uiState.openLeftWidget === (WidgetIndices.Status as number)}
         close={uiState.closeLeftHandWidgets}
       />
       <Local
-        open={uiState.openLeftWidget === WidgetIndices.Local}
+        open={uiState.openLeftWidget === (WidgetIndices.Local as number)}
         close={uiState.closeLeftHandWidgets}
       />
 
@@ -166,7 +168,7 @@ const SideControls = observer(() => {
         open={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        isActive={!!user.userProjects.projectDeleteActiveRequest}
+        isActive={user.userProjects.projectDeleteActiveRequest}
       />
     </>
   );

@@ -12,8 +12,6 @@ import * as ProjectApi from "../../api/projects";
 import { getDemo } from "../../api/demo";
 import ToastContainer from "../../utils/ToastContainer";
 
-type ProjectDB = z.infer<typeof projectSchemaDeepRes>;
-
 export const Project = types
   .model({
     id: types.identifierNumber,
@@ -84,10 +82,6 @@ export const UserProjects = types
           return;
         }
 
-        if (!project) {
-          throw new Error("Project not found");
-        }
-
         self.projects.set(project.id, {
           ...project,
           projectModels: { projectId: project.id },
@@ -117,7 +111,7 @@ export const UserProjects = types
 
         self.projects.clear();
         let foundProjectId = false;
-        projects.forEach((project: ProjectDB) => {
+        for (const project of projects) {
           self.projects.set(project.id, {
             ...project,
             projectModels: { projectId: project.id },
@@ -132,7 +126,7 @@ export const UserProjects = types
           if (self.activeProjectId == project.id) {
             foundProjectId = true;
           }
-        });
+        }
         if (!foundProjectId) {
           self.activeProjectId = undefined;
         }

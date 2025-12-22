@@ -35,7 +35,7 @@ export const ModelCheckpoints = types
     },
     setSelectedCheckpointId(checkpointId: number | undefined) {
       if (checkpointId && !self.checkpoints.has(checkpointId)) {
-        throw new Error(`Checkpoint with id ${checkpointId} not found`);
+        throw new Error(`Checkpoint with id ${checkpointId.toString()} not found`);
       }
       self.selectedCheckpointId = checkpointId;
     },
@@ -54,7 +54,7 @@ export const ModelCheckpoints = types
     },
     setSelectedCheckpointId(checkpointId: number | undefined) {
       if (checkpointId && !self.checkpoints.has(checkpointId)) {
-        throw new Error(`Checkpoint with id ${checkpointId} not found`);
+        throw new Error(`Checkpoint with id ${checkpointId.toString()} not found`);
       }
       self.selectedCheckpointId = checkpointId;
     },
@@ -75,12 +75,12 @@ export const ModelCheckpoints = types
       }
 
       const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append("files", files[i]);
+      for (const file of files) {
+        formData.append("files", file);
       }
 
-      const checkpoints: z.infer<typeof checkpointSchemaArray> =
-        yield checkpointApi.uploadCheckpoints(self.modelId, formData);
+      const checkpoints =
+        (yield checkpointApi.uploadCheckpoints(self.modelId, formData)) as z.infer<typeof checkpointSchemaArray>;
       if (!isAlive(self)) {
         return;
       }
@@ -109,8 +109,9 @@ export const ModelCheckpoints = types
   }))
   .actions((self) => ({
     refreshCheckpoints: flow(function* refreshCheckpoints() {
-      const checkpoints: z.infer<typeof checkpointSchemaArray> =
-        yield checkpointApi.getCheckpointsFromModel(self.modelId);
+      const checkpoints = (yield checkpointApi.getCheckpointsFromModel(
+        self.modelId
+      )) as z.infer<typeof checkpointSchemaArray>;
       if (!isAlive(self)) {
         return;
       }

@@ -69,6 +69,7 @@ import { getResultData } from "../../../api/results";
 import { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
 import ToastContainer from "../../../utils/ToastContainer";
 import EditDialog from "./elements/EditDialog";
+import { JSX } from "react/jsx-runtime";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -115,7 +116,7 @@ interface Props {
 const Volume = observer(({ open, close }: Props) => {
   const { user, uiState } = useMst();
 
-  const activeProject = user?.userProjects.activeProject;
+  const activeProject = user.userProjects.activeProject;
   const projectVolumes = activeProject?.projectVolumes;
   const selectedVolumeId = projectVolumes?.selectedVolumeId;
   const selectedVolume = projectVolumes?.selectedVolume;
@@ -194,7 +195,7 @@ const Volume = observer(({ open, close }: Props) => {
     }
   };
 
-  const handleVolumeSelect = async (value: string | null) => {
+  const handleVolumeSelect = (value: string | null) => {
     try {
       if (!value) {
         return;
@@ -342,10 +343,6 @@ const Volume = observer(({ open, close }: Props) => {
       setIsUploadingData(true);
 
       if (serverSide) {
-        if (!file) {
-          throw new Error("No file found.");
-        }
-
         if (!file.name.endsWith(".ali") && !file.name.endsWith(".mrc")) {
           throw new Error("Wrong file format.");
         }
@@ -359,7 +356,7 @@ const Volume = observer(({ open, close }: Props) => {
             options: options,
           })
         );
-        queueTiltSeriesReconstruction(formData);
+        await queueTiltSeriesReconstruction(formData);
         toastContainer.success(
           "Tilt series reconstruction successfuly queued!"
         );
@@ -442,7 +439,7 @@ const Volume = observer(({ open, close }: Props) => {
         throw new Error("WasmModule is not loaded.");
       }
 
-      const volumeVisualizationSettingsArray: Array<VolVisSettingsSnapshotIn> =
+      const volumeVisualizationSettingsArray: VolVisSettingsSnapshotIn[] =
         [];
 
       const vizualizedVolume: VisualizedVolumeSnapshotIn = {
@@ -499,6 +496,7 @@ const Volume = observer(({ open, close }: Props) => {
         const settings = JSON.parse(settingsData);
         const settingsFileName = `settings_${i}.json`;
         const rawFileName = `raw_${i}.raw`;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         settings.file = rawFileName;
 
         const rawFileContent = await rawFile.arrayBuffer();
@@ -535,14 +533,15 @@ const Volume = observer(({ open, close }: Props) => {
           },
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         settings.transferFunction = tfName;
 
-        window.WasmModule?.FS.writeFile(rawFileName, data);
-        window.WasmModule?.FS.writeFile(
+        window.WasmModule.FS.writeFile(rawFileName, data);
+        window.WasmModule.FS.writeFile(
           settingsFileName,
           JSON.stringify(settings)
         );
-        window.WasmModule?.FS.writeFile(
+        window.WasmModule.FS.writeFile(
           tfName,
           JSON.stringify({
             rampLow: volumeVisualizationSettings.transferFunction.rampLow,
@@ -563,8 +562,8 @@ const Volume = observer(({ open, close }: Props) => {
 
       await Utils.waitForNextFrame();
 
-      window.WasmModule?.FS.writeFile("config.json", JSON.stringify(config));
-      window.WasmModule?.open_volume();
+      window.WasmModule.FS.writeFile("config.json", JSON.stringify(config));
+      window.WasmModule.open_volume();
       uiState.setVizualizedVolume(vizualizedVolume);
 
       toastContainer.success(`${type} label volumes visualized.`);
@@ -681,7 +680,7 @@ const Volume = observer(({ open, close }: Props) => {
       selectedVolume?.setVolumeDataConfirmDeleteActiveRequest(true);
       await selectedVolume?.deleteLabeledVolume(dataType, dataId);
       if (dataType === "SparseLabeledVolumeData") {
-        visualizedVolume?.setLabelEditingMode(false);
+        await visualizedVolume?.setLabelEditingMode(false);
       }
       toastContainer.success("Volume data deleted.");
     } catch (error) {
@@ -718,7 +717,7 @@ const Volume = observer(({ open, close }: Props) => {
     selectedVolume !== undefined &&
     visualizedVolume.volume?.id === selectedVolume.id;
 
-  const handleAnnotationEdit = async (index: number) => {
+  const handleAnnotationEdit = (index: number) => {
     if (!canEditAnnotations) {
       return;
     }
@@ -812,7 +811,7 @@ const Volume = observer(({ open, close }: Props) => {
           {volume.description.length > 0 && (
             <>
               <br />
-              <b>Description:</b> {volume?.description}
+              <b>Description:</b> {volume.description}
             </>
           )}
         </div>
@@ -821,11 +820,11 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const volumeSelectionList = () => {
-    const selectionList: Array<{
+    const selectionList: {
       children: string;
       value: string;
       tooltip: JSX.Element;
-    }> = [];
+    }[] = [];
     projectVolumes?.volumes.forEach((volume) =>
       selectionList.push(volumeSelectionProperties(volume))
     );
@@ -841,18 +840,18 @@ const Volume = observer(({ open, close }: Props) => {
           <b>ID:</b> {result.id}
           <br />
           <b>Checkpoint:</b>{" "}
-          {Utils.getFileNameFromPath(result?.checkpoint?.filePath)}
+          {Utils.getFileNameFromPath(result.checkpoint?.filePath)}
         </div>
       ),
     };
   };
 
   const resultSelectionList = () => {
-    const selectionList: Array<{
+    const selectionList: {
       children: string;
       value: string;
       tooltip: JSX.Element;
-    }> = [];
+    }[] = [];
     results?.forEach((result) =>
       selectionList.push(resultSelectionProperties(result))
     );
@@ -924,7 +923,7 @@ const Volume = observer(({ open, close }: Props) => {
               disabled={
                 isPageBusy() ||
                 !projectVolumes ||
-                projectVolumes?.volumes.size === 0
+                projectVolumes.volumes.size === 0
               }
             />
             <Tooltip
@@ -1210,12 +1209,12 @@ const Volume = observer(({ open, close }: Props) => {
                 />
                 <Switch
                   checked={visualizedVolume?.labelEditingMode ?? false}
-                  onChange={(_, data) => {
+                  onChange={async (_, data) => {
                     if (!visualizedVolume) {
                       return;
                     }
-                    visualizedVolume.setLabelEditingMode(
-                      data?.checked ?? false
+                    await visualizedVolume.setLabelEditingMode(
+                      data.checked
                     );
                   }}
                   disabled={!canActivateEditingMode()}
@@ -1240,7 +1239,7 @@ const Volume = observer(({ open, close }: Props) => {
                 icon={<Add24Regular />}
                 disabled={
                   !selectedVolume ||
-                  selectedVolume?.sparseVolumes.size >= 4 ||
+                  selectedVolume.sparseVolumes.size >= 4 ||
                   !activeProject?.hasWriteAccess
                 }
                 onClick={() => sparseLabelFileRef.current?.click()}
@@ -1260,12 +1259,12 @@ const Volume = observer(({ open, close }: Props) => {
           {Array.from({ length: CONFIG.maxLabels }, (_v, index) => (
             <div key={index}>
               {selectedVolume &&
-              index < selectedVolume?.sparseVolumeArray.length ? (
+              index < selectedVolume.sparseVolumeArray.length ? (
                 <ItemTitleDownloadDelete
                   title={selectedVolume.sparseVolumeArray[index].name}
                   highlighted={
                     visualizedVolume?.labelEditingMode &&
-                    visualizedVolume?.manualLabelIndex === index
+                    visualizedVolume.manualLabelIndex === index
                   }
                   onDownload={() =>
                     handleDownloadVolumeData(
@@ -1306,7 +1305,7 @@ const Volume = observer(({ open, close }: Props) => {
                     selectedVolume.toggleShownAnnotation(index);
                   }}
                   isActive={
-                    selectedVolume?.volumeDataConfirmDeleteActiveRequest
+                    selectedVolume.volumeDataConfirmDeleteActiveRequest
                   }
                   onEditVolumeData={async (newTitle) => {
                     await handleRenameSparseData(
@@ -1332,7 +1331,7 @@ const Volume = observer(({ open, close }: Props) => {
                   inactive={true}
                   highlighted={
                     visualizedVolume?.labelEditingMode &&
-                    visualizedVolume?.manualLabelIndex === index
+                    visualizedVolume.manualLabelIndex === index
                   }
                   onEdit={() => handleAnnotationEdit(index)}
                   canEdit={
@@ -1389,7 +1388,7 @@ const Volume = observer(({ open, close }: Props) => {
                     <br />
                     <div>
                       {!selectedVolume ||
-                      selectedVolume?.sparseVolumeArray.length < 2 ? (
+                      selectedVolume.sparseVolumeArray.length < 2 ? (
                         <ErrorCircle16Filled
                           className={globalClasses.failIcon}
                         />
@@ -1427,9 +1426,9 @@ const Volume = observer(({ open, close }: Props) => {
                 icon={<Stack24Regular />}
                 disabled={
                   !selectedVolume ||
-                  selectedVolume?.sparseVolumeArray.length < 2 ||
-                  selectedVolume?.sparseVolumeArray.length +
-                    selectedVolume?.pseudoVolumeArray.length >
+                  selectedVolume.sparseVolumeArray.length < 2 ||
+                  selectedVolume.sparseVolumeArray.length +
+                    selectedVolume.pseudoVolumeArray.length >
                     4 ||
                   !activeProject?.hasWriteAccess
                 }
@@ -1502,7 +1501,7 @@ const Volume = observer(({ open, close }: Props) => {
                 icon={<Add24Regular />}
                 disabled={
                   !selectedVolume ||
-                  selectedVolume?.pseudoVolumeArray.length >= 4 ||
+                  selectedVolume.pseudoVolumeArray.length >= 4 ||
                   !activeProject?.hasWriteAccess
                 }
                 onClick={() => pseudoLabelFileRef.current?.click()}
@@ -1522,33 +1521,33 @@ const Volume = observer(({ open, close }: Props) => {
           {Array.from({ length: CONFIG.maxLabels }, (_v, index) => (
             <div key={index}>
               {selectedVolume &&
-              index < selectedVolume?.pseudoVolumeArray.length ? (
+              index < selectedVolume.pseudoVolumeArray.length ? (
                 <ItemTitleDownloadDelete
-                  title={selectedVolume?.pseudoVolumeArray[index].name}
+                  title={selectedVolume.pseudoVolumeArray[index].name}
                   onDownload={() =>
                     handleDownloadVolumeData(
                       "PseudoLabeledVolumeData",
-                      selectedVolume?.pseudoVolumeArray[index].id
+                      selectedVolume.pseudoVolumeArray[index].id
                     )
                   }
                   onVisualize={() =>
                     handleVisualisationRequest(
                       "PseudoLabeledVolumeData",
-                      selectedVolume?.pseudoVolumeArray[index].id,
-                      selectedVolume?.pseudoVolumeArray[index]
+                      selectedVolume.pseudoVolumeArray[index].id,
+                      selectedVolume.pseudoVolumeArray[index]
                     )
                   }
                   onDelete={() =>
                     handleVolumeDataConfirmDelete(
                       "PseudoLabeledVolumeData",
-                      selectedVolume?.pseudoVolumeArray[index].id
+                      selectedVolume.pseudoVolumeArray[index].id
                     )
                   }
-                  deleteQuestion={selectedVolume?.pseudoVolumeArray[index].name}
+                  deleteQuestion={selectedVolume.pseudoVolumeArray[index].name}
                   deleteTitle={"Remove Pseudo Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
                   isActive={
-                    !!selectedVolume?.volumeDataConfirmDeleteActiveRequest
+                    selectedVolume.volumeDataConfirmDeleteActiveRequest
                   }
                   onEditVolumeData={async (newTitle) => {
                     await handleRenamePseudoData(

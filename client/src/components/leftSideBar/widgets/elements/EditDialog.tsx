@@ -101,7 +101,7 @@ const EditDialog = ({
                 </Button>
                 <Button
                   appearance="primary"
-                  onClick={handleEdit}
+                  onClick={() => {handleEdit().catch(console.error)}}
                   disabled={inProgress || !open}
                 >
                   Update

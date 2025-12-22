@@ -16,7 +16,7 @@ const TooltipWrapper = ({
   hideDelay = 250,
   positioning = "after-top",
   relationship = "label",
-  visible = undefined,
+  visible,
 }: Props) => {
   return content ? (
     <Tooltip

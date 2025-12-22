@@ -36,7 +36,7 @@ interface Props {
 
 const OpenProjectDialog = observer(({ open, onClose }: Props) => {
   const { user } = useMst();
-  const userProjects = user?.userProjects;
+  const userProjects = user.userProjects;
 
   const classes = useStyles();
   const globalClasses = globalStyles();
@@ -53,7 +53,7 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
     try {
       if (!selectedProjectId) return;
 
-      userProjects?.setActiveProject(selectedProjectId);
+      await userProjects.setActiveProject(selectedProjectId);
 
       onClose();
     } catch (error) {
@@ -74,7 +74,7 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
           {project.description.length > 0 && (
             <>
               <br />
-              <b>Description:</b> {project?.description}
+              <b>Description:</b> {project.description}
             </>
           )}
         </div>
@@ -83,24 +83,24 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
   };
 
   const createSelectionList = () => {
-    const selectionList: Array<{
+    const selectionList: {
       children: string;
       value: string;
       ownerId: number;
       tooltip: JSX.Element;
-    }> = [];
-    userProjects?.projects.forEach((project) =>
+    }[] = [];
+    userProjects.projects.forEach((project) =>
       selectionList.push(projectSelectionProperties(project))
     );
     return selectionList;
   };
 
   const getSelectedOption = () => {
-    if (userProjects?.activeProject) {
+    if (userProjects.activeProject) {
       return projectSelectionProperties(userProjects.activeProject);
     }
     if (selectedProjectId !== undefined) {
-      const project = userProjects?.projects.get(selectedProjectId);
+      const project = userProjects.projects.get(selectedProjectId);
       if (project) {
         return projectSelectionProperties(project);
       }
@@ -140,7 +140,7 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
                 globalClasses.selectionDropdown,
                 classes.combobox
               )}
-              disabled={userProjects?.projects.size === 0}
+              disabled={userProjects.projects.size === 0}
               optionToText={({ children }) => children}
               renderOption={({ children, value, ownerId }) => (
                 <Option
@@ -150,7 +150,7 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
                   style={{ display: "flex" }}
                 >
                   {children}
-                  {user?.id !== ownerId && (
+                  {user.id !== ownerId && (
                     <People16Filled
                       style={{
                         marginLeft: "5px",
@@ -178,7 +178,9 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
                   />
                 }
                 disabled={user.userProjects.fetchProjectsActiveRequest}
-                onClick={handleRefreshProjects}
+                onClick={() => {
+                  handleRefreshProjects().catch(console.error);
+                }}
               />
             </Tooltip>
           </DialogContent>
@@ -197,7 +199,9 @@ const OpenProjectDialog = observer(({ open, onClose }: Props) => {
                 user.userProjects.fetchProjectsActiveRequest
               }
               appearance="primary"
-              onClick={handleSelectProject}
+              onClick={() => {
+                handleSelectProject().catch(console.error);
+              }}
             >
               Select
             </Button>

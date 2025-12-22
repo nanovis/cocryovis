@@ -45,6 +45,7 @@ export async function convertMRCToRaw(
     // Read the data stream and collect the chunks.
     const chunks: BlobPart[] = [];
     const reader = dataBlob.stream().getReader();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -63,6 +64,7 @@ export async function convertMRCToRaw(
     {
       const reader = dataBlob.stream().getReader();
       let leftover = new Uint8Array(0);
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -77,6 +79,7 @@ export async function convertMRCToRaw(
             combined.byteOffset,
             completeLength / 4
           );
+          // eslint-disable-next-line @typescript-eslint/prefer-for-of
           for (let i = 0; i < floatChunk.length; i++) {
             const v = floatChunk[i];
             if (v < minVal) minVal = v;
@@ -93,6 +96,7 @@ export async function convertMRCToRaw(
     {
       const reader = dataBlob.stream().getReader();
       let leftover = new Uint8Array(0);
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;

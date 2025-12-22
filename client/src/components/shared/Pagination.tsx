@@ -5,6 +5,7 @@ import {
   ChevronLeftFilled,
   ChevronRightFilled,
 } from "@fluentui/react-icons";
+import { CSSProperties } from "react";
 
 const useStyles = makeStyles({
   pagination: {
@@ -31,7 +32,7 @@ interface Props {
   maxPageNumber: number;
   ListLenght: number;
   setPageNumberFunction: (pageNumber: number) => void;
-  buttonStyle?: React.CSSProperties;
+  buttonStyle?: CSSProperties;
   showSpinner?: boolean;
 }
 const Paganation = ({

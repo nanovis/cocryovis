@@ -20,7 +20,7 @@ export async function sendApiRequest(
   };
 
   if (options?.query !== undefined) {
-    url += "?" + new URLSearchParams(options.query);
+    url += "?" + new URLSearchParams(options.query).toString();
   }
 
   const fetchOptions = { ...defaultOptions, ...request };
@@ -31,9 +31,10 @@ export async function sendApiRequest(
 
   if (!response.ok) {
     const contentType = response.headers.get("Content-Type");
-    const isJson = contentType && contentType.includes("application/json");
+    const isJson = contentType?.includes("application/json");
     const content = isJson ? await response.json() : await response.text();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     errorMsg = isJson ? content.message : content;
 
     console.error(
@@ -94,9 +95,6 @@ export function isFloatBetween(
   return !Number.isNaN(num) && num >= min && num <= max;
 }
 
-/**
- * @param {string?} filenameOverwrite
- */
 //Don't put in Api folder
 export async function downloadFileFromServer(
   url: string,
@@ -119,14 +117,14 @@ export async function downloadFileFromServer(
 export function getFilenameFromHeader(response: Response) {
   const disposition = response.headers.get("Content-Disposition");
   if (disposition) {
-    const matches = disposition.match(/filename="?([^";]+)"?/);
-    if (matches && matches[1]) {
+    const matches = /filename="?([^";]+)"?/.exec(disposition);
+    if (matches?.[1]) {
       return matches[1];
     }
   }
 
   const fileName = response.url.split("/").pop()?.split("?")[0].split("#")[0];
-  if (fileName && fileName.includes(".")) return fileName;
+  if (fileName?.includes(".")) return fileName;
 }
 
 export async function downloadFile(
@@ -325,15 +323,17 @@ export async function convertTiltSeriesToRawData(
 
   const data = new Uint8Array(fileContent);
 
-  window.WasmModule?.FS.writeFile(file.name, data);
-  const settings = await window.WasmModule?.loadForSart(file.name, volumeDepth);
+  window.WasmModule.FS.writeFile(file.name, data);
+  const settings = await window.WasmModule.loadForSart(file.name, volumeDepth);
   if (!settings) {
     throw new Error("Conversion failed.");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const parsedSettings = JSON.parse(settings);
 
-  const fileData = (await window.WasmModule?.FS.readFile(
+  const fileData = (await window.WasmModule.FS.readFile(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     parsedSettings.file
   )) as ArrayBuffer;
 
@@ -452,11 +452,8 @@ export async function loadScript(src: string): Promise<void> {
 export function toSettingSchema(
   volumeData: RawVolumeInstance | SparseVolumeInstance | PseudoVolumeInstance
 ) {
-  if (volumeData.rawFilePath === null) {
-    throw new Error("Missing row volume data path.");
-  }
   return {
-    file: volumeData.rawFilePath.replace(/^.*[\\/]/, ""),
+    file: volumeData.name,
     size: {
       x: volumeData.sizeX,
       y: volumeData.sizeY,

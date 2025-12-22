@@ -143,16 +143,16 @@ export const UiState = types
           files: [JSONfiles[0]],
         };
       } else {
-        const configData = yield configBlob.text();
+        const configData: string = yield configBlob.text();
         if (!isAlive(self)) {
           return;
         }
         config = JSON.parse(configData);
       }
 
-      window.WasmModule?.FS.writeFile("config.json", JSON.stringify(config));
+      window.WasmModule.FS.writeFile("config.json", JSON.stringify(config));
 
-      const volumeVisualizationSettings: Array<VolVisSettingsSnapshotIn> = [];
+      const volumeVisualizationSettings: VolVisSettingsSnapshotIn[] = [];
 
       const vizualizedVolume: VisualizedVolumeSnapshotIn = {
         volVisSettings: volumeVisualizationSettings,
@@ -173,22 +173,26 @@ export const UiState = types
       const transferFunctionDefinitions = new Map();
       let defaultTFIndex = 0;
 
+       // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       for (const [index, fileName] of config.files.entries()) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const file = filesMap.get(fileName);
 
         if (!file) {
           throw new Error(`Missing setting file: ${fileName}`);
         }
 
-        const fileContent = yield file.text();
+        const fileContent: string = yield file.text();
         if (!isAlive(self)) {
           return;
         }
         const settings = JSON.parse(fileContent);
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
         const rawFile = filesMap.get(settings.file);
 
         if (!rawFile) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           throw new Error(`Missing raw file: ${settings.file}`);
         }
 
@@ -197,20 +201,25 @@ export const UiState = types
           return;
         }
         const data = new Uint8Array(rawFileContent);
-        window.WasmModule?.FS.writeFile(settings.file, data);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        window.WasmModule.FS.writeFile(settings.file, data);
 
         let transferFunction = null;
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (settings.transferFunction) {
           transferFunction = transferFunctionDefinitions.get(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             settings.transferFunction
           );
           if (!transferFunction) {
             const transferFunctionFile = filesMap.get(
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/restrict-plus-operands
               "transfer-functions/" + settings.transferFunction
             );
             if (!transferFunctionFile) {
               console.warn(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 `Missing transfer function file: ${settings.transferFunction}`
               );
             } else {
@@ -218,14 +227,17 @@ export const UiState = types
               if (!isAlive(self)) {
                 return;
               }
-              window.WasmModule?.FS.writeFile(
+              window.WasmModule.FS.writeFile(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 settings.transferFunction,
                 transferFunctionContent
               );
 
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
               transferFunction = JSON.parse(transferFunctionContent);
 
               transferFunctionDefinitions.set(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 settings.transferFunction,
                 transferFunction
               );
@@ -235,6 +247,7 @@ export const UiState = types
 
         if (!transferFunction) {
           const blankTF =
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             (!visualizedObject && config.files.length === 1) ||
             (visualizedObject && getType(visualizedObject) === Volume);
           const { tfName, tfDefinition } = Utils.pickDefaultTF(
@@ -244,39 +257,49 @@ export const UiState = types
           defaultTFIndex++;
 
           transferFunction = transferFunctionDefinitions.get(tfName);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           settings.transferFunction = tfName;
           if (!transferFunction) {
             transferFunction = tfDefinition;
             transferFunctionDefinitions.set(tfName, transferFunction);
-            window.WasmModule?.FS.writeFile(
+            window.WasmModule.FS.writeFile(
               tfName,
               JSON.stringify(transferFunction)
             );
           }
         }
 
-        window.WasmModule?.FS.writeFile(fileName, JSON.stringify(settings));
+        window.WasmModule.FS.writeFile(fileName, JSON.stringify(settings));
 
         if (
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           index === config.rawVolumeChannel ||
           index === CONFIG.shadowsTransferFunctionIndex ||
           index < CONFIG.visibleVolumes
         ) {
           volumeVisualizationSettings.push({
             index: index,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             name: settings.name ?? `Volume ${index}`,
             type:
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               index === config.rawVolumeChannel
                 ? "raw"
                 : index === CONFIG.shadowsTransferFunctionIndex
                   ? "shadows"
                   : "volume",
             transferFunction: {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               rampLow: transferFunction.rampLow,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               rampHigh: transferFunction.rampHigh,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               red: transferFunction.color.x,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               green: transferFunction.color.y,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               blue: transferFunction.color.z,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               comment: transferFunction.comment ?? `transferFunction_${index}`,
             },
           });
@@ -286,7 +309,7 @@ export const UiState = types
       self.setVizualizedVolume(vizualizedVolume);
 
       console.log("File reading done.");
-      window.WasmModule?.open_volume();
+      window.WasmModule.open_volume();
     }),
   }));
 

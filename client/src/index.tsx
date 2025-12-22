@@ -76,9 +76,11 @@ window.addEventListener(
 // });
 
 const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  document.getElementById("root")!
 );
 
+// eslint-disable-next-line react-refresh/only-export-components
 const Main = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -88,9 +90,11 @@ const Main = () => {
 
   async function initModule() {
     try {
+      // eslint-disable-next-line react-hooks/immutability
       window.WasmModule = null;
       await loadScript("/index.js");
 
+      // eslint-disable-next-line react-hooks/immutability
       window.WasmModule = await window.createVolumeRenderer({
         canvas: document.getElementById("canvas"),
 
@@ -117,16 +121,20 @@ const Main = () => {
           console.error("Renderer error: ", text);
         },
         setStatus: function (text: any) {
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           console.log("Renderer status: " + text);
         },
-        monitorRunDependencies: function () {},
+        monitorRunDependencies: function () { /* empty */ },
       });
 
       console.log("Emscripten Module Initialized with WebGPU.");
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!window.WasmModule) {
         console.error("Could not initialize WebGPU device.");
         return;
       }
+
+      // eslint-disable-next-line @typescript-eslint/await-thenable
       await window.WasmModule.start_app();
       canvasResize();
       window.addEventListener("resize", canvasResize);
@@ -152,8 +160,8 @@ const Main = () => {
   }
 
   function canvasResize() {
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    if (!canvas || !canvas.parentElement || !window.WasmModule) return;
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
+    if (!canvas?.parentElement || !window.WasmModule) return;
     const parentWidth = canvas.parentElement.offsetWidth;
 
     const maxHeight = window.innerHeight;
@@ -173,7 +181,7 @@ const Main = () => {
     canvas.width = parseFloat(canvas.style.width);
     canvas.height = canvasHeight;
 
-    window.WasmModule?.on_resize(
+    window.WasmModule.on_resize(
       Math.round(canvas.width),
       Math.round(canvas.height)
     );
@@ -181,7 +189,7 @@ const Main = () => {
 
   useEffect(() => {
     if (!window.WasmModule) {
-      initModule().catch((e) =>
+      initModule().catch((e: unknown) =>
         console.error("Failed to initialize WebGPU module.", e)
       );
     }

@@ -1,6 +1,6 @@
 import { flow, Instance, isAlive, types } from "mobx-state-tree";
 import { User, UserDB } from "./userState/UserModel";
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import Cookies from "js-cookie";
 import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
@@ -57,12 +57,12 @@ const RootStore = types
         Cookies.set(CookieName, JSON.stringify(userData), {
           expires: expirationTime,
         });
-        self.user.userProjects.fetchProjects().catch((error) => {
+        self.user.userProjects.fetchProjects().catch((error: unknown) => {
           const toastContainer = new ToastContainer();
           toastContainer.error(getErrorMessage(error));
         });
         if (self.user.status) {
-          self.user.status.fetchStatus().catch((error) => {
+          self.user.status.fetchStatus().catch((error: unknown) => {
             const toastContainer = new ToastContainer();
             toastContainer.error(getErrorMessage(error));
           });
@@ -96,7 +96,7 @@ const RootStoreContext = createContext<null | RootInstance>(null);
 
 export const RootStoreProvider = RootStoreContext.Provider;
 export function useMst() {
-  const store = useContext(RootStoreContext);
+  const store = use(RootStoreContext);
   if (store === null) {
     throw new Error("Store cannot be null, please add a context provider");
   }

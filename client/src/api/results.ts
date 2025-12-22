@@ -35,6 +35,5 @@ export async function getResultData(id: number) {
     method: "GET",
     credentials: "include",
   });
-  const file = await response.blob();
-  return file;
+  return await response.blob();
 }

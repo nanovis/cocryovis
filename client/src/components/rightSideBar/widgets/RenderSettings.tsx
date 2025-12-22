@@ -148,12 +148,12 @@ const RenderSettings = observer(({ open, close }: Props) => {
                   `#${renderSettings.clearColor[0]
                     .toString(16)
                     .padStart(2, "0")}` +
-                  `${renderSettings.clearColor[1]
+                  renderSettings.clearColor[1]
                     .toString(16)
-                    .padStart(2, "0")}` +
-                  `${renderSettings.clearColor[2]
+                    .padStart(2, "0") +
+                  renderSettings.clearColor[2]
                     .toString(16)
-                    .padStart(2, "0")}`
+                    .padStart(2, "0")
                 }
                 onChange={(event) => handleChangeClearColor(event)}
               />

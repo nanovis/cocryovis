@@ -46,13 +46,54 @@ export function useServerListener(websocketUrl: string, user: UserInstance) {
     shouldReconnect
   );
 
+  const handleInsertPseudoVolumes = (contents: PseudoVolumeUpdate) => {
+    user.userProjects.projects.forEach((project) => {
+      const volume = project.projectVolumes.volumes.get(contents.volumeId);
+      volume?.addPseudoVolumes(contents.pseudoLabeledVolumes);
+    });
+  };
+
+  const handleInsertResult = (contents: ResultUpdate) => {
+    user.userProjects.projects.forEach((project) => {
+      const volume = project.projectVolumes.volumes.get(contents.volumeId);
+      volume?.volumeResults.addResult(contents.result);
+    });
+  };
+
+  const handleInsertCheckpoint = (contents: CheckpointUpdate) => {
+    user.userProjects.projects.forEach((project) => {
+      const model = project.projectModels.models.get(contents.modelId);
+      model?.modelCheckpoints.addCheckpoint(contents.checkpoint);
+    });
+  };
+
+  const handleAddRawData = (contents: RawDataUpdate) => {
+    user.userProjects.projects.forEach((project) => {
+      const volume = project.projectVolumes.volumes.get(contents.volumeId);
+      volume?.setRawVolume(contents.rawData);
+    });
+  };
+
+  const handleInsertTaskHistory = (contents: TaskHistorySnapshotIn) => {
+    user.status?.appendTaskHistory(contents);
+  };
+
+  const handleCPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
+    user.status?.setCPUTaskQueue(contents);
+  };
+
+  const handleGPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
+    user.status?.setGPUTaskQueue(contents);
+  };
+
   useEffect(() => {
     const action = lastJsonMessage as Response;
-    if (!action || !action.actionType) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!action?.actionType) {
       return;
     }
 
-    console.log(action)
+    console.log(action);
 
     switch (action.actionType) {
       case "InsertPseudoVolumes":
@@ -78,46 +119,6 @@ export function useServerListener(websocketUrl: string, user: UserInstance) {
         break;
     }
   }, [lastJsonMessage]);
-
-  const handleInsertPseudoVolumes = (contents: PseudoVolumeUpdate) => {
-    user?.userProjects.projects.forEach((project) => {
-      const volume = project.projectVolumes.volumes.get(contents.volumeId);
-      volume?.addPseudoVolumes(contents.pseudoLabeledVolumes);
-    });
-  };
-
-  const handleInsertResult = (contents: ResultUpdate) => {
-    user?.userProjects.projects.forEach((project) => {
-      const volume = project.projectVolumes.volumes.get(contents.volumeId);
-      volume?.volumeResults.addResult(contents.result);
-    });
-  };
-
-  const handleInsertCheckpoint = (contents: CheckpointUpdate) => {
-    user?.userProjects.projects.forEach((project) => {
-      const model = project.projectModels.models.get(contents.modelId);
-      model?.modelCheckpoints.addCheckpoint(contents.checkpoint);
-    });
-  };
-
-  const handleAddRawData = (contents: RawDataUpdate) => {
-    user?.userProjects.projects.forEach((project) => {
-      const volume = project.projectVolumes.volumes.get(contents.volumeId);
-      volume?.setRawVolume(contents.rawData);
-    });
-  };
-
-  const handleInsertTaskHistory = (contents: TaskHistorySnapshotIn) => {
-    user.status?.appendTaskHistory(contents);
-  };
-
-  const handleCPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
-    user.status?.setCPUTaskQueue(contents);
-  };
-
-  const handleGPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
-    user.status?.setGPUTaskQueue(contents);
-  };
 
   return connectionStatus;
 }

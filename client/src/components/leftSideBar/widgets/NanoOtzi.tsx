@@ -76,7 +76,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
   >(undefined);
   const inferenceCheckpoint =
     inferenceCheckpointId &&
-    projectModels?.uniqueCheckpoints?.get(inferenceCheckpointId);
+    projectModels?.uniqueCheckpoints.get(inferenceCheckpointId);
 
   const [inferenceInProgress, setInferenceInProgress] = useState(false);
 
@@ -129,7 +129,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       if (!volume) {
         throw new Error("Volume not found!");
       }
-      if (volume.rawData?.id === null || volume.rawData?.id === undefined) {
+      if (!volume.rawData) {
         throw new Error("volume missing raw data");
       }
 
@@ -147,24 +147,24 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
-      window.WasmModule?.FS.writeFile(
+      window.WasmModule.FS.writeFile(
         settingsFileName,
         JSON.stringify(rawData)
       );
 
-      window.WasmModule?.FS.writeFile(settings.file, rawDataFile);
+      window.WasmModule.FS.writeFile(settings.file, rawDataFile);
 
       //LOL error when calling this api
       const checkpointTxt = await checkpointToText(inferenceCheckpointId);
 
-      window.WasmModule?.FS.writeFile("parameters.txt", checkpointTxt);
+      window.WasmModule.FS.writeFile("parameters.txt", checkpointTxt);
 
       toastContainer.loading("Running Local Inference...");
 
       // This allows the toast to update, hopefully...
       await new Promise((r) => setTimeout(r, 1000));
 
-      const volumeData = await window.WasmModule?.doInference(
+      const volumeData = await window.WasmModule.doInference(
         settingsFileName,
         "parameters.txt"
       );
@@ -173,6 +173,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       const volumeDescriptors = [];
 
       const formData = new FormData();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       for (const [i, volume] of volumeData.entries()) {
         const blob = new Blob([volume], {
           type: "application/octet-stream",
@@ -222,7 +223,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         })
       );
 
-      createResultFromFiles(volume.id, formData);
+      await createResultFromFiles(volume.id, formData);
 
       toastContainer.success("Local Inference Successful!");
 
@@ -243,7 +244,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           {volume.description.length > 0 && (
             <>
               <br />
-              <b>Description:</b> {volume?.description}
+              <b>Description:</b> {volume.description}
             </>
           )}
         </div>
@@ -361,7 +362,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
           {model.description.length > 0 && (
             <>
               <br />
-              <b>Description:</b> {model?.description}
+              <b>Description:</b> {model.description}
             </>
           )}
         </div>
@@ -397,7 +398,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       modelTraining.setCheckpointId(undefined);
       return;
     }
-    if (!modelTraining?.model) {
+    if (!modelTraining.model) {
       return;
     }
     const checkpointId = parseInt(value);
@@ -595,7 +596,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             <ComboboxSearch
               selectionList={modelSelectionList()}
               selectedOption={
-                modelTraining?.model !== undefined
+                modelTraining.model !== undefined
                   ? modelSelectionProperties(modelTraining.model)
                   : undefined
               }
@@ -609,7 +610,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             <Tooltip
               content={{
                 children: "Select a model first.",
-                className: modelTraining?.model && globalClasses.invisible,
+                className: modelTraining.model && globalClasses.invisible,
               }}
               relationship="label"
               appearance="inverted"
@@ -632,7 +633,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                   placeholder="Select a checkpoint (optional)"
                   noOptionsMessage="No models match your search."
                   optionToText={({ children }) => children}
-                  disabled={!modelTraining?.model}
+                  disabled={!modelTraining.model}
                   clearable={true}
                 />
               </div>
@@ -722,7 +723,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             />
 
             <ComboboxTagMultiselect
-              selectionList={modelTraining?.validationVolumeOptions.map(
+              selectionList={modelTraining.validationVolumeOptions.map(
                 (volume) => volumeSelectionProperties(volume)
               )}
               selectedOptions={modelTraining.validationVolumeIds}
@@ -736,10 +737,10 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             />
 
             <ComboboxTagMultiselect
-              selectionList={modelTraining?.testingVolumeOptions.map((volume) =>
+              selectionList={modelTraining.testingVolumeOptions.map((volume) =>
                 volumeSelectionProperties(volume)
               )}
-              selectedOptions={modelTraining?.testingVolumeIds}
+              selectedOptions={modelTraining.testingVolumeIds}
               onOptionSelect={onTestingVolumeSelect}
               onTagClick={onTestingVolumeTagClick}
               textState={modelTraining.testingVolumeNames}

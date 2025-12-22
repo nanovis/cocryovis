@@ -333,7 +333,7 @@ export const TiltSeriesDialog = types
         "Number of extra rows above and below each tile to prevent line artifacts. If for some reason line artifacts ocurr between the tiles, increase this value.",
         (value: number) =>
           Utils.isIntegerBetween(value, 60, Number.MAX_SAFE_INTEGER) &&
-          Number(value) % 2 === 0
+          value % 2 === 0
       ),
       starting_angle: new NumberInputField(
         "Starting Angle",

@@ -14,11 +14,11 @@ import {
 type RawVolumeData = z.infer<typeof rawVolumeDataSchema>;
 type SparseLabeledVolumeData = z.infer<typeof sparseLabelVolumeDataSchema>;
 type PseudoLabeledVolumeData = z.infer<typeof pseudoLabelVolumeDataSchema>;
-type VolumeDataMap = {
+interface VolumeDataMap {
   RawVolumeData: RawVolumeData;
   SparseLabeledVolumeData: SparseLabeledVolumeData;
   PseudoLabeledVolumeData: PseudoLabeledVolumeData;
-};
+}
 
 export async function getVolumeDataById<T extends keyof VolumeDataMap>(
   type: T,
@@ -57,13 +57,10 @@ export async function getVolumeData(
     method: "GET",
     credentials: "include",
   });
-  const file = await response.arrayBuffer();
-  return file;
+  return await response.arrayBuffer();
 }
 
-export async function getVolumeVisualizationFiles<
-  T extends keyof VolumeDataMap,
->(type: T, id: number) {
+export async function getVolumeVisualizationFiles(type: keyof VolumeDataMap, id: number) {
   const response = await Utils.sendApiRequest(
     `volumeData/${type}/${id}/visualization-data`,
     {
@@ -72,8 +69,7 @@ export async function getVolumeVisualizationFiles<
     }
   );
 
-  const file = await response.blob();
-  return file;
+  return await response.blob();
 }
 
 export async function createFromFiles<T extends keyof VolumeDataMap>(
@@ -145,8 +141,8 @@ export async function updateAnnotations(
   return volumeData;
 }
 
-export async function downloadFullVolumeData<T extends keyof VolumeDataMap>(
-  type: T,
+export async function downloadFullVolumeData(
+  type: keyof VolumeDataMap,
   id: number
 ) {
   const response = await Utils.sendApiRequest(
@@ -155,8 +151,7 @@ export async function downloadFullVolumeData<T extends keyof VolumeDataMap>(
       method: "GET",
     }
   );
-  const fullVolumeDataFile = await response.blob();
-  return fullVolumeDataFile;
+  return await response.blob();
 }
 
 export async function downloadRawFile(id: number) {
@@ -166,12 +161,11 @@ export async function downloadRawFile(id: number) {
       method: "GET",
     }
   );
-  const rawFile = await response.blob();
-  return rawFile;
+  return await response.blob();
 }
 
-export async function deleteVolumeData<T extends keyof VolumeDataMap>(
-  type: T,
+export async function deleteVolumeData(
+  type: keyof VolumeDataMap,
   idVolumeData: number
 ) {
   await Utils.sendApiRequest(

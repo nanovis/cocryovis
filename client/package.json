@@ -26,11 +26,15 @@
     "@vitejs/plugin-react": "^5.1.2",
     "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9.39.2",
+    "eslint-plugin-react-dom": "^2.3.13",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "eslint-plugin-react-x": "^2.3.13",
     "npm-check-updates": "^19.2.0",
     "prettier": "^3.7.4",
     "prettier-eslint": "^16.4.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0",
+    "typescript-eslint": "^8.50.1",
     "vite": "^7.3.0"
   },
   "scripts": {

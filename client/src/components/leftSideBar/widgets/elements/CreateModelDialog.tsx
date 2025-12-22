@@ -11,15 +11,16 @@ import {
   Textarea,
   Spinner,
 } from "@fluentui/react-components";
+import { Dispatch, SetStateAction } from "react";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
   modelName: string;
-  setModelName: React.Dispatch<React.SetStateAction<string>>;
+  setModelName: Dispatch<SetStateAction<string>>;
   modelDescription: string;
-  setModelDescription: React.Dispatch<React.SetStateAction<string>>;
+  setModelDescription: Dispatch<SetStateAction<string>>;
   isActive: boolean;
 }
 

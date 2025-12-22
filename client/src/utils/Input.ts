@@ -6,7 +6,7 @@ export abstract class InputField<T> {
   getValue: () => T;
   setValue: (value: T) => void;
 
-  constructor(
+  protected constructor(
     name: string,
     getValue: () => T,
     setValue: (value: T) => void,
@@ -82,7 +82,7 @@ export class NumberInputField extends InputField<string> {
         );
       }
       return this.defaultValue;
-    } else if (StringInputFieldType.INTEGER) {
+    } else if (this.type === StringInputFieldType.INTEGER) {
       return parseInt(value, 10);
     } else {
       return parseFloat(value);

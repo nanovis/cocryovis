@@ -36,7 +36,7 @@ export const SparseLabelVolume = types
     setColor: flow(function* setColor(
       color: string,
       index: number
-    ): Generator<any, void, any> {
+    ): Generator<any, void> {
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Updating label color...");
@@ -47,7 +47,7 @@ export const SparseLabelVolume = types
 
         self.color = sparselabel.color;
 
-        if (index !== undefined && window.WasmModule && self.color) {
+        if (window.WasmModule && self.color) {
           const color = Utils.fromHexColor(self.color);
           window.WasmModule.set_annotation_color(
             index,

@@ -67,8 +67,7 @@ export const FileUploadInputs = types
         self.width !== undefined &&
         self.height !== undefined &&
         self.depth !== undefined &&
-        self.format !== undefined &&
-        self.endian !== undefined
+        self.format !== undefined
       );
     },
   }))
@@ -179,8 +178,7 @@ export const UrlUploadInputs = types
         self.width !== undefined &&
         self.height !== undefined &&
         self.depth !== undefined &&
-        self.format !== undefined &&
-        self.endian !== undefined
+        self.format !== undefined
       );
     },
   }))
@@ -361,9 +359,9 @@ export const UploadDialog = types
   }))
   .views((self) => ({
     get isValid() {
-      if (self.tab === "fromFile") {
+      if (self.tab === Tabs.fromFile) {
         return self.fileUploadInputs.isValid;
-      } else if (self.tab === "fromUrl") {
+      } else if (self.tab === Tabs.fromUrl) {
         return self.urlUploadInputs.isValid;
       } else {
         return self.cryoETUploadInputs.isValid;
@@ -378,9 +376,9 @@ export const UploadDialog = types
       self.isBusy = isBusy;
     },
     resetCurrentTab() {
-      if (self.tab === "fromFile") {
+      if (self.tab === Tabs.fromFile) {
         self.fileUploadInputs.reset();
-      } else if (self.tab === "fromUrl") {
+      } else if (self.tab === Tabs.fromUrl) {
         self.urlUploadInputs.reset();
       } else {
         self.cryoETUploadInputs.reset();

@@ -15,6 +15,7 @@ import {
   NumberInputField,
 } from "../../utils/Input";
 import { observer } from "mobx-react-lite";
+import { CSSProperties } from "react";
 
 export const NumberInputValidatedField = observer(
   ({
@@ -24,7 +25,7 @@ export const NumberInputValidatedField = observer(
   }: {
     input: NumberInputField;
     disabled?: boolean;
-    style?: React.CSSProperties;
+    style?: CSSProperties;
   }) => {
     const getValidationState = () => {
       if (input.getValue() === "") return "none";
@@ -69,7 +70,7 @@ export const BooleanInputValidatedField = observer(
     input: BooleanInputField;
     labelPosition?: "above" | "after" | "before";
     disabled?: boolean;
-    style?: React.CSSProperties;
+    style?: CSSProperties;
   }) => {
     return (
       <div style={style}>
@@ -102,7 +103,7 @@ export const DropdownInputValidatedField = observer(
   }: {
     input: DropdownInputField;
     disabled?: boolean;
-    style?: React.CSSProperties;
+    style?: CSSProperties;
   }) => {
     return (
       <Field

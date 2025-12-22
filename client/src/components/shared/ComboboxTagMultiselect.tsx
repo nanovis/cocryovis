@@ -10,7 +10,7 @@ import {
 import { Dismiss12Regular } from "@fluentui/react-icons";
 
 import { makeStyles } from "@fluentui/react-components";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 
 const useStyles = makeStyles({
   multiselectContainer: {
@@ -44,7 +44,7 @@ const useStyles = makeStyles({
 });
 
 interface Props<
-  T extends { children: React.ReactNode | string; value: string },
+  T extends { children: ReactNode | string; value: string },
 > {
   selectionList: T[];
   textState: string[];
@@ -58,7 +58,7 @@ interface Props<
 }
 
 const ComboboxTagMultiselect = <
-  T extends { children: React.ReactNode | string; value: string },
+  T extends { children: ReactNode | string; value: string },
 >({
   selectionList,
   textState,
@@ -68,7 +68,7 @@ const ComboboxTagMultiselect = <
   title,
   placeholder,
   noOptionsMessage,
-  optionToText = ({ children }: { children: React.ReactNode }) =>
+  optionToText = ({ children }: { children: ReactNode }) =>
     children as string,
 }: Props<T>) => {
   const classes = useStyles();
@@ -111,7 +111,9 @@ const ComboboxTagMultiselect = <
               appearance="primary"
               icon={<Dismiss12Regular />}
               iconPosition="after"
-              onClick={() => handleTagClick(volumeId, i)}
+              onClick={() => {
+                handleTagClick(volumeId, i);
+              }}
               style={{ minWidth: 0 }}
             >
               {textState[i]}
@@ -125,14 +127,19 @@ const ComboboxTagMultiselect = <
         selectedOptions={selectedOptions}
         onOptionSelect={handleOptionSelect}
         value={searchQuery}
-        onChange={(ev) => setSearchQuery(ev.target.value)}
+        onChange={(ev) => {
+          setSearchQuery(ev.target.value);
+        }}
         positioning={"after"}
       >
         {selectionOptions.map((option) =>
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           option.props.tooltip ? (
             <Tooltip
               hideDelay={0}
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               key={option.props.value}
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               content={option.props.tooltip}
               positioning="after"
               relationship={"description"}
@@ -140,6 +147,7 @@ const ComboboxTagMultiselect = <
               {option}
             </Tooltip>
           ) : (
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             <div key={option.props?.value ?? -1}>{option}</div>
           )
         )}

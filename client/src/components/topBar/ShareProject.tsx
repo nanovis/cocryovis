@@ -102,7 +102,7 @@ interface Props {
 const ShareProject = observer(({ open, setOpen }: Props) => {
   const { user } = useMst();
 
-  const activeProject = user?.userProjects.activeProject;
+  const activeProject = user.userProjects.activeProject;
 
   const classes = useStyles();
   const RemoveSharingIcon = bundleIcon(
@@ -143,7 +143,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const [pendingChanges, setPendingChanges] = useState(new Map());
+  const [pendingChanges, setPendingChanges] = useState(() => new Map());
 
   const [isHoveringOverTagPicker, setIsHoveringOverTagPicker] = useState(false);
 
@@ -209,17 +209,16 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   }, [pendingChanges]);
 
   useEffect(() => {
-    if (open && user) {
+    if (open) {
       refreshTagPickerOptions();
     }
-  }, [selectedIds, user?.id, query]);
+  }, [selectedIds, user.id, query]);
 
   const refreshUsersWithAccess = () => {
     setUsersWithAccess(
-      users.current
-        ?.filter(
+      users.current.filter(
           (userData) =>
-            accessInfoMap.current?.get(userData.id) >= -1 &&
+            accessInfoMap.current.get(userData.id) >= -1 &&
             pendingChanges.get(userData.id) !== -1
         )
         .map((userData) => {
@@ -227,7 +226,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
           return {
             user: userData,
             accessLevel:
-              pendingChange ?? accessInfoMap.current?.get(userData.id),
+              pendingChange ?? accessInfoMap.current.get(userData.id),
             changed: pendingChange >= 0,
           };
         })
@@ -236,11 +235,11 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
   const refreshTagPickerOptions = () => {
     setTagPickerOptions(
-      users.current?.filter(
+      users.current.filter(
         (userData) =>
-          !accessInfoMap.current?.get(userData.id) &&
+          !accessInfoMap.current.get(userData.id) &&
           !selectedIds.includes(userData.id.toString()) &&
-          user?.id !== userData.id &&
+          user.id !== userData.id &&
           (userData.name.toLowerCase().includes(query.toLowerCase()) ||
             userData.username.toLowerCase().includes(query.toLowerCase()))
       )
@@ -249,7 +248,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
   useEffect(() => {
     if (open) {
-      fetchProjectAccessData();
+      fetchProjectAccessData().catch(console.error);
     }
   }, [open]);
 
@@ -258,7 +257,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   }, [usersWithAccess]);
 
   const onOptionSelect = (
-    _ev: Event | SyntheticEvent<Element, Event>,
+    _ev: Event | SyntheticEvent,
     data: TagPickerOnOptionSelectData
   ) => {
     setQuery("");
@@ -328,10 +327,9 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     }
   };
   const updateAccessInfoMap = (userAccessInfo: UserAccessInfo[]) => {
-    const accessMap = new Map(
+    accessInfoMap.current = new Map(
       userAccessInfo.map(({ userId, accessLevel }) => [userId, accessLevel])
     );
-    accessInfoMap.current = accessMap;
 
     refreshUsersWithAccess();
     refreshTagPickerOptions();
@@ -542,7 +540,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                 <div></div>
               </Tooltip>
             </div>
-            {selectedIds.length === 0 && usersWithAccess?.length > 0 && (
+            {selectedIds.length === 0 && usersWithAccess.length > 0 && (
               <div
                 style={{
                   display: "flex",
@@ -690,7 +688,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
             ) : (
               <Button
                 disabled={pageBusy()}
-                onClick={async () => {
+                onClick={() => async () => {
                   if (!activeProject) {
                     return;
                   }
@@ -723,7 +721,9 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                   <Button
                     appearance="primary"
                     disabled={pageBusy() || !canSetSharing()}
-                    onClick={onConfirmChanges}
+                    onClick={() => {
+                      onConfirmChanges().catch(console.error);
+                    }}
                     style={{ marginLeft: "20px" }}
                   >
                     Confirm
