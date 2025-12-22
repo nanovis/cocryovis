@@ -8,6 +8,7 @@ import {
 import { Tooltip } from "@fluentui/react-components";
 import { useEffect, useRef, useState } from "react";
 import TooltipWrapper from "./TooltipWrapper";
+import { JSX } from "react/jsx-runtime";
 
 interface Props<
   T extends {

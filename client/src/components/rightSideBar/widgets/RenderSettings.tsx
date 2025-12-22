@@ -104,7 +104,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Near Plane [{renderSettings.nearPlane}]</Text>
+              label={<Text>Near Plane [{renderSettings.nearPlane}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -121,7 +121,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Far Plane [{renderSettings.farPlane}]</Text>
+              label={<Text>Far Plane [{renderSettings.farPlane}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -138,7 +138,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Background Color</Text>
+              label={<Text>Background Color</Text>}
               className={classes.sliderField}
             >
               <input
@@ -164,7 +164,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Sample Rate [{renderSettings.sampleRate}]</Text>
+              label={<Text>Sample Rate [{renderSettings.sampleRate}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -235,7 +235,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Radius [{renderSettings.aoRadius}]</Text>
+              label={<Text>Radius [{renderSettings.aoRadius}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -253,9 +253,9 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>
+              label={<Text>
                 Number of Samples [{renderSettings.aoNumSamples}]
-              </Text>
+              </Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -273,7 +273,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Strength [{renderSettings.aoStrength}]</Text>
+              label={<Text>Strength [{renderSettings.aoStrength}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -301,7 +301,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Quality [{renderSettings.shadowQuality}]</Text>
+              label={<Text>Quality [{renderSettings.shadowQuality}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -319,7 +319,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Strength [{renderSettings.shadowStrength}]</Text>
+              label={<Text>Strength [{renderSettings.shadowStrength}]</Text>}
               className={classes.sliderField}
             >
               <Slider
@@ -337,7 +337,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label=<Text>Radius [{renderSettings.shadowRadius}]</Text>
+              label={<Text>Radius [{renderSettings.shadowRadius}]</Text>}
               className={classes.sliderField}
             >
               <Slider

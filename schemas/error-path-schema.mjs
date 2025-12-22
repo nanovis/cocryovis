@@ -5,6 +5,7 @@ export const errorSchema = z.object({
     name: z.string(),
     message: z.string(),
 });
+
 export const errorResponse = {
     content: {
         "application/json": {
@@ -20,8 +21,10 @@ export const defaultError = {
 
 /**
  * @param {number[]} errorArray
+ * @returns {{ [key: number]: { content: { "application/json": { schema: errorSchema } } } }}
  */
 export function generateErrors(errorArray) {
+    /** @type {Record<number, { content: { "application/json": { schema: errorSchema } } }>} */
     const responseObj = {};
 
     for (let i = 0; i < errorArray.length; i++) {

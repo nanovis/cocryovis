@@ -1,4 +1,5 @@
 import { Tooltip } from "@fluentui/react-components";
+import { JSX } from "react/jsx-runtime";
 
 interface Props {
   content: JSX.Element | null;
