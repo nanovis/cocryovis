@@ -3,51 +3,43 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@fluentui/react-components": "^9.60.0",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.9.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@fluentui/react-components": "^9.72.9",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "file-saver": "^2.0.5",
     "js-cookie": "^3.0.5",
     "jszip": "^3.10.1",
-    "mobx": "^6.13.5",
-    "mobx-react-lite": "^4.0.7",
-    "mobx-state-tree": "^6.0.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-use-websocket": "4.10.1",
-    "zod": "^4.0.17"
+    "mobx": "^6.15.0",
+    "mobx-react-lite": "^4.1.1",
+    "mobx-state-tree": "^7.0.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-use-websocket": "4.13.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.33.0",
+    "@eslint/js": "^9.39.2",
     "@types/file-saver": "^2.0.7",
     "@types/js-cookie": "^3.0.6",
-    "@vitejs/plugin-react": "^4.5.0",
-    "eslint": "^9.33.0",
-    "prettier": "^3.5.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "baseline-browser-mapping": "^2.9.11",
+    "eslint": "^9.39.2",
+    "npm-check-updates": "^19.2.0",
+    "prettier": "^3.7.4",
     "prettier-eslint": "^16.4.2",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.40.0",
-    "vite": "^6.3.5"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.0",
+    "vite": "^7.3.0"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "format": "prettier --write .",
-    "lint": "npx eslint ."
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "lint": "npx eslint .",
+    "upgrade:check": "npx npm-check-updates --format group",
+    "upgrade": "npx npm-check-updates -u"
   }
 }
