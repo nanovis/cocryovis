@@ -24,6 +24,7 @@
     "@types/file-saver": "^2.0.7",
     "@types/js-cookie": "^3.0.6",
     "@vitejs/plugin-react": "^5.1.2",
+    "@webgpu/types": "^0.1.68",
     "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9.39.2",
     "eslint-plugin-react-dom": "^2.3.13",

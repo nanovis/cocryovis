@@ -27,7 +27,8 @@
 
     "paths": {
       "#schemas/*": ["../schemas/*"]
-    }
+    },
+    "types": ["@webgpu/types"]
   },
   "include": ["src", "../schemas"]
 }
