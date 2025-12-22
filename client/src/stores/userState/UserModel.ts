@@ -1,9 +1,11 @@
-import { Instance, SnapshotIn, types } from "mobx-state-tree";
-import { UserProjects, UserProjectsInstance } from "./ProjectModel";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
+import type { UserProjectsInstance } from "./ProjectModel";
+import { UserProjects } from "./ProjectModel";
 import { Status } from "./Status";
 import { ModelTraining } from "./ModelTraining";
-import z from "zod";
-import { publicUser } from "#schemas/user-path-schema.mjs";
+import type z from "zod";
+import type { publicUser } from "#schemas/user-path-schema.mjs";
 
 export type UserDB = z.infer<typeof publicUser>;
 

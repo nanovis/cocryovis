@@ -58,6 +58,7 @@ export default defineConfig([
       "prefer-rest-params": "off",
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-inferrable-types": [
         "error",
         {

@@ -13,9 +13,8 @@ import {
   DesktopFlow20Regular,
 } from "@fluentui/react-icons";
 import globalStyles from "../../GlobalStyles";
-import ProcessTiltSeriesDialog, {
-  TiltSeriesOptions,
-} from "../../shared/ProcessTiltSeriesDialog";
+import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
+import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
 import { useRef, useState } from "react";
 import * as Utils from "../../../utils/Helpers";
 import JSZip from "jszip";

@@ -1,10 +1,10 @@
-import z from "zod";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
-import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
-import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
-import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
-import { typeSchema } from "#schemas/componentSchemas/volume-data-schema.mjs";
-import {
+import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
+import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
+import type { typeSchema } from "#schemas/componentSchemas/volume-data-schema.mjs";
+import type {
   createFromFilesSchema,
   fromUrlSchema,
   updateAnnotationsSchema,

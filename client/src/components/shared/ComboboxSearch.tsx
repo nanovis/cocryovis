@@ -1,23 +1,20 @@
-import {
-  Combobox,
+import type {
   OptionOnSelectData,
   SelectionEvents,
-  useComboboxFilter,
 } from "@fluentui/react-components";
+import { Combobox, useComboboxFilter } from "@fluentui/react-components";
 
 import { Tooltip } from "@fluentui/react-components";
-import {
+import type {
   ReactNode,
-  useEffect,
-  useRef,
-  useState,
   MouseEvent,
   KeyboardEvent,
   FocusEvent,
   ChangeEvent,
 } from "react";
+import { useEffect, useRef, useState } from "react";
 import TooltipWrapper from "./TooltipWrapper";
-import { JSX } from "react/jsx-runtime";
+import type { JSX } from "react/jsx-runtime";
 
 interface Props<
   T extends {

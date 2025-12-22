@@ -1,3 +1,4 @@
+import type { TagPickerOnOptionSelectData } from "@fluentui/react-components";
 import {
   Button,
   Dialog,
@@ -27,11 +28,11 @@ import {
   Option,
   TableCellActions,
   Tooltip,
-  TagPickerOnOptionSelectData,
   Switch,
   Spinner,
 } from "@fluentui/react-components";
-import { useState, useEffect, useRef, SyntheticEvent } from "react";
+import type { SyntheticEvent } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as Utils from "../../utils/Helpers";
 import {
   bundleIcon,
@@ -41,10 +42,10 @@ import {
 } from "@fluentui/react-icons";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
-import { UserDB } from "../../stores/userState/UserModel";
-import z from "zod";
-import { usersArray } from "#schemas/user-path-schema.mjs";
-import { projectAccessInfoSchema } from "#schemas/project-path-schema.mjs";
+import type { UserDB } from "../../stores/userState/UserModel";
+import type z from "zod";
+import type { usersArray } from "#schemas/user-path-schema.mjs";
+import type { projectAccessInfoSchema } from "#schemas/project-path-schema.mjs";
 import { getAllUsers } from "../../api/users";
 import { getAccessInfo, setAccess } from "../../api/projects";
 import ToastContainer from "../../utils/ToastContainer";

@@ -1,7 +1,8 @@
-import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, isAlive, types } from "mobx-state-tree";
 import { Checkpoint } from "./CheckpointModel";
-import { getResultSchema } from "#schemas/result-path-schema.mjs";
-import z from "zod";
+import type { getResultSchema } from "#schemas/result-path-schema.mjs";
+import type z from "zod";
 import { getResultsFromVolume, deleteResult } from "../../api/results";
 
 export const Result = types.model({

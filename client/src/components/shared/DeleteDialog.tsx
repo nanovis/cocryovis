@@ -8,8 +8,8 @@ import {
   Button,
   Spinner,
 } from "@fluentui/react-components";
-import { CSSProperties } from "react";
-import { JSX } from "react/jsx-runtime";
+import type { CSSProperties } from "react";
+import type { JSX } from "react/jsx-runtime";
 
 interface Props {
   open: boolean;

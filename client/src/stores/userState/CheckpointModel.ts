@@ -1,6 +1,7 @@
-import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import z from "zod";
-import { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, isAlive, types } from "mobx-state-tree";
+import type z from "zod";
+import type { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
 import * as checkpointApi from "../../api/checkpoint";
 
 export const Checkpoint = types.model({

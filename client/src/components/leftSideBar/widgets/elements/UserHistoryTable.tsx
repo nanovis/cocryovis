@@ -1,8 +1,11 @@
+import type {
+  TableColumnDefinition,
+  TableColumnSizingOptions,
+} from "@fluentui/react-components";
 import {
   makeStyles,
   Link,
   Tooltip,
-  TableColumnDefinition,
   createTableColumn,
   Table,
   TableHeader,
@@ -18,7 +21,6 @@ import {
   TableCell,
   useTableColumnSizing_unstable,
   useTableFeatures,
-  TableColumnSizingOptions,
   Text,
   tokens,
   Spinner,
@@ -34,7 +36,7 @@ import {
 import React from "react";
 import globalStyles from "../../../GlobalStyles";
 import { observer } from "mobx-react-lite";
-import { TaskHistoryItem } from "../../../../stores/userState/Status";
+import type { TaskHistoryItem } from "../../../../stores/userState/Status";
 import * as Utils from "../../../../utils/Helpers";
 
 const useStyles = makeStyles({

@@ -43,6 +43,7 @@
     "preview": "vite preview",
     "format": "prettier --write .",
     "lint": "npx eslint .",
+    "lint:fix": "npx eslint --fix .",
     "upgrade:check": "npx npm-check-updates --format group",
     "upgrade": "npx npm-check-updates -u"
   }

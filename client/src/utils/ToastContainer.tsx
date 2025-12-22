@@ -1,14 +1,16 @@
+import type {
+  ToasterProps,
+  ToastId,
+  useToastController,
+} from "@fluentui/react-components";
 import {
   Link,
   Spinner,
   Toast,
-  ToasterProps,
-  ToastId,
   ToastTitle,
   ToastTrigger,
-  useToastController,
 } from "@fluentui/react-components";
-import { JSX } from "react/jsx-runtime";
+import type { JSX } from "react/jsx-runtime";
 
 type ToastFunctions = ReturnType<typeof useToastController>;
 type ToastOptions = Parameters<ToastFunctions["dispatchToast"]>[1];

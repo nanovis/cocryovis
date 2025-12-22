@@ -1,11 +1,11 @@
-import { Tooltip } from "@fluentui/react-components";
-import { JSX } from "react/jsx-runtime";
+import { type PositioningShorthand, Tooltip } from "@fluentui/react-components";
+import type { JSX } from "react/jsx-runtime";
 
 interface Props {
   content: JSX.Element | null;
   child: JSX.Element;
   hideDelay?: number;
-  positioning?: import("@fluentui/react-components").PositioningShorthand;
+  positioning?: PositioningShorthand;
   relationship?: "label" | "description" | "inaccessible";
   visible?: boolean;
 }

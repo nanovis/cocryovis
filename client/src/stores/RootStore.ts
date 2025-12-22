@@ -1,5 +1,7 @@
-import { flow, Instance, isAlive, types } from "mobx-state-tree";
-import { User, UserDB } from "./userState/UserModel";
+import type { Instance } from "mobx-state-tree";
+import { flow, isAlive, types } from "mobx-state-tree";
+import type { UserDB } from "./userState/UserModel";
+import { User } from "./userState/UserModel";
 import { createContext, use } from "react";
 import Cookies from "js-cookie";
 import { UiState } from "./uiState/UiState";

@@ -14,7 +14,7 @@ const useStyles = makeStyles({
   sbutton: { padding: "0px" },
 });
 
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface Props {
   label: string;

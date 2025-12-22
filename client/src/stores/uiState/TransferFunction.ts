@@ -1,11 +1,5 @@
-import {
-  Instance,
-  SnapshotIn,
-  types,
-  getParentOfType,
-  flow,
-  isAlive,
-} from "mobx-state-tree";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { types, getParentOfType, flow, isAlive } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
 import * as Utils from "../../utils/Helpers";
 

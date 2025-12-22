@@ -1,8 +1,10 @@
+import type {
+  OptionOnSelectData,
+  SelectionEvents,
+} from "@fluentui/react-components";
 import {
   Button,
   Combobox,
-  OptionOnSelectData,
-  SelectionEvents,
   tokens,
   Tooltip,
   useComboboxFilter,
@@ -10,7 +12,8 @@ import {
 import { Dismiss12Regular } from "@fluentui/react-icons";
 
 import { makeStyles } from "@fluentui/react-components";
-import { ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 const useStyles = makeStyles({
   multiselectContainer: {

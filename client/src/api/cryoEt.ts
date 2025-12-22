@@ -1,6 +1,6 @@
-import z from "zod";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
-import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
+import type { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 
 export async function queueTiltSeriesReconstruction(request: FormData) {
   await Utils.sendApiRequest(`tilt-series-reconstruction`, {

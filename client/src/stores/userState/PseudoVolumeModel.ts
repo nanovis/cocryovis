@@ -1,6 +1,7 @@
-import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
-import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
-import z from "zod";
+import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, types } from "mobx-state-tree";
+import type z from "zod";
 import { updateVolumeData } from "../../api/volumeData";
 
 export const PseudoLabelVolume = types

@@ -19,13 +19,14 @@ import {
   EditFilled,
   EraserFilled,
 } from "@fluentui/react-icons";
-import { ChangeEvent, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useRef, useState } from "react";
 import * as Utils from "../../../utils/Helpers";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
-import { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
+import type { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
 import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";

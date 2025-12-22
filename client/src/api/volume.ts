@@ -1,16 +1,16 @@
-import z from "zod";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
-import {
+import type {
   createVolumeReq,
   getVolumeSchema,
   volumeQuerySchema,
   volumesDeepSchemaRes,
 } from "#schemas/volume-path-schema.mjs";
-import {
+import type {
   volumeSchema,
   volumeUpdateSchema,
 } from "#schemas/componentSchemas/volume-schema.mjs";
-import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 
 export async function getVolumesFromProjectDeep(id: number) {
   const response = await Utils.sendApiRequest(`project/${id}/volumes/deep`, {

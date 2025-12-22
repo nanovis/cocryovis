@@ -1,19 +1,18 @@
-import { Instance, SnapshotIn, types } from "mobx-state-tree";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
-import { Volume, VolumeInstance } from "../userState/VolumeModel";
-import { Result, ResultInstance } from "../userState/ResultModel";
+import type { VolumeInstance } from "../userState/VolumeModel";
+import { Volume } from "../userState/VolumeModel";
+import type { ResultInstance } from "../userState/ResultModel";
+import { Result } from "../userState/ResultModel";
 import { flow, isAlive } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
-import {
-  SparseLabelVolume,
-  SparseVolumeInstance,
-} from "../userState/SparseVolumeModel";
-import {
-  PseudoLabelVolume,
-  PseudoVolumeInstance,
-} from "../userState/PseudoVolumeModel";
-import z from "zod";
-import { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
+import type { SparseVolumeInstance } from "../userState/SparseVolumeModel";
+import { SparseLabelVolume } from "../userState/SparseVolumeModel";
+import type { PseudoVolumeInstance } from "../userState/PseudoVolumeModel";
+import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
+import type z from "zod";
+import type { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
 import { downloadRawFile } from "../../api/volumeData";
 import { getVolumeWithSparseVolumes } from "../../api/volume";
 import ToastContainer from "../../utils/ToastContainer";

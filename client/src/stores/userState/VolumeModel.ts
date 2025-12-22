@@ -1,30 +1,32 @@
-import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import { RawVolume, RawVolumeSnapshotIn } from "./RawVolumeModel";
-import {
-  SparseLabelVolume,
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, isAlive, types } from "mobx-state-tree";
+import type { RawVolumeSnapshotIn } from "./RawVolumeModel";
+import { RawVolume } from "./RawVolumeModel";
+import type {
   SparseVolumeInstance,
   SparseVolumeSnapshotIn,
 } from "./SparseVolumeModel";
-import {
-  PseudoLabelVolume,
+import { SparseLabelVolume } from "./SparseVolumeModel";
+import type {
   PseudoVolumeInstance,
   PseudoVolumeSnapshotIn,
 } from "./PseudoVolumeModel";
+import { PseudoLabelVolume } from "./PseudoVolumeModel";
 import { VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
-import { VolumeSettings } from "../../utils/VolumeSettings";
-import { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
-import z from "zod";
-import {
+import type { VolumeSettings } from "../../utils/VolumeSettings";
+import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
+import type z from "zod";
+import type {
   volumeSchema,
   volumeUpdateSchema,
 } from "#schemas/componentSchemas/volume-schema.mjs";
-import {
+import type {
   deepVolumeSchema,
   volumesDeepSchemaRes,
 } from "#schemas/volume-path-schema.mjs";
-import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
-import { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
+import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
 import { getVolumesFromProjectDeep } from "../../api/volume";
 import * as volumeApi from "../../api/volume";
 import {
@@ -33,7 +35,7 @@ import {
   createFromUrl,
   deleteVolumeData,
 } from "../../api/volumeData";
-import { FileTypeOptions } from "../uiState/UploadDialog";
+import type { FileTypeOptions } from "../uiState/UploadDialog";
 import ToastContainer from "../../utils/ToastContainer";
 
 export type LabeledVolumeTypes =

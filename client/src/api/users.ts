@@ -1,4 +1,4 @@
-import {
+import type {
   idUserSchema,
   loginSchemaReq,
   publicUser,
@@ -9,7 +9,7 @@ import {
   usersArray,
 } from "#schemas/user-path-schema.mjs";
 import * as Utils from "../utils/Helpers";
-import z from "zod";
+import type z from "zod";
 
 export async function login(request: z.input<typeof loginSchemaReq>) {
   const response = await Utils.sendApiRequest("login", {

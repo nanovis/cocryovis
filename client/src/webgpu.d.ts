@@ -1,4 +1,4 @@
-import { MainModule } from "./wasmInterface";
+import type { MainModule } from "./wasmInterface";
 
 declare global {
   interface Window {

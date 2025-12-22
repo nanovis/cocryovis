@@ -1,6 +1,7 @@
-import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import z from "zod";
-import { statusSchema } from "#schemas/user-path-schema.mjs";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, isAlive, types } from "mobx-state-tree";
+import type z from "zod";
+import type { statusSchema } from "#schemas/user-path-schema.mjs";
 import { getStatus } from "../../api/users";
 
 export interface TaskHistoryItem {

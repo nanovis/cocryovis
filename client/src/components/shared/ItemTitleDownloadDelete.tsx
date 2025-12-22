@@ -1,4 +1,5 @@
-import { MouseEventHandler, useState, KeyboardEvent } from "react";
+import type { MouseEventHandler, KeyboardEvent } from "react";
+import { useState } from "react";
 import { Button, Input, Label, mergeClasses } from "@fluentui/react-components";
 
 import {

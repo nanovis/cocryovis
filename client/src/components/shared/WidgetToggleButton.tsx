@@ -5,7 +5,7 @@ import {
   tokens,
   Tooltip,
 } from "@fluentui/react-components";
-import { FluentIcon } from "@fluentui/react-icons";
+import type { FluentIcon } from "@fluentui/react-icons";
 
 const useStyles = makeStyles({
   widgetButton: {

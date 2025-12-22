@@ -1,9 +1,9 @@
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../DefaultTransferFunctions";
 import ToastContainer from "./ToastContainer";
-import { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
-import { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
-import { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
+import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
+import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
+import type { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
 
 export type FileMap = Map<string, File>;
 

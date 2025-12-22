@@ -1,5 +1,5 @@
-import { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
-import {
+import type { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
+import type {
   projectAccessInfoSchema,
   projectCreateSchemaReq,
   projectSchemaDeepRes,
@@ -8,7 +8,7 @@ import {
   setAccessSchemaRes,
 } from "#schemas/project-path-schema.mjs";
 import * as Utils from "../utils/Helpers";
-import z from "zod";
+import type z from "zod";
 
 export async function getAllUserProjectsDeep() {
   const response = await Utils.sendApiRequest("projects-deep", {

@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useWebSocketConnection } from "./useWebSocketConnection";
-import { UserInstance } from "../stores/userState/UserModel";
-import { PseudoVolumeSnapshotIn } from "../stores/userState/PseudoVolumeModel";
-import { ResultSnapshotIn } from "../stores/userState/ResultModel";
-import { CheckpointSnapshotIn } from "../stores/userState/CheckpointModel";
-import { TaskHistorySnapshotIn } from "../stores/userState/Status";
-import { RawVolumeSnapshotIn } from "../stores/userState/RawVolumeModel";
+import type { UserInstance } from "../stores/userState/UserModel";
+import type { PseudoVolumeSnapshotIn } from "../stores/userState/PseudoVolumeModel";
+import type { ResultSnapshotIn } from "../stores/userState/ResultModel";
+import type { CheckpointSnapshotIn } from "../stores/userState/CheckpointModel";
+import type { TaskHistorySnapshotIn } from "../stores/userState/Status";
+import type { RawVolumeSnapshotIn } from "../stores/userState/RawVolumeModel";
 
 interface PseudoVolumeUpdate {
   volumeId: number;

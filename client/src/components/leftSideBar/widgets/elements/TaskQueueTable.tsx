@@ -1,6 +1,9 @@
+import type {
+  TableColumnDefinition,
+  TableColumnSizingOptions,
+} from "@fluentui/react-components";
 import {
   Tooltip,
-  TableColumnDefinition,
   createTableColumn,
   Table,
   TableHeader,
@@ -16,7 +19,6 @@ import {
   TableCell,
   useTableColumnSizing_unstable,
   useTableFeatures,
-  TableColumnSizingOptions,
   Text,
   tokens,
   Spinner,
@@ -25,7 +27,7 @@ import { Hourglass24Regular } from "@fluentui/react-icons";
 import React from "react";
 import globalStyles from "../../../GlobalStyles";
 import { observer } from "mobx-react-lite";
-import { TaskQueueItem } from "../../../../stores/userState/Status";
+import type { TaskQueueItem } from "../../../../stores/userState/Status";
 
 const columnsDef: TableColumnDefinition<TaskQueueItem>[] = [
   createTableColumn<TaskQueueItem>({

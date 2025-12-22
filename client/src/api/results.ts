@@ -1,6 +1,6 @@
-import z from "zod";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
-import {
+import type {
   getResultSchema,
   resultFilesSchema,
 } from "#schemas/result-path-schema.mjs";

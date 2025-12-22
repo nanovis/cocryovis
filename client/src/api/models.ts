@@ -1,10 +1,10 @@
-import z from "zod";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
-import {
+import type {
   modelSchema,
   modelSchemaWithCheckpoint,
 } from "#schemas/componentSchemas/model-schema.mjs";
-import {
+import type {
   createModelSchema,
   getModelQuerySchema,
 } from "#schemas/models-path-schema.mjs";

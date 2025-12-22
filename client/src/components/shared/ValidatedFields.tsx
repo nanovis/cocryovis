@@ -1,21 +1,23 @@
-import {
-  Input,
-  Field,
+import type {
   InputOnChangeData,
-  InfoLabel,
-  Switch,
   SwitchOnChangeData,
-  Dropdown,
-  Option,
   OptionOnSelectData,
 } from "@fluentui/react-components";
 import {
+  Input,
+  Field,
+  InfoLabel,
+  Switch,
+  Dropdown,
+  Option,
+} from "@fluentui/react-components";
+import type {
   BooleanInputField,
   DropdownInputField,
   NumberInputField,
 } from "../../utils/Input";
 import { observer } from "mobx-react-lite";
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 export const NumberInputValidatedField = observer(
   ({

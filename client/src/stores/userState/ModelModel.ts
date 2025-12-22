@@ -1,7 +1,9 @@
-import { flow, Instance, isAlive, SnapshotIn, types } from "mobx-state-tree";
-import { CheckpointInstance, ModelCheckpoints } from "./CheckpointModel";
-import z from "zod";
-import {
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, isAlive, types } from "mobx-state-tree";
+import type { CheckpointInstance } from "./CheckpointModel";
+import { ModelCheckpoints } from "./CheckpointModel";
+import type z from "zod";
+import type {
   modelSchema,
   modelSchemaWithCheckpoint,
   modelSchemaWithOptionalCheckpoint,

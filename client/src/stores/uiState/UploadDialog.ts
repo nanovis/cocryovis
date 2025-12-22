@@ -1,15 +1,9 @@
-import {
-  flow,
-  getParentOfType,
-  Instance,
-  isAlive,
-  SnapshotIn,
-  types,
-} from "mobx-state-tree";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, getParentOfType, isAlive, types } from "mobx-state-tree";
 import { VolumeSettings } from "../../utils/VolumeSettings";
 import * as Utils from "../../utils/Helpers";
-import { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
-import z from "zod";
+import type { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
+import type z from "zod";
 import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
 import { getTomographyMetadataFromCryoETId } from "../../api/cryoEt";
 import ToastContainer from "../../utils/ToastContainer";

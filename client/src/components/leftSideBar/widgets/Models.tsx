@@ -21,11 +21,11 @@ import ComboboxSearch from "../../shared/ComboboxSearch";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
-import { ModelInstance } from "../../../stores/userState/ModelModel";
-import { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
+import type { ModelInstance } from "../../../stores/userState/ModelModel";
+import type { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
 import ToastContainer from "../../../utils/ToastContainer";
 import { getErrorMessage } from "../../../utils/Helpers";
-import { JSX } from "react/jsx-runtime";
+import type { JSX } from "react/jsx-runtime";
 
 interface Props {
   open: boolean;

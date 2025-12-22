@@ -1,9 +1,10 @@
-import { flow, Instance, SnapshotIn, types } from "mobx-state-tree";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, types } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
 import { updateVolumeData } from "../../api/volumeData";
 import ToastContainer from "../../utils/ToastContainer";
-import { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
-import z from "zod";
+import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
+import type z from "zod";
 
 export const SparseLabelVolume = types
   .model({

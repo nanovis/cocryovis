@@ -1,6 +1,6 @@
-import z from "zod";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
-import { projectSchemaDeepRes } from "#schemas/project-path-schema.mjs";
+import type { projectSchemaDeepRes } from "#schemas/project-path-schema.mjs";
 
 export async function getDemo() {
   const response = await Utils.sendApiRequest("demo", {

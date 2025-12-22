@@ -1,17 +1,11 @@
-import {
-  flow,
-  getType,
-  Instance,
-  isAlive,
-  SnapshotIn,
-  types,
-} from "mobx-state-tree";
-import {
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, getType, isAlive, types } from "mobx-state-tree";
+import type {
   visualizedObjectInstances,
-  VisualizedVolume,
   VisualizedVolumeSnapshotIn,
 } from "./VisualizedVolume";
-import { VolVisSettingsSnapshotIn } from "./VolVisSettings";
+import { VisualizedVolume } from "./VisualizedVolume";
+import type { VolVisSettingsSnapshotIn } from "./VolVisSettings";
 import * as Utils from "../../utils/Helpers";
 import { Volume } from "../userState/VolumeModel";
 import { CONFIG } from "../../Constants.mjs";

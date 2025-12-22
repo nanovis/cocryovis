@@ -5,7 +5,7 @@ import {
   ChevronLeftFilled,
   ChevronRightFilled,
 } from "@fluentui/react-icons";
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 const useStyles = makeStyles({
   pagination: {

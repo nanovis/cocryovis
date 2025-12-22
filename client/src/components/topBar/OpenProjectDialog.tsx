@@ -18,8 +18,8 @@ import globalStyles from "../GlobalStyles";
 import { ArrowSync24Regular, People16Filled } from "@fluentui/react-icons";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore";
-import { JSX } from "react/jsx-runtime";
-import { ProjectInstance } from "../../stores/userState/ProjectModel";
+import type { JSX } from "react/jsx-runtime";
+import type { ProjectInstance } from "../../stores/userState/ProjectModel";
 import ToastContainer from "../../utils/ToastContainer";
 import { getErrorMessage } from "../../utils/Helpers";
 

@@ -38,12 +38,11 @@ import { CONFIG } from "../../../Constants.mjs";
 import "../../../App.css";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
-import ProcessTiltSeriesDialog, {
-  TiltSeriesOptions,
-} from "../../shared/ProcessTiltSeriesDialog";
+import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
+import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
-import {
+import type {
   LabeledVolumeTypes,
   VolumeInstance,
 } from "../../../stores/userState/VolumeModel";
@@ -51,13 +50,13 @@ import {
   WriteAccessTooltipContent,
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
-import { ResultInstance } from "../../../stores/userState/ResultModel";
-import { VolumeSettings } from "../../../utils/VolumeSettings";
+import type { ResultInstance } from "../../../stores/userState/ResultModel";
+import type { VolumeSettings } from "../../../utils/VolumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
-import { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
-import { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
-import { VolVisSettingsSnapshotIn } from "../../../stores/uiState/VolVisSettings";
-import { VisualizedVolumeSnapshotIn } from "../../../stores/uiState/VisualizedVolume";
+import type { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
+import type { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
+import type { VolVisSettingsSnapshotIn } from "../../../stores/uiState/VolVisSettings";
+import type { VisualizedVolumeSnapshotIn } from "../../../stores/uiState/VisualizedVolume";
 import { DEFAULT_TF } from "../../../DefaultTransferFunctions";
 import { queuePseudoLabelsGeneration } from "../../../api/ilastik";
 import { queueTiltSeriesReconstruction } from "../../../api/cryoEt";
@@ -66,10 +65,10 @@ import {
   getVolumeVisualizationFiles,
 } from "../../../api/volumeData";
 import { getResultData } from "../../../api/results";
-import { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
+import type { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
 import ToastContainer from "../../../utils/ToastContainer";
 import EditDialog from "./elements/EditDialog";
-import { JSX } from "react/jsx-runtime";
+import type { JSX } from "react/jsx-runtime";
 
 const useStyles = makeStyles({
   visualizeButton: {

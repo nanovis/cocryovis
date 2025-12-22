@@ -11,8 +11,10 @@ import {
   useId,
   useToastController,
 } from "@fluentui/react-components";
-import SignInPage, { SignInCredentials } from "./components/topBar/SignInPage";
-import SignUpPage, { SignUpCredentials } from "./components/topBar/SignUpPage";
+import type { SignInCredentials } from "./components/topBar/SignInPage";
+import SignInPage from "./components/topBar/SignInPage";
+import type { SignUpCredentials } from "./components/topBar/SignUpPage";
+import SignUpPage from "./components/topBar/SignUpPage";
 import ProfilePage from "./components/topBar/ProfilePage";
 import Cookies from "js-cookie";
 import * as Utils from "./utils/Helpers";

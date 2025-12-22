@@ -1,4 +1,8 @@
 type User = z.infer<typeof publicUser>;
+import type {
+  TableColumnDefinition,
+  TableColumnId,
+} from "@fluentui/react-components";
 import {
   Button,
   createTableColumn,
@@ -9,8 +13,6 @@ import {
   TableBody,
   TableCell,
   TableCellLayout,
-  TableColumnDefinition,
-  TableColumnId,
   TableHeader,
   TableHeaderCell,
   TableRow,
@@ -20,11 +22,12 @@ import {
 } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import GlobalStyles from "../GlobalStyles";
-import { useEffect, useState, MouseEvent } from "react";
+import type { MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
-import { publicUser } from "#schemas/user-path-schema.mjs";
-import z from "zod";
+import type { publicUser } from "#schemas/user-path-schema.mjs";
+import type z from "zod";
 import { adminDeleteUser, getAllUsers } from "../../api/users";
 import { useMst } from "../../stores/RootStore";
 import ToastContainer from "../../utils/ToastContainer";

@@ -30,13 +30,15 @@ import {
 } from "@fluentui/react-icons";
 import { VolumeSettings } from "../../utils/VolumeSettings";
 import React from "react";
+import type {
+  FileTypeOptions,
+  UploadDialogInstance,
+} from "../../stores/uiState/UploadDialog";
 import {
   endianOptions,
-  FileTypeOptions,
   fileTypeOptions,
   formatOptions,
   Tabs,
-  UploadDialogInstance,
 } from "../../stores/uiState/UploadDialog";
 import globalStyles from "../GlobalStyles";
 import { observer } from "mobx-react-lite";

@@ -16,7 +16,7 @@ import * as Utils from "../../utils/Helpers";
 import { convertMRCToRaw } from "../../utils/MrcParser";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import { VolumeSettings } from "../../utils/VolumeSettings";
+import type { VolumeSettings } from "../../utils/VolumeSettings";
 import ToastContainer from "../../utils/ToastContainer";
 
 const enum WidgetIndices {

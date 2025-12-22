@@ -1,5 +1,5 @@
-import { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
-import z from "zod";
+import type { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
+import type z from "zod";
 import * as Utils from "../utils/Helpers";
 
 export async function deleteCheckpoint(idCheckpoint: number) {

@@ -1,14 +1,10 @@
-import {
-  flow,
-  getParentOfType,
-  Instance,
-  SnapshotIn,
-  types,
-  isAlive,
-} from "mobx-state-tree";
-import { Volume, VolumeInstance } from "./VolumeModel";
+import type { Instance, SnapshotIn } from "mobx-state-tree";
+import { flow, getParentOfType, types, isAlive } from "mobx-state-tree";
+import type { VolumeInstance } from "./VolumeModel";
+import { Volume } from "./VolumeModel";
 import { User } from "./UserModel";
-import { Model, ModelInstance } from "./ModelModel";
+import type { ModelInstance } from "./ModelModel";
+import { Model } from "./ModelModel";
 import * as Utils from "../../utils/Helpers";
 import {
   BooleanInputField,

@@ -1,17 +1,19 @@
 //Nano-Ötzi.js
 import { useState } from "react";
+import type {
+  OptionOnSelectData,
+  AccordionToggleData,
+} from "@fluentui/react-components";
 import {
   makeStyles,
   tokens,
   Button,
   Tooltip,
-  OptionOnSelectData,
   Accordion,
   AccordionItem,
   AccordionHeader,
   AccordionPanel,
   Text,
-  AccordionToggleData,
 } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
@@ -25,9 +27,9 @@ import ComboboxTagMultiselect from "../../shared/ComboboxTagMultiselect";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
-import { VolumeInstance } from "../../../stores/userState/VolumeModel";
-import { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
-import { ModelInstance } from "../../../stores/userState/ModelModel";
+import type { VolumeInstance } from "../../../stores/userState/VolumeModel";
+import type { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
+import type { ModelInstance } from "../../../stores/userState/ModelModel";
 import {
   BooleanInputValidatedField,
   DropdownInputValidatedField,
@@ -38,7 +40,7 @@ import { getVolumeDataById, getVolumeData } from "../../../api/volumeData";
 import { checkpointToText } from "../../../api/checkpoint";
 import { createResultFromFiles } from "../../../api/results";
 import ToastContainer from "../../../utils/ToastContainer";
-import { JSX } from "react/jsx-runtime";
+import type { JSX } from "react/jsx-runtime";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {
