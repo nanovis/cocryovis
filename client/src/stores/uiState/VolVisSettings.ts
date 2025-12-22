@@ -21,7 +21,9 @@ export const VolVisSettings = types
     },
   }));
 
-export interface VolVisSettingsInstance
-  extends Instance<typeof VolVisSettings> {}
-export interface VolVisSettingsSnapshotIn
-  extends SnapshotIn<typeof VolVisSettings> {}
+export interface VolVisSettingsInstance extends Instance<
+  typeof VolVisSettings
+> {}
+export interface VolVisSettingsSnapshotIn extends SnapshotIn<
+  typeof VolVisSettings
+> {}

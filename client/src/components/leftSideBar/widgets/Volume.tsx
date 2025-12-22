@@ -439,8 +439,7 @@ const Volume = observer(({ open, close }: Props) => {
         throw new Error("WasmModule is not loaded.");
       }
 
-      const volumeVisualizationSettingsArray: VolVisSettingsSnapshotIn[] =
-        [];
+      const volumeVisualizationSettingsArray: VolVisSettingsSnapshotIn[] = [];
 
       const vizualizedVolume: VisualizedVolumeSnapshotIn = {
         volVisSettings: volumeVisualizationSettingsArray,
@@ -1213,9 +1212,7 @@ const Volume = observer(({ open, close }: Props) => {
                     if (!visualizedVolume) {
                       return;
                     }
-                    await visualizedVolume.setLabelEditingMode(
-                      data.checked
-                    );
+                    await visualizedVolume.setLabelEditingMode(data.checked);
                   }}
                   disabled={!canActivateEditingMode()}
                 />
@@ -1304,9 +1301,7 @@ const Volume = observer(({ open, close }: Props) => {
                   onEnabled={() => {
                     selectedVolume.toggleShownAnnotation(index);
                   }}
-                  isActive={
-                    selectedVolume.volumeDataConfirmDeleteActiveRequest
-                  }
+                  isActive={selectedVolume.volumeDataConfirmDeleteActiveRequest}
                   onEditVolumeData={async (newTitle) => {
                     await handleRenameSparseData(
                       selectedVolume.sparseVolumeArray[index],
@@ -1546,9 +1541,7 @@ const Volume = observer(({ open, close }: Props) => {
                   deleteQuestion={selectedVolume.pseudoVolumeArray[index].name}
                   deleteTitle={"Remove Pseudo Volume Data?"}
                   preventChanges={!activeProject?.hasWriteAccess}
-                  isActive={
-                    selectedVolume.volumeDataConfirmDeleteActiveRequest
-                  }
+                  isActive={selectedVolume.volumeDataConfirmDeleteActiveRequest}
                   onEditVolumeData={async (newTitle) => {
                     await handleRenamePseudoData(
                       selectedVolume.pseudoVolumeArray[index],

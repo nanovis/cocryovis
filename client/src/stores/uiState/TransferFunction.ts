@@ -128,7 +128,9 @@ export const TransferFunction = types
     }),
   }));
 
-export interface TransferFunctionInstance
-  extends Instance<typeof TransferFunction> {}
-export interface TransferFunctionSnapshotIn
-  extends SnapshotIn<typeof TransferFunction> {}
+export interface TransferFunctionInstance extends Instance<
+  typeof TransferFunction
+> {}
+export interface TransferFunctionSnapshotIn extends SnapshotIn<
+  typeof TransferFunction
+> {}

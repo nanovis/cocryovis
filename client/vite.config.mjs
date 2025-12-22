@@ -6,7 +6,6 @@ import { DEFAULT_URL } from "./src/Constants.mjs";
 import path from "path";
 
 export default defineConfig(({ mode }) => {
-   
   const env = loadEnv(mode, process.cwd());
 
   const proxyTarget = env.VITE_API_URL || DEFAULT_URL;
@@ -18,7 +17,6 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-         
         "#schemas": path.resolve(__dirname, "../schemas"),
       },
     },

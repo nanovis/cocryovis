@@ -39,7 +39,6 @@ export const UiState = types
   })
   .volatile(() => ({
     isSignInOrSignUpInProgress: false,
-
   }))
   .actions((self) => ({
     setOpenLeftWidget(id: number) {
@@ -114,7 +113,7 @@ export const UiState = types
     },
   }))
   .actions((self) => ({
-     visualizeVolume: flow(function* visualizeVolume(
+    visualizeVolume: flow(function* visualizeVolume(
       filesMap: Map<string, Blob>,
       visualizedObject: visualizedObjectInstances
     ) {
@@ -173,7 +172,7 @@ export const UiState = types
       const transferFunctionDefinitions = new Map();
       let defaultTFIndex = 0;
 
-       // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       for (const [index, fileName] of config.files.entries()) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const file = filesMap.get(fileName);

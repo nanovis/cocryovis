@@ -45,5 +45,4 @@ export async function deleteModel(idModel: number) {
     method: "DELETE",
     credentials: "include",
   });
-
 }

@@ -148,10 +148,12 @@ export const FileUploadInputs = types
     },
   }));
 
-export interface FileUploadInputsInstance
-  extends Instance<typeof FileUploadInputs> {}
-export interface FileUploadInputsSnapshotIn
-  extends SnapshotIn<typeof FileUploadInputs> {}
+export interface FileUploadInputsInstance extends Instance<
+  typeof FileUploadInputs
+> {}
+export interface FileUploadInputsSnapshotIn extends SnapshotIn<
+  typeof FileUploadInputs
+> {}
 
 export const UrlUploadInputs = types
   .model({
@@ -258,10 +260,12 @@ export const UrlUploadInputs = types
     },
   }));
 
-export interface UrlUploadInputsInstance
-  extends Instance<typeof UrlUploadInputs> {}
-export interface UrlUploadInputsSnapshotIn
-  extends SnapshotIn<typeof UrlUploadInputs> {}
+export interface UrlUploadInputsInstance extends Instance<
+  typeof UrlUploadInputs
+> {}
+export interface UrlUploadInputsSnapshotIn extends SnapshotIn<
+  typeof UrlUploadInputs
+> {}
 
 export const CryoETUploadInputs = types
   .model({
@@ -342,10 +346,12 @@ export const CryoETUploadInputs = types
     }),
   }));
 
-export interface CryoETUploadInputsInstance
-  extends Instance<typeof CryoETUploadInputs> {}
-export interface CryoETUploadInputsSnapshotIn
-  extends SnapshotIn<typeof CryoETUploadInputs> {}
+export interface CryoETUploadInputsInstance extends Instance<
+  typeof CryoETUploadInputs
+> {}
+export interface CryoETUploadInputsSnapshotIn extends SnapshotIn<
+  typeof CryoETUploadInputs
+> {}
 
 export const UploadDialog = types
   .model({
@@ -387,5 +393,6 @@ export const UploadDialog = types
   }));
 
 export interface UploadDialogInstance extends Instance<typeof UploadDialog> {}
-export interface UploadDialogSnapshotIn
-  extends SnapshotIn<typeof UploadDialog> {}
+export interface UploadDialogSnapshotIn extends SnapshotIn<
+  typeof UploadDialog
+> {}

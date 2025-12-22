@@ -5,4 +5,4 @@ export const CONFIG = Object.freeze({
   statusRefreshInterval: 5000,
 });
 
-export const DEFAULT_URL = "http://localhost:8080"
+export const DEFAULT_URL = "http://localhost:8080";

@@ -164,7 +164,10 @@ const SideControls = observer(() => {
             title={"Visualization"}
             labelPositioning={"before"}
             LabelIcon={BorderNone24Regular}
-            isOpen={uiState.openRightWidget === (WidgetIndices.Visualization as number)}
+            isOpen={
+              uiState.openRightWidget ===
+              (WidgetIndices.Visualization as number)
+            }
             onClick={() =>
               uiState.setOpenRightWidget(WidgetIndices.Visualization)
             }
@@ -175,7 +178,10 @@ const SideControls = observer(() => {
             title={"Render Settings"}
             labelPositioning={"before"}
             LabelIcon={SlideSettings24Regular}
-            isOpen={uiState.openRightWidget === (WidgetIndices.RenderSettings as number)}
+            isOpen={
+              uiState.openRightWidget ===
+              (WidgetIndices.RenderSettings as number)
+            }
             onClick={() =>
               uiState.setOpenRightWidget(WidgetIndices.RenderSettings)
             }
@@ -194,12 +200,16 @@ const SideControls = observer(() => {
       </div>
 
       <Visualization
-        open={uiState.openRightWidget === (WidgetIndices.Visualization as number)}
+        open={
+          uiState.openRightWidget === (WidgetIndices.Visualization as number)
+        }
         close={uiState.closeRightHandWidgets}
       />
 
       <RenderSettings
-        open={uiState.openRightWidget === (WidgetIndices.RenderSettings as number)}
+        open={
+          uiState.openRightWidget === (WidgetIndices.RenderSettings as number)
+        }
         close={uiState.closeRightHandWidgets}
       />
 

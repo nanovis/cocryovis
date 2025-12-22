@@ -60,7 +60,10 @@ export async function getVolumeData(
   return await response.arrayBuffer();
 }
 
-export async function getVolumeVisualizationFiles(type: keyof VolumeDataMap, id: number) {
+export async function getVolumeVisualizationFiles(
+  type: keyof VolumeDataMap,
+  id: number
+) {
   const response = await Utils.sendApiRequest(
     `volumeData/${type}/${id}/visualization-data`,
     {
@@ -168,11 +171,8 @@ export async function deleteVolumeData(
   type: keyof VolumeDataMap,
   idVolumeData: number
 ) {
-  await Utils.sendApiRequest(
-    `volumeData/${type}/${idVolumeData}`,
-    {
-      method: "DELETE",
-      credentials: "include",
-    }
-  );
+  await Utils.sendApiRequest(`volumeData/${type}/${idVolumeData}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }

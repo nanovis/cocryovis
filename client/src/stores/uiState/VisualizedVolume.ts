@@ -251,7 +251,9 @@ export const VisualizedVolume = types
     }),
   }));
 
-export interface VisualizedVolumeInstance
-  extends Instance<typeof VisualizedVolume> {}
-export interface VisualizedVolumeSnapshotIn
-  extends SnapshotIn<typeof VisualizedVolume> {}
+export interface VisualizedVolumeInstance extends Instance<
+  typeof VisualizedVolume
+> {}
+export interface VisualizedVolumeSnapshotIn extends SnapshotIn<
+  typeof VisualizedVolume
+> {}

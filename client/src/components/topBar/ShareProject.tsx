@@ -216,7 +216,8 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
   const refreshUsersWithAccess = () => {
     setUsersWithAccess(
-      users.current.filter(
+      users.current
+        .filter(
           (userData) =>
             accessInfoMap.current.get(userData.id) >= -1 &&
             pendingChanges.get(userData.id) !== -1

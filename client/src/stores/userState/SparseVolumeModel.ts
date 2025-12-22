@@ -64,7 +64,9 @@ export const SparseLabelVolume = types
     }),
   }));
 
-export interface SparseVolumeInstance
-  extends Instance<typeof SparseLabelVolume> {}
-export interface SparseVolumeSnapshotIn
-  extends SnapshotIn<typeof SparseLabelVolume> {}
+export interface SparseVolumeInstance extends Instance<
+  typeof SparseLabelVolume
+> {}
+export interface SparseVolumeSnapshotIn extends SnapshotIn<
+  typeof SparseLabelVolume
+> {}

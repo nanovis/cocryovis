@@ -89,7 +89,7 @@ const SignUpPage = ({ onSignUp }: Props) => {
   const [errorMessage, setErrorMessage] = useState("");
   const classes = useStyles();
 
-  const handleSubmit = async ()  =>  {
+  const handleSubmit = async () => {
     uiState.setIsActive(true);
     setShowSpinner(true);
     setErrorMessage("");

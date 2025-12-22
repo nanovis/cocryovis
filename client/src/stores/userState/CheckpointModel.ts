@@ -35,7 +35,9 @@ export const ModelCheckpoints = types
     },
     setSelectedCheckpointId(checkpointId: number | undefined) {
       if (checkpointId && !self.checkpoints.has(checkpointId)) {
-        throw new Error(`Checkpoint with id ${checkpointId.toString()} not found`);
+        throw new Error(
+          `Checkpoint with id ${checkpointId.toString()} not found`
+        );
       }
       self.selectedCheckpointId = checkpointId;
     },
@@ -54,7 +56,9 @@ export const ModelCheckpoints = types
     },
     setSelectedCheckpointId(checkpointId: number | undefined) {
       if (checkpointId && !self.checkpoints.has(checkpointId)) {
-        throw new Error(`Checkpoint with id ${checkpointId.toString()} not found`);
+        throw new Error(
+          `Checkpoint with id ${checkpointId.toString()} not found`
+        );
       }
       self.selectedCheckpointId = checkpointId;
     },
@@ -79,8 +83,10 @@ export const ModelCheckpoints = types
         formData.append("files", file);
       }
 
-      const checkpoints =
-        (yield checkpointApi.uploadCheckpoints(self.modelId, formData)) as z.infer<typeof checkpointSchemaArray>;
+      const checkpoints = (yield checkpointApi.uploadCheckpoints(
+        self.modelId,
+        formData
+      )) as z.infer<typeof checkpointSchemaArray>;
       if (!isAlive(self)) {
         return;
       }
@@ -127,7 +133,9 @@ export const ModelCheckpoints = types
     }),
   }));
 
-export interface ModelCheckpointsInstance
-  extends Instance<typeof ModelCheckpoints> {}
-export interface ModelCheckpointsSnapshotIn
-  extends SnapshotIn<typeof ModelCheckpoints> {}
+export interface ModelCheckpointsInstance extends Instance<
+  typeof ModelCheckpoints
+> {}
+export interface ModelCheckpointsSnapshotIn extends SnapshotIn<
+  typeof ModelCheckpoints
+> {}

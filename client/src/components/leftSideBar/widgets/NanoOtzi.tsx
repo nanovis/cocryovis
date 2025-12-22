@@ -147,10 +147,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
-      window.WasmModule.FS.writeFile(
-        settingsFileName,
-        JSON.stringify(rawData)
-      );
+      window.WasmModule.FS.writeFile(settingsFileName, JSON.stringify(rawData));
 
       window.WasmModule.FS.writeFile(settings.file, rawDataFile);
 

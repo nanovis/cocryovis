@@ -45,7 +45,7 @@ const DeleteDialog = ({
                 <Spinner
                   appearance="primary"
                   size="medium"
-                  style={{marginRight: "10px"}}
+                  style={{ marginRight: "10px" }}
                 />
               </div>
             ) : (

@@ -320,7 +320,9 @@ const ItemTitleDownloadDelete = observer(
             BodyText={deleteQuestion ?? ""}
             open={isDialogOpen}
             onClose={handleCloseDialog}
-            onConfirm={() => {handleDeleteClick().catch(console.error)}}
+            onConfirm={() => {
+              handleDeleteClick().catch(console.error);
+            }}
             isActive={isActive}
           />
         </div>

@@ -286,10 +286,7 @@ const VolumeUploadDialog = observer(
           settings
         );
       } else {
-        await onUrlConfirm(
-          urlUploadInputs.url,
-          urlUploadInputs.fileType
-        );
+        await onUrlConfirm(urlUploadInputs.url, urlUploadInputs.fileType);
       }
     };
 

@@ -81,7 +81,9 @@ export const RenderSettings = types
     },
   }));
 
-export interface RenderSettingsInstance
-  extends Instance<typeof RenderSettings> {}
-export interface RenderSettingsSnapshotIn
-  extends SnapshotIn<typeof RenderSettings> {}
+export interface RenderSettingsInstance extends Instance<
+  typeof RenderSettings
+> {}
+export interface RenderSettingsSnapshotIn extends SnapshotIn<
+  typeof RenderSettings
+> {}

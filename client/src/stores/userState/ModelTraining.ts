@@ -349,5 +349,6 @@ export const ModelTraining = types
   }));
 
 export interface ModelTrainingInstance extends Instance<typeof ModelTraining> {}
-export interface ModelTrainingSnapshotIn
-  extends SnapshotIn<typeof ModelTraining> {}
+export interface ModelTrainingSnapshotIn extends SnapshotIn<
+  typeof ModelTraining
+> {}

@@ -107,11 +107,9 @@ const SignInPage = observer(({ onSignIn }: Props) => {
     <div className={classes.container}>
       <h2 className={classes.signInHeader}>Sign In</h2>
       <form
-        onSubmit={(event) =>
-          {
-            handleSubmit(event).catch(console.error);
-          }
-        }
+        onSubmit={(event) => {
+          handleSubmit(event).catch(console.error);
+        }}
       >
         <div className={classes.inputContainer}>
           <label className={classes.label} htmlFor="username">

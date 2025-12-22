@@ -147,49 +147,52 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
     toastContainer.success("Sign-up successful!");
   };
 
-  const globalKeyDown = useCallback((event: KeyboardEvent) => {
-    if (mouseOverCanvas.current) {
-      switch (event.key.toLowerCase()) {
-        case "f":
-          uiState.visualizedVolume?.setFullscreen(
-            !uiState.visualizedVolume.fullscreen
-          );
-          break;
-        case "r":
-          uiState.visualizedVolume?.setShowRawClippingPlane(
-            !uiState.visualizedVolume.showRawClippingPlane
-          );
-          break;
-        case "l":
-          uiState.visualizedVolume?.setEraseMode(
-            !uiState.visualizedVolume.eraseMode
-          );
-          break;
-        default:
-          break;
-      }
-      if (event.shiftKey) {
-        // Check for event codes since shift combos make other characters
-        switch (event.code) {
-          case "Digit1":
-            uiState.visualizedVolume?.setClippingPlane("0");
+  const globalKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (mouseOverCanvas.current) {
+        switch (event.key.toLowerCase()) {
+          case "f":
+            uiState.visualizedVolume?.setFullscreen(
+              !uiState.visualizedVolume.fullscreen
+            );
             break;
-          case "Digit2":
-            uiState.visualizedVolume?.setClippingPlane("1");
+          case "r":
+            uiState.visualizedVolume?.setShowRawClippingPlane(
+              !uiState.visualizedVolume.showRawClippingPlane
+            );
             break;
-          case "Digit3":
-            uiState.visualizedVolume?.setClippingPlane("2");
+          case "l":
+            uiState.visualizedVolume?.setEraseMode(
+              !uiState.visualizedVolume.eraseMode
+            );
             break;
-          case "Digit4":
-            uiState.visualizedVolume?.setClippingPlane("3");
-            break;
-          case "Digit5":
-            uiState.visualizedVolume?.setClippingPlane("4");
+          default:
             break;
         }
+        if (event.shiftKey) {
+          // Check for event codes since shift combos make other characters
+          switch (event.code) {
+            case "Digit1":
+              uiState.visualizedVolume?.setClippingPlane("0");
+              break;
+            case "Digit2":
+              uiState.visualizedVolume?.setClippingPlane("1");
+              break;
+            case "Digit3":
+              uiState.visualizedVolume?.setClippingPlane("2");
+              break;
+            case "Digit4":
+              uiState.visualizedVolume?.setClippingPlane("3");
+              break;
+            case "Digit5":
+              uiState.visualizedVolume?.setClippingPlane("4");
+              break;
+          }
+        }
       }
-    }
-  }, [uiState.visualizedVolume]);
+    },
+    [uiState.visualizedVolume]
+  );
 
   useEffect(() => {
     getIsUserAuth().catch(console.error);
@@ -209,7 +212,9 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
 
         <div
           id="rendering"
-          onContextMenu={(e) => { e.preventDefault(); }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+          }}
           onMouseEnter={() => (mouseOverCanvas.current = true)}
           onMouseLeave={() => (mouseOverCanvas.current = false)}
         >

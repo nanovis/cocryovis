@@ -43,9 +43,7 @@ const useStyles = makeStyles({
   },
 });
 
-interface Props<
-  T extends { children: ReactNode | string; value: string },
-> {
+interface Props<T extends { children: ReactNode | string; value: string }> {
   selectionList: T[];
   textState: string[];
   selectedOptions: string[];
@@ -68,8 +66,7 @@ const ComboboxTagMultiselect = <
   title,
   placeholder,
   noOptionsMessage,
-  optionToText = ({ children }: { children: ReactNode }) =>
-    children as string,
+  optionToText = ({ children }: { children: ReactNode }) => children as string,
 }: Props<T>) => {
   const classes = useStyles();
 

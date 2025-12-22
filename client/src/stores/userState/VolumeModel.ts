@@ -469,5 +469,6 @@ export const ProjectVolumes = types
     }),
   }));
 
-export interface ProjectVolumesInstance
-  extends Instance<typeof ProjectVolumes> {}
+export interface ProjectVolumesInstance extends Instance<
+  typeof ProjectVolumes
+> {}

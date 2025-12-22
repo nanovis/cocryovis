@@ -164,14 +164,19 @@ const ProcessTiltSeriesDialog = observer(
             ...parseOptions(Object.entries(store.reconstructionInputs)),
           };
         }
-        await onSubmit(store.pendingFile, options, toastContainer, store.serverSide);
+        await onSubmit(
+          store.pendingFile,
+          options,
+          toastContainer,
+          store.serverSide
+        );
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
         onClose();
         toastContainer.success("Tilt series processed successfully.");
       } catch (error) {
-      toastContainer.error(Utils.getErrorMessage(error));
+        toastContainer.error(Utils.getErrorMessage(error));
       } finally {
         setIsBusy(false);
       }

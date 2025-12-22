@@ -5,7 +5,7 @@ import { ModelTraining } from "./ModelTraining";
 import z from "zod";
 import { publicUser } from "#schemas/user-path-schema.mjs";
 
-export type UserDB = z.infer<typeof publicUser>
+export type UserDB = z.infer<typeof publicUser>;
 
 export const User = types
   .model({

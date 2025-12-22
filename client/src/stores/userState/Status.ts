@@ -104,10 +104,12 @@ export const TaskQueueElement = types.model({
   startTime: types.optional(types.maybeNull(types.Date), null),
 });
 
-export interface TaskQueueElementInstance
-  extends Instance<typeof TaskQueueElement> {}
-export interface TaskQueueElementSnapshotIn
-  extends SnapshotIn<typeof TaskQueueElement> {}
+export interface TaskQueueElementInstance extends Instance<
+  typeof TaskQueueElement
+> {}
+export interface TaskQueueElementSnapshotIn extends SnapshotIn<
+  typeof TaskQueueElement
+> {}
 
 enum Type {
   "Label Generation" = 0,

@@ -484,9 +484,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 value={uiState.kernelSize}
                 min={1}
                 max={200}
-                onChange={(_, data) =>
-                  uiState.setKernelSize(data.value)
-                }
+                onChange={(_, data) => uiState.setKernelSize(data.value)}
               />
             </Field>
           </div>
@@ -533,7 +531,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 }
                 checked={
                   visualizedVolume?.rawSettings !== undefined &&
-                  (visualizedVolume.showRawClippingPlane)
+                  visualizedVolume.showRawClippingPlane
                 }
                 min={1}
                 max={200}

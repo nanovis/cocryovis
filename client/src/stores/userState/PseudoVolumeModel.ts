@@ -32,7 +32,9 @@ export const PseudoLabelVolume = types
     }),
   }));
 
-export interface PseudoVolumeInstance
-  extends Instance<typeof PseudoLabelVolume> {}
-export interface PseudoVolumeSnapshotIn
-  extends SnapshotIn<typeof PseudoLabelVolume> {}
+export interface PseudoVolumeInstance extends Instance<
+  typeof PseudoLabelVolume
+> {}
+export interface PseudoVolumeSnapshotIn extends SnapshotIn<
+  typeof PseudoLabelVolume
+> {}

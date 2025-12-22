@@ -126,7 +126,7 @@ const ProfilePage = observer(() => {
       toastContainer.error(getErrorMessage(error));
     }
   };
-  
+
   const deleteUser = async () => {
     try {
       user.setDeleteUserActiveRequset(true);

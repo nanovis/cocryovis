@@ -453,8 +453,7 @@ export const TiltSeriesDialog = types
         "Patch Radius must be between 0 and 0.5.",
         0.125,
         "Low spatial frequencies in the cross-correlation will be attenuated by a Gaussian curve that is 1 at this cutoff radius and falls off below this radius with a standard deviation.",
-        (value: number) =>
-          Utils.isFloatBetween(value, 0, 0.5)
+        (value: number) => Utils.isFloatBetween(value, 0, 0.5)
       ),
       rotationAngle: new NumberInputField(
         "Rotation Angle",
@@ -652,7 +651,9 @@ export const TiltSeriesDialog = types
     },
   }));
 
-export interface TiltSeriesDialogInstance
-  extends Instance<typeof TiltSeriesDialog> {}
-export interface TiltSeriesDialogSnapshotIn
-  extends SnapshotIn<typeof TiltSeriesDialog> {}
+export interface TiltSeriesDialogInstance extends Instance<
+  typeof TiltSeriesDialog
+> {}
+export interface TiltSeriesDialogSnapshotIn extends SnapshotIn<
+  typeof TiltSeriesDialog
+> {}

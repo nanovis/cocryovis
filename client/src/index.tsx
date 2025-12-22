@@ -124,7 +124,9 @@ const Main = () => {
           // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           console.log("Renderer status: " + text);
         },
-        monitorRunDependencies: function () { /* empty */ },
+        monitorRunDependencies: function () {
+          /* empty */
+        },
       });
 
       console.log("Emscripten Module Initialized with WebGPU.");
@@ -150,7 +152,7 @@ const Main = () => {
           }, 250);
         }
       }, 250);
-    } catch(e) {
+    } catch (e) {
       console.log(e);
       const spinner = document.getElementById("loading-spinner");
       if (spinner) {
@@ -160,7 +162,9 @@ const Main = () => {
   }
 
   function canvasResize() {
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
+    const canvas = document.getElementById(
+      "canvas"
+    ) as HTMLCanvasElement | null;
     if (!canvas?.parentElement || !window.WasmModule) return;
     const parentWidth = canvas.parentElement.offsetWidth;
 

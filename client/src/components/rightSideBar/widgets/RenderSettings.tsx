@@ -148,12 +148,8 @@ const RenderSettings = observer(({ open, close }: Props) => {
                   `#${renderSettings.clearColor[0]
                     .toString(16)
                     .padStart(2, "0")}` +
-                  renderSettings.clearColor[1]
-                    .toString(16)
-                    .padStart(2, "0") +
-                  renderSettings.clearColor[2]
-                    .toString(16)
-                    .padStart(2, "0")
+                  renderSettings.clearColor[1].toString(16).padStart(2, "0") +
+                  renderSettings.clearColor[2].toString(16).padStart(2, "0")
                 }
                 onChange={(event) => handleChangeClearColor(event)}
               />
@@ -253,9 +249,9 @@ const RenderSettings = observer(({ open, close }: Props) => {
           <div className={classes.sliderContainer}>
             <Field
               orientation="horizontal"
-              label={<Text>
-                Number of Samples [{renderSettings.aoNumSamples}]
-              </Text>}
+              label={
+                <Text>Number of Samples [{renderSettings.aoNumSamples}]</Text>
+              }
               className={classes.sliderField}
             >
               <Slider
