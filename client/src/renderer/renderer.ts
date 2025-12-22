@@ -1,44 +1,82 @@
-export interface WebGPURenderer {
-  init: (canvas: HTMLCanvasElement) => Promise<void>;
-  setVertexBuffer: (data: Float32Array) => void;
-  destroy: () => void;
+export interface DeviceInfo {
+  adapter: GPUAdapter;
+  device: GPUDevice;
+  context: GPUCanvasContext;
 }
 
-export function createWebGPURenderer(): WebGPURenderer {
-  let device: GPUDevice | null = null;
-  let context: GPUCanvasContext | null = null;
-  let pipeline: GPURenderPipeline | null = null;
-  let vertexBuffer: GPUBuffer | null = null;
-  let animationFrame: number | null = null;
+export async function initializeDevice(
+  canvas: HTMLCanvasElement,
+  {
+    adapterOptions,
+    deviceOptions,
+  }: {
+    adapterOptions?: GPURequestAdapterOptions;
+    deviceOptions?: GPUDeviceDescriptor;
+  } = {}
+): Promise<DeviceInfo> {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!navigator.gpu) {
+    throw new Error("WebGPU not supported");
+  }
 
-  async function init(canvas: HTMLCanvasElement) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!navigator.gpu) {
-      throw new Error("WebGPU not supported");
+  const adapter = await navigator.gpu.requestAdapter(adapterOptions);
+  if (!adapter) {
+    throw new Error("No GPU adapter found");
+  }
+
+  const device = await adapter.requestDevice(deviceOptions);
+
+  const context = canvas.getContext("webgpu");
+
+  if (!context) {
+    throw new Error("WebGPU not supported");
+  }
+
+  const format = navigator.gpu.getPreferredCanvasFormat();
+
+  context.configure({
+    device,
+    format,
+    alphaMode: "opaque",
+  });
+
+  return { adapter, device, context };
+}
+
+export class VolumeRenderer {
+  device: GPUDevice;
+  context: GPUCanvasContext | undefined;
+  outputFormat?: GPUTextureFormat | undefined;
+  outputView?: GPUTextureView | undefined;
+
+  pipeline: GPURenderPipeline | null = null;
+  vertexBuffer: GPUBuffer | null = null;
+  animationFrame: number | null = null;
+
+  constructor(
+    device: GPUDevice,
+    {
+      outputFormat,
+      outputView,
+      context,
+    }: {
+      outputFormat?: GPUTextureFormat;
+      outputView?: GPUTextureView;
+      context?: GPUCanvasContext;
+    } = {}
+  ) {
+    this.device = device;
+    this.outputFormat = outputFormat;
+    this.context = context;
+    this.outputView = outputView;
+
+    if (!context && !outputView && !outputFormat) {
+      throw new Error(
+        "Either context, or outputView and outputFormat must be provided"
+      );
     }
 
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) {
-      throw new Error("No GPU adapter found");
-    }
-
-    device = await adapter.requestDevice();
-
-    context = canvas.getContext("webgpu");
-
-    if (!context) {
-      throw new Error("WebGPU not supported");
-    }
-
-    const format = navigator.gpu.getPreferredCanvasFormat();
-
-    context.configure({
-      device,
-      format,
-      alphaMode: "opaque",
-    });
-
-    const shader = device.createShaderModule({
+    const shader = this.device.createShaderModule({
       code: `
         struct VSOut {
           @builtin(position) pos: vec4<f32>,
@@ -58,7 +96,10 @@ export function createWebGPURenderer(): WebGPURenderer {
       `,
     });
 
-    pipeline = device.createRenderPipeline({
+    const format =
+      this.outputFormat ?? navigator.gpu.getPreferredCanvasFormat();
+
+    this.pipeline = this.device.createRenderPipeline({
       layout: "auto",
       vertex: {
         module: shader,
@@ -84,14 +125,19 @@ export function createWebGPURenderer(): WebGPURenderer {
       primitive: { topology: "triangle-list" },
     });
 
-    render();
+    this.render();
   }
 
-  function render() {
-    if (!device || !context || !pipeline) return;
+  render() {
+    if (!this.pipeline) return;
 
-    const encoder = device.createCommandEncoder();
-    const view = context.getCurrentTexture().createView();
+    const encoder = this.device.createCommandEncoder();
+    const view =
+      this.outputView ?? this.context?.getCurrentTexture().createView();
+
+    if (!view) {
+      return;
+    }
 
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -104,51 +150,40 @@ export function createWebGPURenderer(): WebGPURenderer {
       ],
     });
 
-    pass.setPipeline(pipeline);
+    pass.setPipeline(this.pipeline);
 
-    if (vertexBuffer) {
-      pass.setVertexBuffer(0, vertexBuffer);
+    if (this.vertexBuffer) {
+      pass.setVertexBuffer(0, this.vertexBuffer);
       pass.draw(3);
     }
 
     pass.end();
-    device.queue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
 
-    animationFrame = requestAnimationFrame(render);
+    this.animationFrame = requestAnimationFrame(this.render.bind(this));
   }
 
-  function setVertexBuffer(data: Float32Array) {
-    if (!device) return;
+  setVertexBuffer(data: Float32Array) {
+    this.vertexBuffer?.destroy();
 
-    vertexBuffer?.destroy();
-
-    vertexBuffer = device.createBuffer({
+    this.vertexBuffer = this.device.createBuffer({
       size: data.byteLength,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
       mappedAtCreation: true,
     });
 
-    new Float32Array(vertexBuffer.getMappedRange()).set(data);
-    vertexBuffer.unmap();
+    new Float32Array(this.vertexBuffer.getMappedRange()).set(data);
+    this.vertexBuffer.unmap();
   }
 
-  function destroy() {
-    if (animationFrame !== null) {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = null;
+  destroy() {
+    if (this.animationFrame !== null) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
     }
 
-    vertexBuffer?.destroy();
-    vertexBuffer = null;
-
-    device = null;
-    context = null;
-    pipeline = null;
+    this.vertexBuffer?.destroy();
+    this.vertexBuffer = null;
+    this.pipeline = null;
   }
-
-  return {
-    init,
-    setVertexBuffer,
-    destroy,
-  };
 }

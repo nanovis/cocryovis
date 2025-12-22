@@ -25,6 +25,7 @@ import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import { getLoggedUserData, login, register } from "./api/users";
 import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/ToastContainer";
+import RendererCanvas from "./components/RendererCanvas/RendererCanvas.tsx";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height
@@ -224,6 +225,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
           {uiState.openSignUpPage && <SignUpPage onSignUp={handleSignUp} />}
           {uiState.openProfilePage && <ProfilePage />}
           <AdminPanel />
+          <RendererCanvas />
           <canvas id="canvas" tabIndex={0} />
         </div>
         {!uiState.openSignInPage && !uiState.openSignUpPage && (

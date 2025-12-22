@@ -138,8 +138,8 @@ const Main = () => {
 
       // eslint-disable-next-line @typescript-eslint/await-thenable
       await window.WasmModule.start_app();
-      canvasResize();
-      window.addEventListener("resize", canvasResize);
+      // canvasResize();
+      // window.addEventListener("resize", canvasResize);
 
       setTimeout(() => {
         const spinner = document.getElementById("loading-spinner");
@@ -161,35 +161,35 @@ const Main = () => {
     }
   }
 
-  function canvasResize() {
-    const canvas = document.getElementById(
-      "canvas"
-    ) as HTMLCanvasElement | null;
-    if (!canvas?.parentElement || !window.WasmModule) return;
-    const parentWidth = canvas.parentElement.offsetWidth;
-
-    const maxHeight = window.innerHeight;
-
-    let canvasHeight = parentWidth * (9 / 16);
-
-    if (canvasHeight > maxHeight) {
-      canvasHeight = maxHeight;
-      const limitedWidth = maxHeight * (16 / 9);
-      canvas.style.width = `${limitedWidth}px`;
-    } else {
-      canvas.style.width = `${parentWidth}px`;
-    }
-
-    canvas.style.height = `${canvasHeight}px`;
-
-    canvas.width = parseFloat(canvas.style.width);
-    canvas.height = canvasHeight;
-
-    window.WasmModule.on_resize(
-      Math.round(canvas.width),
-      Math.round(canvas.height)
-    );
-  }
+  // function canvasResize() {
+  //   const canvas = document.getElementById(
+  //     "canvas"
+  //   ) as HTMLCanvasElement | null;
+  //   if (!canvas?.parentElement || !window.WasmModule) return;
+  //   const parentWidth = canvas.parentElement.offsetWidth;
+  //
+  //   const maxHeight = window.innerHeight;
+  //
+  //   let canvasHeight = parentWidth * (9 / 16);
+  //
+  //   if (canvasHeight > maxHeight) {
+  //     canvasHeight = maxHeight;
+  //     const limitedWidth = maxHeight * (16 / 9);
+  //     canvas.style.width = `${limitedWidth}px`;
+  //   } else {
+  //     canvas.style.width = `${parentWidth}px`;
+  //   }
+  //
+  //   canvas.style.height = `${canvasHeight}px`;
+  //
+  //   canvas.width = parseFloat(canvas.style.width);
+  //   canvas.height = canvasHeight;
+  //
+  //   window.WasmModule.on_resize(
+  //     Math.round(canvas.width),
+  //     Math.round(canvas.height)
+  //   );
+  // }
 
   useEffect(() => {
     if (!window.WasmModule) {
