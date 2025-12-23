@@ -4,6 +4,12 @@ export interface DeviceInfo {
   context: GPUCanvasContext;
 }
 
+export interface OutputInfo {
+  outputFormat: GPUTextureFormat;
+  outputView: GPUTextureView;
+  aspectRatio: number;
+}
+
 export async function initializeDevice(
   canvas: HTMLCanvasElement,
   {
@@ -46,9 +52,10 @@ export async function initializeDevice(
 export class VolumeRenderer {
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
-  outputFormat?: GPUTextureFormat | undefined;
-  outputView?: GPUTextureView | undefined;
+  output: OutputInfo | undefined;
 
+  aspectRatio: number;
+  format: GPUTextureFormat;
   pipeline: GPURenderPipeline | null = null;
   vertexBuffer: GPUBuffer | null = null;
   animationFrame: number | null = null;
@@ -56,24 +63,25 @@ export class VolumeRenderer {
   constructor(
     device: GPUDevice,
     {
-      outputFormat,
-      outputView,
+      output,
       context,
     }: {
-      outputFormat?: GPUTextureFormat;
-      outputView?: GPUTextureView;
+      output?: OutputInfo;
       context?: GPUCanvasContext;
     } = {}
   ) {
     this.device = device;
-    this.outputFormat = outputFormat;
     this.context = context;
-    this.outputView = outputView;
+    this.output = output;
 
-    if (!context && !outputView && !outputFormat) {
-      throw new Error(
-        "Either context, or outputView and outputFormat must be provided"
-      );
+    if (output) {
+      this.aspectRatio = output.aspectRatio;
+      this.format = output.outputFormat;
+    } else if (context) {
+      this.aspectRatio = context.canvas.width / context.canvas.height;
+      this.format = navigator.gpu.getPreferredCanvasFormat();
+    } else {
+      throw new Error("Either context or output information must be provided");
     }
 
     const shader = this.device.createShaderModule({
@@ -96,9 +104,6 @@ export class VolumeRenderer {
       `,
     });
 
-    const format =
-      this.outputFormat ?? navigator.gpu.getPreferredCanvasFormat();
-
     this.pipeline = this.device.createRenderPipeline({
       layout: "auto",
       vertex: {
@@ -120,7 +125,7 @@ export class VolumeRenderer {
       fragment: {
         module: shader,
         entryPoint: "fs_main",
-        targets: [{ format }],
+        targets: [{ format: this.format }],
       },
       primitive: { topology: "triangle-list" },
     });
@@ -133,7 +138,7 @@ export class VolumeRenderer {
 
     const encoder = this.device.createCommandEncoder();
     const view =
-      this.outputView ?? this.context?.getCurrentTexture().createView();
+      this.output?.outputView ?? this.context?.getCurrentTexture().createView();
 
     if (!view) {
       return;
@@ -174,6 +179,10 @@ export class VolumeRenderer {
 
     new Float32Array(this.vertexBuffer.getMappedRange()).set(data);
     this.vertexBuffer.unmap();
+  }
+
+  resize(width: number, height: number) {
+    this.aspectRatio = width / height;
   }
 
   destroy() {

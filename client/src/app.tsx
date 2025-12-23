@@ -39,6 +39,10 @@ const useStyles = makeStyles({
     overflowY: "hidden",
     justifyContent: "space-between", // This will space out the children
   },
+  rendererContainer: {
+    flex: 1,
+    height: "100%",
+  },
 });
 
 const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
@@ -210,7 +214,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
       <Toaster toasterId={toasterId} {...DEFAULT_TOASTER_PROPS} />
       <MenuBar toggleTheme={toggleTheme} connectionStatus={connectionStatus} />
 
-      <div id="main-panel" className={classes.mainPanel}>
+      <div className={classes.mainPanel}>
         {!uiState.openSignInPage && !uiState.openSignUpPage && <SideControls />}
 
         <div
@@ -225,7 +229,9 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
           {uiState.openSignUpPage && <SignUpPage onSignUp={handleSignUp} />}
           {uiState.openProfilePage && <ProfilePage />}
           <AdminPanel />
-          <RendererCanvas />
+          <div className={classes.rendererContainer}>
+            <RendererCanvas />
+          </div>
           <canvas id="canvas" tabIndex={0} />
         </div>
         {!uiState.openSignInPage && !uiState.openSignUpPage && (
