@@ -8,7 +8,7 @@ export class ParamData {
   enableSoftShadows = 0;
 
   interaction = 0.0;
-  sampleRate = 1.0;
+  sampleRate = 5.0;
   aoRadius = 1.0;
   aoStrength = 1.0;
 
@@ -17,13 +17,13 @@ export class ParamData {
   shadowStrength = 1.0;
   voxelSize = 1.0;
 
-  enableVolumeA = 0;
+  enableVolumeA = 1;
   enableVolumeB = 0;
   enableVolumeC = 0;
   enableVolumeD = 0;
 
   // vec4
-  clippingMask = vec4.create();
+  clippingMask = vec4.fromValues(1, 1, 1, 1);
   viewVector = vec4.create();
   clippingPlaneOrigin = vec4.create();
   clippingPlaneNormal = vec4.create();
@@ -36,13 +36,13 @@ export class ParamData {
 
   rawVolumeChannel = -1;
   numChannels = 1;
-  empty2 = 0;
-  empty3 = 0;
 
   private dirty: boolean = true;
   private readonly onChange: (() => void) | undefined;
   private readonly buffer;
   private device: GPUDevice;
+
+  private destroyed: boolean = false;
 
   constructor(
     device: GPUDevice,
@@ -53,6 +53,7 @@ export class ParamData {
     this.device = device;
     this.onChange = onChange;
     this.buffer = device.createBuffer({
+      label: "ParamData Buffer",
       size: this.getSize(),
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
@@ -68,70 +69,116 @@ export class ParamData {
     return data.byteLength;
   }
 
-  toBuffer(): Float32Array {
-    const buffer = new Float32Array(64); // 64 floats = 1024 bits = plenty
+  toBuffer(): ArrayBuffer {
+    const buffer = new ArrayBuffer(48 * 4);
+    const view = new DataView(buffer);
 
-    let i = 0;
+    let o = 0;
+    const le = true; // little-endian (required)
 
-    // Scalars (first 4 floats)
-    buffer[i++] = this.enableEarlyRayTermination;
-    buffer[i++] = this.enableJittering;
-    buffer[i++] = this.enableAmbientOcclusion;
-    buffer[i++] = this.enableSoftShadows;
+    // ---- i32 flags ----
+    view.setInt32(o, this.enableEarlyRayTermination, le);
+    o += 4;
+    view.setInt32(o, this.enableJittering, le);
+    o += 4;
+    view.setInt32(o, this.enableAmbientOcclusion, le);
+    o += 4;
+    view.setInt32(o, this.enableSoftShadows, le);
+    o += 4;
 
-    buffer[i++] = this.interaction;
-    buffer[i++] = this.sampleRate;
-    buffer[i++] = this.aoRadius;
-    buffer[i++] = this.aoStrength;
+    // ---- f32 ----
+    view.setFloat32(o, this.interaction, le);
+    o += 4;
+    view.setFloat32(o, this.sampleRate, le);
+    o += 4;
+    view.setFloat32(o, this.aoRadius, le);
+    o += 4;
+    view.setFloat32(o, this.aoStrength, le);
+    o += 4;
 
-    buffer[i++] = this.aoNumSamples;
-    buffer[i++] = this.shadowQuality;
-    buffer[i++] = this.shadowStrength;
-    buffer[i++] = this.voxelSize;
+    // ---- mixed ----
+    view.setInt32(o, this.aoNumSamples, le);
+    o += 4;
+    view.setFloat32(o, this.shadowQuality, le);
+    o += 4;
+    view.setFloat32(o, this.shadowStrength, le);
+    o += 4;
+    view.setFloat32(o, this.voxelSize, le);
+    o += 4;
 
-    buffer[i++] = this.enableVolumeA;
-    buffer[i++] = this.enableVolumeB;
-    buffer[i++] = this.enableVolumeC;
-    buffer[i++] = this.enableVolumeD;
+    view.setInt32(o, this.enableVolumeA, le);
+    o += 4;
+    view.setInt32(o, this.enableVolumeB, le);
+    o += 4;
+    view.setInt32(o, this.enableVolumeC, le);
+    o += 4;
+    view.setInt32(o, this.enableVolumeD, le);
+    o += 4;
 
-    // vec4s
-    buffer.set(this.clippingMask, i);
-    i += 4;
-    buffer.set(this.viewVector, i);
-    i += 4;
-    buffer.set(this.clippingPlaneOrigin, i);
-    i += 4;
-    buffer.set(this.clippingPlaneNormal, i);
-    i += 4;
-    buffer.set(this.clearColor, i);
-    i += 4;
+    // ---- vec4<f32> ----
+    for (let i = 0; i < 4; i++)
+      view.setFloat32(o + i * 4, this.clippingMask[i], le);
+    o += 16;
 
-    // Scalars
-    buffer[i++] = this.enableAnnotations;
-    buffer[i++] = this.annotationVolume;
-    buffer[i++] = this.annotationPingPong;
-    buffer[i++] = this.shadowRadius;
+    for (let i = 0; i < 4; i++)
+      view.setFloat32(o + i * 4, this.viewVector[i], le);
+    o += 16;
 
-    buffer[i++] = this.rawVolumeChannel;
-    buffer[i++] = this.numChannels;
-    buffer[i++] = this.empty2;
-    buffer[i++] = this.empty3;
+    for (let i = 0; i < 4; i++)
+      view.setFloat32(o + i * 4, this.clippingPlaneOrigin[i], le);
+    o += 16;
+
+    for (let i = 0; i < 4; i++)
+      view.setFloat32(o + i * 4, this.clippingPlaneNormal[i], le);
+    o += 16;
+
+    for (let i = 0; i < 4; i++)
+      view.setFloat32(o + i * 4, this.clearColor[i], le);
+    o += 16;
+
+    // ---- tail i32s ----
+    view.setInt32(o, this.enableAnnotations, le);
+    o += 4;
+    view.setInt32(o, this.annotationVolume, le);
+    o += 4;
+    view.setInt32(o, this.annotationPingPong, le);
+    o += 4;
+    view.setFloat32(o, this.shadowRadius, le);
+    o += 4;
+
+    view.setInt32(o, this.rawVolumeChannel, le);
+    o += 4;
+    view.setInt32(o, this.numChannels, le);
+    o += 4;
+
+    // padding (empty2, empty3)
+    view.setInt32(o, 0, le);
+    o += 4;
+    view.setInt32(o, 0, le);
+    o += 4;
+
+    console.log(buffer);
 
     return buffer;
   }
 
   updateBuffer() {
-    if (!this.dirty) {
+    if (!this.dirty || this.destroyed) {
       return;
     }
     const data = this.toBuffer();
-    this.device.queue.writeBuffer(this.buffer, 0, data.buffer);
-
+    this.device.queue.writeBuffer(this.buffer, 0, data);
+    this.dirty = false;
     this.onChange?.();
   }
 
   getBuffer(): GPUBuffer {
     this.updateBuffer();
     return this.buffer;
+  }
+
+  destroy() {
+    this.destroyed = true;
+    this.buffer.destroy();
   }
 }

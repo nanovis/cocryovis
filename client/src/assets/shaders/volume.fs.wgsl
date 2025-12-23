@@ -14,8 +14,7 @@ struct Camera {
 	view : mat4x4<f32>,
 	viewInv : mat4x4<f32>,
 	proj : mat4x4<f32>,
-	aspectRatio : f32,
-	fov : f32,
+	mvpInv : mat4x4<f32>,
 }
 
 struct Ray
@@ -43,6 +42,14 @@ struct TransferFunctionColor
 struct TransferFunctionRamp
 {
 	ramp : array<f32>,
+}
+
+struct ChannelData
+{
+  color : vec4<f32>,
+  ratio: vec4<f32>,
+  rampStart: f32,
+  rampEnd: f32,
 }
 
 struct Param
@@ -95,10 +102,11 @@ struct Annotations
 //@group(0) @binding(5) var volume2 : texture_3d<f32>;
 //@group(0) @binding(6) var volume3 : texture_3d<f32>;
 @group(0) @binding(8) var<uniform> param : Param;
-@group(0) @binding(9) var<storage, read> transferFunctionColor: TransferFunctionColor;
-@group(0) @binding(10) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
-@group(0) @binding(11) var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
-@group(0) @binding(12) var<storage, read> volumeRatios: VolumeRatios;
+@group(0) @binding(9) var<storage, read> channelData: array<ChannelData>;
+//@group(0) @binding(9) var<storage, read> transferFunctionColor: TransferFunctionColor;
+//@group(0) @binding(10) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
+//@group(0) @binding(11) var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
+//@group(0) @binding(12) var<storage, read> volumeRatios: VolumeRatios;
 // @group(0) @binding(13) var<storage, read> annotations: Annotations;
 
 var<private> seedGlobal : u32;
@@ -233,29 +241,29 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 {
 	var mapped : vec4<f32>;
 
-	var volumeRatio = volumeRatios.ratio[0].xyz;
+	var volumeRatio = channelData[0].ratio.xyz;
 	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
 
 	var sample4 = textureSampleLevel(volume0, s, pos, 0.0);
 
-	var low0 = transferFunctionRamp1.ramp[0];
-	var high0 = transferFunctionRamp2.ramp[0];
+	var low0 = channelData[0].rampStart;
+	var high0 = channelData[0].rampEnd;
 	mapped.x = clamp((sample4.x - low0) / (high0 - low0), 0.0, 1.0);
 
 	mapped.x = mapped.x * f32(param.enableVolumeA);
 
-	var low1 = transferFunctionRamp1.ramp[1];
-	var high1 = transferFunctionRamp2.ramp[1];
+	var low1 = channelData[1].rampStart;
+	var high1 = channelData[1].rampEnd;
 	mapped.y = clamp((sample4.y - low1) / (high1 - low1), 0.0, 1.0);
 	mapped.y = mapped.y * f32(param.enableVolumeB);
 
-	var low2 = transferFunctionRamp1.ramp[2];
-	var high2 = transferFunctionRamp2.ramp[2];
+	var low2 = channelData[2].rampStart;
+	var high2 = channelData[2].rampEnd;
 	mapped.z = clamp((sample4.z - low2) / (high2 - low2), 0.0, 1.0);
 	mapped.z = mapped.z * f32(param.enableVolumeC);
 
-	var low3 = transferFunctionRamp1.ramp[3];
-	var high3 = transferFunctionRamp2.ramp[3];
+	var low3 = channelData[3].rampStart;
+	var high3 = channelData[3].rampEnd;
 	mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);
 
 	var clipEnabled = param.clippingMask.x != 1.0 ||
@@ -311,7 +319,7 @@ fn calcTBNMatrix2(direction : vec3<f32>) -> mat3x3<f32>
 
 fn color_transfer(which : i32) -> vec3<f32>
 {
-	return transferFunctionColor.color[which].xyz;
+	return channelData[which].color.xyz;
 }
 
 fn intersect_plane(ray: Ray, p : Plane) -> Intersection
@@ -370,7 +378,7 @@ fn main(
 
 
 	// volumeRatio = voxelSize * (dataSize / maxDataSize)
-	var volumeRatio = volumeRatios.ratio[0].xyz;
+	var volumeRatio = channelData[0].ratio.xyz;
 	//size = vec3<f32>(1.5, 1.0, 1.0);
 
 	// intialize random seed
@@ -449,6 +457,10 @@ fn main(
 			continue;
 		}
 
+//		output.color = vec4<f32>(isec1.xyz, 1.0);
+//
+//		return output;
+
 		var masks = vec4<f32>(0.0);
 		// 0,1,2 mask 3 is raw data
 		masks = dataRead(isec1);
@@ -457,9 +469,6 @@ fn main(
 		if (masks.x < 0.01 && masks.y < 0.01 && masks.z < 0.01) {
 			masks = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 		}
-
-		//return output;
-
 
 		// ======================== SAMPLE ANNOTATION VOLUME ========================
 		var annotationColor = vec4<f32>(0, 0, 0, 0);
@@ -482,10 +491,9 @@ fn main(
 			if(i != rawVolumeChannel) {
 				influence += masks[i];
 			}
-
 		}
 
-		if (( influence <= 0.2) || (useRawVolume && masks[rawVolumeChannel] <= 0.1)) {
+		if (influence <= 0.2 || (useRawVolume && masks[rawVolumeChannel] <= 0.1)) {
 			continue;
 		}
 
@@ -496,7 +504,6 @@ fn main(
 			output.frag_depth = projPos.z / projPos.w;
 			firstHit = false;
 		}
-
 
 		// ============= OBJECTS SPACE AMBIENT OCCLUSION =============
 		var ao = 0.0;
@@ -568,8 +575,8 @@ fn main(
 					}
 
 					var value = 1.0 - (sample_var.x + sample_var.y + sample_var.z);
-					var low = transferFunctionRamp1.ramp[4];
-					var high = transferFunctionRamp2.ramp[4];
+					var low = channelData[4].rampStart;
+					var high = channelData[4].rampEnd;
 					var occlusion = 1.0 - clamp((value - low) / (high - low), 0.0, 1.0);
 					//occlusion = 1.0 - value;
 					//occlusion = 1.0 - dataRead(sp, 1).x;
@@ -614,21 +621,21 @@ fn main(
 			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
 			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
 
-			if (annotationColor.a > 0) {
-				var stripe = annotationColor.xyz;
-
-				var stripeStrength = 0.2;
-				if (sin((position.x + position.y) * 100.0) > 0.0)
-				{
-					stripe = mix(stripe, vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
-				}
-				else
-				{
-					stripe = mix(stripe, vec3<f32>(1.0, 1.0, 1.0), stripeStrength);
-				}
-
-				color = mix(color, stripe, annotationColor.a);
-			}
+//			if (annotationColor.a > 0) {
+//				var stripe = annotationColor.xyz;
+//
+//				var stripeStrength = 0.2;
+//				if (sin((position.x + position.y) * 100.0) > 0.0)
+//				{
+//					stripe = mix(stripe, vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
+//				}
+//				else
+//				{
+//					stripe = mix(stripe, vec3<f32>(1.0, 1.0, 1.0), stripeStrength);
+//				}
+//
+//				color = mix(color, stripe, annotationColor.a);
+//			}
 
 			//front to back alpha compositing
 			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;

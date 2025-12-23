@@ -18,11 +18,11 @@ export default function useRenderer(
       const renderer = new VolumeRenderer(
         deviceInfo.device,
         {
-          position: vec3.fromValues(0, 0, 1),
+          position: vec3.fromValues(0, 0, -3),
           viewCenter: vec3.fromValues(0, 0, 0),
-          up: vec3.fromValues(0, 1, 0),
+          up: vec3.fromValues(0, -1, 0),
           fovY: 45,
-          near: 0.1,
+          near: 0.01,
           far: 100,
         },
         {

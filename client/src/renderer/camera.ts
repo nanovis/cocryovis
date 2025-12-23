@@ -21,7 +21,6 @@ export class Camera {
   private viewMatrix: mat4;
   private inverseViewMatrix: mat4;
   private projectionMatrix: mat4;
-  private inverseProjectionMatrix: mat4;
 
   private device: GPUDevice;
 
@@ -30,6 +29,7 @@ export class Camera {
 
     this.params = params;
     this.buffer = this.device.createBuffer({
+      label: "Camera Buffer",
       size: 256,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
@@ -38,10 +38,7 @@ export class Camera {
     this.viewMatrix = viewMatrix;
     this.inverseViewMatrix = inverseViewMatrix;
 
-    const { projectionMatrix, inverseProjectionMatrix } =
-      this.computeProjectionMatrix();
-    this.projectionMatrix = projectionMatrix;
-    this.inverseProjectionMatrix = inverseProjectionMatrix;
+    this.projectionMatrix = this.computeProjectionMatrix();
   }
 
   private computeViewMatrix(): { viewMatrix: mat4; inverseViewMatrix: mat4 } {
@@ -57,10 +54,7 @@ export class Camera {
     return { viewMatrix, inverseViewMatrix };
   }
 
-  private computeProjectionMatrix(): {
-    projectionMatrix: mat4;
-    inverseProjectionMatrix: mat4;
-  } {
+  private computeProjectionMatrix(): mat4 {
     const projectionMatrix = mat4.create();
     mat4.perspectiveZO(
       projectionMatrix,
@@ -69,9 +63,7 @@ export class Camera {
       this.params.near,
       this.params.far
     );
-    const inverseProjectionMatrix = mat4.create();
-    mat4.invert(inverseProjectionMatrix, projectionMatrix);
-    return { projectionMatrix, inverseProjectionMatrix };
+    return projectionMatrix;
   }
 
   getViewMatrix(): { viewMatrix: mat4; inverseViewMatrix: mat4 } {
@@ -86,20 +78,11 @@ export class Camera {
     };
   }
 
-  getProjectionMatrix(): {
-    projectionMatrix: mat4;
-    inverseProjectionMatrix: mat4;
-  } {
+  getProjectionMatrix(): mat4 {
     if (this.dirty) {
-      const { projectionMatrix, inverseProjectionMatrix } =
-        this.computeProjectionMatrix();
-      this.projectionMatrix = projectionMatrix;
-      this.inverseProjectionMatrix = inverseProjectionMatrix;
+      this.projectionMatrix = this.computeProjectionMatrix();
     }
-    return {
-      projectionMatrix: this.projectionMatrix,
-      inverseProjectionMatrix: this.inverseProjectionMatrix,
-    };
+    return this.projectionMatrix;
   }
 
   setParameters(params: Partial<CameraParams>) {
@@ -113,8 +96,11 @@ export class Camera {
     }
 
     const { viewMatrix, inverseViewMatrix } = this.getViewMatrix();
-    const { projectionMatrix, inverseProjectionMatrix } =
-      this.getProjectionMatrix();
+    const projectionMatrix = this.getProjectionMatrix();
+
+    const inverseProjectionMatrix = mat4.create();
+    mat4.multiply(inverseProjectionMatrix, projectionMatrix, viewMatrix);
+    mat4.invert(inverseProjectionMatrix, inverseProjectionMatrix);
 
     const data = new Float32Array(64);
 
@@ -130,9 +116,15 @@ export class Camera {
       data.byteOffset,
       data.byteLength
     );
+
+    this.dirty = false;
   }
 
   getBuffer(): GPUBuffer {
     return this.buffer;
+  }
+
+  destroy() {
+    this.buffer.destroy();
   }
 }

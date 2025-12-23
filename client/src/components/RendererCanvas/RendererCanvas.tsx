@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import useRenderer from "../../hooks/useRenderer.ts";
 import { makeStyles } from "@fluentui/react-components";
+import { observer } from "mobx-react-lite";
+import { useMst } from "../../stores/RootStore.ts";
 
 const useStyles = makeStyles({
   canvasContainer: {
@@ -14,13 +16,13 @@ const useStyles = makeStyles({
   },
 });
 
-const RendererCanvas = () => {
+const RendererCanvas = observer(() => {
+  const rootStore = useMst();
+
   const classes = useStyles();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRenderer(canvasRef, (renderer) => {
-    renderer.setVertexBuffer(
-      new Float32Array([0.0, 0.6, -0.6, -0.6, 0.6, -0.6])
-    );
+    rootStore.setRenderer(renderer);
   });
 
   useEffect(() => {
@@ -29,14 +31,21 @@ const RendererCanvas = () => {
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
-      const { width, height } = entry.contentRect;
+      let { width, height } = entry.contentRect;
+      width = Math.round(width);
+      height = Math.round(height);
+
+      canvas.width = width;
+      canvas.height = height;
 
       rendererRef.current?.resize(width, height);
     });
 
     observer.observe(canvas);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   });
 
   return (
@@ -44,6 +53,6 @@ const RendererCanvas = () => {
       <canvas ref={canvasRef} className={classes.canvas} />
     </div>
   );
-};
+});
 
 export default RendererCanvas;

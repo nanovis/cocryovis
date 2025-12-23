@@ -3,7 +3,7 @@ import fragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
 import { Volume } from "./volume.ts";
 import { ParamData } from "./params.ts";
 import { Camera, type CameraParams } from "./camera.ts";
-import { ChannelData } from "./transferFunctions.ts";
+import { ChannelData } from "./channelData.ts";
 
 export interface DeviceInfo {
   adapter: GPUAdapter;
@@ -38,7 +38,19 @@ export async function initializeDevice(
     throw new Error("No GPU adapter found");
   }
 
-  const device = await adapter.requestDevice(deviceOptions);
+  const requiredLimits = {
+    maxTextureDimension3D: adapter.limits.maxTextureDimension3D,
+    maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
+  };
+
+  console.log("Requesting device with limits:", requiredLimits);
+
+  const deviceDescriptor: GPUDeviceDescriptor = {
+    ...deviceOptions,
+    requiredLimits: { ...requiredLimits },
+  };
+
+  const device = await adapter.requestDevice(deviceDescriptor);
 
   const context = canvas.getContext("webgpu");
 
@@ -94,7 +106,7 @@ export class VolumeRenderer {
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
 
-  clearValue: GPUColor = { r: 0.1, g: 0.1, b: 0.1, a: 1 };
+  clearValue: GPUColor = { r: 0, g: 0, b: 0, a: 1 };
 
   bindGroup: GPUBindGroup | undefined;
   private dirtyBindGroup: boolean = true;
@@ -105,11 +117,12 @@ export class VolumeRenderer {
   width: number;
   height: number;
   format: GPUTextureFormat;
-  pipeline: GPURenderPipeline | null = null;
-  vertexBuffer: GPUBuffer | null = null;
+  pipeline: GPURenderPipeline;
   animationFrame: number | null = null;
 
   private depthTexture: GPUTexture | undefined;
+
+  private destroyed: boolean = false;
 
   constructor(
     device: GPUDevice,
@@ -147,11 +160,13 @@ export class VolumeRenderer {
       addressModeV: "clamp-to-edge",
       addressModeW: "clamp-to-edge",
     });
-    this.volume = new Volume(volumeSampler, () => {
+    this.volume = new Volume(this.device, volumeSampler, () => {
       this.dirtyBindGroup = true;
     });
     this.params = new ParamData(this.device);
-    this.channelData = new ChannelData(this.device);
+    this.channelData = new ChannelData(this.device, () => {
+      this.dirtyBindGroup = true;
+    });
 
     this.camera = new Camera(this.device, {
       ...cameraParams,
@@ -198,14 +213,15 @@ export class VolumeRenderer {
   getDepthTexture(): GPUTexture {
     if (
       this.depthTexture &&
-      this.depthTexture.width !== this.width &&
-      this.depthTexture.height !== this.height
+      this.depthTexture.width === this.width &&
+      this.depthTexture.height === this.height
     ) {
       return this.depthTexture;
     }
 
     this.depthTexture?.destroy();
     this.depthTexture = this.device.createTexture({
+      label: "Depth Texture",
       size: [this.width, this.height],
       format: DEPTH_TEXTURE_FORMAT,
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -214,15 +230,12 @@ export class VolumeRenderer {
   }
 
   recreateBindGroup() {
-    if (!this.pipeline) {
-      return;
-    }
-
     const volumeView = this.volume.getView();
 
     if (!volumeView) {
       return;
     }
+    this.dirtyBindGroup = false;
 
     this.bindGroup = this.device.createBindGroup({
       layout: this.pipeline.getBindGroupLayout(0),
@@ -249,14 +262,18 @@ export class VolumeRenderer {
         },
         {
           binding: 9,
-          resource: this.channelData.getBuffer(),
+          resource: {
+            buffer: this.channelData.getBuffer(),
+          },
         },
       ],
     });
   }
 
   render() {
-    if (!this.pipeline) return;
+    if (this.destroyed) {
+      return;
+    }
 
     const encoder = this.device.createCommandEncoder();
     const view =
@@ -275,6 +292,7 @@ export class VolumeRenderer {
     }
 
     if (!this.bindGroup) {
+      this.renderEmpty();
       return;
     }
 
@@ -296,11 +314,9 @@ export class VolumeRenderer {
     });
 
     pass.setPipeline(this.pipeline);
+    pass.setBindGroup(0, this.bindGroup);
 
-    if (this.vertexBuffer) {
-      pass.setVertexBuffer(0, this.vertexBuffer);
-      pass.draw(3);
-    }
+    pass.draw(6);
 
     pass.end();
     this.device.queue.submit([encoder.finish()]);
@@ -308,17 +324,36 @@ export class VolumeRenderer {
     this.animationFrame = requestAnimationFrame(this.render.bind(this));
   }
 
-  setVertexBuffer(data: Float32Array) {
-    this.vertexBuffer?.destroy();
+  renderEmpty() {
+    const encoder = this.device.createCommandEncoder();
+    const view =
+      this.output?.outputView ?? this.context?.getCurrentTexture().createView();
 
-    this.vertexBuffer = this.device.createBuffer({
-      size: data.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-      mappedAtCreation: true,
+    if (!view) {
+      return;
+    }
+
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view,
+          clearValue: this.clearValue,
+          loadOp: "clear",
+          storeOp: "store",
+        },
+      ],
+      depthStencilAttachment: {
+        view: this.getDepthTexture(),
+        depthClearValue: 1,
+        depthLoadOp: "clear",
+        depthStoreOp: "discard",
+      },
     });
 
-    new Float32Array(this.vertexBuffer.getMappedRange()).set(data);
-    this.vertexBuffer.unmap();
+    pass.end();
+    this.device.queue.submit([encoder.finish()]);
+
+    this.animationFrame = requestAnimationFrame(this.render.bind(this));
   }
 
   resize(width: number, height: number) {
@@ -328,13 +363,15 @@ export class VolumeRenderer {
   }
 
   destroy() {
+    this.destroyed = true;
     if (this.animationFrame !== null) {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
     }
-
-    this.vertexBuffer?.destroy();
-    this.vertexBuffer = null;
-    this.pipeline = null;
+    this.depthTexture?.destroy();
+    this.volume.destroy();
+    this.camera.destroy();
+    this.params.destroy();
+    this.channelData.destroy();
   }
 }

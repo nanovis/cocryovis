@@ -1,4 +1,8 @@
-import type { Instance, SnapshotIn } from "mobx-state-tree";
+import {
+  getParentOfType,
+  type Instance,
+  type SnapshotIn,
+} from "mobx-state-tree";
 import { flow, getType, isAlive, types } from "mobx-state-tree";
 import type {
   visualizedObjectInstances,
@@ -15,6 +19,7 @@ import { Result } from "../userState/ResultModel";
 import { SparseLabelVolume } from "../userState/SparseVolumeModel";
 import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
 import { TiltSeriesDialog } from "./TiltSeriesDialog";
+import { RootStore } from "../RootStore.ts";
 
 export const UiState = types
   .model({
@@ -143,7 +148,13 @@ export const UiState = types
         config = JSON.parse(configData);
       }
 
-      window.WasmModule.FS.writeFile("config.json", JSON.stringify(config));
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      if (!rootStore.renderer) {
+        console.warn("Renderer not initialized yet.");
+        return;
+      }
+
+      // window.WasmModule.FS.writeFile("config.json", JSON.stringify(config));
 
       const volumeVisualizationSettings: VolVisSettingsSnapshotIn[] = [];
 
@@ -189,13 +200,14 @@ export const UiState = types
           throw new Error(`Missing raw file: ${settings.file}`);
         }
 
-        const rawFileContent = yield rawFile.arrayBuffer();
+        const rawFileContent = (yield rawFile.arrayBuffer()) as ArrayBuffer;
         if (!isAlive(self)) {
           return;
         }
-        const data = new Uint8Array(rawFileContent);
+        // const data = new Uint8Array(rawFileContent);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        window.WasmModule.FS.writeFile(settings.file, data);
+        // window.WasmModule.FS.writeFile(settings.file, data);
+        rootStore.renderer.volume.loadData(rawFileContent);
 
         let transferFunction = null;
 
@@ -220,11 +232,11 @@ export const UiState = types
               if (!isAlive(self)) {
                 return;
               }
-              window.WasmModule.FS.writeFile(
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                settings.transferFunction,
-                transferFunctionContent
-              );
+              // window.WasmModule.FS.writeFile(
+              //   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              //   settings.transferFunction,
+              //   transferFunctionContent
+              // );
 
               // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
               transferFunction = JSON.parse(transferFunctionContent);
@@ -255,14 +267,14 @@ export const UiState = types
           if (!transferFunction) {
             transferFunction = tfDefinition;
             transferFunctionDefinitions.set(tfName, transferFunction);
-            window.WasmModule.FS.writeFile(
-              tfName,
-              JSON.stringify(transferFunction)
-            );
+            // window.WasmModule.FS.writeFile(
+            //   tfName,
+            //   JSON.stringify(transferFunction)
+            // );
           }
         }
 
-        window.WasmModule.FS.writeFile(fileName, JSON.stringify(settings));
+        // window.WasmModule.FS.writeFile(fileName, JSON.stringify(settings));
 
         if (
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -302,7 +314,7 @@ export const UiState = types
       self.setVizualizedVolume(vizualizedVolume);
 
       console.log("File reading done.");
-      window.WasmModule.open_volume();
+      // window.WasmModule.open_volume();
     }),
   }));
 

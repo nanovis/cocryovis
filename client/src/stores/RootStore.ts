@@ -8,10 +8,11 @@ import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
 import ToastContainer from "../utils/ToastContainer";
 import { getErrorMessage } from "../utils/Helpers";
+import type { VolumeRenderer } from "../renderer/renderer.ts";
 
 const CookieName = "LoggedUser";
 
-const RootStore = types
+export const RootStore = types
   .model({
     user: types.optional(User, {}),
     uiState: types.optional(UiState, {}),
@@ -21,6 +22,7 @@ const RootStore = types
     reloadingSession: false,
     triedReloadingSession: false,
     setingUpUser: false,
+    renderer: null as VolumeRenderer | null,
   }))
 
   .views((self) => ({
@@ -36,6 +38,12 @@ const RootStore = types
     },
   }))
   .actions((self) => ({
+    setRenderer(renderer: VolumeRenderer | null) {
+      if (self.renderer) {
+        self.renderer.destroy();
+      }
+      self.renderer = renderer;
+    },
     setReloadingSession(loading: boolean) {
       self.reloadingSession = loading;
     },
