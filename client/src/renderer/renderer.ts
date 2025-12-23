@@ -1,3 +1,10 @@
+import vertexShader from "../assets/shaders/volume.vs.wgsl?raw";
+import fragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
+import { Volume } from "./volume.ts";
+import { ParamData } from "./params.ts";
+import { Camera, type CameraParams } from "./camera.ts";
+import { ChannelData } from "./transferFunctions.ts";
+
 export interface DeviceInfo {
   adapter: GPUAdapter;
   device: GPUDevice;
@@ -7,7 +14,8 @@ export interface DeviceInfo {
 export interface OutputInfo {
   outputFormat: GPUTextureFormat;
   outputView: GPUTextureView;
-  aspectRatio: number;
+  width: number;
+  height: number;
 }
 
 export async function initializeDevice(
@@ -49,23 +57,68 @@ export async function initializeDevice(
   return { adapter, device, context };
 }
 
+const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+  entries: [
+    {
+      binding: 0,
+      visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
+      buffer: { type: "uniform" },
+    },
+    {
+      binding: 2,
+      visibility: GPUShaderStage.FRAGMENT,
+      sampler: { type: "filtering" },
+    },
+    {
+      binding: 3,
+      visibility: GPUShaderStage.FRAGMENT,
+      texture: { sampleType: "float", viewDimension: "3d" },
+    },
+    {
+      binding: 8,
+      visibility: GPUShaderStage.FRAGMENT,
+      buffer: { type: "uniform" },
+    },
+    {
+      binding: 9,
+      visibility: GPUShaderStage.FRAGMENT,
+      buffer: { type: "read-only-storage" },
+    },
+  ],
+};
+
+const DEPTH_TEXTURE_FORMAT: GPUTextureFormat = "depth24plus";
+
 export class VolumeRenderer {
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
 
-  aspectRatio: number;
+  clearValue: GPUColor = { r: 0.1, g: 0.1, b: 0.1, a: 1 };
+
+  bindGroup: GPUBindGroup | undefined;
+  private dirtyBindGroup: boolean = true;
+  volume: Volume;
+  params: ParamData;
+  camera: Camera;
+  channelData: ChannelData;
+  width: number;
+  height: number;
   format: GPUTextureFormat;
   pipeline: GPURenderPipeline | null = null;
   vertexBuffer: GPUBuffer | null = null;
   animationFrame: number | null = null;
 
+  private depthTexture: GPUTexture | undefined;
+
   constructor(
     device: GPUDevice,
+    cameraParams: Omit<CameraParams, "aspectRatio">,
     {
       output,
       context,
     }: {
+      clearValue?: GPUColor;
       output?: OutputInfo;
       context?: GPUCanvasContext;
     } = {}
@@ -75,62 +128,131 @@ export class VolumeRenderer {
     this.output = output;
 
     if (output) {
-      this.aspectRatio = output.aspectRatio;
+      this.width = output.width;
+      this.height = output.height;
       this.format = output.outputFormat;
     } else if (context) {
-      this.aspectRatio = context.canvas.width / context.canvas.height;
+      this.width = context.canvas.width;
+      this.height = context.canvas.height;
       this.format = navigator.gpu.getPreferredCanvasFormat();
     } else {
       throw new Error("Either context or output information must be provided");
     }
 
-    const shader = this.device.createShaderModule({
-      code: `
-        struct VSOut {
-          @builtin(position) pos: vec4<f32>,
-        };
+    const volumeSampler = this.device.createSampler({
+      magFilter: "linear",
+      minFilter: "linear",
+      mipmapFilter: "linear",
+      addressModeU: "clamp-to-edge",
+      addressModeV: "clamp-to-edge",
+      addressModeW: "clamp-to-edge",
+    });
+    this.volume = new Volume(volumeSampler, () => {
+      this.dirtyBindGroup = true;
+    });
+    this.params = new ParamData(this.device);
+    this.channelData = new ChannelData(this.device);
 
-        @vertex
-        fn vs_main(@location(0) position: vec2<f32>) -> VSOut {
-          var out: VSOut;
-          out.pos = vec4<f32>(position, 0.0, 1.0);
-          return out;
-        }
+    this.camera = new Camera(this.device, {
+      ...cameraParams,
+      aspectRatio: this.width / this.height,
+    });
 
-        @fragment
-        fn fs_main() -> @location(0) vec4<f32> {
-          return vec4<f32>(0.3, 0.7, 1.0, 1.0);
-        }
-      `,
+    const vertexShaderModule = this.device.createShaderModule({
+      code: vertexShader,
+    });
+
+    const fragmentShaderModule = this.device.createShaderModule({
+      code: fragmentShader,
+    });
+
+    const bindGroupLayout = this.device.createBindGroupLayout(
+      bindGroupLayoutDescriptor
+    );
+    const pipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout],
     });
 
     this.pipeline = this.device.createRenderPipeline({
-      layout: "auto",
+      layout: pipelineLayout,
       vertex: {
-        module: shader,
-        entryPoint: "vs_main",
-        buffers: [
-          {
-            arrayStride: 8,
-            attributes: [
-              {
-                shaderLocation: 0,
-                format: "float32x2",
-                offset: 0,
-              },
-            ],
-          },
-        ],
+        module: vertexShaderModule,
+        entryPoint: "main",
       },
       fragment: {
-        module: shader,
-        entryPoint: "fs_main",
+        module: fragmentShaderModule,
+        entryPoint: "main",
         targets: [{ format: this.format }],
       },
       primitive: { topology: "triangle-list" },
+      depthStencil: {
+        depthWriteEnabled: true,
+        depthCompare: "less",
+        format: DEPTH_TEXTURE_FORMAT,
+      },
     });
 
     this.render();
+  }
+
+  getDepthTexture(): GPUTexture {
+    if (
+      this.depthTexture &&
+      this.depthTexture.width !== this.width &&
+      this.depthTexture.height !== this.height
+    ) {
+      return this.depthTexture;
+    }
+
+    this.depthTexture?.destroy();
+    this.depthTexture = this.device.createTexture({
+      size: [this.width, this.height],
+      format: DEPTH_TEXTURE_FORMAT,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    return this.depthTexture;
+  }
+
+  recreateBindGroup() {
+    if (!this.pipeline) {
+      return;
+    }
+
+    const volumeView = this.volume.getView();
+
+    if (!volumeView) {
+      return;
+    }
+
+    this.bindGroup = this.device.createBindGroup({
+      layout: this.pipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: this.camera.getBuffer(),
+          },
+        },
+        {
+          binding: 2,
+          resource: this.volume.sampler,
+        },
+        {
+          binding: 3,
+          resource: volumeView,
+        },
+        {
+          binding: 8,
+          resource: {
+            buffer: this.params.getBuffer(),
+          },
+        },
+        {
+          binding: 9,
+          resource: this.channelData.getBuffer(),
+        },
+      ],
+    });
   }
 
   render() {
@@ -144,15 +266,33 @@ export class VolumeRenderer {
       return;
     }
 
+    this.params.updateBuffer();
+    this.channelData.updateBuffer();
+    this.camera.updateBuffer();
+
+    if (!this.bindGroup || this.dirtyBindGroup) {
+      this.recreateBindGroup();
+    }
+
+    if (!this.bindGroup) {
+      return;
+    }
+
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
           view,
-          clearValue: { r: 0.05, g: 0.05, b: 0.08, a: 1 },
+          clearValue: this.clearValue,
           loadOp: "clear",
           storeOp: "store",
         },
       ],
+      depthStencilAttachment: {
+        view: this.getDepthTexture(),
+        depthClearValue: 1,
+        depthLoadOp: "clear",
+        depthStoreOp: "discard",
+      },
     });
 
     pass.setPipeline(this.pipeline);
@@ -182,7 +322,9 @@ export class VolumeRenderer {
   }
 
   resize(width: number, height: number) {
-    this.aspectRatio = width / height;
+    this.width = width;
+    this.height = height;
+    this.camera.setParameters({ aspectRatio: width / height });
   }
 
   destroy() {

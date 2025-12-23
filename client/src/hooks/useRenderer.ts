@@ -1,5 +1,6 @@
 import { type RefObject, useEffect, useRef, useTransition } from "react";
 import { initializeDevice, VolumeRenderer } from "../renderer/renderer.ts";
+import { vec3 } from "gl-matrix";
 
 export default function useRenderer(
   canvasRef: RefObject<HTMLCanvasElement | null>,
@@ -14,9 +15,20 @@ export default function useRenderer(
     startTransition(async () => {
       if (!canvasRef.current || destroyed) return;
       const deviceInfo = await initializeDevice(canvasRef.current);
-      const renderer = new VolumeRenderer(deviceInfo.device, {
-        context: deviceInfo.context,
-      });
+      const renderer = new VolumeRenderer(
+        deviceInfo.device,
+        {
+          position: vec3.fromValues(0, 0, 1),
+          viewCenter: vec3.fromValues(0, 0, 0),
+          up: vec3.fromValues(0, 1, 0),
+          fovY: 45,
+          near: 0.1,
+          far: 100,
+        },
+        {
+          context: deviceInfo.context,
+        }
+      );
       rendererRef.current = renderer;
       onReadyRef.current?.(renderer);
     });
