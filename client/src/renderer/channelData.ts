@@ -25,7 +25,7 @@ export class ChannelData {
     this.buffer = this.createBuffer(this.bufferSize);
 
     this.addChannelData({
-      color: [0.1, 0.1, 0.1, 1],
+      color: [1, 1, 1, 1],
       ratio: [1, 1, 1, 1],
       rampStart: 0.1,
       rampEnd: 0.9,

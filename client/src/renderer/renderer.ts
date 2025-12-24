@@ -106,12 +106,10 @@ export class VolumeRenderer {
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
 
-  clearValue: GPUColor = { r: 0, g: 0, b: 0, a: 1 };
-
   bindGroup: GPUBindGroup | undefined;
   private dirtyBindGroup: boolean = true;
   volume: Volume;
-  params: ParamData;
+  paramData: ParamData;
   camera: Camera;
   channelData: ChannelData;
   width: number;
@@ -131,7 +129,6 @@ export class VolumeRenderer {
       output,
       context,
     }: {
-      clearValue?: GPUColor;
       output?: OutputInfo;
       context?: GPUCanvasContext;
     } = {}
@@ -163,7 +160,7 @@ export class VolumeRenderer {
     this.volume = new Volume(this.device, volumeSampler, () => {
       this.dirtyBindGroup = true;
     });
-    this.params = new ParamData(this.device);
+    this.paramData = new ParamData(this.device);
     this.channelData = new ChannelData(this.device, () => {
       this.dirtyBindGroup = true;
     });
@@ -257,7 +254,7 @@ export class VolumeRenderer {
         {
           binding: 8,
           resource: {
-            buffer: this.params.getBuffer(),
+            buffer: this.paramData.getBuffer(),
           },
         },
         {
@@ -283,7 +280,7 @@ export class VolumeRenderer {
       return;
     }
 
-    this.params.updateBuffer();
+    this.paramData.updateBuffer();
     this.channelData.updateBuffer();
     this.camera.updateBuffer();
 
@@ -300,7 +297,7 @@ export class VolumeRenderer {
       colorAttachments: [
         {
           view,
-          clearValue: this.clearValue,
+          clearValue: this.paramData.params.clearColor,
           loadOp: "clear",
           storeOp: "store",
         },
@@ -337,7 +334,7 @@ export class VolumeRenderer {
       colorAttachments: [
         {
           view,
-          clearValue: this.clearValue,
+          clearValue: this.paramData.params.clearColor,
           loadOp: "clear",
           storeOp: "store",
         },
@@ -371,7 +368,7 @@ export class VolumeRenderer {
     this.depthTexture?.destroy();
     this.volume.destroy();
     this.camera.destroy();
-    this.params.destroy();
+    this.paramData.destroy();
     this.channelData.destroy();
   }
 }

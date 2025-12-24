@@ -1,6 +1,7 @@
 import { type RefObject, useEffect, useRef, useTransition } from "react";
 import { initializeDevice, VolumeRenderer } from "../renderer/renderer.ts";
 import { vec3 } from "gl-matrix";
+import { OrbitCameraController } from "../utils/orbitCameraController.ts";
 
 export default function useRenderer(
   canvasRef: RefObject<HTMLCanvasElement | null>,
@@ -9,6 +10,7 @@ export default function useRenderer(
   const rendererRef = useRef<VolumeRenderer | null>(null);
   const onReadyRef = useRef<typeof onReady>(onReady);
   const [_isPending, startTransition] = useTransition();
+  const orbitRef = useRef<OrbitCameraController | null>(null);
 
   useEffect(() => {
     let destroyed = false;
@@ -20,7 +22,7 @@ export default function useRenderer(
         {
           position: vec3.fromValues(0, 0, -3),
           viewCenter: vec3.fromValues(0, 0, 0),
-          up: vec3.fromValues(0, -1, 0),
+          up: vec3.fromValues(0, 1, 0),
           fovY: 45,
           near: 0.01,
           far: 100,
@@ -30,6 +32,11 @@ export default function useRenderer(
         }
       );
       rendererRef.current = renderer;
+      orbitRef.current = new OrbitCameraController(
+        renderer.camera,
+        canvasRef.current,
+        3
+      );
       onReadyRef.current?.(renderer);
     });
 
@@ -37,6 +44,8 @@ export default function useRenderer(
       destroyed = true;
       rendererRef.current?.destroy();
       rendererRef.current = null;
+      orbitRef.current?.dispose();
+      orbitRef.current = null;
     };
   }, [canvasRef]);
 

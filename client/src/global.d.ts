@@ -7,3 +7,9 @@ interface WidgetDefinition {
   LabelIcon: FluentIcon;
   widget: React.FC<{ open: boolean; close: () => void }>;
 }
+
+interface Vector3 {
+  x: number;
+  y: number;
+  z: number;
+}

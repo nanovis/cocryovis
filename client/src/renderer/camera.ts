@@ -14,7 +14,7 @@ export interface CameraParams {
 export class Camera {
   private readonly buffer: GPUBuffer;
 
-  private params: CameraParams;
+  private readonly params: CameraParams;
 
   private dirty: boolean = true;
 
@@ -85,6 +85,10 @@ export class Camera {
     return this.projectionMatrix;
   }
 
+  get viewCenter(): vec3 {
+    return this.params.viewCenter;
+  }
+
   setParameters(params: Partial<CameraParams>) {
     Object.assign(this.params, params);
     this.dirty = true;
@@ -98,16 +102,16 @@ export class Camera {
     const { viewMatrix, inverseViewMatrix } = this.getViewMatrix();
     const projectionMatrix = this.getProjectionMatrix();
 
-    const inverseProjectionMatrix = mat4.create();
-    mat4.multiply(inverseProjectionMatrix, projectionMatrix, viewMatrix);
-    mat4.invert(inverseProjectionMatrix, inverseProjectionMatrix);
+    const inverseMvp = mat4.create();
+    mat4.multiply(inverseMvp, projectionMatrix, viewMatrix);
+    mat4.invert(inverseMvp, inverseMvp);
 
     const data = new Float32Array(64);
 
     data.set(viewMatrix, 0);
     data.set(inverseViewMatrix, 16);
     data.set(projectionMatrix, 32);
-    data.set(inverseProjectionMatrix, 48);
+    data.set(inverseMvp, 48);
 
     this.device.queue.writeBuffer(
       this.buffer,

@@ -4,12 +4,6 @@ struct CubeOutput
 	fr : f32,
 }
 
-struct Plane
-{
-	position : vec3<f32>,
-	normal : vec3<f32>,
-}
-
 struct Camera {
 	view : mat4x4<f32>,
 	viewInv : mat4x4<f32>,
@@ -21,27 +15,6 @@ struct Ray
 {
 	origin : vec3<f32>,
 	direction : vec3<f32>,
-}
-
-struct Intersection
-{
-	intersects : bool,
-	position : vec3<f32>,
-}
-
-struct VolumeRatios
-{
-	ratio : array<vec4<f32>>,
-}
-
-struct TransferFunctionColor
-{
-	color : array<vec4<f32>>,
-}
-
-struct TransferFunctionRamp
-{
-	ramp : array<f32>,
 }
 
 struct ChannelData
@@ -87,8 +60,6 @@ struct Param
 
 	rawVolumeChannel : i32,
 	numChannels : i32,
-	empty2 : i32,
-	empty3 : i32,
 }
 
 struct Annotations
@@ -103,10 +74,6 @@ struct Annotations
 //@group(0) @binding(6) var volume3 : texture_3d<f32>;
 @group(0) @binding(8) var<uniform> param : Param;
 @group(0) @binding(9) var<storage, read> channelData: array<ChannelData>;
-//@group(0) @binding(9) var<storage, read> transferFunctionColor: TransferFunctionColor;
-//@group(0) @binding(10) var<storage, read> transferFunctionRamp1: TransferFunctionRamp;
-//@group(0) @binding(11) var<storage, read> transferFunctionRamp2: TransferFunctionRamp;
-//@group(0) @binding(12) var<storage, read> volumeRatios: VolumeRatios;
 // @group(0) @binding(13) var<storage, read> annotations: Annotations;
 
 var<private> seedGlobal : u32;
@@ -279,65 +246,9 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 	return mapped;
 }
 
-
-fn calcTBNMatrix(direction : vec3<f32>) -> mat3x3<f32>
-{
-	var tangent : vec3<f32>;
-	var binormal : vec3<f32>;
-
-	var c1 = cross(direction, vec3<f32>(0.0, 0.0, 1.0));
-	var c2 = cross(direction, vec3<f32>(0.0, 1.0, 0.0));
-
-	if (length(c1) > length(c2))
-	{
-		tangent = c1;
-	}
-	else
-	{
-		tangent = c2;
-	}
-	tangent = normalize(tangent);
-
-	binormal = cross(direction, tangent);
-	binormal = normalize(binormal);
-
-
-	return mat3x3<f32>(tangent, binormal, direction);
-}
-
-fn calcTBNMatrix2(direction : vec3<f32>) -> mat3x3<f32>
-{
-	var up = normalize(vec3<f32>(0.01, 0.99, 0.9));
-	if(dot(direction, up) < 0.1) {
-		up = normalize(vec3<f32>(0.01, 0.2, 0.9));
-	}
-	var tangent = normalize(cross(up, direction));
-	var bitangent = normalize(cross(direction, tangent));
-
-	return mat3x3<f32>(tangent, bitangent, direction);
-}
-
 fn color_transfer(which : i32) -> vec3<f32>
 {
 	return channelData[which].color.xyz;
-}
-
-fn intersect_plane(ray: Ray, p : Plane) -> Intersection
-{
-	var d = -dot(p.position, p.normal);
-	var v = dot(ray.direction, p.normal);
-	var t = -(dot(ray.origin, p.normal) + d) / v;
-
-	var intersection : Intersection;
-	intersection.intersects = false;
-
-	if(t > 0.0)
-	{
-		intersection.intersects = true;
-		intersection.position = ray.origin * t * ray.direction;
-	}
-
-	return intersection;
 }
 
 struct FragmentOutput {
@@ -360,48 +271,26 @@ fn main(
 	output.frag_depth = 0.0;
 	output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
 
-	//var interaction = (param.interaction == 1.0);
-	//if(interaction)
-	//{
-	//	if (i32(position.x) % 2 == 0 || i32(position.y) % 2 == 0)
-	//	{
-	//		//discard;
-	//	}
-	//}
-
 	clipped = false;
 
 	var rawVolumeChannel = param.rawVolumeChannel;
 	var useRawVolume = rawVolumeChannel >= 0;
 	var numChannels = param.numChannels;
 
-
-
-	// volumeRatio = voxelSize * (dataSize / maxDataSize)
 	var volumeRatio = channelData[0].ratio.xyz;
-	//size = vec3<f32>(1.5, 1.0, 1.0);
 
 	// intialize random seed
-	//seedGlobal = u32(tex_coords.x * 21032.0 * tex_coords.y * 43242.0);
 	seedGlobal = u32(tex_coords.x * tex_coords.y * 1000000.0);
-
 
 	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
 	var outputCube = cube(eye, direction, volumeRatio);
 
-
-	var bg = vec4<f32>(0.2, 0.2, 0.2, 1.0);
-	//var bg = param.clearColor;
+	var bg = param.clearColor;
 
 	if(outputCube.t < 0.0 )
 	{
 		output.color = bg;
 		return output;
-		//discard;
-	}
-	else
-	{
-		//return vec4<f32>(0.0, 1.0, 0.0, 1.0);
 	}
 
 	var stepSize = 0.01;
@@ -418,19 +307,11 @@ fn main(
 	var src = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 	var dst = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 
-	// D3D backend will unroll loops and cause following error when gradient instructions are used
-	// error X3511: unable to unroll loop, loop does not appear to terminate in a timely manne
-	// It's a known problem with the FXC compiler used by Chrome
-	// https://bugs.chromium.org/p/tint/issues/detail?id=1112
-	// Fix: do not use gradient instruction, such as all texture sampling methods which determine the used mip-level by themselves
-	// instead define mip map level through "textureSampleLevel()"
-
 	// raymarching
 	var accumA = 0.0;
 	var accumC = vec3<f32>(0.0, 0.0, 0.0);
 
 	var quit = false;
-	var clipColor = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 	var firstHit = true;
 
 	var enableAO = bool(param.enableAmbientOcclusion);
@@ -440,14 +321,10 @@ fn main(
 
 	for (var i: i32 = 0; i < iterations; i += 1)
 	{
-    	//calculate intersection along the ray
+    //calculate intersection along the ray
 		var tmp = f32(i) * stepSize + outputCube.t;
 		var isec0 = tmp * direction + eye;
-		//var isec0Shifted = isec0;
 
-		// account for the data padding and shift the volume in the center
-		//isec0Shifted.x = isec0Shifted.x - (param.paddingRatioX / 2.0);
-		//transform it to match the bounding box centered on [0, 0, 0]
 		var isec1 = (isec0 / volumeRatio) * 0.5 + 0.5;
 
 		if (isec1.x < 0.0 || isec1.x > 1.0 ||
@@ -457,14 +334,9 @@ fn main(
 			continue;
 		}
 
-//		output.color = vec4<f32>(isec1.xyz, 1.0);
-//
-//		return output;
-
 		var masks = vec4<f32>(0.0);
-		// 0,1,2 mask 3 is raw data
+		// 0,1,2 mask 3 is raw data.
 		masks = dataRead(isec1);
-
 
 		if (masks.x < 0.01 && masks.y < 0.01 && masks.z < 0.01) {
 			masks = vec4<f32>(0.0, 0.0, 0.0, 0.0);
@@ -516,13 +388,12 @@ fn main(
 				var randomOffset = vec3<f32>(rand11(), rand11(), rand11());
 				randomOffset = normalize(randomOffset);
 				randomOffset = randomOffset / volumeRatio;
-				//var tbn = calcTBNMatrix(normalize(lightPos - isec1));
-				//randomOffset = tbn * randomOffset;
 				var offsetLength = 0.2 + rand() * 0.5;
 				randomOffset = randomOffset * radius * offsetLength;
 
 				var sample_pos = isec1 + randomOffset;
 				var sample_var = vec3<f32>(0.0);
+
 				// sample only within bounds of the texture
 				if(sample_pos.x > 0.0 && sample_pos.x < 1.0 &&
 				   sample_pos.y > 0.0 && sample_pos.y < 1.0 &&
@@ -533,7 +404,6 @@ fn main(
 				var value = (sample_var.x + sample_var.y + sample_var.z);
 				value = clamp(value, 0.0, 1.0);
 				var occlusion = 1.0 - value;
-				//var occlusion = 1.0 - clamp(voxel.x + voxel.y + voxel.z, 0.0, 1.0);
 
 				ao = ao + occlusion;
 			}
@@ -578,8 +448,6 @@ fn main(
 					var low = channelData[4].rampStart;
 					var high = channelData[4].rampEnd;
 					var occlusion = 1.0 - clamp((value - low) / (high - low), 0.0, 1.0);
-					//occlusion = 1.0 - value;
-					//occlusion = 1.0 - dataRead(sp, 1).x;
 
 					shadow = shadow + (occlusion); // pow((0.25 - t) * 2.0, 1.0)
 
@@ -614,9 +482,6 @@ fn main(
 			if(useRawVolume) {
 				alpha = alpha * masks[rawVolumeChannel];
 			}
-
-			//shading
-			var originalColor = color;
 
 			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
 			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
@@ -671,14 +536,6 @@ fn main(
 
 	var fragColor = vec4<f32>(accumC.x, accumC.y, accumC.z, accumA);
 
-	/*fragColor.x = fragColor.x * 4.0;
-	fragColor.y = fragColor.y * 4.0;
-	fragColor.z = fragColor.z * 4.0;*/
-
-	//fragColor = sample;
-	//fragColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
-	//fragColor = fragColor + clipColor;
-	//output.frag_depth = 0.5;
 	output.color = fragColor;
 
 	return output;

@@ -1,41 +1,42 @@
 import { vec4 } from "gl-matrix";
 
 export class ParamData {
-  // Scalars (4-byte each, pad to 16 bytes per 4)
-  enableEarlyRayTermination = 0;
-  enableJittering = 0;
-  enableAmbientOcclusion = 0;
-  enableSoftShadows = 0;
+  params = {
+    enableEarlyRayTermination: 1,
+    enableJittering: 1,
+    enableAmbientOcclusion: 1,
+    enableSoftShadows: 1,
 
-  interaction = 0.0;
-  sampleRate = 5.0;
-  aoRadius = 1.0;
-  aoStrength = 1.0;
+    interaction: 0.0,
+    sampleRate: 5.0,
+    aoRadius: 1.0,
+    aoStrength: 0.9,
 
-  aoNumSamples = 1;
-  shadowQuality = 1.0;
-  shadowStrength = 1.0;
-  voxelSize = 1.0;
+    aoNumSamples: 5,
+    shadowQuality: 1.0,
+    shadowStrength: 0.5,
+    voxelSize: 1.0,
 
-  enableVolumeA = 1;
-  enableVolumeB = 0;
-  enableVolumeC = 0;
-  enableVolumeD = 0;
+    enableVolumeA: 1,
+    enableVolumeB: 0,
+    enableVolumeC: 0,
+    enableVolumeD: 0,
 
-  // vec4
-  clippingMask = vec4.fromValues(1, 1, 1, 1);
-  viewVector = vec4.create();
-  clippingPlaneOrigin = vec4.create();
-  clippingPlaneNormal = vec4.create();
-  clearColor = vec4.fromValues(0, 0, 0, 1);
+    // vec4
+    clippingMask: vec4.fromValues(1, 1, 1, 1),
+    viewVector: vec4.create(),
+    clippingPlaneOrigin: vec4.create(),
+    clippingPlaneNormal: vec4.create(),
+    clearColor: vec4.fromValues(0, 0, 0, 1),
 
-  enableAnnotations = 0;
-  annotationVolume = 0;
-  annotationPingPong = 0;
-  shadowRadius = 1.0;
+    enableAnnotations: 0,
+    annotationVolume: 0,
+    annotationPingPong: 0,
+    shadowRadius: 0.2,
 
-  rawVolumeChannel = -1;
-  numChannels = 1;
+    rawVolumeChannel: -1,
+    numChannels: 1,
+  };
 
   private dirty: boolean = true;
   private readonly onChange: (() => void) | undefined;
@@ -46,10 +47,10 @@ export class ParamData {
 
   constructor(
     device: GPUDevice,
-    init?: Partial<ParamData>,
+    init?: Partial<typeof this.params>,
     onChange?: () => void
   ) {
-    Object.assign(this, init);
+    Object.assign(this.params, init);
     this.device = device;
     this.onChange = onChange;
     this.buffer = device.createBuffer({
@@ -61,7 +62,7 @@ export class ParamData {
 
   set(params: Partial<ParamData>) {
     this.dirty = true;
-    Object.assign(this, params);
+    Object.assign(this.params, params);
   }
 
   getSize(): number {
@@ -77,78 +78,78 @@ export class ParamData {
     const le = true; // little-endian (required)
 
     // ---- i32 flags ----
-    view.setInt32(o, this.enableEarlyRayTermination, le);
+    view.setInt32(o, this.params.enableEarlyRayTermination, le);
     o += 4;
-    view.setInt32(o, this.enableJittering, le);
+    view.setInt32(o, this.params.enableJittering, le);
     o += 4;
-    view.setInt32(o, this.enableAmbientOcclusion, le);
+    view.setInt32(o, this.params.enableAmbientOcclusion, le);
     o += 4;
-    view.setInt32(o, this.enableSoftShadows, le);
+    view.setInt32(o, this.params.enableSoftShadows, le);
     o += 4;
 
     // ---- f32 ----
-    view.setFloat32(o, this.interaction, le);
+    view.setFloat32(o, this.params.interaction, le);
     o += 4;
-    view.setFloat32(o, this.sampleRate, le);
+    view.setFloat32(o, this.params.sampleRate, le);
     o += 4;
-    view.setFloat32(o, this.aoRadius, le);
+    view.setFloat32(o, this.params.aoRadius, le);
     o += 4;
-    view.setFloat32(o, this.aoStrength, le);
+    view.setFloat32(o, this.params.aoStrength, le);
     o += 4;
 
     // ---- mixed ----
-    view.setInt32(o, this.aoNumSamples, le);
+    view.setInt32(o, this.params.aoNumSamples, le);
     o += 4;
-    view.setFloat32(o, this.shadowQuality, le);
+    view.setFloat32(o, this.params.shadowQuality, le);
     o += 4;
-    view.setFloat32(o, this.shadowStrength, le);
+    view.setFloat32(o, this.params.shadowStrength, le);
     o += 4;
-    view.setFloat32(o, this.voxelSize, le);
+    view.setFloat32(o, this.params.voxelSize, le);
     o += 4;
 
-    view.setInt32(o, this.enableVolumeA, le);
+    view.setInt32(o, this.params.enableVolumeA, le);
     o += 4;
-    view.setInt32(o, this.enableVolumeB, le);
+    view.setInt32(o, this.params.enableVolumeB, le);
     o += 4;
-    view.setInt32(o, this.enableVolumeC, le);
+    view.setInt32(o, this.params.enableVolumeC, le);
     o += 4;
-    view.setInt32(o, this.enableVolumeD, le);
+    view.setInt32(o, this.params.enableVolumeD, le);
     o += 4;
 
     // ---- vec4<f32> ----
     for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.clippingMask[i], le);
+      view.setFloat32(o + i * 4, this.params.clippingMask[i], le);
     o += 16;
 
     for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.viewVector[i], le);
+      view.setFloat32(o + i * 4, this.params.viewVector[i], le);
     o += 16;
 
     for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.clippingPlaneOrigin[i], le);
+      view.setFloat32(o + i * 4, this.params.clippingPlaneOrigin[i], le);
     o += 16;
 
     for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.clippingPlaneNormal[i], le);
+      view.setFloat32(o + i * 4, this.params.clippingPlaneNormal[i], le);
     o += 16;
 
     for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.clearColor[i], le);
+      view.setFloat32(o + i * 4, this.params.clearColor[i], le);
     o += 16;
 
     // ---- tail i32s ----
-    view.setInt32(o, this.enableAnnotations, le);
+    view.setInt32(o, this.params.enableAnnotations, le);
     o += 4;
-    view.setInt32(o, this.annotationVolume, le);
+    view.setInt32(o, this.params.annotationVolume, le);
     o += 4;
-    view.setInt32(o, this.annotationPingPong, le);
+    view.setInt32(o, this.params.annotationPingPong, le);
     o += 4;
-    view.setFloat32(o, this.shadowRadius, le);
+    view.setFloat32(o, this.params.shadowRadius, le);
     o += 4;
 
-    view.setInt32(o, this.rawVolumeChannel, le);
+    view.setInt32(o, this.params.rawVolumeChannel, le);
     o += 4;
-    view.setInt32(o, this.numChannels, le);
+    view.setInt32(o, this.params.numChannels, le);
     o += 4;
 
     // padding (empty2, empty3)
@@ -156,8 +157,6 @@ export class ParamData {
     o += 4;
     view.setInt32(o, 0, le);
     o += 4;
-
-    console.log(buffer);
 
     return buffer;
   }

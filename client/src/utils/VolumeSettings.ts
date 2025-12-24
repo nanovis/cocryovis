@@ -1,11 +1,5 @@
 import * as Utils from "./Helpers";
 
-export interface Vector3 {
-  x: number;
-  y: number;
-  z: number;
-}
-
 export class VolumeSettings {
   file?: string;
   size?: Vector3;
