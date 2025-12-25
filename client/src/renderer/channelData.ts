@@ -13,39 +13,10 @@ export class ChannelData extends WebGpuBuffer {
   private volumes: ChannelParameters[] = [];
   private bufferSize: number = 0;
 
+  private static readonly channelSize = 48;
+
   constructor(device: GPUDevice) {
     super(device, 0, "ChannelData Buffer");
-
-    this.addChannelData({
-      color: [1, 1, 1, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.1,
-      rampEnd: 0.9,
-    });
-    this.addChannelData({
-      color: [0, 1, 0, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-    });
-    this.addChannelData({
-      color: [0, 0, 1, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-    });
-    this.addChannelData({
-      color: [1, 1, 0, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-    });
-    this.addChannelData({
-      color: [1, 0, 1, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-    });
   }
 
   protected createBuffer(size: number): GPUBuffer {
@@ -62,10 +33,15 @@ export class ChannelData extends WebGpuBuffer {
   }
 
   setChannelData(index: number, data: Partial<ChannelParameters>) {
-    if (index < 0 || index >= this.volumes.length) {
+    if (index < 0 || index > this.volumes.length) {
       throw new Error("Index out of bounds");
     }
     Object.assign(this.volumes[index], data);
+    this.dirty = true;
+  }
+
+  clearChannelData() {
+    this.volumes = [];
     this.dirty = true;
   }
 
@@ -93,7 +69,7 @@ export class ChannelData extends WebGpuBuffer {
 
     if (this.bufferSize !== data.byteLength) {
       this.buffer.destroy();
-      this.bufferSize = data.byteLength;
+      this.bufferSize = ChannelData.channelSize * this.volumes.length;
       this.buffer = this.createBuffer(this.bufferSize);
     }
 

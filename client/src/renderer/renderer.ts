@@ -1,10 +1,9 @@
 import vertexShader from "../assets/shaders/volume.vs.wgsl?raw";
 import fragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
-import { Volume } from "./volume.ts";
 import { ParamData } from "./params.ts";
 import { Camera, type CameraParams } from "./camera.ts";
-import { ChannelData } from "./channelData.ts";
 import { BindGroup } from "./bindGroup.ts";
+import { VolumeManager } from "./volumeManager.ts";
 
 export interface DeviceInfo {
   adapter: GPUAdapter;
@@ -108,10 +107,9 @@ export class VolumeRenderer {
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
-  volume: Volume;
+  volumeManager: VolumeManager;
   paramData: ParamData;
   camera: Camera;
-  channelData: ChannelData;
   width: number;
   height: number;
   format: GPUTextureFormat;
@@ -151,17 +149,8 @@ export class VolumeRenderer {
       throw new Error("Either context or output information must be provided");
     }
 
-    const volumeSampler = this.device.createSampler({
-      magFilter: "linear",
-      minFilter: "linear",
-      mipmapFilter: "linear",
-      addressModeU: "clamp-to-edge",
-      addressModeV: "clamp-to-edge",
-      addressModeW: "clamp-to-edge",
-    });
-    this.volume = new Volume(this.device, volumeSampler);
     this.paramData = new ParamData(this.device);
-    this.channelData = new ChannelData(this.device);
+    this.volumeManager = new VolumeManager(this.device);
 
     this.camera = new Camera(this.device, {
       ...cameraParams,
@@ -178,10 +167,10 @@ export class VolumeRenderer {
 
     this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
     this.bindGroup.setResource(0, this.camera);
-    this.bindGroup.setResource(2, this.volume);
-    this.bindGroup.setResource(3, this.volume);
+    this.bindGroup.setResource(2, this.volumeManager.volume);
+    this.bindGroup.setResource(3, this.volumeManager.volume);
     this.bindGroup.setResource(8, this.paramData);
-    this.bindGroup.setResource(9, this.channelData);
+    this.bindGroup.setResource(9, this.volumeManager.channelData);
 
     const pipelineLayout = this.device.createPipelineLayout({
       bindGroupLayouts: [this.bindGroup.getBindGroupLayout()],
@@ -242,7 +231,7 @@ export class VolumeRenderer {
     }
 
     this.paramData.updateBuffer();
-    this.channelData.updateBuffer();
+    this.volumeManager.channelData.updateBuffer();
     this.camera.updateBuffer();
 
     const gpuBindGroup = this.bindGroup.getGPUBindGroup();
@@ -325,9 +314,8 @@ export class VolumeRenderer {
       this.animationFrame = null;
     }
     this.depthTexture?.destroy();
-    this.volume.destroy();
+    this.volumeManager.destroy();
     this.camera.destroy();
     this.paramData.destroy();
-    this.channelData.destroy();
   }
 }

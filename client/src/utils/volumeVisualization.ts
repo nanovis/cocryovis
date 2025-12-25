@@ -113,7 +113,7 @@ export async function visualizeVolumeFromConfig(
     }
   }
 
-  await renderer.volume.loadData(config.descriptors);
+  await renderer.volumeManager.loadVolumes(config.descriptors);
 
   return visualizedVolume;
   //

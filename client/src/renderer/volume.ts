@@ -3,10 +3,6 @@ import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
 import { WebGpuTexture } from "./webGpuTexture.ts";
 
 export class Volume extends WebGpuTexture {
-  constructor(device: GPUDevice, sampler: GPUSampler) {
-    super(device, sampler);
-  }
-
   async loadData(volumeDescriptors: VolumeDescriptor[]) {
     this.texture = await streamVolumesToGPU(this.device, volumeDescriptors);
 
