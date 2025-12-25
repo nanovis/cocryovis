@@ -1,4 +1,5 @@
 import type { vec4 } from "gl-matrix";
+import { WebGpuBuffer } from "./webGpuBuffer.ts";
 
 interface ChannelParameters {
   color: vec4;
@@ -7,22 +8,13 @@ interface ChannelParameters {
   rampEnd: number;
 }
 
-export class ChannelData {
-  private buffer: GPUBuffer;
+export class ChannelData extends WebGpuBuffer {
   private dirty: boolean = true;
   private volumes: ChannelParameters[] = [];
-  private device: GPUDevice;
   private bufferSize: number = 0;
 
-  private destroyed: boolean = false;
-
-  private onCreated: (() => void) | undefined;
-
-  constructor(device: GPUDevice, onCreated?: () => void) {
-    this.device = device;
-    this.onCreated = onCreated;
-
-    this.buffer = this.createBuffer(this.bufferSize);
+  constructor(device: GPUDevice) {
+    super(device, 0, "ChannelData Buffer");
 
     this.addChannelData({
       color: [1, 1, 1, 1],
@@ -56,14 +48,12 @@ export class ChannelData {
     });
   }
 
-  private createBuffer(size: number): GPUBuffer {
-    const buffer = this.device.createBuffer({
-      label: "ChannelData Buffer",
+  protected createBuffer(size: number): GPUBuffer {
+    return this.device.createBuffer({
+      label: this.label,
       size: size,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
-    this.onCreated?.();
-    return buffer;
   }
 
   addChannelData(volume: ChannelParameters) {
@@ -79,9 +69,9 @@ export class ChannelData {
     this.dirty = true;
   }
 
-  private getOrUpdateBuffer(): GPUBuffer {
+  updateBuffer() {
     if (!this.dirty || this.destroyed) {
-      return this.buffer;
+      return;
     }
 
     const data = new Float32Array(this.volumes.length * 10); // Each VolumeData has 8 floats
@@ -116,19 +106,5 @@ export class ChannelData {
     );
 
     this.dirty = false;
-    return this.buffer;
-  }
-
-  updateBuffer() {
-    this.getOrUpdateBuffer();
-  }
-
-  getBuffer(): GPUBuffer {
-    return this.getOrUpdateBuffer();
-  }
-
-  destroy() {
-    this.destroyed = true;
-    this.buffer.destroy();
   }
 }

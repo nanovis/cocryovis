@@ -4,6 +4,7 @@ import { Volume } from "./volume.ts";
 import { ParamData } from "./params.ts";
 import { Camera, type CameraParams } from "./camera.ts";
 import { ChannelData } from "./channelData.ts";
+import { BindGroup } from "./bindGroup.ts";
 
 export interface DeviceInfo {
   adapter: GPUAdapter;
@@ -107,9 +108,6 @@ export class VolumeRenderer {
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
-
-  bindGroup: GPUBindGroup | undefined;
-  private dirtyBindGroup: boolean = true;
   volume: Volume;
   paramData: ParamData;
   camera: Camera;
@@ -123,6 +121,8 @@ export class VolumeRenderer {
   private depthTexture: GPUTexture | undefined;
 
   private destroyed: boolean = false;
+
+  private bindGroup: BindGroup;
 
   constructor(
     device: GPUDevice,
@@ -159,13 +159,9 @@ export class VolumeRenderer {
       addressModeV: "clamp-to-edge",
       addressModeW: "clamp-to-edge",
     });
-    this.volume = new Volume(this.device, volumeSampler, () => {
-      this.dirtyBindGroup = true;
-    });
+    this.volume = new Volume(this.device, volumeSampler);
     this.paramData = new ParamData(this.device);
-    this.channelData = new ChannelData(this.device, () => {
-      this.dirtyBindGroup = true;
-    });
+    this.channelData = new ChannelData(this.device);
 
     this.camera = new Camera(this.device, {
       ...cameraParams,
@@ -180,11 +176,15 @@ export class VolumeRenderer {
       code: fragmentShader,
     });
 
-    const bindGroupLayout = this.device.createBindGroupLayout(
-      bindGroupLayoutDescriptor
-    );
+    this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
+    this.bindGroup.setResource(0, this.camera);
+    this.bindGroup.setResource(2, this.volume);
+    this.bindGroup.setResource(3, this.volume);
+    this.bindGroup.setResource(8, this.paramData);
+    this.bindGroup.setResource(9, this.channelData);
+
     const pipelineLayout = this.device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout],
+      bindGroupLayouts: [this.bindGroup.getBindGroupLayout()],
     });
 
     this.pipeline = this.device.createRenderPipeline({
@@ -228,47 +228,6 @@ export class VolumeRenderer {
     return this.depthTexture;
   }
 
-  recreateBindGroup() {
-    const volumeView = this.volume.getView();
-
-    if (!volumeView) {
-      return;
-    }
-    this.dirtyBindGroup = false;
-
-    this.bindGroup = this.device.createBindGroup({
-      layout: this.pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: this.camera.getBuffer(),
-          },
-        },
-        {
-          binding: 2,
-          resource: this.volume.sampler,
-        },
-        {
-          binding: 3,
-          resource: volumeView,
-        },
-        {
-          binding: 8,
-          resource: {
-            buffer: this.paramData.getBuffer(),
-          },
-        },
-        {
-          binding: 9,
-          resource: {
-            buffer: this.channelData.getBuffer(),
-          },
-        },
-      ],
-    });
-  }
-
   render() {
     if (this.destroyed) {
       return;
@@ -286,11 +245,9 @@ export class VolumeRenderer {
     this.channelData.updateBuffer();
     this.camera.updateBuffer();
 
-    if (!this.bindGroup || this.dirtyBindGroup) {
-      this.recreateBindGroup();
-    }
+    const gpuBindGroup = this.bindGroup.getGPUBindGroup();
 
-    if (!this.bindGroup) {
+    if (!gpuBindGroup) {
       this.renderEmpty();
       return;
     }
@@ -313,7 +270,7 @@ export class VolumeRenderer {
     });
 
     pass.setPipeline(this.pipeline);
-    pass.setBindGroup(0, this.bindGroup);
+    pass.setBindGroup(0, gpuBindGroup);
 
     pass.draw(6);
 

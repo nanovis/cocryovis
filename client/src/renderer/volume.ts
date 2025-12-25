@@ -1,17 +1,10 @@
 import { streamVolumesToGPU } from "./volumeLoader.ts";
 import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
+import { WebGpuTexture } from "./webGpuTexture.ts";
 
-export class Volume {
-  private texture: GPUTexture | undefined;
-  private view: GPUTextureView | undefined;
-  private readonly onChange: (() => void) | undefined;
-  sampler: GPUSampler;
-  private device: GPUDevice;
-
-  constructor(device: GPUDevice, sampler: GPUSampler, onChange?: () => void) {
-    this.onChange = onChange;
-    this.sampler = sampler;
-    this.device = device;
+export class Volume extends WebGpuTexture {
+  constructor(device: GPUDevice, sampler: GPUSampler) {
+    super(device, sampler);
   }
 
   async loadData(volumeDescriptors: VolumeDescriptor[]) {
@@ -20,8 +13,6 @@ export class Volume {
     this.view = this.texture.createView({
       dimension: "3d",
     });
-
-    this.onChange?.();
   }
 
   // async loadTestData(device: GPUDevice) {
@@ -61,11 +52,4 @@ export class Volume {
   //
   //   this.onChange?.();
   // }
-
-  getView(): GPUTextureView | undefined {
-    return this.view;
-  }
-  destroy() {
-    this.texture?.destroy();
-  }
 }

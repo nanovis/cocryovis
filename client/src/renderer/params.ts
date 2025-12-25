@@ -1,7 +1,44 @@
 import { vec4 } from "gl-matrix";
+import { WebGpuBuffer } from "./webGpuBuffer.ts";
 
-export class ParamData {
-  params = {
+interface Params {
+  enableEarlyRayTermination: number;
+  enableJittering: number;
+  enableAmbientOcclusion: number;
+  enableSoftShadows: number;
+
+  interaction: number;
+  sampleRate: number;
+  aoRadius: number;
+  aoStrength: number;
+
+  aoNumSamples: number;
+  shadowQuality: number;
+  shadowStrength: number;
+  voxelSize: number;
+
+  enableVolumeA: number;
+  enableVolumeB: number;
+  enableVolumeC: number;
+  enableVolumeD: number;
+
+  clippingMask: vec4;
+  viewVector: vec4;
+  clippingPlaneOrigin: vec4;
+  clippingPlaneNormal: vec4;
+  clearColor: vec4;
+
+  enableAnnotations: number;
+  annotationVolume: number;
+  annotationPingPong: number;
+  shadowRadius: number;
+
+  rawVolumeChannel: number;
+  numChannels: number;
+}
+
+export class ParamData extends WebGpuBuffer {
+  params: Params = {
     enableEarlyRayTermination: 1,
     enableJittering: 1,
     enableAmbientOcclusion: 1,
@@ -39,23 +76,19 @@ export class ParamData {
   };
 
   private dirty: boolean = true;
-  private readonly onChange: (() => void) | undefined;
-  private readonly buffer;
-  private device: GPUDevice;
 
-  private destroyed: boolean = false;
+  private static readonly size = 48 * 4;
 
-  constructor(
-    device: GPUDevice,
-    init?: Partial<typeof this.params>,
-    onChange?: () => void
-  ) {
+  constructor(device: GPUDevice, init?: Partial<Params>) {
+    super(device, ParamData.size, "ParamData Buffer");
     Object.assign(this.params, init);
     this.device = device;
-    this.onChange = onChange;
-    this.buffer = device.createBuffer({
-      label: "ParamData Buffer",
-      size: this.getSize(),
+  }
+
+  protected createBuffer(size: number): GPUBuffer {
+    return this.device.createBuffer({
+      size: size,
+      label: this.label,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
   }
@@ -65,13 +98,8 @@ export class ParamData {
     Object.assign(this.params, params);
   }
 
-  getSize(): number {
-    const data = this.toBuffer();
-    return data.byteLength;
-  }
-
   toBuffer(): ArrayBuffer {
-    const buffer = new ArrayBuffer(48 * 4);
+    const buffer = new ArrayBuffer(ParamData.size);
     const view = new DataView(buffer);
 
     let o = 0;
@@ -168,16 +196,5 @@ export class ParamData {
     const data = this.toBuffer();
     this.device.queue.writeBuffer(this.buffer, 0, data);
     this.dirty = false;
-    this.onChange?.();
-  }
-
-  getBuffer(): GPUBuffer {
-    this.updateBuffer();
-    return this.buffer;
-  }
-
-  destroy() {
-    this.destroyed = true;
-    this.buffer.destroy();
   }
 }

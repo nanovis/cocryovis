@@ -1,5 +1,6 @@
 import type { vec3 } from "gl-matrix";
 import { mat4 } from "gl-matrix";
+import { WebGpuBuffer } from "./webGpuBuffer.ts";
 
 export interface CameraParams {
   position: vec3;
@@ -11,9 +12,7 @@ export interface CameraParams {
   far: number;
 }
 
-export class Camera {
-  private readonly buffer: GPUBuffer;
-
+export class Camera extends WebGpuBuffer {
   private readonly params: CameraParams;
 
   private dirty: boolean = true;
@@ -22,23 +21,26 @@ export class Camera {
   private inverseViewMatrix: mat4;
   private projectionMatrix: mat4;
 
-  private device: GPUDevice;
+  private static readonly size = 256;
 
   constructor(device: GPUDevice, params: CameraParams) {
-    this.device = device;
+    super(device, Camera.size, "Camera Buffer");
 
     this.params = params;
-    this.buffer = this.device.createBuffer({
-      label: "Camera Buffer",
-      size: 256,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
 
     const { viewMatrix, inverseViewMatrix } = this.computeViewMatrix();
     this.viewMatrix = viewMatrix;
     this.inverseViewMatrix = inverseViewMatrix;
 
     this.projectionMatrix = this.computeProjectionMatrix();
+  }
+
+  protected createBuffer(size: number): GPUBuffer {
+    return this.device.createBuffer({
+      label: "Camera Buffer",
+      size: size,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
   }
 
   private computeViewMatrix(): { viewMatrix: mat4; inverseViewMatrix: mat4 } {
@@ -95,7 +97,7 @@ export class Camera {
   }
 
   updateBuffer() {
-    if (!this.dirty) {
+    if (!this.dirty || this.destroyed) {
       return;
     }
 
@@ -125,10 +127,7 @@ export class Camera {
   }
 
   getBuffer(): GPUBuffer {
+    this.updateBuffer();
     return this.buffer;
-  }
-
-  destroy() {
-    this.buffer.destroy();
   }
 }
