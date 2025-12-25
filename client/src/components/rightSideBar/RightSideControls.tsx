@@ -13,11 +13,12 @@ import {
 } from "@fluentui/react-icons";
 import { useState } from "react";
 import * as Utils from "../../utils/Helpers";
-import { convertMRCToRaw } from "../../utils/MrcParser";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import type { VolumeSettings } from "../../utils/VolumeSettings";
+import { VolumeData, VolumeDescriptor } from "../../utils/volumeSettings.ts";
 import ToastContainer from "../../utils/ToastContainer";
+import type { VisualizationDescriptor } from "../../utils/volumeVisualization.ts";
+import { convertMRCToRaw } from "../../utils/MrcParser.ts";
 
 const enum WidgetIndices {
   Visualization = 0,
@@ -31,105 +32,39 @@ const SideControls = observer(() => {
 
   const [isVisDialogOpen, setIsVisDialogOpen] = useState(false);
 
-  const visualizeFiles = async (
-    pendingFile: File,
-    volumeSettings?: VolumeSettings
-  ) => {
+  const visualizeVolume = async (volumeDescriptor: VolumeDescriptor) => {
     const toastContainer = new ToastContainer();
 
     try {
       toastContainer.loading("Parsing volume files...");
 
-      const fileMap = await parseVisualizationFile(pendingFile, volumeSettings);
+      let descriptor = volumeDescriptor;
 
-      toastContainer.loading("isualizing the volume...");
+      if (
+        descriptor.volumeData.file &&
+        Utils.isMrcFile(descriptor.volumeData.file.name)
+      ) {
+        const { rawFile, settings } = await convertMRCToRaw(
+          descriptor.volumeData.file
+        );
+        descriptor = new VolumeDescriptor(
+          new VolumeData({ file: rawFile }),
+          settings
+        );
+      }
 
-      await uiState.visualizeVolume(fileMap, undefined);
+      const visualizationDescriptor: VisualizationDescriptor = {
+        descriptors: [descriptor],
+      };
+
+      toastContainer.loading("Visualizing the volume...");
+
+      await uiState.visualizeVolume(visualizationDescriptor);
       toastContainer.success("Visualization Ready!");
     } catch (error) {
       toastContainer.error(Utils.getErrorMessage(error));
       throw error;
     }
-  };
-
-  const visualizeUrl = async (
-    url: string,
-    fileType: string,
-    volumeSettings?: VolumeSettings
-  ) => {
-    const toastContainer = new ToastContainer();
-
-    try {
-      toastContainer.loading("Downloading volume files...");
-      const response = await fetch(url);
-      const blob = await response.blob();
-      let filename = Utils.getFilenameFromHeader(response);
-      if (!filename) {
-        filename = new Date().toISOString();
-      }
-      filename = Utils.removeExtensionFromPath(filename) + "." + fileType;
-
-      if (!filename) {
-        throw new Error("No filename found in the response headers.");
-      }
-
-      const pendingFile = new File([blob], filename, {
-        type: "application/octet-stream",
-      });
-
-      toastContainer.loading("Parsing volume files...");
-
-      await Utils.waitForNextFrame();
-
-      const fileMap = await parseVisualizationFile(pendingFile, volumeSettings);
-
-      toastContainer.loading("Visualizing the volume...");
-
-      await Utils.waitForNextFrame();
-
-      await uiState.visualizeVolume(fileMap, undefined);
-
-      toastContainer.success("Visualization Ready!");
-    } catch (error) {
-      toastContainer.error(Utils.getErrorMessage(error));
-    }
-  };
-
-  const parseVisualizationFile = async (
-    pendingFile: File,
-    volumeSettings?: VolumeSettings
-  ) => {
-    if (Utils.isMrcFile(pendingFile.name)) {
-      try {
-        const { rawFile, settings } = await convertMRCToRaw(pendingFile);
-        pendingFile = rawFile;
-        volumeSettings = settings;
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new Error("Error converting MRC file:" + error.message);
-        } else {
-          throw new Error("Error converting MRC file");
-        }
-      }
-    }
-
-    if (!Utils.isRawFile(pendingFile.name)) {
-      throw new Error("No .raw file found in the uploaded files");
-    }
-
-    if (!volumeSettings) {
-      throw new Error("Missing volume settings");
-    }
-
-    volumeSettings.file = pendingFile.name;
-    volumeSettings.checkValidity();
-
-    const volumeSettingsFile = volumeSettings.toFile();
-
-    return await Utils.unpackAndcreateFileMap([
-      pendingFile,
-      volumeSettingsFile,
-    ]);
   };
 
   return (
@@ -221,8 +156,7 @@ const SideControls = observer(() => {
       <VolumeUploadDialog
         open={isVisDialogOpen}
         onClose={() => setIsVisDialogOpen(false)}
-        onFileConfirm={visualizeFiles}
-        onUrlConfirm={visualizeUrl}
+        onConfirm={visualizeVolume}
         titleText={"Visualize Volume"}
         confirmText="Visualize"
         uploadDialogStore={uiState.uploadDialog}

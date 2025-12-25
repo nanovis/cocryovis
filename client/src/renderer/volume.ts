@@ -1,4 +1,5 @@
 import { streamVolumesToGPU } from "./volumeLoader.ts";
+import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
 
 export class Volume {
   private texture: GPUTexture | undefined;
@@ -13,22 +14,8 @@ export class Volume {
     this.device = device;
   }
 
-  loadData(data: ArrayBuffer) {
-    this.texture = streamVolumesToGPU(this.device, [
-      {
-        buffer: data,
-        params: {
-          bytesPerVoxel: 1,
-          usedBits: 8,
-          skipBytes: 0,
-          littleEndian: true,
-          isSigned: false,
-          addValue: 0,
-          size: { x: 256, y: 256, z: 448 },
-          ratio: { x: 1, y: 1, z: 1 },
-        },
-      },
-    ]);
+  async loadData(volumeDescriptors: VolumeDescriptor[]) {
+    this.texture = await streamVolumesToGPU(this.device, volumeDescriptors);
 
     this.view = this.texture.createView({
       dimension: "3d",

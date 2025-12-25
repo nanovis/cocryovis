@@ -1,12 +1,18 @@
 import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { flow, getParentOfType, isAlive, types } from "mobx-state-tree";
-import { VolumeSettings } from "../../utils/VolumeSettings";
+import {
+  fileTypeOptions,
+  type FileTypeOptions,
+  VolumeData,
+  VolumeDescriptor,
+  type VolumeDescriptorSettings,
+  volumeDescriptorSettingsSchema,
+} from "../../utils/volumeSettings.ts";
 import * as Utils from "../../utils/Helpers";
 import type { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
-import type z from "zod";
-import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
 import { getTomographyMetadataFromCryoETId } from "../../api/cryoEt";
 import ToastContainer from "../../utils/ToastContainer";
+import type z from "zod";
 
 export enum Tabs {
   fromFile = "fromFile",
@@ -27,10 +33,6 @@ export const endianOptions = [
   "Little Endian",
   "Big Endian",
 ] as readonly string[];
-
-export type FileTypeOptions = z.infer<typeof fileTypeSchema>;
-export const fileTypeOptions =
-  fileTypeSchema.options as readonly FileTypeOptions[];
 
 function stringToPositiveInteger(value: string) {
   const parsedValue = parseInt(value);
@@ -114,7 +116,7 @@ export const FileUploadInputs = types
       self.format = undefined;
       self.endian = "Little Endian";
     },
-    toVolumeSettings(): VolumeSettings {
+    generateVolumeDescriptor(): VolumeDescriptor {
       const usedBits = self.format
         ? parseInt(self.format.split("-")[0])
         : undefined;
@@ -123,22 +125,35 @@ export const FileUploadInputs = types
       const isSigned = self.format ? self.format.includes("Signed") : undefined;
       const isLittleEndian = self.endian === "Little Endian";
 
-      if (!self.width || !self.height || !self.depth) {
-        throw new Error("Missing width, height, or depth.");
+      if (!self.pendingFile) {
+        throw new Error("Missing file.");
       }
 
-      return new VolumeSettings({
-        file: self.pendingFile?.name,
-        size: {
-          x: self.width,
-          y: self.height,
-          z: self.depth,
-        },
-        isSigned: isSigned,
-        isLittleEndian: isLittleEndian,
-        bytesPerVoxel: bytesPerVoxel,
-        usedBits: usedBits,
-      });
+      let settings: VolumeDescriptorSettings | undefined;
+
+      if (self.isRawUpload) {
+        settings = volumeDescriptorSettingsSchema.parse({
+          size: {
+            x: self.width,
+            y: self.height,
+            z: self.depth,
+          },
+          ratio: {
+            x: 1,
+            y: 1,
+            z: 1,
+          },
+          isSigned: isSigned,
+          isLittleEndian: isLittleEndian,
+          bytesPerVoxel: bytesPerVoxel,
+          usedBits: usedBits,
+        });
+      }
+
+      return new VolumeDescriptor(
+        new VolumeData({ file: self.pendingFile }),
+        settings
+      );
     },
   }));
 
@@ -227,7 +242,7 @@ export const UrlUploadInputs = types
       self.format = undefined;
       self.endian = "Little Endian";
     },
-    toVolumeSettings(): VolumeSettings {
+    generateVolumeDescriptor(): VolumeDescriptor {
       const usedBits = self.format
         ? parseInt(self.format.split("-")[0])
         : undefined;
@@ -236,21 +251,31 @@ export const UrlUploadInputs = types
       const isSigned = self.format ? self.format.includes("Signed") : undefined;
       const isLittleEndian = self.endian === "Little Endian";
 
-      if (!self.width || !self.height || !self.depth) {
-        throw new Error("Missing width, height, or depth.");
+      if (!self.url) {
+        throw new Error("Missing URL.");
       }
 
-      return new VolumeSettings({
+      const settings = volumeDescriptorSettingsSchema.parse({
         size: {
           x: self.width,
           y: self.height,
           z: self.depth,
+        },
+        ratio: {
+          x: 1,
+          y: 1,
+          z: 1,
         },
         isSigned: isSigned,
         isLittleEndian: isLittleEndian,
         bytesPerVoxel: bytesPerVoxel,
         usedBits: usedBits,
       });
+
+      return new VolumeDescriptor(
+        new VolumeData({ url: self.url, fileType: self.fileType }),
+        settings
+      );
     },
   }));
 
@@ -338,6 +363,11 @@ export const CryoETUploadInputs = types
         console.error("Error fetching CryoET metadata:", error);
       }
     }),
+    generateVolumeDescriptor(): VolumeDescriptor {
+      return new VolumeDescriptor(
+        new VolumeData({ url: self.url, fileType: "mrc" })
+      );
+    },
   }));
 
 export interface CryoETUploadInputsInstance extends Instance<

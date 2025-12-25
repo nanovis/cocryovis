@@ -1,20 +1,9 @@
-export interface VolumeDescriptor {
-  buffer: ArrayBuffer;
-  params: VolumeParams;
-}
+import {
+  type VolumeDescriptor,
+  type VolumeDescriptorSettings,
+} from "../utils/volumeSettings.ts";
 
-export interface VolumeParams {
-  bytesPerVoxel: number;
-  usedBits: number;
-  skipBytes: number;
-  littleEndian: boolean;
-  isSigned: boolean;
-  addValue: number;
-  size: { x: number; y: number; z: number };
-  ratio: { x: number; y: number; z: number };
-}
-
-function getVoxelRange(params: VolumeParams): {
+function getVoxelRange(params: VolumeDescriptorSettings): {
   min: number;
   max: number;
 } {
@@ -31,7 +20,7 @@ function getVoxelRange(params: VolumeParams): {
 
 function normalizeToUint8(
   data: Float32Array,
-  params: VolumeParams
+  params: VolumeDescriptorSettings
 ): Uint8Array {
   const { min, max } = getVoxelRange(params);
   const scale = 255 / (max - min);
@@ -46,12 +35,15 @@ function normalizeToUint8(
   return out;
 }
 
-function readRaw3D(buffer: ArrayBuffer, params: VolumeParams): Float32Array {
+function readRaw3D(
+  buffer: ArrayBuffer,
+  params: VolumeDescriptorSettings
+): Float32Array {
   const {
     bytesPerVoxel,
     usedBits,
     skipBytes,
-    littleEndian,
+    isLittleEndian,
     isSigned,
     addValue,
     size,
@@ -83,14 +75,14 @@ function readRaw3D(buffer: ArrayBuffer, params: VolumeParams): Float32Array {
 
       case 2:
         value = isSigned
-          ? view.getInt16(offset, littleEndian)
-          : view.getUint16(offset, littleEndian);
+          ? view.getInt16(offset, isLittleEndian)
+          : view.getUint16(offset, isLittleEndian);
         break;
 
       case 4:
         value = isSigned
-          ? view.getInt32(offset, littleEndian)
-          : view.getUint32(offset, littleEndian);
+          ? view.getInt32(offset, isLittleEndian)
+          : view.getUint32(offset, isLittleEndian);
         break;
 
       default:
@@ -119,7 +111,7 @@ function readRaw3D(buffer: ArrayBuffer, params: VolumeParams): Float32Array {
 
 function readRawSlab(
   buffer: ArrayBuffer,
-  params: VolumeParams,
+  params: VolumeDescriptorSettings,
   zStart: number,
   slabDepth: number
 ): Float32Array {
@@ -205,19 +197,26 @@ function uploadBatch(
   );
 }
 
-export function streamVolumesToGPU(
+export async function streamVolumesToGPU(
   device: GPUDevice,
   descriptors: VolumeDescriptor[],
-  batchSize = 8
-): GPUTexture {
+  batchSize = 2
+): Promise<GPUTexture> {
   if (descriptors.length < 1 || descriptors.length > 4) {
     throw new Error("Volume count must be between 1 and 4");
   }
 
-  const size = descriptors[0].params.size;
+  if (descriptors[0].settings === undefined) {
+    throw new Error("Volume descriptor settings are missing");
+  }
+
+  const size = descriptors[0].settings.size;
 
   for (const d of descriptors) {
-    const s = d.params.size;
+    if (d.settings === undefined) {
+      throw new Error("Volume descriptor settings are missing");
+    }
+    const s = d.settings.size;
     if (s.x !== size.x || s.y !== size.y || s.z !== size.z) {
       throw new Error("All volumes must have identical dimensions");
     }
@@ -240,8 +239,12 @@ export function streamVolumesToGPU(
     const channelSlabs: Uint8Array[] = [];
 
     for (const d of descriptors) {
-      const floatSlab = readRawSlab(d.buffer, d.params, z, batchSize);
-      channelSlabs.push(normalizeToUint8(floatSlab, d.params));
+      if (d.settings === undefined) {
+        throw new Error("Volume descriptor settings are missing");
+      }
+      const arrayBuffer = await d.volumeData.getVolumeData();
+      const floatSlab = readRawSlab(arrayBuffer, d.settings, z, batchSize);
+      channelSlabs.push(normalizeToUint8(floatSlab, d.settings));
     }
 
     const rgbaSlab = packBatchRGBA(channelSlabs, {

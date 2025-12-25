@@ -28,15 +28,15 @@ import {
   Checkmark24Filled,
   Info24Regular,
 } from "@fluentui/react-icons";
-import { VolumeSettings } from "../../utils/VolumeSettings";
+import {
+  fileTypeOptions,
+  type VolumeDescriptor,
+} from "../../utils/volumeSettings.ts";
+import { volumeSettingsFromJson } from "../../utils/volumeSettings.ts";
 import React from "react";
-import type {
-  FileTypeOptions,
-  UploadDialogInstance,
-} from "../../stores/uiState/UploadDialog";
+import type { UploadDialogInstance } from "../../stores/uiState/UploadDialog";
 import {
   endianOptions,
-  fileTypeOptions,
   formatOptions,
   Tabs,
 } from "../../stores/uiState/UploadDialog";
@@ -88,12 +88,7 @@ const useStyles = makeStyles({
 interface Props {
   open: boolean;
   onClose: () => void;
-  onFileConfirm: (file: File, volumeSettings?: VolumeSettings) => Promise<void>;
-  onUrlConfirm: (
-    url: string,
-    fileType: FileTypeOptions,
-    volumeSettings?: VolumeSettings
-  ) => Promise<void>;
+  onConfirm: (volumeDescriptor: VolumeDescriptor) => Promise<void>;
   titleText: string;
   confirmText: string;
   uploadDialogStore: UploadDialogInstance;
@@ -103,8 +98,7 @@ const VolumeUploadDialog = observer(
   ({
     open,
     onClose,
-    onFileConfirm,
-    onUrlConfirm,
+    onConfirm,
     titleText,
     confirmText,
     uploadDialogStore,
@@ -183,40 +177,38 @@ const VolumeUploadDialog = observer(
 
     const parseVolumeSettings = async (descriptorFile: File) => {
       const descriptor = await descriptorFile.text();
-      const settings = VolumeSettings.fromJSON(descriptor);
+      const settings = volumeSettingsFromJson(descriptor);
 
-      if (settings.size) {
-        const { x, y, z } = settings.size;
-        if (x) fileUploadInputs.setWidth(x.toString());
-        if (y) fileUploadInputs.setHeight(y.toString());
-        if (z) fileUploadInputs.setDepth(z.toString());
-      }
+      const { x, y, z } = settings.size;
+      fileUploadInputs.setWidth(x.toString());
+      fileUploadInputs.setHeight(y.toString());
+      fileUploadInputs.setDepth(z.toString());
+
       if ("isLittleEndian" in settings) {
         fileUploadInputs.setEndian(
           settings.isLittleEndian ? "Little Endian" : "Big Endian"
         );
       }
-      if (settings.bytesPerVoxel !== undefined) {
-        if (settings.bytesPerVoxel === 1) {
-          fileUploadInputs.setFormat("8-bit");
-        } else {
-          const isSigned = "isSigned" in settings ? settings.isSigned : false;
-          fileUploadInputs.setFormat(
-            `${settings.bytesPerVoxel * 8}-bit ${
-              isSigned ? "Signed" : "Unsigned"
-            }`
-          );
-        }
-      } else if (settings.usedBits !== undefined) {
-        if (settings.usedBits === 8) {
-          fileUploadInputs.setFormat("8-bit");
-        } else {
-          const isSigned = "isSigned" in settings ? settings.isSigned : false;
-          fileUploadInputs.setFormat(
-            `${settings.usedBits}-bit ${isSigned ? "Signed" : "Unsigned"}`
-          );
-        }
+      if (settings.bytesPerVoxel === 1) {
+        fileUploadInputs.setFormat("8-bit");
+      } else {
+        const isSigned = "isSigned" in settings ? settings.isSigned : false;
+        fileUploadInputs.setFormat(
+          `${settings.bytesPerVoxel * 8}-bit ${
+            isSigned ? "Signed" : "Unsigned"
+          }`
+        );
       }
+      // else if (settings.usedBits !== undefined) {
+      //   if (settings.usedBits === 8) {
+      //     fileUploadInputs.setFormat("8-bit");
+      //   } else {
+      //     const isSigned = "isSigned" in settings ? settings.isSigned : false;
+      //     fileUploadInputs.setFormat(
+      //       `${settings.usedBits}-bit ${isSigned ? "Signed" : "Unsigned"}`
+      //     );
+      //   }
+      // }
     };
 
     const parseMrcFile = (mrcFile: File) => {
@@ -268,35 +260,21 @@ const VolumeUploadDialog = observer(
       if (!fileUploadInputs.isValid) {
         return;
       }
-      if (fileUploadInputs.isRawUpload) {
-        const settings = fileUploadInputs.toVolumeSettings();
-        await onFileConfirm(fileUploadInputs.getFile(), settings);
-      } else {
-        await onFileConfirm(fileUploadInputs.getFile());
-      }
+      await onConfirm(fileUploadInputs.generateVolumeDescriptor());
     };
 
     const confirmUrl = async () => {
       if (!urlUploadInputs.isValid) {
         return;
       }
-      if (urlUploadInputs.isRawUpload) {
-        const settings = urlUploadInputs.toVolumeSettings();
-        await onUrlConfirm(
-          urlUploadInputs.url,
-          urlUploadInputs.fileType,
-          settings
-        );
-      } else {
-        await onUrlConfirm(urlUploadInputs.url, urlUploadInputs.fileType);
-      }
+      await onConfirm(urlUploadInputs.generateVolumeDescriptor());
     };
 
     const confirmCryoET = async () => {
       if (!cryoETUploadInputs.isValid) {
         return;
       }
-      await onUrlConfirm(cryoETUploadInputs.url, "mrc");
+      await onConfirm(cryoETUploadInputs.generateVolumeDescriptor());
     };
 
     return (

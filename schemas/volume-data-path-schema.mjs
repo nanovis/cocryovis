@@ -21,7 +21,10 @@ import {
     singleFileSchema,
 } from "./componentSchemas/file-schema.mjs";
 import { annotationsSchema } from "./volume-path-schema.mjs";
-import { volumeSettings } from "./componentSchemas/volume-settings-schema.mjs";
+import {
+    volumeDescriptorSettings,
+    volumeSettings,
+} from "./componentSchemas/volume-settings-schema.mjs";
 
 export const volumeData = z.union([
     sparseLabelVolumeDataSchema,
@@ -49,7 +52,7 @@ export const fromUrlSchema = z
         url: z.url({
             protocol: /^https?$/,
         }),
-        volumeSettings: volumeSettings.optional(),
+        volumeSettings: volumeDescriptorSettings.optional(),
     })
     .refine((f) => f.fileType !== "raw" || f.volumeSettings, {
         message: "Raw files require volume settings.",

@@ -14,7 +14,11 @@ import type {
 import { PseudoLabelVolume } from "./PseudoVolumeModel";
 import { VolumeResults } from "./ResultModel";
 import * as Utils from "../../utils/Helpers";
-import type { VolumeSettings } from "../../utils/VolumeSettings";
+import {
+  type FileTypeOptions,
+  type VolumeDescriptorSettings,
+  type VolumeSettings,
+} from "../../utils/volumeSettings.ts";
 import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import type z from "zod";
 import type {
@@ -35,7 +39,6 @@ import {
   createFromUrl,
   deleteVolumeData,
 } from "../../api/volumeData";
-import type { FileTypeOptions } from "../uiState/UploadDialog";
 import ToastContainer from "../../utils/ToastContainer";
 
 export type LabeledVolumeTypes =
@@ -149,23 +152,7 @@ export const Volume = types
       const rawData: z.infer<typeof rawVolumeDataSchema> =
         yield createFromFiles("RawVolumeData", self.id, {
           rawFile,
-          volumeSettings: {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            file: settings.file!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            size: settings.size!,
-            ratio: settings.ratio,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            bytesPerVoxel: settings.bytesPerVoxel!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            usedBits: settings.usedBits!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            isLittleEndian: settings.isLittleEndian!,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            isSigned: settings.isSigned!,
-            skipBytes: settings.skipBytes,
-            addValue: settings.addValue,
-          },
+          volumeSettings: settings,
         });
       if (!isAlive(self)) {
         return;
@@ -194,13 +181,11 @@ export const Volume = types
     uploadFromUrl: flow(function* uploadFromUrl(
       url: string,
       fileType: FileTypeOptions,
-      volumeSettings?: VolumeSettings
+      settings?: VolumeDescriptorSettings
     ) {
       if (!Utils.isValidHttpUrl(url)) {
         throw new Error("Invalid URL.");
       }
-
-      volumeSettings?.checkValidity();
 
       // TODO better unify server and client setting types
       const rawData: z.infer<typeof rawVolumeDataSchema> = yield createFromUrl(
@@ -208,25 +193,7 @@ export const Volume = types
         {
           url: url,
           fileType: fileType,
-          volumeSettings: volumeSettings
-            ? {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                file: volumeSettings.file!,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                size: volumeSettings.size!,
-                ratio: volumeSettings.ratio,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                bytesPerVoxel: volumeSettings.bytesPerVoxel! as 1 | 2 | 4 | 8,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                usedBits: volumeSettings.usedBits! as 8 | 16 | 32 | 64,
-                skipBytes: volumeSettings.skipBytes,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                isLittleEndian: volumeSettings.isLittleEndian!,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                isSigned: volumeSettings.isSigned!,
-                addValue: volumeSettings.addValue,
-              }
-            : undefined,
+          volumeSettings: settings,
         }
       );
       if (!isAlive(self)) {

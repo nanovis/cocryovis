@@ -40,7 +40,7 @@ export async function initializeDevice(
 
   const requiredLimits = {
     maxTextureDimension3D: adapter.limits.maxTextureDimension3D,
-    maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
+    maxBufferSize: adapter.limits.maxBufferSize,
   };
 
   console.log("Requesting device with limits:", requiredLimits);
@@ -51,6 +51,8 @@ export async function initializeDevice(
   };
 
   const device = await adapter.requestDevice(deviceDescriptor);
+
+  console.log("Obtained device with limits:", device.limits);
 
   const context = canvas.getContext("webgpu");
 

@@ -1,4 +1,4 @@
-import { VolumeSettings } from "./VolumeSettings";
+import type { VolumeSettings } from "./volumeSettings.ts";
 
 /**
  * MRC file into a RAW and JSON file using streaming/chunked.
@@ -138,7 +138,7 @@ export async function convertMRCToRaw(
   });
 
   // Generate the settings object.
-  const settings = new VolumeSettings({
+  const settings: VolumeSettings = {
     file: rawFileName,
     size: { x: nx, y: ny, z: nz },
     ratio: { x: 1.0, y: 1.0, z: 1.0 },
@@ -148,7 +148,7 @@ export async function convertMRCToRaw(
     isLittleEndian: true,
     isSigned: isSigned,
     addValue: 0,
-  });
+  };
 
   return { rawFile, settings };
 }

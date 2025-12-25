@@ -51,7 +51,7 @@ import {
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
 import type { ResultInstance } from "../../../stores/userState/ResultModel";
-import type { VolumeSettings } from "../../../utils/VolumeSettings";
+import type { VolumeDescriptor } from "../../../utils/volumeSettings.ts";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
 import type { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
@@ -65,10 +65,10 @@ import {
   getVolumeVisualizationFiles,
 } from "../../../api/volumeData";
 import { getResultData } from "../../../api/results";
-import type { FileTypeOptions } from "../../../stores/uiState/UploadDialog";
 import ToastContainer from "../../../utils/ToastContainer";
 import EditDialog from "./elements/EditDialog";
 import type { JSX } from "react/jsx-runtime";
+import { fileMapToVisualizationConfig } from "../../../utils/volumeVisualization.ts";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -274,54 +274,55 @@ const Volume = observer(({ open, close }: Props) => {
     projectVolumes.setCreateVolumeActiveRequest(false);
   };
 
-  const uploadRawData = async (
-    pendingFile: File,
-    volumeSettings?: VolumeSettings
-  ) => {
+  const uploadRawData = async (volumeDescriptor: VolumeDescriptor) => {
     const toastContainer = new ToastContainer();
     try {
       toastContainer.loading("Uploading files...");
-      if (Utils.isMrcFile(pendingFile.name)) {
-        try {
-          await selectedVolume?.uploadMrcVolume(pendingFile);
-        } catch (error) {
-          if (error instanceof Error) {
-            throw new Error("Error converting MRC file:" + error.message);
-          } else {
-            throw new Error("Error converting MRC file.");
+
+      if (!selectedVolume) {
+        throw new Error("No volume selected.");
+      }
+
+      if (volumeDescriptor.volumeData.url) {
+        if (!volumeDescriptor.volumeData.fileType) {
+          throw new Error("No file type specified.");
+        }
+        await selectedVolume.uploadFromUrl(
+          volumeDescriptor.volumeData.url,
+          volumeDescriptor.volumeData.fileType,
+          volumeDescriptor.settings
+        );
+      } else if (volumeDescriptor.volumeData.file) {
+        if (Utils.isMrcFile(volumeDescriptor.volumeData.file.name)) {
+          try {
+            await selectedVolume.uploadMrcVolume(
+              volumeDescriptor.volumeData.file
+            );
+          } catch (error) {
+            if (error instanceof Error) {
+              throw new Error("Error converting MRC file:" + error.message);
+            } else {
+              throw new Error("Error converting MRC file.");
+            }
           }
+        } else if (Utils.isRawFile(volumeDescriptor.volumeData.file.name)) {
+          if (!volumeDescriptor.settings) {
+            throw new Error("Missing volume settings.");
+          }
+          await selectedVolume.uploadRawVolume(
+            volumeDescriptor.volumeData.file,
+            {
+              ...volumeDescriptor.settings,
+              file: volumeDescriptor.volumeData.file.name,
+            }
+          );
+        } else {
+          throw new Error("Invalid file format.");
         }
       } else {
-        if (!Utils.isRawFile(pendingFile.name)) {
-          throw new Error("No .raw file found in the uploaded files.");
-        }
-
-        if (!volumeSettings) {
-          throw new Error("Missing volume settings.");
-        }
-
-        volumeSettings.checkValidity();
-
-        await Utils.waitForNextFrame();
-        await selectedVolume?.uploadRawVolume(pendingFile, volumeSettings);
+        throw new Error("Invalid volume data.");
       }
       toastContainer.success("Data uploaded!");
-    } catch (error) {
-      toastContainer.error(Utils.getErrorMessage(error));
-      console.error("Error:", error);
-    }
-  };
-
-  const uploadUrl = async (
-    url: string,
-    fileType: FileTypeOptions,
-    volumeSettings?: VolumeSettings
-  ) => {
-    const toastContainer = new ToastContainer();
-    try {
-      toastContainer.loading("Uploading files...");
-      await selectedVolume?.uploadFromUrl(url, fileType, volumeSettings);
-      toastContainer.success("Data successfully uploaded!");
     } catch (error) {
       toastContainer.error(Utils.getErrorMessage(error));
       console.error("Error:", error);
@@ -407,10 +408,12 @@ const Volume = observer(({ open, close }: Props) => {
       const contents = await getVolumeVisualizationFiles(dataType, id);
 
       toastContainer.loading("Processing visualization data...");
-
       const fileMap = await Utils.zipToFileMap(contents);
 
-      await uiState.visualizeVolume(fileMap, volumeInstance);
+      const visualizationDescriptor =
+        await fileMapToVisualizationConfig(fileMap);
+
+      await uiState.visualizeVolume(visualizationDescriptor, volumeInstance);
 
       toastContainer.dismiss();
     } catch (error) {
@@ -584,7 +587,10 @@ const Volume = observer(({ open, close }: Props) => {
       const contents = await getResultData(selectedResultId);
       const fileMap = await Utils.zipToFileMap(contents);
 
-      await uiState.visualizeVolume(fileMap, selectedResult);
+      const visualizationDescriptor =
+        await fileMapToVisualizationConfig(fileMap);
+
+      await uiState.visualizeVolume(visualizationDescriptor, selectedResult);
 
       toastContainer.dismiss();
     } catch (error) {
@@ -1092,11 +1098,10 @@ const Volume = observer(({ open, close }: Props) => {
           <VolumeUploadDialog
             open={isUploadVolumeDialogOpen}
             onClose={() => setIsUploadVolumeDialogOpen(false)}
-            onFileConfirm={uploadRawData}
+            onConfirm={uploadRawData}
             titleText={"Upload Raw Data"}
             confirmText="Upload"
             uploadDialogStore={uiState.uploadDialog}
-            onUrlConfirm={uploadUrl}
           />
 
           <div
