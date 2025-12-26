@@ -23,6 +23,7 @@ struct ChannelData
   ratio: vec4<f32>,
   rampStart: f32,
   rampEnd: f32,
+  visible: i32,
 }
 
 struct Param
@@ -42,12 +43,6 @@ struct Param
 	shadowStrength : f32,
 	voxelSize : f32,
 
-	enableVolumeA : i32,
-	enableVolumeB : i32,
-	enableVolumeC : i32,
-	enableVolumeD : i32,
-
-	clippingMask : vec4<f32>,
 	viewVector : vec4<f32>,
 	clippingPlaneOrigin : vec4<f32>,
 	clippingPlaneNormal : vec4<f32>,
@@ -60,6 +55,7 @@ struct Param
 
 	rawVolumeChannel : i32,
 	numChannels : i32,
+	clippingEnabled : i32,
 }
 
 struct Annotations
@@ -178,8 +174,6 @@ fn clip(sample_var : vec4<f32>, pos : vec3<f32> ) -> vec4<f32>
 
 	if(d > r)
 	{
-		//clipped = true;
-		//result = result * param.clippingMask;
 		return vec4<f32>(0.0, 0.0, 0.0, 0.0);
 	}
 
@@ -216,32 +210,27 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 	var low0 = channelData[0].rampStart;
 	var high0 = channelData[0].rampEnd;
 	mapped.x = clamp((sample4.x - low0) / (high0 - low0), 0.0, 1.0);
-
-	mapped.x = mapped.x * f32(param.enableVolumeA);
+	mapped.x = mapped.x * f32(channelData[0].visible);
 
 	var low1 = channelData[1].rampStart;
 	var high1 = channelData[1].rampEnd;
 	mapped.y = clamp((sample4.y - low1) / (high1 - low1), 0.0, 1.0);
-	mapped.y = mapped.y * f32(param.enableVolumeB);
+	mapped.y = mapped.y * f32(channelData[1].visible);
 
 	var low2 = channelData[2].rampStart;
 	var high2 = channelData[2].rampEnd;
 	mapped.z = clamp((sample4.z - low2) / (high2 - low2), 0.0, 1.0);
-	mapped.z = mapped.z * f32(param.enableVolumeC);
+	mapped.z = mapped.z * f32(channelData[2].visible);
 
 	var low3 = channelData[3].rampStart;
 	var high3 = channelData[3].rampEnd;
 	mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);
+	mapped.z = mapped.z * f32(channelData[3].visible);
 
-	var clipEnabled = param.clippingMask.x != 1.0 ||
-					  param.clippingMask.y != 1.0 ||
-					  param.clippingMask.z != 1.0;
-
-	if (clipEnabled && !clipped)
+	if (bool(param.clippingEnabled) && !clipped)
 	{
 		mapped = clip(mapped, posOrig);
 	}
-
 
 	return mapped;
 }

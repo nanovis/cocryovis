@@ -3,6 +3,7 @@ export const CONFIG = Object.freeze({
   visibleVolumes: 3,
   shadowsTransferFunctionIndex: 4,
   statusRefreshInterval: 5000,
+  clippingPlaneScrollSpeed: 0.007,
 });
 
 export const DEFAULT_URL = "http://localhost:8080";

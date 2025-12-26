@@ -6,6 +6,7 @@ interface ChannelParameters {
   ratio: vec4;
   rampStart: number;
   rampEnd: number;
+  visible: boolean;
 }
 
 export class ChannelData extends WebGpuBuffer {
@@ -17,6 +18,42 @@ export class ChannelData extends WebGpuBuffer {
 
   constructor(device: GPUDevice) {
     super(device, 0, "ChannelData Buffer");
+
+    this.addChannelData({
+      color: [1, 1, 1, 1],
+      ratio: [1, 1, 1, 1],
+      rampStart: 0.1,
+      rampEnd: 0.9,
+      visible: false,
+    });
+    this.addChannelData({
+      color: [0, 1, 0, 1],
+      ratio: [1, 1, 1, 1],
+      rampStart: 0.0,
+      rampEnd: 1.0,
+      visible: false,
+    });
+    this.addChannelData({
+      color: [0, 0, 1, 1],
+      ratio: [1, 1, 1, 1],
+      rampStart: 0.0,
+      rampEnd: 1.0,
+      visible: false,
+    });
+    this.addChannelData({
+      color: [1, 1, 0, 1],
+      ratio: [1, 1, 1, 1],
+      rampStart: 0.0,
+      rampEnd: 1.0,
+      visible: false,
+    });
+    this.addChannelData({
+      color: [1, 0, 1, 1],
+      ratio: [1, 1, 1, 1],
+      rampStart: 0.0,
+      rampEnd: 1.0,
+      visible: false,
+    });
   }
 
   protected createBuffer(size: number): GPUBuffer {
@@ -40,6 +77,13 @@ export class ChannelData extends WebGpuBuffer {
     this.dirty = true;
   }
 
+  getParameters(index: number): ChannelParameters {
+    if (index < 0 || index > this.volumes.length) {
+      throw new Error("Index out of bounds");
+    }
+    return { ...this.volumes[index] };
+  }
+
   clearChannelData() {
     this.volumes = [];
     this.dirty = true;
@@ -50,36 +94,41 @@ export class ChannelData extends WebGpuBuffer {
       return;
     }
 
-    const data = new Float32Array(this.volumes.length * 10); // Each VolumeData has 8 floats
-    let offset = 0;
+    const buffer = new ArrayBuffer(
+      ChannelData.channelSize * this.volumes.length
+    );
+    const view = new DataView(buffer);
+
+    let o = 0;
     for (const volume of this.volumes) {
-      data[offset++] = volume.color[0];
-      data[offset++] = volume.color[1];
-      data[offset++] = volume.color[2];
-      data[offset++] = volume.color[3];
-      data[offset++] = volume.ratio[0];
-      data[offset++] = volume.ratio[1];
-      data[offset++] = volume.ratio[2];
-      data[offset++] = volume.ratio[3];
-      data[offset++] = volume.rampStart;
-      data[offset++] = volume.rampEnd;
-      data[offset++] = 0;
-      data[offset++] = 0;
+      for (let i = 0; i < 4; i++)
+        view.setFloat32(o + i * 4, volume.color[i], true);
+      o += 16;
+
+      for (let i = 0; i < 4; i++)
+        view.setFloat32(o + i * 4, volume.ratio[i], true);
+      o += 16;
+
+      view.setFloat32(o, volume.rampStart, true);
+      o += 4;
+      view.setFloat32(o, volume.rampEnd, true);
+      o += 4;
+
+      view.setInt32(o, Number(volume.visible), true);
+      o += 4;
+
+      // Padding
+      view.setInt32(o, 0, true);
+      o += 4;
     }
 
-    if (this.bufferSize !== data.byteLength) {
+    if (this.bufferSize !== buffer.byteLength) {
       this.buffer.destroy();
-      this.bufferSize = ChannelData.channelSize * this.volumes.length;
+      this.bufferSize = buffer.byteLength;
       this.buffer = this.createBuffer(this.bufferSize);
     }
 
-    this.device.queue.writeBuffer(
-      this.buffer,
-      0,
-      data.buffer,
-      data.byteOffset,
-      data.byteLength
-    );
+    this.device.queue.writeBuffer(this.buffer, 0, buffer);
 
     this.dirty = false;
   }

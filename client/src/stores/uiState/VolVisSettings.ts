@@ -1,6 +1,12 @@
-import type { Instance, SnapshotIn } from "mobx-state-tree";
+import {
+  getParentOfType,
+  type Instance,
+  type SnapshotIn,
+} from "mobx-state-tree";
 import { types } from "mobx-state-tree";
 import { TransferFunction } from "./TransferFunction";
+import { RootStore } from "../RootStore.ts";
+import type { VolumeRenderer } from "../../renderer/renderer.ts";
 
 export const VolVisSettings = types
   .model({
@@ -8,18 +14,26 @@ export const VolVisSettings = types
     name: types.string,
     transferFunction: TransferFunction,
     visible: types.optional(types.boolean, true),
-    clipping: types.optional(types.boolean, true),
+    // clipping: types.optional(types.boolean, true),
     type: types.enumeration("VolumeType", ["volume", "raw", "shadows"]),
   })
+  .views((self) => ({
+    get renderer(): VolumeRenderer | null {
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      return rootStore.renderer;
+    },
+  }))
   .actions((self) => ({
     setVisibility(visible: boolean) {
       self.visible = visible;
-      window.WasmModule?.show_volume(self.index, visible);
+      self.renderer?.volumeManager.channelData.setChannelData(self.index, {
+        visible: visible,
+      });
     },
-    setClipping(clipping: boolean) {
-      self.clipping = clipping;
-      window.WasmModule?.clip_volume(clipping, self.index);
-    },
+    // setClipping(clipping: boolean) {
+    //   self.clipping = clipping;
+    //   window.WasmModule?.clip_volume(clipping, self.index);
+    // },
   }));
 
 export interface VolVisSettingsInstance extends Instance<

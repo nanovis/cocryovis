@@ -13,9 +13,9 @@ import { VisualizedVolume } from "./VisualizedVolume";
 import { RenderSettings } from "./RenderSettings";
 import { UploadDialog } from "./UploadDialog";
 import { TiltSeriesDialog } from "./TiltSeriesDialog";
-import { RootStore } from "../RootStore.ts";
-import type { VisualizationDescriptor } from "../../utils/volumeVisualization.ts";
 import { visualizeVolumeFromConfig } from "../../utils/volumeVisualization.ts";
+import type { VisualizationDescriptor } from "../../renderer/volumeManager.ts";
+import { RootStore } from "../RootStore.ts";
 
 export const UiState = types
   .model({
@@ -116,7 +116,7 @@ export const UiState = types
       void,
       VisualizedVolumeSnapshotIn
     > {
-      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      const rootStore = getParentOfType(self, RootStore);
       if (!rootStore.renderer) {
         console.warn("Renderer not initialized yet.");
         return;

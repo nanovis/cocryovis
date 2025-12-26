@@ -1,6 +1,6 @@
 import vertexShader from "../assets/shaders/volume.vs.wgsl?raw";
 import fragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
-import { ParamData } from "./params.ts";
+import { ParamData, type RendererParameters } from "./params.ts";
 import { Camera, type CameraParams } from "./camera.ts";
 import { BindGroup } from "./bindGroup.ts";
 import { VolumeManager } from "./volumeManager.ts";
@@ -103,6 +103,8 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
 
 const DEPTH_TEXTURE_FORMAT: GPUTextureFormat = "depth24plus";
 
+export type RendererCameraParameters = Omit<CameraParams, "aspectRatio">;
+
 export class VolumeRenderer {
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
@@ -124,13 +126,15 @@ export class VolumeRenderer {
 
   constructor(
     device: GPUDevice,
-    cameraParams: Omit<CameraParams, "aspectRatio">,
+    cameraParams: RendererCameraParameters,
     {
       output,
       context,
+      parameters,
     }: {
       output?: OutputInfo;
       context?: GPUCanvasContext;
+      parameters?: Partial<RendererParameters>;
     } = {}
   ) {
     this.device = device;
@@ -148,14 +152,12 @@ export class VolumeRenderer {
     } else {
       throw new Error("Either context or output information must be provided");
     }
-
-    this.paramData = new ParamData(this.device);
-    this.volumeManager = new VolumeManager(this.device);
-
     this.camera = new Camera(this.device, {
       ...cameraParams,
       aspectRatio: this.width / this.height,
     });
+    this.paramData = new ParamData(this.device, this.camera, parameters);
+    this.volumeManager = new VolumeManager(this.device);
 
     const vertexShaderModule = this.device.createShaderModule({
       code: vertexShader,

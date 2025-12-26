@@ -1,8 +1,5 @@
 import type { Camera } from "../renderer/camera.ts";
-
-function clamp(v: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, v));
-}
+import { clamp } from "./Helpers.ts";
 
 export class OrbitCameraController {
   minDistance = 1;
@@ -78,6 +75,8 @@ export class OrbitCameraController {
   };
 
   private onWheel = (e: WheelEvent) => {
+    if (e.shiftKey) return;
+
     e.preventDefault();
 
     this.radius += e.deltaY * this.zoomSpeed;

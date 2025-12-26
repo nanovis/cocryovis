@@ -1,4 +1,8 @@
-import type { Instance, SnapshotIn } from "mobx-state-tree";
+import {
+  getParentOfType,
+  type Instance,
+  type SnapshotIn,
+} from "mobx-state-tree";
 import { types } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
 import type { VolumeInstance } from "../userState/VolumeModel";
@@ -16,6 +20,10 @@ import type { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
 import { downloadRawFile } from "../../api/volumeData";
 import { getVolumeWithSparseVolumes } from "../../api/volume";
 import ToastContainer from "../../utils/ToastContainer";
+import type { VolumeRenderer } from "../../renderer/renderer.ts";
+import { RootStore } from "../RootStore.ts";
+import type { ClippingPlaneType } from "../../renderer/params.ts";
+import { clamp } from "../../utils/Helpers";
 
 export type visualizedObjectInstances =
   | VolumeInstance
@@ -93,9 +101,16 @@ export const VisualizedVolume = types
     result: types.maybe(types.reference(Result)),
     volVisSettings: types.array(VolVisSettings),
     clippingPlane: types.optional(
-      types.enumeration("ClippingPlane", ["0", "1", "2", "3", "4"]),
-      "0"
+      types.enumeration("ClippingPlane", [
+        "view-aligned",
+        "x",
+        "y",
+        "z",
+        "none",
+      ]),
+      "none"
     ),
+    clippingPlaneOffset: types.optional(types.number, 0),
     labelEditingMode: types.optional(types.boolean, false),
     manualLabelIndex: types.optional(types.integer, 0),
     fullscreen: types.optional(types.boolean, false),
@@ -122,22 +137,16 @@ export const VisualizedVolume = types
     get canEditLabels() {
       return self.volume !== undefined;
     },
+    get renderer(): VolumeRenderer | null {
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      return rootStore.renderer;
+    },
   }))
   .actions((self) => ({
     resetSaveAsNew() {
       for (let i = 0; i < self.saveAsNew.length; i++) {
         self.saveAsNew[i] = false;
       }
-    },
-    afterAttach() {
-      if (!window.WasmModule) {
-        return;
-      }
-      window.WasmModule.chooseClippingPlane(parseInt(self.clippingPlane));
-      window.WasmModule.set_fullscreen_mode(self.fullscreen);
-      window.WasmModule.show_raw_data_on_clipping(self.showRawClippingPlane);
-      window.WasmModule.set_annotation_mode(!self.eraseMode);
-      window.WasmModule.enable_annotation_mode(false);
     },
     setFullscreen(enable: boolean) {
       if (!window.WasmModule) {
@@ -147,7 +156,7 @@ export const VisualizedVolume = types
         return;
       }
       self.fullscreen = enable;
-      window.WasmModule.set_fullscreen_mode(enable);
+      // TODO
     },
     setShowRawClippingPlane(enable: boolean) {
       if (!window.WasmModule) {
@@ -157,7 +166,7 @@ export const VisualizedVolume = types
         return;
       }
       self.showRawClippingPlane = enable;
-      window.WasmModule.show_raw_data_on_clipping(enable);
+      // TODO
     },
     setEraseMode(enable: boolean) {
       if (!window.WasmModule) {
@@ -170,6 +179,13 @@ export const VisualizedVolume = types
       self.eraseMode = enable;
       window.WasmModule.set_annotation_mode(!enable);
     },
+    setClippingOffset(offset: number) {
+      if (self.clippingPlane === "none") {
+        return;
+      }
+      self.clippingPlaneOffset = clamp(offset, -1, 1);
+      self.renderer?.paramData.setClippingPlaneOffset(offset);
+    },
   }))
   .actions((self) => ({
     setManualLabelIndex(index: number) {
@@ -180,15 +196,18 @@ export const VisualizedVolume = types
       window.WasmModule.set_annotation_channel(index);
       self.volume?.setShownAnnotation(index, true);
     },
-    setClippingPlane(clippingPlane: "0" | "1" | "2" | "3" | "4") {
+    setClippingPlane(clippingPlane: ClippingPlaneType) {
       if (!window.WasmModule) {
         return;
       }
       self.clippingPlane = clippingPlane;
-      window.WasmModule.chooseClippingPlane(parseInt(clippingPlane));
+      self.renderer?.paramData.setClippingPlane(clippingPlane);
       if (self.fullscreen) {
         self.setFullscreen(false);
       }
+    },
+    changeClippingPlaneOffset(offset: number) {
+      self.setClippingOffset(self.clippingPlaneOffset + offset);
     },
     clearActiveAnnotationChannel() {
       if (
@@ -239,8 +258,8 @@ export const VisualizedVolume = types
         window.WasmModule.enable_annotation_mode(true);
         self.setManualLabelIndex(0);
 
-        if (self.clippingPlane === "0") {
-          self.setClippingPlane("4");
+        if (self.clippingPlane === "none") {
+          self.setClippingPlane("z");
         }
         toastContainer.success("Labeling mode enabled.");
       } catch (error) {

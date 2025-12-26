@@ -31,6 +31,7 @@ import ShortcutKey from "../../shared/ShortcutKey";
 import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
 import ToastContainer from "../../../utils/ToastContainer";
+import type { ClippingPlaneType } from "../../../renderer/params.ts";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -230,7 +231,12 @@ const Visualization = observer(({ open, close }: Props) => {
     volVisSettings: VolVisSettingsInstance
   ) => {
     try {
-      await volVisSettings.transferFunction.handleTFUpload(event.target.files);
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error("No file selected.");
+      }
+      await volVisSettings.transferFunction.handleTFUpload(
+        event.target.files[0]
+      );
     } catch (error) {
       const toastContainer = new ToastContainer();
       toastContainer.error(`Error: ${error}`);
@@ -242,12 +248,12 @@ const Visualization = observer(({ open, close }: Props) => {
     }
   };
 
-  const handleClippingChange = (
-    event: ChangeEvent<HTMLInputElement>,
-    volumeSettings: VolVisSettingsInstance
-  ) => {
-    volumeSettings.setClipping(event.target.checked);
-  };
+  // const handleClippingChange = (
+  //   event: ChangeEvent<HTMLInputElement>,
+  //   volumeSettings: VolVisSettingsInstance
+  // ) => {
+  //   volumeSettings.setClipping(event.target.checked);
+  // };
 
   const handleChangeRW = (
     event: ChangeEvent<HTMLInputElement>,
@@ -493,20 +499,20 @@ const Visualization = observer(({ open, close }: Props) => {
           {/* Set Clipping Plane */}
           <Field label="Clipping Plane">
             <RadioGroup
-              value={visualizedVolume?.clippingPlane ?? "0"}
+              value={visualizedVolume?.clippingPlane ?? "none"}
               onChange={(_, data) => {
                 visualizedVolume?.setClippingPlane(
-                  data.value as "0" | "1" | "2" | "3" | "4"
+                  data.value as ClippingPlaneType
                 );
               }}
               className={classes.clippingPlane}
               disabled={actionsDisabled()}
             >
-              <Radio value="0" label="None" />
-              <Radio value="1" label="View-aligned" />
-              <Radio value="2" label="YZ-plane" />
-              <Radio value="3" label="XZ-plane" />
-              <Radio value="4" label="XY-plane" />
+              <Radio value="none" label="None" />
+              <Radio value="view-aligned" label="View-aligned" />
+              <Radio value="x" label="YZ-plane" />
+              <Radio value="y" label="XZ-plane" />
+              <Radio value="z" label="XY-plane" />
             </RadioGroup>
           </Field>
 
@@ -597,12 +603,12 @@ const Visualization = observer(({ open, close }: Props) => {
                           settingsInstance.setVisibility(data.checked);
                         }}
                       />
-                      <Switch
-                        checked={settingsInstance.clipping}
-                        onChange={(event) =>
-                          handleClippingChange(event, settingsInstance)
-                        }
-                      />
+                      {/*<Switch*/}
+                      {/*  checked={settingsInstance.clipping}*/}
+                      {/*  onChange={(event) =>*/}
+                      {/*    handleClippingChange(event, settingsInstance)*/}
+                      {/*  }*/}
+                      {/*/>*/}
                     </div>
                   )
                 )}

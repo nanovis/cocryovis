@@ -15,13 +15,9 @@ import {
   volumeSettings,
 } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type { FileMap } from "./Helpers.ts";
+import type { VisualizationDescriptor } from "../renderer/volumeManager.ts";
 
 const CONFIG_FILE_NAME = "config.json";
-
-export interface VisualizationDescriptor {
-  descriptors: VolumeDescriptor[];
-  rawVolumeChannel?: number;
-}
 
 export async function fileMapToVisualizationConfig(
   fileMap: FileMap
@@ -99,6 +95,12 @@ export async function visualizeVolumeFromConfig(
 
   const visualizedVolume: VisualizedVolumeSnapshotIn = {
     volVisSettings: volumeVisualizationSettings,
+    clippingPlaneOffset: 0,
+    clippingPlane: "none",
+    labelEditingMode: false,
+    manualLabelIndex: 0,
+    fullscreen: false,
+    showRawClippingPlane: false,
   };
 
   if (visualizedObject !== undefined) {
@@ -113,7 +115,26 @@ export async function visualizeVolumeFromConfig(
     }
   }
 
-  await renderer.volumeManager.loadVolumes(config.descriptors);
+  renderer.paramData.setClippingPlaneOffset(0);
+  renderer.paramData.setClippingPlane("none");
+  await renderer.volumeManager.loadVolumes(config);
+
+  for (let index = 0; index < config.descriptors.length; index++) {
+    const channelData = renderer.volumeManager.channelData.getParameters(index);
+    volumeVisualizationSettings.push({
+      index: index,
+      name: `Volume ${index}`,
+      type: index === config.rawVolumeChannel ? "raw" : "volume",
+      transferFunction: {
+        rampLow: channelData.rampStart,
+        rampHigh: channelData.rampEnd,
+        red: channelData.color[0] * 255,
+        green: channelData.color[1] * 255,
+        blue: channelData.color[2] * 255,
+        comment: `transferFunction_${index}`,
+      },
+    });
+  }
 
   return visualizedVolume;
   //

@@ -1,5 +1,15 @@
-import type { Instance, SnapshotIn } from "mobx-state-tree";
+import {
+  getParentOfType,
+  type Instance,
+  type SnapshotIn,
+} from "mobx-state-tree";
 import { types } from "mobx-state-tree";
+import type { RendererParameters } from "../../renderer/params.ts";
+import {
+  type RendererCameraParameters,
+  type VolumeRenderer,
+} from "../../renderer/renderer.ts";
+import { RootStore } from "../RootStore.ts";
 
 export const RenderSettings = types
   .model({
@@ -7,9 +17,8 @@ export const RenderSettings = types
     farPlane: types.optional(types.number, 100),
     clearColor: types.optional(types.array(types.number), [0, 0, 0]),
     sampleRate: types.optional(types.number, 5),
-    earlyRayTermination: types.optional(types.boolean, true),
+    enableEarlyRayTermination: types.optional(types.boolean, true),
     enableJittering: types.optional(types.boolean, true),
-    enablePostProcessing: types.optional(types.boolean, true),
     enableAmbientOcclusion: types.optional(types.boolean, true),
     aoRadius: types.optional(types.number, 1),
     aoNumSamples: types.optional(types.integer, 5),
@@ -19,66 +28,122 @@ export const RenderSettings = types
     shadowStrength: types.optional(types.number, 0.5),
     shadowRadius: types.optional(types.number, 0.2),
   })
+  .views((self) => ({
+    get renderer(): VolumeRenderer | null {
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      return rootStore.renderer;
+    },
+  }))
   .actions((self) => ({
     setNearPlane(nearPlane: number) {
       self.nearPlane = nearPlane;
-      window.WasmModule?.set_near_plane(nearPlane);
+      self.renderer?.camera.setParameters({
+        near: self.nearPlane,
+      });
     },
     setFarPlane(farPlane: number) {
       self.farPlane = farPlane;
-      window.WasmModule?.set_far_plane(farPlane);
+      self.renderer?.camera.setParameters({
+        far: self.farPlane,
+      });
     },
     setClearColor(r: number, g: number, b: number) {
       self.clearColor.replace([r, g, b]);
-      window.WasmModule?.setColor(r / 255, g / 255, b / 255);
+      self.renderer?.paramData.set({
+        clearColor: [r / 255, g / 255, b / 255, 1],
+      });
     },
     setSampleRate(rate: number) {
       self.sampleRate = rate;
-      window.WasmModule?.set_sample_rate(rate);
+      self.renderer?.paramData.set({
+        sampleRate: self.sampleRate,
+      });
     },
     setEarlyRayTermination(state: boolean) {
-      self.earlyRayTermination = state;
-      window.WasmModule?.enable_early_ray_termination(state);
+      self.enableEarlyRayTermination = state;
+      self.renderer?.paramData.set({
+        enableEarlyRayTermination: self.enableEarlyRayTermination,
+      });
     },
     setJittering(state: boolean) {
       self.enableJittering = state;
-      window.WasmModule?.enable_jittering(state);
-    },
-    setPostProcessing(state: boolean) {
-      self.enablePostProcessing = state;
-      window.WasmModule?.enable_post_processing(state);
+      self.renderer?.paramData.set({
+        enableJittering: self.enableJittering,
+      });
     },
     setAmbientOcclusion(state: boolean) {
       self.enableAmbientOcclusion = state;
-      window.WasmModule?.enableAO(state);
+      self.renderer?.paramData.set({
+        enableAmbientOcclusion: self.enableAmbientOcclusion,
+      });
     },
     setAoRadius(radius: number) {
       self.aoRadius = radius;
-      window.WasmModule?.set_ao_radius(radius);
+      self.renderer?.paramData.set({
+        aoRadius: self.aoRadius,
+      });
     },
     setAoStrength(strength: number) {
       self.aoStrength = strength;
-      window.WasmModule?.set_ao_strength(strength);
+      self.renderer?.paramData.set({
+        aoStrength: self.aoStrength,
+      });
     },
     setAoNumSamples(samples: number) {
       self.aoNumSamples = samples;
-      window.WasmModule?.set_ao_samples(samples);
+      self.renderer?.paramData.set({
+        aoNumSamples: self.aoNumSamples,
+      });
     },
     setSoftShadows(state: boolean) {
       self.enableSoftShadows = state;
-      window.WasmModule?.enable_soft_shadows(state);
+      self.renderer?.paramData.set({
+        enableSoftShadows: self.enableSoftShadows,
+      });
     },
     setShadowQuality(quality: number) {
       self.shadowQuality = quality;
-      window.WasmModule?.set_shadow_quality(quality);
+      self.renderer?.paramData.set({
+        shadowQuality: self.shadowQuality,
+      });
     },
     setShadowStrength(strength: number) {
       self.shadowStrength = strength;
-      window.WasmModule?.set_shadow_strength(strength);
+      self.renderer?.paramData.set({
+        shadowStrength: self.shadowStrength,
+      });
     },
     setShadowRadius(radius: number) {
       self.shadowRadius = radius;
-      window.WasmModule?.set_shadow_radius(radius);
+      self.renderer?.paramData.set({
+        shadowRadius: self.shadowRadius,
+      });
+    },
+    getRendererParameters(): Partial<RendererParameters> {
+      return {
+        enableEarlyRayTermination: self.enableEarlyRayTermination,
+        enableJittering: self.enableJittering,
+        enableAmbientOcclusion: self.enableAmbientOcclusion,
+        enableSoftShadows: self.enableSoftShadows,
+
+        sampleRate: self.sampleRate,
+        aoRadius: self.aoRadius,
+        aoStrength: self.aoStrength,
+
+        aoNumSamples: self.aoNumSamples,
+        shadowQuality: self.shadowQuality,
+        shadowStrength: self.shadowStrength,
+
+        clearColor: [...self.clearColor, 1],
+
+        shadowRadius: self.shadowRadius,
+      };
+    },
+    getCameraParameters(): Partial<RendererCameraParameters> {
+      return {
+        near: self.nearPlane,
+        far: self.farPlane,
+      };
     },
   }));
 

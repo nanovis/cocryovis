@@ -181,7 +181,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
               label="Enable Early Ray Termination"
             >
               <Switch
-                checked={renderSettings.earlyRayTermination}
+                checked={renderSettings.enableEarlyRayTermination}
                 onChange={(_event, data) =>
                   renderSettings.setEarlyRayTermination(data.checked)
                 }

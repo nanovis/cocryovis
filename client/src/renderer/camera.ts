@@ -1,5 +1,4 @@
-import type { vec3 } from "gl-matrix";
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import { WebGpuBuffer } from "./webGpuBuffer.ts";
 
 export interface CameraParams {
@@ -91,9 +90,20 @@ export class Camera extends WebGpuBuffer {
     return this.params.viewCenter;
   }
 
+  get up(): vec3 {
+    return this.params.up;
+  }
+
   setParameters(params: Partial<CameraParams>) {
     Object.assign(this.params, params);
     this.dirty = true;
+  }
+
+  getViewVector() {
+    const viewVector = vec3.create();
+    vec3.subtract(viewVector, this.params.viewCenter, this.params.position);
+    vec3.normalize(viewVector, viewVector);
+    return viewVector;
   }
 
   updateBuffer() {

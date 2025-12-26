@@ -31,3 +31,14 @@ export const visualizationConfigSchema = z.object({
     files: z.array(z.string()),
     rawVolumeChannel: z.number().optional(),
 });
+
+export const transferFunctionSchema = z.object({
+    rampLow: z.number().min(0).max(1),
+    rampHigh: z.number().min(0).max(1),
+    color: z.object({
+        x: z.number().min(0).max(255),
+        y: z.number().min(0).max(255),
+        z: z.number().min(0).max(255),
+    }),
+    comment: z.string().optional(),
+});

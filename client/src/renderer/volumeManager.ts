@@ -3,6 +3,11 @@ import { ChannelData } from "./channelData.ts";
 import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
 import { pickDefaultTF } from "../utils/Helpers.ts";
 
+export interface VisualizationDescriptor {
+  descriptors: VolumeDescriptor[];
+  rawVolumeChannel?: number;
+}
+
 export class VolumeManager {
   private device: GPUDevice;
   volume: Volume;
@@ -22,15 +27,15 @@ export class VolumeManager {
     this.volume = new Volume(device, volumeSampler);
   }
 
-  async loadVolumes(volumeDescriptors: VolumeDescriptor[]) {
-    await this.volume.loadData(volumeDescriptors);
-    this.channelData.clearChannelData();
+  async loadVolumes(visualizationDescriptor: VisualizationDescriptor) {
+    await this.volume.loadData(visualizationDescriptor.descriptors);
+    // this.channelData.clearChannelData();
 
     let tfIndex = 0;
-    for (const descriptor of volumeDescriptors) {
+    for (const descriptor of visualizationDescriptor.descriptors) {
       const transferFunction = pickDefaultTF(
         tfIndex,
-        volumeDescriptors.length === 1
+        visualizationDescriptor.descriptors.length === 1
       );
       const color = transferFunction.tfDefinition.color;
 
@@ -45,11 +50,12 @@ export class VolumeManager {
         (r, i) => (r * sizeArray[i]) / maxSize
       );
 
-      this.channelData.addChannelData({
+      this.channelData.setChannelData(tfIndex, {
         color: [color.x / 255, color.y / 255, color.z / 255],
         ratio: scaledRatio,
         rampStart: transferFunction.tfDefinition.rampLow,
         rampEnd: transferFunction.tfDefinition.rampHigh,
+        visible: true,
       });
       tfIndex++;
     }

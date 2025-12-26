@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import "./App.css";
 
 import MenuBar from "./components/topBar/MenuBar";
@@ -100,7 +100,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
     }
   }, [rootStore.user.userProjects]);
 
-  const getIsUserAuth = useCallback(async () => {
+  const getIsUserAuth = useEffectEvent(async () => {
     if (rootStore.triedReloadingSession) return;
     rootStore.setTriedReloadingSession(true);
     const cookieData = fetchAuthCookieData();
@@ -127,7 +127,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
     }
     await resolveProjectUrl();
     await resolveDemoUrl();
-  }, [resolveDemoUrl, resolveProjectUrl, rootStore, uiState]);
+  });
 
   const classes = useStyles();
 
@@ -154,52 +154,49 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
     toastContainer.success("Sign-up successful!");
   };
 
-  const globalKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (mouseOverCanvas.current) {
-        switch (event.key.toLowerCase()) {
-          case "f":
-            uiState.visualizedVolume?.setFullscreen(
-              !uiState.visualizedVolume.fullscreen
-            );
+  const globalKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (mouseOverCanvas.current) {
+      switch (event.key.toLowerCase()) {
+        case "f":
+          uiState.visualizedVolume?.setFullscreen(
+            !uiState.visualizedVolume.fullscreen
+          );
+          break;
+        case "r":
+          uiState.visualizedVolume?.setShowRawClippingPlane(
+            !uiState.visualizedVolume.showRawClippingPlane
+          );
+          break;
+        case "l":
+          uiState.visualizedVolume?.setEraseMode(
+            !uiState.visualizedVolume.eraseMode
+          );
+          break;
+        default:
+          break;
+      }
+      if (event.shiftKey) {
+        // Check for event codes since shift combos make other characters
+        switch (event.code) {
+          case "Digit1":
+            uiState.visualizedVolume?.setClippingPlane("none");
             break;
-          case "r":
-            uiState.visualizedVolume?.setShowRawClippingPlane(
-              !uiState.visualizedVolume.showRawClippingPlane
-            );
+          case "Digit2":
+            uiState.visualizedVolume?.setClippingPlane("view-aligned");
             break;
-          case "l":
-            uiState.visualizedVolume?.setEraseMode(
-              !uiState.visualizedVolume.eraseMode
-            );
+          case "Digit3":
+            uiState.visualizedVolume?.setClippingPlane("x");
             break;
-          default:
+          case "Digit4":
+            uiState.visualizedVolume?.setClippingPlane("y");
             break;
-        }
-        if (event.shiftKey) {
-          // Check for event codes since shift combos make other characters
-          switch (event.code) {
-            case "Digit1":
-              uiState.visualizedVolume?.setClippingPlane("0");
-              break;
-            case "Digit2":
-              uiState.visualizedVolume?.setClippingPlane("1");
-              break;
-            case "Digit3":
-              uiState.visualizedVolume?.setClippingPlane("2");
-              break;
-            case "Digit4":
-              uiState.visualizedVolume?.setClippingPlane("3");
-              break;
-            case "Digit5":
-              uiState.visualizedVolume?.setClippingPlane("4");
-              break;
-          }
+          case "Digit5":
+            uiState.visualizedVolume?.setClippingPlane("z");
+            break;
         }
       }
-    },
-    [uiState.visualizedVolume]
-  );
+    }
+  });
 
   useEffect(() => {
     getIsUserAuth().catch(console.error);
