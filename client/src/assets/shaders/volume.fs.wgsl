@@ -28,34 +28,33 @@ struct ChannelData
 
 struct Param
 {
+	clippingPlaneOrigin : vec4<f32>,
+	clippingPlaneNormal : vec4<f32>,
+	clearColor : vec4<f32>,
+
 	enableEarlyRayTermination : i32,
 	enableJittering : i32,
 	enableAmbientOcclusion : i32,
 	enableSoftShadows : i32,
 
-	interaction : f32,
+  clippingEnabled : i32,
+  enableAnnotations : i32,
+  annotationPingPong : i32,
 	sampleRate : f32,
+
 	aoRadius : f32,
 	aoStrength : f32,
-
 	aoNumSamples : i32,
 	shadowQuality : f32,
+
 	shadowStrength : f32,
-	voxelSize : f32,
-
-	viewVector : vec4<f32>,
-	clippingPlaneOrigin : vec4<f32>,
-	clippingPlaneNormal : vec4<f32>,
-	clearColor : vec4<f32>,
-
-	enableAnnotations : i32,
-	annotationVolume : i32,
-	annotationPingPong : i32,
 	shadowRadius : f32,
+  shadowMin: f32,
+	shadowMax: f32,
 
-	rawVolumeChannel : i32,
-	numChannels : i32,
-	clippingEnabled : i32,
+  voxelSize : f32,
+  rawVolumeChannel : i32,
+  numChannels : i32,
 }
 
 struct Annotations
@@ -434,8 +433,8 @@ fn main(
 					}
 
 					var value = 1.0 - (sample_var.x + sample_var.y + sample_var.z);
-					var low = channelData[4].rampStart;
-					var high = channelData[4].rampEnd;
+					var low = param.shadowMin;
+					var high = param.shadowMax;
 					var occlusion = 1.0 - clamp((value - low) / (high - low), 0.0, 1.0);
 
 					shadow = shadow + (occlusion); // pow((0.25 - t) * 2.0, 1.0)

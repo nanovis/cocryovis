@@ -4,68 +4,66 @@ import type { Camera } from "./camera.ts";
 import { clamp } from "./math.ts";
 
 export interface RendererParameters {
+  clippingPlaneOrigin: vec4;
+  clippingPlaneNormal: vec4;
+  clearColor: vec4;
+
   enableEarlyRayTermination: boolean;
   enableJittering: boolean;
   enableAmbientOcclusion: boolean;
   enableSoftShadows: boolean;
 
-  interaction: number;
+  clippingEnabled: boolean;
+  enableAnnotations: boolean;
+  annotationPingPong: number;
   sampleRate: number;
+
   aoRadius: number;
   aoStrength: number;
-
   aoNumSamples: number;
   shadowQuality: number;
+
   shadowStrength: number;
-  voxelSize: number;
-
-  viewVector: vec4;
-  clippingPlaneOrigin: vec4;
-  clippingPlaneNormal: vec4;
-  clearColor: vec4;
-
-  enableAnnotations: boolean;
-  annotationVolume: number;
-  annotationPingPong: number;
   shadowRadius: number;
+  shadowMin: number;
+  shadowMax: number;
 
+  voxelSize: number;
   rawVolumeChannel: number;
   numChannels: number;
-  clippingEnabled: boolean;
 }
 
 export type ClippingPlaneType = "view-aligned" | "x" | "y" | "z" | "none";
 
 export class ParamData extends WebGpuBuffer {
   params: RendererParameters = {
+    clippingPlaneOrigin: vec4.create(),
+    clippingPlaneNormal: vec4.create(),
+    clearColor: vec4.fromValues(0, 0, 0, 1),
+
     enableEarlyRayTermination: true,
     enableJittering: true,
     enableAmbientOcclusion: true,
     enableSoftShadows: true,
 
-    interaction: 0.0,
+    clippingEnabled: false,
+    enableAnnotations: false,
+    annotationPingPong: 0,
     sampleRate: 5.0,
+
     aoRadius: 1.0,
     aoStrength: 0.9,
-
     aoNumSamples: 5,
     shadowQuality: 1.0,
+
     shadowStrength: 0.5,
-    voxelSize: 1.0,
-
-    viewVector: vec4.create(),
-    clippingPlaneOrigin: vec4.create(),
-    clippingPlaneNormal: vec4.create(),
-    clearColor: vec4.fromValues(0, 0, 0, 1),
-
-    enableAnnotations: false,
-    annotationVolume: 0,
-    annotationPingPong: 0,
     shadowRadius: 0.2,
+    shadowMin: 0.0,
+    shadowMax: 1.0,
 
+    voxelSize: 1.0,
     rawVolumeChannel: -1,
     numChannels: 1,
-    clippingEnabled: false,
   };
 
   private camera: Camera;
@@ -80,7 +78,7 @@ export class ParamData extends WebGpuBuffer {
 
   private lastViewDirection: undefined | vec3;
 
-  private static readonly size = 36 * 4;
+  private static readonly size = 32 * 4;
 
   constructor(
     device: GPUDevice,
@@ -113,37 +111,6 @@ export class ParamData extends WebGpuBuffer {
     let o = 0;
     const le = true;
 
-    view.setInt32(o, Number(this.params.enableEarlyRayTermination), le);
-    o += 4;
-    view.setInt32(o, Number(this.params.enableJittering), le);
-    o += 4;
-    view.setInt32(o, Number(this.params.enableAmbientOcclusion), le);
-    o += 4;
-    view.setInt32(o, Number(this.params.enableSoftShadows), le);
-    o += 4;
-
-    view.setFloat32(o, this.params.interaction, le);
-    o += 4;
-    view.setFloat32(o, this.params.sampleRate, le);
-    o += 4;
-    view.setFloat32(o, this.params.aoRadius, le);
-    o += 4;
-    view.setFloat32(o, this.params.aoStrength, le);
-    o += 4;
-
-    view.setInt32(o, this.params.aoNumSamples, le);
-    o += 4;
-    view.setFloat32(o, this.params.shadowQuality, le);
-    o += 4;
-    view.setFloat32(o, this.params.shadowStrength, le);
-    o += 4;
-    view.setFloat32(o, this.params.voxelSize, le);
-    o += 4;
-
-    for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.params.viewVector[i], le);
-    o += 16;
-
     for (let i = 0; i < 4; i++)
       view.setFloat32(o + i * 4, this.params.clippingPlaneOrigin[i], le);
     o += 16;
@@ -156,22 +123,48 @@ export class ParamData extends WebGpuBuffer {
       view.setFloat32(o + i * 4, this.params.clearColor[i], le);
     o += 16;
 
-    view.setInt32(o, Number(this.params.enableAnnotations), le);
+    view.setInt32(o, Number(this.params.enableEarlyRayTermination), le);
     o += 4;
-    view.setInt32(o, this.params.annotationVolume, le);
+    view.setInt32(o, Number(this.params.enableJittering), le);
+    o += 4;
+    view.setInt32(o, Number(this.params.enableAmbientOcclusion), le);
+    o += 4;
+    view.setInt32(o, Number(this.params.enableSoftShadows), le);
+    o += 4;
+
+    view.setInt32(o, Number(this.params.clippingEnabled), le);
+    o += 4;
+    view.setInt32(o, Number(this.params.enableAnnotations), le);
     o += 4;
     view.setInt32(o, this.params.annotationPingPong, le);
     o += 4;
-    view.setFloat32(o, this.params.shadowRadius, le);
+    view.setFloat32(o, this.params.sampleRate, le);
     o += 4;
 
+    view.setFloat32(o, this.params.aoRadius, le);
+    o += 4;
+    view.setFloat32(o, this.params.aoStrength, le);
+    o += 4;
+    view.setInt32(o, this.params.aoNumSamples, le);
+    o += 4;
+    view.setFloat32(o, this.params.shadowQuality, le);
+    o += 4;
+
+    view.setFloat32(o, this.params.shadowStrength, le);
+    o += 4;
+    view.setFloat32(o, this.params.shadowRadius, le);
+    o += 4;
+    view.setFloat32(o, this.params.shadowMin, le);
+    o += 4;
+    view.setFloat32(o, this.params.shadowMax, le);
+    o += 4;
+
+    view.setFloat32(o, this.params.voxelSize, le);
+    o += 4;
     view.setInt32(o, this.params.rawVolumeChannel, le);
     o += 4;
     view.setInt32(o, this.params.numChannels, le);
     o += 4;
-    view.setInt32(o, Number(this.params.clippingEnabled), le);
-    o += 4;
-
     // Padding
     view.setInt32(o, 0, le);
     o += 4;
