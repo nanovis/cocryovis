@@ -274,25 +274,6 @@ const Visualization = observer(({ open, close }: Props) => {
     }
   };
 
-  const handleChangeShadows = (
-    event: ChangeEvent<HTMLInputElement>,
-    upper: boolean
-  ) => {
-    if (!visualizedVolume?.shadowsSettings) {
-      return;
-    }
-
-    if (!upper) {
-      visualizedVolume.shadowsSettings.transferFunction.setRampLow(
-        Number(event.target.value)
-      );
-    } else {
-      visualizedVolume.shadowsSettings.transferFunction.setRampHigh(
-        Number(event.target.value)
-      );
-    }
-  };
-
   const actionsDisabled = () => {
     return !uiState.visualizedVolume;
   };
@@ -644,45 +625,6 @@ const Visualization = observer(({ open, close }: Props) => {
                           min={0}
                           max={100}
                           onChange={(event) => handleChangeRW(event, true)}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-                {visualizedVolume.shadowsSettings && (
-                  <>
-                    <div
-                      className={classes.volumesRow}
-                      style={{ height: "5px" }}
-                    />
-                    <div className={classes.volumesRow}>
-                      <Label style={{ verticalAlign: "top" }}>
-                        Soft Shadows Parameters
-                      </Label>
-                      <div className={classes.sliderContainer}>
-                        <Label>Min value</Label>
-                        <Slider
-                          value={
-                            visualizedVolume.shadowsSettings.transferFunction
-                              .rampLow * 100
-                          }
-                          min={0}
-                          max={100}
-                          onChange={(event) =>
-                            handleChangeShadows(event, false)
-                          }
-                        />
-                      </div>
-                      <div className={classes.sliderContainer}>
-                        <Label>Max value</Label>
-                        <Slider
-                          value={
-                            visualizedVolume.shadowsSettings.transferFunction
-                              .rampHigh * 100
-                          }
-                          min={0}
-                          max={100}
-                          onChange={(event) => handleChangeShadows(event, true)}
                         />
                       </div>
                     </div>

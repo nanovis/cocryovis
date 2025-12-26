@@ -348,6 +348,42 @@ const RenderSettings = observer(({ open, close }: Props) => {
               />
             </Field>
           </div>
+          <div className={classes.sliderContainer}>
+            <Field
+              orientation="horizontal"
+              label={<Text>Threshold Min [{renderSettings.shadowMin}]</Text>}
+              className={classes.sliderField}
+            >
+              <Slider
+                className={classes.slider}
+                disabled={!renderSettings.enableSoftShadows}
+                value={renderSettings.shadowMin * 100}
+                min={0}
+                max={100}
+                onChange={(_event, data) =>
+                  renderSettings.setShadowMin(data.value / 100)
+                }
+              />
+            </Field>
+          </div>
+          <div className={classes.sliderContainer}>
+            <Field
+              orientation="horizontal"
+              label={<Text>Threshold Max [{renderSettings.shadowMax}]</Text>}
+              className={classes.sliderField}
+            >
+              <Slider
+                className={classes.slider}
+                disabled={!renderSettings.enableSoftShadows}
+                value={renderSettings.shadowMax * 100}
+                min={0}
+                max={100}
+                onChange={(_event, data) =>
+                  renderSettings.setShadowMax(data.value / 100)
+                }
+              />
+            </Field>
+          </div>
         </div>
       </div>
     </div>

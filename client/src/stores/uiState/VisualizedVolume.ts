@@ -124,11 +124,6 @@ export const VisualizedVolume = types
         (volVisSettings) => volVisSettings.type === "raw"
       );
     },
-    get shadowsSettings() {
-      return self.volVisSettings.find(
-        (volVisSettings) => volVisSettings.type === "shadows"
-      );
-    },
     get volumeSettings() {
       return self.volVisSettings.filter(
         (volVisSettings) => volVisSettings.type === "volume"

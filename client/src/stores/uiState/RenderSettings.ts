@@ -10,6 +10,7 @@ import {
   type VolumeRenderer,
 } from "../../renderer/renderer.ts";
 import { RootStore } from "../RootStore.ts";
+import { clamp } from "../../renderer/math.ts";
 
 export const RenderSettings = types
   .model({
@@ -27,6 +28,8 @@ export const RenderSettings = types
     shadowQuality: types.optional(types.number, 1),
     shadowStrength: types.optional(types.number, 0.5),
     shadowRadius: types.optional(types.number, 0.2),
+    shadowMin: types.optional(types.number, 0),
+    shadowMax: types.optional(types.number, 1),
   })
   .views((self) => ({
     get renderer(): VolumeRenderer | null {
@@ -119,6 +122,20 @@ export const RenderSettings = types
         shadowRadius: self.shadowRadius,
       });
     },
+    setShadowMin(threshold: number) {
+      threshold = clamp(threshold, 0, 1);
+      self.shadowMin = threshold;
+      if (self.shadowMin > self.shadowMax) {
+        self.shadowMax = threshold;
+      }
+    },
+    setShadowMax(threshold: number) {
+      threshold = clamp(threshold, 0, 1);
+      self.shadowMax = threshold;
+      if (self.shadowMax < self.shadowMin) {
+        self.shadowMin = threshold;
+      }
+    },
     getRendererParameters(): Partial<RendererParameters> {
       return {
         enableEarlyRayTermination: self.enableEarlyRayTermination,
@@ -133,6 +150,8 @@ export const RenderSettings = types
         aoNumSamples: self.aoNumSamples,
         shadowQuality: self.shadowQuality,
         shadowStrength: self.shadowStrength,
+        shadowMin: self.shadowMin,
+        shadowMax: self.shadowMax,
 
         clearColor: [...self.clearColor, 1],
 

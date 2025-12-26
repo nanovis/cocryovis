@@ -15,7 +15,7 @@ export const VolVisSettings = types
     transferFunction: TransferFunction,
     visible: types.optional(types.boolean, true),
     // clipping: types.optional(types.boolean, true),
-    type: types.enumeration("VolumeType", ["volume", "raw", "shadows"]),
+    type: types.enumeration("VolumeType", ["volume", "raw"]),
   })
   .views((self) => ({
     get renderer(): VolumeRenderer | null {
