@@ -157,7 +157,7 @@ export class VolumeRenderer {
       aspectRatio: this.width / this.height,
     });
     this.paramData = new ParamData(this.device, this.camera, parameters);
-    this.volumeManager = new VolumeManager(this.device);
+    this.volumeManager = new VolumeManager(this.device, this.paramData);
 
     const vertexShaderModule = this.device.createShaderModule({
       code: vertexShader,
@@ -231,10 +231,6 @@ export class VolumeRenderer {
     if (!view) {
       return;
     }
-
-    this.paramData.updateBuffer();
-    this.volumeManager.channelData.updateBuffer();
-    this.camera.updateBuffer();
 
     const gpuBindGroup = this.bindGroup.getGPUBindGroup();
 

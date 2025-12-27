@@ -11,16 +11,6 @@ export class Volume extends WebGpuTexture {
     });
   }
 
-  // async loadTestData(device: GPUDevice) {
-  //   this.texture = await loadTestVolume(device);
-  //   this.view = this.texture.createView({
-  //     dimension: "3d",
-  //   });
-  //   console.log("TEST DATA LOADED");
-  //
-  //   this.onChange?.();
-  // }
-
   // setData(
   //   device: GPUDevice,
   //   data: ArrayBuffer,

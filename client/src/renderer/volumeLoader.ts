@@ -2,6 +2,7 @@ import {
   type VolumeDescriptor,
   type VolumeDescriptorSettings,
 } from "../utils/volumeSettings.ts";
+import { CONFIG } from "../Constants.mjs";
 
 function getVoxelRange(params: VolumeDescriptorSettings): {
   min: number;
@@ -200,10 +201,17 @@ function uploadBatch(
 export async function streamVolumesToGPU(
   device: GPUDevice,
   descriptors: VolumeDescriptor[],
-  batchSize = 2
+  batchSize = 8
 ): Promise<GPUTexture> {
-  if (descriptors.length < 1 || descriptors.length > 4) {
-    throw new Error("Volume count must be between 1 and 4");
+  if (descriptors.length < 1) {
+    throw new Error("At least one volume descriptor is required");
+  }
+
+  if (descriptors.length > CONFIG.maxRenderedVolumes) {
+    console.warn(
+      "More than 4 volume descriptors provided. Only the first 4 will be used."
+    );
+    descriptors = descriptors.slice(0, CONFIG.maxRenderedVolumes);
   }
 
   if (descriptors[0].settings === undefined) {
@@ -264,56 +272,3 @@ export async function streamVolumesToGPU(
 
   return texture;
 }
-
-// export async function loadTestVolume(device: GPUDevice) {
-//   const response = await fetch("../assets/ts_16_bin4-256x256.raw");
-//   if (!response.ok) {
-//     throw new Error(response.statusText);
-//   }
-//   console.log("Content-Length:", response.headers.get("content-length"));
-//
-//   const arrayBuffer = await response.arrayBuffer();
-//
-//   const descriptor: VolumeDescriptor = {
-//     buffer: arrayBuffer,
-//     params: {
-//       bytesPerVoxel: 1,
-//       usedBits: 8,
-//       skipBytes: 0,
-//       littleEndian: true,
-//       isSigned: false,
-//       addValue: 0,
-//       size: { x: 256, y: 256, z: 448 },
-//       ratio: { x: 1, y: 1, z: 1 },
-//     },
-//   };
-//
-//   return streamVolumesToGPU(device, [descriptor]);
-//
-//   // const texture = streamVolumesToGPU(device, [descriptor]);
-//   //
-//   // console.log("Uploaded texture:", texture);
-//   //
-//   // await import("../assets/ts_16_bin4-256x256.raw?raw").then(async (module) => {
-//   //   const response = await fetch(module.default);
-//   //   const arrayBuffer = await response.arrayBuffer();
-//   //
-//   //   const descriptor: VolumeDescriptor = {
-//   //     buffer: arrayBuffer,
-//   //     params: {
-//   //       bytesPerVoxel: 1,
-//   //       usedBits: 8,
-//   //       skipBytes: 0,
-//   //       littleEndian: true,
-//   //       isSigned: false,
-//   //       addValue: 0,
-//   //       size: { x: 256, y: 256, z: 448 },
-//   //       ratio: { x: 1, y: 1, z: 1 },
-//   //     },
-//   //   };
-//   //
-//   //   const texture = streamVolumesToGPU(device, [descriptor]);
-//   //
-//   //   console.log("Uploaded texture:", texture);
-//   // });
-// }

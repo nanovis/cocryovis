@@ -2,6 +2,8 @@ import { Volume } from "./volume.ts";
 import { ChannelData } from "./channelData.ts";
 import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
 import { pickDefaultTF } from "../utils/Helpers.ts";
+import type { ParamData } from "./params.ts";
+import { CONFIG } from "../Constants.mjs";
 
 export interface VisualizationDescriptor {
   descriptors: VolumeDescriptor[];
@@ -10,11 +12,13 @@ export interface VisualizationDescriptor {
 
 export class VolumeManager {
   private device: GPUDevice;
+  private params: ParamData;
   volume: Volume;
   channelData: ChannelData;
 
-  constructor(device: GPUDevice) {
+  constructor(device: GPUDevice, params: ParamData) {
     this.device = device;
+    this.params = params;
     this.channelData = new ChannelData(device);
     const volumeSampler = this.device.createSampler({
       magFilter: "linear",
@@ -37,7 +41,10 @@ export class VolumeManager {
         tfIndex,
         visualizationDescriptor.descriptors.length === 1
       );
-      const color = transferFunction.tfDefinition.color;
+      let color = transferFunction.tfDefinition.color;
+      if (tfIndex === visualizationDescriptor.rawVolumeChannel) {
+        color = { x: 255, y: 255, z: 255 };
+      }
 
       const ratio = descriptor.settings?.ratio;
       const ratioArray = ratio ? [ratio.x, ratio.y, ratio.z] : [1, 1, 1];
@@ -59,6 +66,10 @@ export class VolumeManager {
       });
       tfIndex++;
     }
+    this.params.set({
+      numChannels: Math.min(tfIndex, CONFIG.maxRenderedVolumes),
+      rawVolumeChannel: visualizationDescriptor.rawVolumeChannel ?? -1,
+    });
   }
 
   destroy() {
