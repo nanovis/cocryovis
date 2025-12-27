@@ -35,6 +35,7 @@ export default defineConfig([
             "jsdoc/require-template": 1,
             "jsdoc/require-yields": 0, // Recommended
             "jsdoc/valid-types": 0, // Recommended
+            "jsdoc/reject-any-type": 0,
         },
     },
     globalIgnores([

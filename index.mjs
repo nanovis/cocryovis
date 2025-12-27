@@ -54,7 +54,7 @@ const startServer = async () => {
     const demoProjectIndex = options.demoProject || appConfig.demoProjectIndex;
     appConfig.demoProjectIndex = demoProjectIndex;
 
-    const seassionsPath = process.env.SESSIONS_PATH || "./database/db.sessions";
+    const seassionsPath = process.env.SESSIONS_PATH || "./database/sessions.db";
 
     const app = express();
 
