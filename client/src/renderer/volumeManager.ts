@@ -2,8 +2,8 @@ import { Volume } from "./volume.ts";
 import { ChannelData } from "./channelData.ts";
 import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
 import { pickDefaultTF } from "../utils/Helpers.ts";
-import type { ParamData } from "./params.ts";
 import { CONFIG } from "../Constants.mjs";
+import { VolumeParameterBuffer } from "./volumeParameterBuffer.ts";
 
 export interface VisualizationDescriptor {
   descriptors: VolumeDescriptor[];
@@ -12,13 +12,12 @@ export interface VisualizationDescriptor {
 
 export class VolumeManager {
   private device: GPUDevice;
-  private params: ParamData;
   volume: Volume;
   channelData: ChannelData;
+  volumeParameterBuffer: VolumeParameterBuffer;
 
-  constructor(device: GPUDevice, params: ParamData) {
+  constructor(device: GPUDevice) {
     this.device = device;
-    this.params = params;
     this.channelData = new ChannelData(device);
     const volumeSampler = this.device.createSampler({
       magFilter: "linear",
@@ -29,6 +28,7 @@ export class VolumeManager {
       addressModeW: "clamp-to-edge",
     });
     this.volume = new Volume(device, volumeSampler);
+    this.volumeParameterBuffer = new VolumeParameterBuffer(device);
   }
 
   async loadVolumes(visualizationDescriptor: VisualizationDescriptor) {
@@ -66,7 +66,7 @@ export class VolumeManager {
       });
       tfIndex++;
     }
-    this.params.set({
+    this.volumeParameterBuffer.set({
       numChannels: Math.min(tfIndex, CONFIG.maxRenderedVolumes),
       rawVolumeChannel: visualizationDescriptor.rawVolumeChannel ?? -1,
     });

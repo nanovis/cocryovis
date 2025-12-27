@@ -89,6 +89,11 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
       texture: { sampleType: "float", viewDimension: "3d" },
     },
     {
+      binding: 7,
+      visibility: GPUShaderStage.FRAGMENT,
+      buffer: { type: "uniform" },
+    },
+    {
       binding: 8,
       visibility: GPUShaderStage.FRAGMENT,
       buffer: { type: "uniform" },
@@ -157,7 +162,7 @@ export class VolumeRenderer {
       aspectRatio: this.width / this.height,
     });
     this.paramData = new ParamData(this.device, this.camera, parameters);
-    this.volumeManager = new VolumeManager(this.device, this.paramData);
+    this.volumeManager = new VolumeManager(this.device);
 
     const vertexShaderModule = this.device.createShaderModule({
       code: vertexShader,
@@ -171,6 +176,7 @@ export class VolumeRenderer {
     this.bindGroup.setResource(0, this.camera);
     this.bindGroup.setResource(2, this.volumeManager.volume);
     this.bindGroup.setResource(3, this.volumeManager.volume);
+    this.bindGroup.setResource(7, this.volumeManager.volumeParameterBuffer);
     this.bindGroup.setResource(8, this.paramData);
     this.bindGroup.setResource(9, this.volumeManager.channelData);
 

@@ -51,10 +51,12 @@ struct Param
 	shadowRadius : f32,
   shadowMin: f32,
 	shadowMax: f32,
+}
 
-  voxelSize : f32,
+struct VolumeParameters {
   rawVolumeChannel : i32,
   numChannels : i32,
+  voxelSize : f32,
 }
 
 struct Annotations
@@ -67,6 +69,7 @@ struct Annotations
 @group(0) @binding(3) var volume0 : texture_3d<f32>;
 //@group(0) @binding(5) var volume2 : texture_3d<f32>;
 //@group(0) @binding(6) var volume3 : texture_3d<f32>;
+@group(0) @binding(7) var<uniform> volumeParameters : VolumeParameters;
 @group(0) @binding(8) var<uniform> param : Param;
 @group(0) @binding(9) var<storage, read> channelData: array<ChannelData>;
 // @group(0) @binding(13) var<storage, read> annotations: Annotations;
@@ -261,9 +264,9 @@ fn main(
 
 	clipped = false;
 
-	var rawVolumeChannel = param.rawVolumeChannel;
+	var rawVolumeChannel = volumeParameters.rawVolumeChannel;
 	var useRawVolume = rawVolumeChannel >= 0;
-	var numChannels = param.numChannels;
+	var numChannels = volumeParameters.numChannels;
 
 	var volumeRatio = channelData[0].ratio.xyz;
 
@@ -369,7 +372,7 @@ fn main(
 		var ao = 0.0;
 		if (enableAO)
 		{
-			var radius = param.aoRadius * 0.015 * param.voxelSize;
+			var radius = param.aoRadius * 0.015 * volumeParameters.voxelSize;
 
 			for (var j: i32 = 0; j < param.aoNumSamples; j = j + 1)
 			{

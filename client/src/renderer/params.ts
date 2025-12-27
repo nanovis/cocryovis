@@ -27,10 +27,6 @@ export interface RendererParameters {
   shadowRadius: number;
   shadowMin: number;
   shadowMax: number;
-
-  voxelSize: number;
-  rawVolumeChannel: number;
-  numChannels: number;
 }
 
 export type ClippingPlaneType = "view-aligned" | "x" | "y" | "z" | "none";
@@ -60,10 +56,6 @@ export class ParamData extends WebGpuBuffer {
     shadowRadius: 0.2,
     shadowMin: 0.0,
     shadowMax: 1.0,
-
-    voxelSize: 1.0,
-    rawVolumeChannel: -1,
-    numChannels: 1,
   };
 
   private camera: Camera;
@@ -78,7 +70,7 @@ export class ParamData extends WebGpuBuffer {
 
   private lastViewDirection: undefined | vec3;
 
-  private static readonly size = 32 * 4;
+  private static readonly size = 28 * 4;
 
   constructor(
     device: GPUDevice,
@@ -157,16 +149,6 @@ export class ParamData extends WebGpuBuffer {
     view.setFloat32(o, this.params.shadowMin, le);
     o += 4;
     view.setFloat32(o, this.params.shadowMax, le);
-    o += 4;
-
-    view.setFloat32(o, this.params.voxelSize, le);
-    o += 4;
-    view.setInt32(o, this.params.rawVolumeChannel, le);
-    o += 4;
-    view.setInt32(o, this.params.numChannels, le);
-    o += 4;
-    // Padding
-    view.setInt32(o, 0, le);
     o += 4;
 
     return buffer;
