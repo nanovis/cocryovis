@@ -27,6 +27,7 @@ const globalStyles = makeStyles({
     paddingLeft: "24px",
     paddingTop: "8px",
     paddingRight: "24px",
+    paddingBottom: "16px",
     justifyContent: "center",
   },
   sidebarHeader: {
