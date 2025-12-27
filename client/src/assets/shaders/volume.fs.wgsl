@@ -166,20 +166,12 @@ fn cube(eye : vec3<f32>, dir : vec3<f32>, size : vec3<f32>) -> CubeOutput
 	return output;
 }
 
-var<private> clipped : bool;
-
-fn clip(sample_var : vec4<f32>, pos : vec3<f32> ) -> vec4<f32>
+fn isClipped(pos : vec3<f32>) -> bool
 {
-	var result = sample_var;
-	var d = dot(param.clippingPlaneOrigin.xyz, param.clippingPlaneNormal.xyz);
-	var r = dot(pos, param.clippingPlaneNormal.xyz);
+  var d = dot(param.clippingPlaneOrigin.xyz, param.clippingPlaneNormal.xyz);
+  var r = dot(pos, param.clippingPlaneNormal.xyz);
 
-	if(d > r)
-	{
-		return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-	}
-
-	return sample_var;
+  return d > r;
 }
 
 //fn dataReadAnnotation(pos : vec3<f32>) -> vec4<f32>
@@ -204,9 +196,6 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 {
 	var mapped : vec4<f32>;
 
-	var volumeRatio = channelData[0].ratio.xyz;
-	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
-
 	var sample4 = textureSampleLevel(volume0, s, pos, 0.0);
 
 	var low0 = channelData[0].rampStart;
@@ -228,11 +217,6 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 	var high3 = channelData[3].rampEnd;
 	mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);
 	mapped.z = mapped.z * f32(channelData[3].visible);
-
-	if (bool(param.clippingEnabled) && !clipped)
-	{
-		mapped = clip(mapped, posOrig);
-	}
 
 	return mapped;
 }
@@ -262,11 +246,12 @@ fn main(
 	output.frag_depth = 0.0;
 	output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
 
-	clipped = false;
+	var clipped = false;
 
 	var rawVolumeChannel = volumeParameters.rawVolumeChannel;
 	var useRawVolume = rawVolumeChannel >= 0;
 	var numChannels = volumeParameters.numChannels;
+	var clippingEnabled = bool(param.clippingEnabled);
 
 	var volumeRatio = channelData[0].ratio.xyz;
 
@@ -325,13 +310,13 @@ fn main(
 			continue;
 		}
 
-		var masks = vec4<f32>(0.0);
-		// 0,1,2 mask 3 is raw data.
-		masks = dataRead(isec1);
-
-		if (masks.x < 0.01 && masks.y < 0.01 && masks.z < 0.01) {
-			masks = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+		if (clippingEnabled && isClipped(isec0)) {
+		  clipped = true;
+		  continue;
 		}
+
+		var masks = vec4<f32>(0.0);
+		masks = dataRead(isec1);
 
 		// ======================== SAMPLE ANNOTATION VOLUME ========================
 		var annotationColor = vec4<f32>(0, 0, 0, 0);
@@ -346,27 +331,38 @@ fn main(
 //			}
 //		}
 
-		// voxels with low influence are skipped
-		var influence = 0.0;
-
-		for (var i: i32 = 0; i < numChannels; i = i + 1)
-		{
-			if(i != rawVolumeChannel) {
-				influence += masks[i];
-			}
-		}
-
-		if (influence <= 0.2 || (useRawVolume && masks[rawVolumeChannel] <= 0.1)) {
-			continue;
-		}
-
 		// store depth of first hit
 		if(firstHit)
 		{
-			var projPos = camera.proj * camera.view * vec4<f32>(isec0.xyz, 1.0);
+      var projPos = camera.proj * camera.view * vec4<f32>(isec0.xyz, 1.0);
 			output.frag_depth = projPos.z / projPos.w;
 			firstHit = false;
+			if (clipped) {
+        var result_color = vec3<f32>(0., 0., 0.);
+        for (var which: i32 = 0; which < numChannels; which += 1) {
+            if(which == rawVolumeChannel) {
+                continue;
+            }
+            result_color += masks[which] * color_transfer(which);
+        }
+        output.color = vec4<f32>(result_color, 1.0);
+        return output;
+      }
 		}
+
+		// voxels with low influence are skipped
+    var influence = 0.0;
+
+    for (var i: i32 = 0; i < numChannels; i = i + 1)
+    {
+      if(i != rawVolumeChannel) {
+        influence += masks[i];
+      }
+    }
+
+    if (influence <= 0.2 || (useRawVolume && masks[rawVolumeChannel] <= 0.1)) {
+      continue;
+    }
 
 		// ============= OBJECTS SPACE AMBIENT OCCLUSION =============
 		var ao = 0.0;
