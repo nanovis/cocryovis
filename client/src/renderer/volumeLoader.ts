@@ -208,10 +208,9 @@ export async function streamVolumesToGPU(
   }
 
   if (descriptors.length > CONFIG.maxRenderedVolumes) {
-    console.warn(
-      "More than 4 volume descriptors provided. Only the first 4 will be used."
+    throw new Error(
+      `Number of volumes exceeds the maximum supported: ${CONFIG.maxRenderedVolumes}`
     );
-    descriptors = descriptors.slice(0, CONFIG.maxRenderedVolumes);
   }
 
   if (descriptors[0].settings === undefined) {

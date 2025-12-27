@@ -117,14 +117,20 @@ export async function visualizeVolumeFromConfig(
 
   renderer.renderingParameters.setClippingPlaneOffset(0);
   renderer.renderingParameters.setClippingPlane("none");
-  await renderer.volumeManager.loadVolumes(config);
+  const visualizationDescriptor =
+    await renderer.volumeManager.loadVolumes(config);
 
-  for (let index = 0; index < config.descriptors.length; index++) {
+  for (
+    let index = 0;
+    index < visualizationDescriptor.descriptors.length;
+    index++
+  ) {
     const channelData = renderer.volumeManager.channelData.getParameters(index);
     volumeVisualizationSettings.push({
       index: index,
       name: `Volume ${index}`,
-      type: index === config.rawVolumeChannel ? "raw" : "volume",
+      type:
+        index === visualizationDescriptor.rawVolumeChannel ? "raw" : "volume",
       transferFunction: {
         rampLow: channelData.rampStart,
         rampHigh: channelData.rampEnd,

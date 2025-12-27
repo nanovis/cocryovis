@@ -31,18 +31,28 @@ export class VolumeManager {
     this.volumeParameterBuffer = new VolumeParameterBuffer(device);
   }
 
-  async loadVolumes(visualizationDescriptor: VisualizationDescriptor) {
-    await this.volume.loadData(visualizationDescriptor.descriptors);
+  async loadVolumes(
+    visualizationDescriptor: VisualizationDescriptor
+  ): Promise<VisualizationDescriptor> {
+    const descriptors = visualizationDescriptor.descriptors.splice(
+      0,
+      CONFIG.maxRenderedVolumes
+    );
+
+    await this.volume.loadData(descriptors);
+
+    let rawVolumeChannel = visualizationDescriptor.rawVolumeChannel ?? -1;
+    if (rawVolumeChannel >= descriptors.length) {
+      rawVolumeChannel = -1;
+    }
+
     // this.channelData.clearChannelData();
 
     let tfIndex = 0;
-    for (const descriptor of visualizationDescriptor.descriptors) {
-      const transferFunction = pickDefaultTF(
-        tfIndex,
-        visualizationDescriptor.descriptors.length === 1
-      );
+    for (const descriptor of descriptors) {
+      const transferFunction = pickDefaultTF(tfIndex, descriptors.length === 1);
       let color = transferFunction.tfDefinition.color;
-      if (tfIndex === visualizationDescriptor.rawVolumeChannel) {
+      if (tfIndex === rawVolumeChannel) {
         color = { x: 255, y: 255, z: 255 };
       }
 
@@ -67,9 +77,14 @@ export class VolumeManager {
       tfIndex++;
     }
     this.volumeParameterBuffer.set({
-      numChannels: Math.min(tfIndex, CONFIG.maxRenderedVolumes),
-      rawVolumeChannel: visualizationDescriptor.rawVolumeChannel ?? -1,
+      numChannels: descriptors.length,
+      rawVolumeChannel: rawVolumeChannel,
     });
+
+    return {
+      rawVolumeChannel: rawVolumeChannel !== -1 ? rawVolumeChannel : undefined,
+      descriptors: descriptors,
+    };
   }
 
   destroy() {
