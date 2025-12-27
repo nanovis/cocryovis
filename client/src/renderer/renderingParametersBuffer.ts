@@ -3,7 +3,7 @@ import { WebGpuBuffer } from "./webGpuBuffer.ts";
 import type { Camera } from "./camera.ts";
 import { clamp } from "./math.ts";
 
-export interface RendererParameters {
+export interface RenderingParameters {
   clippingPlaneOrigin: vec4;
   clippingPlaneNormal: vec4;
   clearColor: vec4;
@@ -31,8 +31,8 @@ export interface RendererParameters {
 
 export type ClippingPlaneType = "view-aligned" | "x" | "y" | "z" | "none";
 
-export class ParamData extends WebGpuBuffer {
-  params: RendererParameters = {
+export class RenderingParametersBuffer extends WebGpuBuffer {
+  params: RenderingParameters = {
     clippingPlaneOrigin: vec4.create(),
     clippingPlaneNormal: vec4.create(),
     clearColor: vec4.fromValues(0, 0, 0, 1),
@@ -75,9 +75,9 @@ export class ParamData extends WebGpuBuffer {
   constructor(
     device: GPUDevice,
     camera: Camera,
-    init?: Partial<RendererParameters>
+    init?: Partial<RenderingParameters>
   ) {
-    super(device, ParamData.size, "ParamData Buffer");
+    super(device, RenderingParametersBuffer.size, "ParamData Buffer");
     this.camera = camera;
     Object.assign(this.params, init);
     this.device = device;
@@ -91,13 +91,13 @@ export class ParamData extends WebGpuBuffer {
     });
   }
 
-  set(params: Partial<RendererParameters>) {
+  set(params: Partial<RenderingParameters>) {
     this.dirty = true;
     Object.assign(this.params, params);
   }
 
   toBuffer(): ArrayBuffer {
-    const buffer = new ArrayBuffer(ParamData.size);
+    const buffer = new ArrayBuffer(RenderingParametersBuffer.size);
     const view = new DataView(buffer);
 
     let o = 0;

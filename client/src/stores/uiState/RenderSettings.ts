@@ -4,7 +4,7 @@ import {
   type SnapshotIn,
 } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
-import type { RendererParameters } from "../../renderer/params.ts";
+import type { RenderingParameters } from "../../renderer/renderingParametersBuffer.ts";
 import {
   type RendererCameraParameters,
   type VolumeRenderer,
@@ -52,73 +52,73 @@ export const RenderSettings = types
     },
     setClearColor(r: number, g: number, b: number) {
       self.clearColor.replace([r, g, b]);
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         clearColor: [r / 255, g / 255, b / 255, 1],
       });
     },
     setSampleRate(rate: number) {
       self.sampleRate = rate;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         sampleRate: self.sampleRate,
       });
     },
     setEarlyRayTermination(state: boolean) {
       self.enableEarlyRayTermination = state;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         enableEarlyRayTermination: self.enableEarlyRayTermination,
       });
     },
     setJittering(state: boolean) {
       self.enableJittering = state;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         enableJittering: self.enableJittering,
       });
     },
     setAmbientOcclusion(state: boolean) {
       self.enableAmbientOcclusion = state;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         enableAmbientOcclusion: self.enableAmbientOcclusion,
       });
     },
     setAoRadius(radius: number) {
       self.aoRadius = radius;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         aoRadius: self.aoRadius,
       });
     },
     setAoStrength(strength: number) {
       self.aoStrength = strength;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         aoStrength: self.aoStrength,
       });
     },
     setAoNumSamples(samples: number) {
       self.aoNumSamples = samples;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         aoNumSamples: self.aoNumSamples,
       });
     },
     setSoftShadows(state: boolean) {
       self.enableSoftShadows = state;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         enableSoftShadows: self.enableSoftShadows,
       });
     },
     setShadowQuality(quality: number) {
       self.shadowQuality = quality;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         shadowQuality: self.shadowQuality,
       });
     },
     setShadowStrength(strength: number) {
       self.shadowStrength = strength;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         shadowStrength: self.shadowStrength,
       });
     },
     setShadowRadius(radius: number) {
       self.shadowRadius = radius;
-      self.renderer?.paramData.set({
+      self.renderer?.renderingParameters.set({
         shadowRadius: self.shadowRadius,
       });
     },
@@ -136,7 +136,7 @@ export const RenderSettings = types
         self.shadowMin = threshold;
       }
     },
-    getRendererParameters(): Partial<RendererParameters> {
+    getRendererParameters(): Partial<RenderingParameters> {
       return {
         enableEarlyRayTermination: self.enableEarlyRayTermination,
         enableJittering: self.enableJittering,

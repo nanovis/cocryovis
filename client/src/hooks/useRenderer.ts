@@ -6,7 +6,7 @@ import {
 } from "../renderer/renderer.ts";
 import { vec3 } from "gl-matrix";
 import { OrbitCameraController } from "../utils/orbitCameraController.ts";
-import type { RendererParameters } from "../renderer/params.ts";
+import type { RenderingParameters } from "../renderer/renderingParametersBuffer.ts";
 
 const defaultCameraParameters: RendererCameraParameters = {
   position: vec3.fromValues(0, 0, -3),
@@ -24,7 +24,7 @@ export default function useRenderer(
     cameraParameters,
     onReady,
   }: {
-    parameters?: Partial<RendererParameters>;
+    parameters?: Partial<RenderingParameters>;
     cameraParameters?: Partial<RendererCameraParameters>;
     onReady?: (renderer: VolumeRenderer) => void;
   }

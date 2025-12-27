@@ -22,7 +22,7 @@ import { getVolumeWithSparseVolumes } from "../../api/volume";
 import ToastContainer from "../../utils/ToastContainer";
 import type { VolumeRenderer } from "../../renderer/renderer.ts";
 import { RootStore } from "../RootStore.ts";
-import type { ClippingPlaneType } from "../../renderer/params.ts";
+import type { ClippingPlaneType } from "../../renderer/renderingParametersBuffer.ts";
 import { clamp } from "../../utils/Helpers";
 
 export type visualizedObjectInstances =
@@ -179,7 +179,7 @@ export const VisualizedVolume = types
         return;
       }
       self.clippingPlaneOffset = clamp(offset, -1, 1);
-      self.renderer?.paramData.setClippingPlaneOffset(offset);
+      self.renderer?.renderingParameters.setClippingPlaneOffset(offset);
     },
   }))
   .actions((self) => ({
@@ -196,7 +196,7 @@ export const VisualizedVolume = types
         return;
       }
       self.clippingPlane = clippingPlane;
-      self.renderer?.paramData.setClippingPlane(clippingPlane);
+      self.renderer?.renderingParameters.setClippingPlane(clippingPlane);
       if (self.fullscreen) {
         self.setFullscreen(false);
       }

@@ -1,6 +1,9 @@
 import vertexShader from "../assets/shaders/volume.vs.wgsl?raw";
 import fragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
-import { ParamData, type RendererParameters } from "./params.ts";
+import {
+  RenderingParametersBuffer,
+  type RenderingParameters,
+} from "./renderingParametersBuffer.ts";
 import { Camera, type CameraParams } from "./camera.ts";
 import { BindGroup } from "./bindGroup.ts";
 import { VolumeManager } from "./volumeManager.ts";
@@ -115,7 +118,7 @@ export class VolumeRenderer {
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
   volumeManager: VolumeManager;
-  paramData: ParamData;
+  renderingParameters: RenderingParametersBuffer;
   camera: Camera;
   width: number;
   height: number;
@@ -139,7 +142,7 @@ export class VolumeRenderer {
     }: {
       output?: OutputInfo;
       context?: GPUCanvasContext;
-      parameters?: Partial<RendererParameters>;
+      parameters?: Partial<RenderingParameters>;
     } = {}
   ) {
     this.device = device;
@@ -161,7 +164,11 @@ export class VolumeRenderer {
       ...cameraParams,
       aspectRatio: this.width / this.height,
     });
-    this.paramData = new ParamData(this.device, this.camera, parameters);
+    this.renderingParameters = new RenderingParametersBuffer(
+      this.device,
+      this.camera,
+      parameters
+    );
     this.volumeManager = new VolumeManager(this.device);
 
     const vertexShaderModule = this.device.createShaderModule({
@@ -177,7 +184,7 @@ export class VolumeRenderer {
     this.bindGroup.setResource(2, this.volumeManager.volume);
     this.bindGroup.setResource(3, this.volumeManager.volume);
     this.bindGroup.setResource(7, this.volumeManager.volumeParameterBuffer);
-    this.bindGroup.setResource(8, this.paramData);
+    this.bindGroup.setResource(8, this.renderingParameters);
     this.bindGroup.setResource(9, this.volumeManager.channelData);
 
     const pipelineLayout = this.device.createPipelineLayout({
@@ -249,7 +256,7 @@ export class VolumeRenderer {
       colorAttachments: [
         {
           view,
-          clearValue: this.paramData.params.clearColor,
+          clearValue: this.renderingParameters.params.clearColor,
           loadOp: "clear",
           storeOp: "store",
         },
@@ -286,7 +293,7 @@ export class VolumeRenderer {
       colorAttachments: [
         {
           view,
-          clearValue: this.paramData.params.clearColor,
+          clearValue: this.renderingParameters.params.clearColor,
           loadOp: "clear",
           storeOp: "store",
         },
@@ -320,6 +327,6 @@ export class VolumeRenderer {
     this.depthTexture?.destroy();
     this.volumeManager.destroy();
     this.camera.destroy();
-    this.paramData.destroy();
+    this.renderingParameters.destroy();
   }
 }
