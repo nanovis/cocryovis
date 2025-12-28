@@ -345,14 +345,18 @@ fn main(
 			  }
 
         var result_color = vec3<f32>(0., 0., 0.);
+        var maskSum = 0.0;
         for (var which: i32 = 0; which < numChannels; which += 1) {
-            if(which == rawVolumeChannel) {
-                continue;
-            }
-            result_color += masks[which] * color_transfer(which);
+          if(which == rawVolumeChannel) {
+              continue;
+          }
+          maskSum += masks[which];
+          result_color += masks[which] * color_transfer(which);
         }
-        output.color = vec4<f32>(result_color, 1.0);
-        return output;
+        if (maskSum > 0.1) {
+          output.color = vec4<f32>(result_color, 1.0);
+          return output;
+        }
       }
 		}
 
