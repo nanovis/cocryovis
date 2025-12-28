@@ -4,6 +4,7 @@ export interface VolumeParameters {
   rawVolumeChannel: number;
   numChannels: number;
   voxelSize: number;
+  rawClippingPlane: boolean;
 }
 
 export class VolumeParameterBuffer extends WebGpuBuffer {
@@ -11,6 +12,7 @@ export class VolumeParameterBuffer extends WebGpuBuffer {
     rawVolumeChannel: -1,
     numChannels: 0,
     voxelSize: 1,
+    rawClippingPlane: false,
   };
 
   private dirty: boolean = true;
@@ -49,8 +51,7 @@ export class VolumeParameterBuffer extends WebGpuBuffer {
     o += 4;
     view.setFloat32(o, this.params.voxelSize, le);
     o += 4;
-    // Padding
-    view.setInt32(o, 0, le);
+    view.setInt32(o, Number(this.params.rawClippingPlane), le);
     o += 4;
 
     return buffer;

@@ -515,7 +515,8 @@ const Visualization = observer(({ open, close }: Props) => {
                 style={{ marginLeft: 10 }}
                 disabled={
                   actionsDisabled() ||
-                  visualizedVolume?.rawSettings === undefined
+                  visualizedVolume?.rawSettings === undefined ||
+                  visualizedVolume.clippingPlane === "none"
                 }
                 checked={
                   visualizedVolume?.rawSettings !== undefined &&

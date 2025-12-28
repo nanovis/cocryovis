@@ -161,7 +161,9 @@ export const VisualizedVolume = types
         return;
       }
       self.showRawClippingPlane = enable;
-      // TODO
+      self.renderer?.volumeManager.volumeParameterBuffer.set({
+        rawClippingPlane: enable,
+      });
     },
     setEraseMode(enable: boolean) {
       if (!window.WasmModule) {

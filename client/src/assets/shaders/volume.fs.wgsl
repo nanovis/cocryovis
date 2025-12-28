@@ -57,6 +57,7 @@ struct VolumeParameters {
   rawVolumeChannel : i32,
   numChannels : i32,
   voxelSize : f32,
+  rawClippingPlane: i32
 }
 
 struct Annotations
@@ -338,6 +339,11 @@ fn main(
 			output.frag_depth = projPos.z / projPos.w;
 			firstHit = false;
 			if (clipped) {
+			  if (bool(volumeParameters.rawClippingPlane) && useRawVolume) {
+			    output.color = vec4<f32>(vec3<f32>(masks[rawVolumeChannel]), 1.);
+			    return output;
+			  }
+
         var result_color = vec3<f32>(0., 0., 0.);
         for (var which: i32 = 0; which < numChannels; which += 1) {
             if(which == rawVolumeChannel) {

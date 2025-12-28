@@ -79,6 +79,7 @@ export class VolumeManager {
     this.volumeParameterBuffer.set({
       numChannels: descriptors.length,
       rawVolumeChannel: rawVolumeChannel,
+      rawClippingPlane: false,
     });
 
     return {
