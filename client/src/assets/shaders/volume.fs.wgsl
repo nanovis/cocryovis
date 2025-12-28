@@ -427,13 +427,15 @@ fn main(
 					var halfV = normalize(lightPos - isec1);
 
 					var sample_pos = isec1 + halfV * t * param.shadowRadius;
+					var sample_pos_clip = isec0 + halfV * t * param.shadowRadius * 2.;
 
 					var sample_var = vec3<f32>(0.0);
 					// sample only within bounds of the texture
 					if(sample_pos.x > 0.0 && sample_pos.x < 1.0 &&
 					   sample_pos.y > 0.0 && sample_pos.y < 1.0 &&
-				       sample_pos.z > 0.0 && sample_pos.z < 1.0)
-					{
+				     sample_pos.z > 0.0 && sample_pos.z < 1.0 &&
+				     (!clippingEnabled || !isClipped(sample_pos_clip)))
+				  {
 						sample_var = dataRead(sample_pos).xyz;
 					}
 
