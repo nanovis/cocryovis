@@ -247,11 +247,6 @@ export class VolumeRenderer {
 
     const gpuBindGroup = this.bindGroup.getGPUBindGroup();
 
-    if (!gpuBindGroup) {
-      this.renderEmpty();
-      return;
-    }
-
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
@@ -269,42 +264,12 @@ export class VolumeRenderer {
       },
     });
 
-    pass.setPipeline(this.pipeline);
-    pass.setBindGroup(0, gpuBindGroup);
+    if (gpuBindGroup) {
+      pass.setPipeline(this.pipeline);
+      pass.setBindGroup(0, gpuBindGroup);
 
-    pass.draw(6);
-
-    pass.end();
-    this.device.queue.submit([encoder.finish()]);
-
-    this.animationFrame = requestAnimationFrame(this.render.bind(this));
-  }
-
-  renderEmpty() {
-    const encoder = this.device.createCommandEncoder();
-    const view =
-      this.output?.outputView ?? this.context?.getCurrentTexture().createView();
-
-    if (!view) {
-      return;
+      pass.draw(6);
     }
-
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view,
-          clearValue: this.renderingParameters.params.clearColor,
-          loadOp: "clear",
-          storeOp: "store",
-        },
-      ],
-      depthStencilAttachment: {
-        view: this.getDepthTexture(),
-        depthClearValue: 1,
-        depthLoadOp: "clear",
-        depthStoreOp: "discard",
-      },
-    });
 
     pass.end();
     this.device.queue.submit([encoder.finish()]);
