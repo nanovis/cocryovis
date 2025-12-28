@@ -46,9 +46,9 @@ export class ClippingPlaneManager {
         clippingPlaneNormal: vec4.fromValues(0, 1, 0, 0),
       });
     } else if (type === "z") {
-      this.clippingPlaneUp = vec3.fromValues(1, 0, 0);
+      this.clippingPlaneUp = vec3.fromValues(0, 1, 0);
       this.clippingParametersBuffer.set({
-        clippingPlaneNormal: vec4.fromValues(0, 0, 1, 0),
+        clippingPlaneNormal: vec4.fromValues(0, 0, -1, 0),
       });
     }
   }
