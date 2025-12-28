@@ -1,4 +1,4 @@
-import { mat4, vec3 } from "gl-matrix";
+import { glMatrix, mat4, vec3 } from "gl-matrix";
 import { WebGpuBuffer } from "./webGpuBuffer.ts";
 
 export interface CameraParams {
@@ -59,7 +59,7 @@ export class Camera extends WebGpuBuffer {
     const projectionMatrix = mat4.create();
     mat4.perspectiveZO(
       projectionMatrix,
-      this.params.fovY,
+      glMatrix.toRadian(this.params.fovY),
       this.params.aspectRatio,
       this.params.near,
       this.params.far
