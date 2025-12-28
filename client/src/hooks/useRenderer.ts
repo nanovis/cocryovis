@@ -5,7 +5,6 @@ import {
   VolumeRenderer,
 } from "../renderer/renderer.ts";
 import { vec3 } from "gl-matrix";
-import { OrbitCameraController } from "../utils/orbitCameraController.ts";
 import type { RenderingParameters } from "../renderer/renderingParametersBuffer.ts";
 
 const defaultCameraParameters: RendererCameraParameters = {
@@ -32,7 +31,6 @@ export default function useRenderer(
   const rendererRef = useRef<VolumeRenderer | null>(null);
   const onReadyRef = useRef<typeof onReady>(onReady);
   const [_isPending, startTransition] = useTransition();
-  const orbitRef = useRef<OrbitCameraController | null>(null);
 
   useEffect(() => {
     let destroyed = false;
@@ -52,11 +50,6 @@ export default function useRenderer(
         }
       );
       rendererRef.current = renderer;
-      orbitRef.current = new OrbitCameraController(
-        renderer.camera,
-        canvasRef.current,
-        3
-      );
       onReadyRef.current?.(renderer);
     });
 
@@ -64,8 +57,6 @@ export default function useRenderer(
       destroyed = true;
       rendererRef.current?.destroy();
       rendererRef.current = null;
-      orbitRef.current?.dispose();
-      orbitRef.current = null;
     };
   }, [canvasRef]); // eslint-disable-line react-hooks/exhaustive-deps
 

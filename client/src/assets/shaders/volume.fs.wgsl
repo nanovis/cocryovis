@@ -65,6 +65,12 @@ struct Annotations
 	annotation : array<vec4<f32>>,
 }
 
+struct ClippingPlane {
+	origin : vec4<f32>,
+	normal : vec4<f32>,
+	enabled : i32,
+};
+
 @group(0) @binding(0) var<uniform> camera : Camera;
 @group(0) @binding(2) var s : sampler;
 @group(0) @binding(3) var volume0 : texture_3d<f32>;
@@ -73,6 +79,7 @@ struct Annotations
 @group(0) @binding(7) var<uniform> volumeParameters : VolumeParameters;
 @group(0) @binding(8) var<uniform> param : Param;
 @group(0) @binding(9) var<storage, read> channelData: array<ChannelData>;
+@group(0) @binding(10) var<uniform> clippingPlane: ClippingPlane;
 // @group(0) @binding(13) var<storage, read> annotations: Annotations;
 
 var<private> seedGlobal : u32;
@@ -169,8 +176,8 @@ fn cube(eye : vec3<f32>, dir : vec3<f32>, size : vec3<f32>) -> CubeOutput
 
 fn isClipped(pos : vec3<f32>) -> bool
 {
-  var d = dot(param.clippingPlaneOrigin.xyz, param.clippingPlaneNormal.xyz);
-  var r = dot(pos, param.clippingPlaneNormal.xyz);
+  var d = dot(clippingPlane.origin.xyz, clippingPlane.normal.xyz);
+  var r = dot(pos, clippingPlane.normal.xyz);
 
   return d > r;
 }
@@ -252,7 +259,7 @@ fn main(
 	var rawVolumeChannel = volumeParameters.rawVolumeChannel;
 	var useRawVolume = rawVolumeChannel >= 0;
 	var numChannels = volumeParameters.numChannels;
-	var clippingEnabled = bool(param.clippingEnabled);
+	var clippingEnabled = bool(clippingPlane.enabled);
 
 	var volumeRatio = channelData[0].ratio.xyz;
 

@@ -22,8 +22,9 @@ import { getVolumeWithSparseVolumes } from "../../api/volume";
 import ToastContainer from "../../utils/ToastContainer";
 import type { VolumeRenderer } from "../../renderer/renderer.ts";
 import { RootStore } from "../RootStore.ts";
-import type { ClippingPlaneType } from "../../renderer/renderingParametersBuffer.ts";
 import { clamp } from "../../utils/Helpers";
+import type { ClippingPlaneType } from "../../renderer/clippingPlaneManager.ts";
+import type { OrbitCameraController } from "../../utils/orbitCameraController.ts";
 
 export type visualizedObjectInstances =
   | VolumeInstance
@@ -136,6 +137,10 @@ export const VisualizedVolume = types
       const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
       return rootStore.renderer;
     },
+    get orbitCameraController(): OrbitCameraController | null {
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      return rootStore.orbitCameraController;
+    },
   }))
   .actions((self) => ({
     resetSaveAsNew() {
@@ -144,19 +149,17 @@ export const VisualizedVolume = types
       }
     },
     setFullscreen(enable: boolean) {
-      if (!window.WasmModule) {
+      if (enable === self.fullscreen) {
         return;
       }
-      if (enable && self.clippingPlane === "0") {
+      if (enable && self.clippingPlane === "none") {
         return;
       }
       self.fullscreen = enable;
-      // TODO
+      self.orbitCameraController?.setActive(!enable);
+      self.renderer?.clippingPlaneManager.setFullscreen(enable);
     },
     setShowRawClippingPlane(enable: boolean) {
-      if (!window.WasmModule) {
-        return;
-      }
       if (enable && self.rawSettings === undefined) {
         return;
       }
@@ -181,7 +184,7 @@ export const VisualizedVolume = types
         return;
       }
       self.clippingPlaneOffset = clamp(offset, -1, 1);
-      self.renderer?.renderingParameters.setClippingPlaneOffset(offset);
+      self.renderer?.clippingPlaneManager.setClippingPlaneOffset(offset);
     },
   }))
   .actions((self) => ({
@@ -194,12 +197,9 @@ export const VisualizedVolume = types
       self.volume?.setShownAnnotation(index, true);
     },
     setClippingPlane(clippingPlane: ClippingPlaneType) {
-      if (!window.WasmModule) {
-        return;
-      }
       self.clippingPlane = clippingPlane;
-      self.renderer?.renderingParameters.setClippingPlane(clippingPlane);
-      if (self.fullscreen) {
+      self.renderer?.clippingPlaneManager.setClippingPlane(clippingPlane);
+      if (self.fullscreen && clippingPlane === "none") {
         self.setFullscreen(false);
       }
     },

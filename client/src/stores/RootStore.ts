@@ -9,6 +9,7 @@ import * as Api from "../api/users";
 import ToastContainer from "../utils/ToastContainer";
 import { getErrorMessage } from "../utils/Helpers";
 import type { VolumeRenderer } from "../renderer/renderer.ts";
+import type { OrbitCameraController } from "../utils/orbitCameraController.ts";
 
 const CookieName = "LoggedUser";
 
@@ -23,6 +24,7 @@ export const RootStore = types
     triedReloadingSession: false,
     setingUpUser: false,
     renderer: null as VolumeRenderer | null,
+    orbitCameraController: null as OrbitCameraController | null,
   }))
 
   .views((self) => ({
@@ -43,6 +45,11 @@ export const RootStore = types
         self.renderer.destroy();
       }
       self.renderer = renderer;
+    },
+    setOrbitCameraController(
+      orbitCameraController: OrbitCameraController | null
+    ) {
+      self.orbitCameraController = orbitCameraController;
     },
     setReloadingSession(loading: boolean) {
       self.reloadingSession = loading;

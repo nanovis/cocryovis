@@ -115,8 +115,8 @@ export async function visualizeVolumeFromConfig(
     }
   }
 
-  renderer.renderingParameters.setClippingPlaneOffset(0);
-  renderer.renderingParameters.setClippingPlane("none");
+  renderer.clippingPlaneManager.setClippingPlaneOffset(0);
+  renderer.clippingPlaneManager.setClippingPlane("none");
   const visualizationDescriptor =
     await renderer.volumeManager.loadVolumes(config);
 

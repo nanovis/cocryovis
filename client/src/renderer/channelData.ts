@@ -77,6 +77,10 @@ export class ChannelData extends WebGpuBuffer {
     this.dirty = true;
   }
 
+  get numberOfChannels(): number {
+    return this.volumes.length;
+  }
+
   getParameters(index: number): ChannelParameters {
     if (index < 0 || index > this.volumes.length) {
       throw new Error("Index out of bounds");

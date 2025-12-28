@@ -1,5 +1,5 @@
-import vertexShader from "../assets/shaders/volume.vs.wgsl?raw";
-import fragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
+import volumeVertexShader from "../assets/shaders/volume.vs.wgsl?raw";
+import volumeFragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
 import {
   RenderingParametersBuffer,
   type RenderingParameters,
@@ -7,6 +7,7 @@ import {
 import { Camera, type CameraParams } from "./camera.ts";
 import { BindGroup } from "./bindGroup.ts";
 import { VolumeManager } from "./volumeManager.ts";
+import { ClippingPlaneManager } from "./clippingPlaneManager.ts";
 
 export interface DeviceInfo {
   adapter: GPUAdapter;
@@ -106,6 +107,11 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
       visibility: GPUShaderStage.FRAGMENT,
       buffer: { type: "read-only-storage" },
     },
+    {
+      binding: 10,
+      visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+      buffer: { type: "uniform" },
+    },
   ],
 };
 
@@ -118,12 +124,13 @@ export class VolumeRenderer {
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
   volumeManager: VolumeManager;
+  clippingPlaneManager: ClippingPlaneManager;
   renderingParameters: RenderingParametersBuffer;
   camera: Camera;
   width: number;
   height: number;
   format: GPUTextureFormat;
-  pipeline: GPURenderPipeline;
+  volumePipeline: GPURenderPipeline;
   animationFrame: number | null = null;
 
   private depthTexture: GPUTexture | undefined;
@@ -166,18 +173,14 @@ export class VolumeRenderer {
     });
     this.renderingParameters = new RenderingParametersBuffer(
       this.device,
-      this.camera,
       parameters
     );
     this.volumeManager = new VolumeManager(this.device);
-
-    const vertexShaderModule = this.device.createShaderModule({
-      code: vertexShader,
-    });
-
-    const fragmentShaderModule = this.device.createShaderModule({
-      code: fragmentShader,
-    });
+    this.clippingPlaneManager = new ClippingPlaneManager(
+      this.device,
+      this.camera,
+      this.volumeManager
+    );
 
     this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
     this.bindGroup.setResource(0, this.camera);
@@ -186,19 +189,29 @@ export class VolumeRenderer {
     this.bindGroup.setResource(7, this.volumeManager.volumeParameterBuffer);
     this.bindGroup.setResource(8, this.renderingParameters);
     this.bindGroup.setResource(9, this.volumeManager.channelData);
+    this.bindGroup.setResource(
+      10,
+      this.clippingPlaneManager.clippingParametersBuffer
+    );
 
     const pipelineLayout = this.device.createPipelineLayout({
       bindGroupLayouts: [this.bindGroup.getBindGroupLayout()],
     });
 
-    this.pipeline = this.device.createRenderPipeline({
+    this.volumePipeline = this.device.createRenderPipeline({
       layout: pipelineLayout,
       vertex: {
-        module: vertexShaderModule,
+        module: this.device.createShaderModule({
+          label: "Volume Vertex Shader",
+          code: volumeVertexShader,
+        }),
         entryPoint: "main",
       },
       fragment: {
-        module: fragmentShaderModule,
+        module: this.device.createShaderModule({
+          label: "Volume Fragment Shader",
+          code: volumeFragmentShader,
+        }),
         entryPoint: "main",
         targets: [{ format: this.format }],
       },
@@ -212,6 +225,16 @@ export class VolumeRenderer {
 
     this.render();
   }
+
+  // setFullscreen() {
+  //   const channelParams = this.volumeManager.channelData.getParameters(0);
+  //   this.camera.setFullscreen(
+  //     vec3.fromValues(1, 0, 0),
+  //     this.renderingParameters.params.clippingPlaneNormal,
+  //     this.renderingParameters.params.clippingPlaneOrigin,
+  //     channelParams.ratio
+  //   );
+  // }
 
   getDepthTexture(): GPUTexture {
     if (
@@ -245,6 +268,8 @@ export class VolumeRenderer {
       return;
     }
 
+    this.clippingPlaneManager.update();
+
     const gpuBindGroup = this.bindGroup.getGPUBindGroup();
 
     const pass = encoder.beginRenderPass({
@@ -265,7 +290,7 @@ export class VolumeRenderer {
     });
 
     if (gpuBindGroup) {
-      pass.setPipeline(this.pipeline);
+      pass.setPipeline(this.volumePipeline);
       pass.setBindGroup(0, gpuBindGroup);
 
       pass.draw(6);

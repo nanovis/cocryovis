@@ -22,6 +22,8 @@ export class Camera extends WebGpuBuffer {
 
   private static readonly size = 256;
 
+  private views = new Map<string, CameraParams>();
+
   constructor(device: GPUDevice, params: CameraParams) {
     super(device, Camera.size, "Camera Buffer");
 
@@ -40,6 +42,25 @@ export class Camera extends WebGpuBuffer {
       size: size,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
+  }
+
+  saveCameraView(key: string) {
+    this.views.set(key, {
+      position: vec3.clone(this.params.position),
+      viewCenter: vec3.clone(this.params.viewCenter),
+      up: vec3.clone(this.params.up),
+      fovY: this.params.fovY,
+      aspectRatio: this.params.aspectRatio,
+      near: this.params.near,
+      far: this.params.far,
+    });
+  }
+
+  restoreCameraView(key: string) {
+    const view = this.views.get(key);
+    if (!view) return;
+
+    this.setParameters(view);
   }
 
   private computeViewMatrix(): { viewMatrix: mat4; inverseViewMatrix: mat4 } {
@@ -90,8 +111,20 @@ export class Camera extends WebGpuBuffer {
     return this.params.viewCenter;
   }
 
+  get fovY(): number {
+    return this.params.fovY;
+  }
+
+  get aspectRatio(): number {
+    return this.params.aspectRatio;
+  }
+
+  get position(): vec3 {
+    return vec3.clone(this.params.position);
+  }
+
   get up(): vec3 {
-    return this.params.up;
+    return vec3.clone(this.params.up);
   }
 
   setParameters(params: Partial<CameraParams>) {
@@ -134,6 +167,29 @@ export class Camera extends WebGpuBuffer {
     );
 
     this.dirty = false;
+  }
+
+  setFullscreen(
+    clippingPlaneUp: vec3,
+    clippingPlaneNormal: vec3,
+    clippingPlaneOrigin: vec3,
+    volumeRatio: vec3
+  ) {
+    this.params.up = clippingPlaneUp;
+    this.params.viewCenter = clippingPlaneOrigin;
+    const objectSize =
+      Math.abs(volumeRatio[0] * clippingPlaneUp[0]) +
+      Math.abs(volumeRatio[1] * clippingPlaneUp[1]) +
+      Math.abs(volumeRatio[2] * clippingPlaneUp[2]);
+    const scaledFov = glMatrix.toRadian(this.params.fovY / 2);
+    const distance = objectSize / Math.tan(scaledFov);
+    vec3.scaleAndAdd(
+      this.params.position,
+      clippingPlaneOrigin,
+      clippingPlaneNormal,
+      -distance
+    );
+    this.dirty = true;
   }
 
   getBuffer(): GPUBuffer {

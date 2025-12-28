@@ -4,6 +4,7 @@ import { makeStyles } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore.ts";
 import { CONFIG } from "../../Constants.mjs";
+import { OrbitCameraController } from "../../utils/orbitCameraController.ts";
 
 const useStyles = makeStyles({
   canvasContainer: {
@@ -26,7 +27,13 @@ const RendererCanvas = observer(() => {
     parameters: rootStore.uiState.renderSettings.getRendererParameters(),
     cameraParameters: rootStore.uiState.renderSettings.getCameraParameters(),
     onReady: (renderer) => {
+      if (!canvasRef.current) {
+        return;
+      }
       rootStore.setRenderer(renderer);
+      rootStore.setOrbitCameraController(
+        new OrbitCameraController(renderer.camera, canvasRef.current, 3)
+      );
     },
   });
 

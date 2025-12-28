@@ -31,7 +31,7 @@ import ShortcutKey from "../../shared/ShortcutKey";
 import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
 import ToastContainer from "../../../utils/ToastContainer";
-import type { ClippingPlaneType } from "../../../renderer/renderingParametersBuffer.ts";
+import type { ClippingPlaneType } from "../../../renderer/clippingPlaneManager.ts";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -440,7 +440,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 <Tooltip
                   content={
                     <Text>
-                      Erase Annorations <ShortcutKey content="L" />
+                      Erase Annotations <ShortcutKey content="L" />
                     </Text>
                   }
                   relationship="label"
@@ -497,10 +497,28 @@ const Visualization = observer(({ open, close }: Props) => {
             </RadioGroup>
           </Field>
 
+          <Field label="Clipping Plane Offset">
+            <Slider
+              disabled={
+                actionsDisabled() || visualizedVolume?.clippingPlane === "none"
+              }
+              value={
+                visualizedVolume?.clippingPlaneOffset
+                  ? visualizedVolume.clippingPlaneOffset * 100
+                  : 0
+              }
+              min={-100}
+              max={100}
+              onChange={(_, data) =>
+                visualizedVolume?.setClippingOffset(data.value / 100)
+              }
+            />
+          </Field>
+
           <Tooltip
             content={
               <Text>
-                Shows raw volume when any clipping plane is enabled{" "}
+                Shows raw volume when any clipping plane is enabled
                 <ShortcutKey content="R" />
               </Text>
             }
@@ -547,7 +565,8 @@ const Visualization = observer(({ open, close }: Props) => {
                 labelPosition="before"
                 style={{ marginLeft: 105 }}
                 disabled={
-                  actionsDisabled() || visualizedVolume?.clippingPlane === "0"
+                  actionsDisabled() ||
+                  visualizedVolume?.clippingPlane === "none"
                 }
                 checked={visualizedVolume?.fullscreen ?? false}
                 min={1}

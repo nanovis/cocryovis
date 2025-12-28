@@ -15,6 +15,7 @@ export class OrbitCameraController {
   private isDragging = false;
   private lastX = 0;
   private lastY = 0;
+  private active = true;
 
   constructor(
     private camera: Camera,
@@ -27,6 +28,12 @@ export class OrbitCameraController {
 
   setRadius(radius: number) {
     this.radius = radius;
+  }
+
+  setActive(active: boolean) {
+    if (this.active === active) return;
+    this.active = active;
+    this.isDragging = false;
   }
 
   private addEventListeners() {
@@ -44,13 +51,15 @@ export class OrbitCameraController {
   }
 
   private onMouseDown = (e: MouseEvent) => {
+    if (!this.active) return;
+
     this.isDragging = true;
     this.lastX = e.clientX;
     this.lastY = e.clientY;
   };
 
   private onMouseMove = (e: MouseEvent) => {
-    if (!this.isDragging) return;
+    if (!this.isDragging || !this.active) return;
 
     const dx = e.clientX - this.lastX;
     const dy = e.clientY - this.lastY;
@@ -75,7 +84,7 @@ export class OrbitCameraController {
   };
 
   private onWheel = (e: WheelEvent) => {
-    if (e.shiftKey) return;
+    if (e.shiftKey || !this.active) return;
 
     e.preventDefault();
 
