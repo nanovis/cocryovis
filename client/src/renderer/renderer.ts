@@ -1,5 +1,5 @@
-import volumeVertexShader from "../assets/shaders/volume.vs.wgsl?raw";
-import volumeFragmentShader from "../assets/shaders/volume.fs.wgsl?raw";
+import volumeVertexShader from "@/assets/shaders/volume.vs.wgsl?raw";
+import volumeFragmentShader from "@/assets/shaders/volume.fs.wgsl?raw";
 import {
   RenderingParametersBuffer,
   type RenderingParameters,

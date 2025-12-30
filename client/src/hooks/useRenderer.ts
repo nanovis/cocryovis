@@ -5,7 +5,7 @@ import {
   VolumeRenderer,
 } from "../renderer/renderer.ts";
 import { vec3 } from "gl-matrix";
-import type { RenderingParameters } from "../renderer/renderingParametersBuffer.ts";
+import type { RenderingParameters } from "@/renderer/renderingParametersBuffer";
 import { CONFIG } from "../Constants";
 
 const defaultCameraParameters: RendererCameraParameters = {

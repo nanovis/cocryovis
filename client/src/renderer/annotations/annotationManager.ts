@@ -1,8 +1,8 @@
-import annotateShader from "../../assets/shaders/annotate.comp.wgsl?raw";
-import copyKernelShader from "../../assets/shaders/copy_kernel.comp.wgsl?raw";
-import clear3dShader from "../../assets/shaders/clear3d.comp.wgsl?raw";
-import annotateReadWriteShader from "../../assets/shaders/annotate_readwrite.comp.wgsl?raw";
-import clear3dReadWriteShader from "../../assets/shaders/clear3d_readwrite.comp.wgsl?raw";
+import annotateShader from "@/assets/shaders/annotate.comp.wgsl?raw";
+import copyKernelShader from "@/assets/shaders/copy_kernel.comp.wgsl?raw";
+import clear3dShader from "@/assets/shaders/clear3d.comp.wgsl?raw";
+import annotateReadWriteShader from "@/assets/shaders/annotate_readwrite.comp.wgsl?raw";
+import clear3dReadWriteShader from "@/assets/shaders/clear3d_readwrite.comp.wgsl?raw";
 
 import { BindGroup } from "../core/bindGroup.ts";
 import { AnnotationParametersBuffer } from "./annotationParametersBuffer.ts";
