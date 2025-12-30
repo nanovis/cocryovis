@@ -1,4 +1,6 @@
-struct Param 
+requires readonly_and_readwrite_storage_textures;
+
+struct Param
 {
 	vertex : vec4<f32>,
 	kernelSize : vec4<i32>,
