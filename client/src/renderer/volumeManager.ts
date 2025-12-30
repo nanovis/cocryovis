@@ -4,6 +4,7 @@ import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
 import { pickDefaultTF } from "../utils/Helpers.ts";
 import { CONFIG } from "../Constants.mjs";
 import { VolumeParameterBuffer } from "./volumeParameterBuffer.ts";
+import { mat4 } from "gl-matrix";
 
 export interface VisualizationDescriptor {
   descriptors: VolumeDescriptor[];
@@ -15,6 +16,7 @@ export class VolumeManager {
   volume: Volume;
   channelData: ChannelData;
   volumeParameterBuffer: VolumeParameterBuffer;
+  private modelMatrix: mat4 = mat4.create();
 
   constructor(device: GPUDevice) {
     this.device = device;
@@ -86,6 +88,10 @@ export class VolumeManager {
       rawVolumeChannel: rawVolumeChannel !== -1 ? rawVolumeChannel : undefined,
       descriptors: descriptors,
     };
+  }
+
+  getModelMatrix() {
+    return this.modelMatrix;
   }
 
   destroy() {

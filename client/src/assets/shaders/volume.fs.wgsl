@@ -60,11 +60,6 @@ struct VolumeParameters {
   rawClippingPlane: i32
 }
 
-struct Annotations
-{
-	annotation : array<vec4<f32>>,
-}
-
 struct ClippingPlane {
 	origin : vec4<f32>,
 	normal : vec4<f32>,
@@ -74,13 +69,13 @@ struct ClippingPlane {
 @group(0) @binding(0) var<uniform> camera : Camera;
 @group(0) @binding(2) var s : sampler;
 @group(0) @binding(3) var volume0 : texture_3d<f32>;
-//@group(0) @binding(5) var volume2 : texture_3d<f32>;
-//@group(0) @binding(6) var volume3 : texture_3d<f32>;
+@group(0) @binding(4) var volume2 : texture_3d<f32>;
+@group(0) @binding(5) var volume3 : texture_3d<f32>;
+@group(0) @binding(6) var<storage, read> annotations: array<vec4<f32>>;
 @group(0) @binding(7) var<uniform> volumeParameters : VolumeParameters;
 @group(0) @binding(8) var<uniform> param : Param;
 @group(0) @binding(9) var<storage, read> channelData: array<ChannelData>;
 @group(0) @binding(10) var<uniform> clippingPlane: ClippingPlane;
-// @group(0) @binding(13) var<storage, read> annotations: Annotations;
 
 var<private> seedGlobal : u32;
 var<private> lightRadius : f32;
@@ -182,23 +177,20 @@ fn isClipped(pos : vec3<f32>) -> bool
   return d > r;
 }
 
-//fn dataReadAnnotation(pos : vec3<f32>) -> vec4<f32>
-//{
-//	var result : vec4<f32>;
-//	var volumeRatio = volumeRatios.ratio[0].xyz;
-//	var posOrig = (pos - 0.5) * 2.0 * volumeRatio;
-//
-//	if(bool(param.annotationPingPong))
-//	{
-//		result = textureSampleLevel(volume2, s, pos, 0.0);
-//	}
-//	else {
-//		result = textureSampleLevel(volume3, s, pos, 0.0);
-//	}
-//	result = clip(result, posOrig);
-//
-//	return result;
-//}
+fn dataReadAnnotation(pos : vec3<f32>) -> vec4<f32>
+{
+	var result : vec4<f32>;
+
+	if(bool(param.annotationPingPong))
+	{
+	  result = textureSampleLevel(volume3, s, pos, 0.0);
+	}
+	else {
+		result = textureSampleLevel(volume2, s, pos, 0.0);
+	}
+
+	return result;
+}
 
 fn dataRead(pos : vec3<f32>) -> vec4<f32>
 {
@@ -232,6 +224,26 @@ fn dataRead(pos : vec3<f32>) -> vec4<f32>
 fn color_transfer(which : i32) -> vec3<f32>
 {
 	return channelData[which].color.xyz;
+}
+
+fn mixAnnotationColor(color: vec3<f32>, position: vec4<f32>, annotationColor: vec4<f32>) -> vec3<f32>
+{
+  if (annotationColor.a == 0.0) {
+    return color;
+  }
+  var stripe = annotationColor.xyz;
+
+  var stripeStrength = 0.2;
+  if (sin((position.x + position.y) * 100.0) > 0.0)
+  {
+    stripe = mix(stripe, vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
+  }
+  else
+  {
+    stripe = mix(stripe, vec3<f32>(1.0, 1.0, 1.0), stripeStrength);
+  }
+
+  return mix(color, stripe, annotationColor.a);
 }
 
 struct FragmentOutput {
@@ -327,17 +339,17 @@ fn main(
 		masks = dataRead(isec1);
 
 		// ======================== SAMPLE ANNOTATION VOLUME ========================
-		var annotationColor = vec4<f32>(0, 0, 0, 0);
-//		if(enableAnnotations)
-//		{
-//			var annotationVec = dataReadAnnotation(isec1);
-//			for (var i: i32 = 0; i < 4; i += 1) {
-//				var alpha: f32 = annotations.annotation[i].a * annotationVec[i];
-//				if (alpha > annotationColor.a) {
-//					annotationColor = vec4<f32>(annotations.annotation[i].rgb, alpha);
-//				}
-//			}
-//		}
+    var annotationColor = vec4<f32>(0, 0, 0, 0);
+    if(enableAnnotations)
+    {
+      var annotationVec = dataReadAnnotation(isec1);
+      for (var i: i32 = 0; i < 4; i += 1) {
+        var alpha: f32 = annotations[i].a * annotationVec[i];
+        if (alpha > annotationColor.a) {
+          annotationColor = vec4<f32>(annotations[i].rgb, alpha);
+        }
+      }
+    }
 
 		// store depth of first hit
 		if(firstHit)
@@ -347,7 +359,7 @@ fn main(
 			firstHit = false;
 			if (clipped) {
 			  if (bool(volumeParameters.rawClippingPlane) && useRawVolume) {
-			    output.color = vec4<f32>(vec3<f32>(masks[rawVolumeChannel]), 1.);
+			    output.color = vec4<f32>(mixAnnotationColor(vec3<f32>(masks[rawVolumeChannel]), position, annotationColor), 1.0);
 			    return output;
 			  }
 
@@ -361,7 +373,7 @@ fn main(
           result_color += masks[which] * color_transfer(which);
         }
         if (maskSum > 0.1) {
-          output.color = vec4<f32>(result_color, 1.0);
+          output.color = vec4<f32>(mixAnnotationColor(vec3<f32>(result_color), position, annotationColor), 1.0);
           return output;
         }
       }
@@ -491,22 +503,7 @@ fn main(
 
 			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
 			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
-
-//			if (annotationColor.a > 0) {
-//				var stripe = annotationColor.xyz;
-//
-//				var stripeStrength = 0.2;
-//				if (sin((position.x + position.y) * 100.0) > 0.0)
-//				{
-//					stripe = mix(stripe, vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
-//				}
-//				else
-//				{
-//					stripe = mix(stripe, vec3<f32>(1.0, 1.0, 1.0), stripeStrength);
-//				}
-//
-//				color = mix(color, stripe, annotationColor.a);
-//			}
+			color = mixAnnotationColor(color, position, annotationColor);
 
 			//front to back alpha compositing
 			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;

@@ -30,6 +30,10 @@ export class ClippingPlaneManager {
     this.clippingParametersBuffer = new ClippingParametersBuffer(device);
   }
 
+  getClippingPlaneType() {
+    return this.clippingPlaneType;
+  }
+
   setClippingPlane(type: ClippingPlaneType) {
     if (this.clippingPlaneType === type) return;
     this.clippingPlaneType = type;

@@ -1,10 +1,11 @@
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useRef } from "react";
 import useRenderer from "../../hooks/useRenderer.ts";
 import { makeStyles } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../stores/RootStore.ts";
 import { CONFIG } from "../../Constants.mjs";
 import { OrbitCameraController } from "../../utils/orbitCameraController.ts";
+import { useCanvasControls } from "../../hooks/useCanvasControls.ts";
 
 const useStyles = makeStyles({
   canvasContainer: {
@@ -22,7 +23,8 @@ const RendererCanvas = observer(() => {
   const rootStore = useMst();
 
   const classes = useStyles();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const rendererRef = useRenderer(canvasRef, {
     parameters: rootStore.uiState.renderSettings.getRendererParameters(),
     cameraParameters: rootStore.uiState.renderSettings.getCameraParameters(),
@@ -37,16 +39,17 @@ const RendererCanvas = observer(() => {
     },
   });
 
-  const onWheel = useEffectEvent((event: WheelEvent) => {
-    if (!event.shiftKey) return;
-
-    event.preventDefault();
-
-    const direction = event.deltaY < 0 ? 1 : -1;
-
-    rootStore.uiState.visualizedVolume?.changeClippingPlaneOffset(
-      direction * CONFIG.clippingPlaneScrollSpeed
-    );
+  const canvasControls = useCanvasControls({
+    canvasRef,
+    onDrag: (x, y) => {
+      rootStore.renderer?.annotationManager.processAnnotation(x, y, true, 0);
+    },
+    onWheel: (direction, event) => {
+      if (!event.shiftKey) return;
+      rootStore.uiState.visualizedVolume?.changeClippingPlaneOffset(
+        direction * CONFIG.clippingPlaneScrollSpeed
+      );
+    },
   });
 
   useEffect(() => {
@@ -65,19 +68,16 @@ const RendererCanvas = observer(() => {
       rendererRef.current?.resize(width, height);
     });
 
-    canvas.addEventListener("wheel", onWheel);
-
     observer.observe(canvas);
 
     return () => {
-      canvas.removeEventListener("wheel", onWheel);
       observer.disconnect();
     };
-  });
+  }, [rendererRef]);
 
   return (
     <div className={classes.canvasContainer}>
-      <canvas ref={canvasRef} className={classes.canvas} />
+      <canvas ref={canvasRef} className={classes.canvas} {...canvasControls} />
     </div>
   );
 });

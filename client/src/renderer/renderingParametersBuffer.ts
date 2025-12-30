@@ -13,7 +13,7 @@ export interface RenderingParameters {
 
   clippingEnabled: boolean;
   enableAnnotations: boolean;
-  annotationPingPong: number;
+  annotationPingPong: boolean;
   sampleRate: number;
 
   aoRadius: number;
@@ -39,8 +39,8 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     enableSoftShadows: true,
 
     clippingEnabled: false,
-    enableAnnotations: false,
-    annotationPingPong: 0,
+    enableAnnotations: true,
+    annotationPingPong: true,
     sampleRate: 5.0,
 
     aoRadius: 1.0,
@@ -77,6 +77,10 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     Object.assign(this.params, params);
   }
 
+  annotationsEnabled(): boolean {
+    return this.params.enableAnnotations;
+  }
+
   toBuffer(): ArrayBuffer {
     const buffer = new ArrayBuffer(RenderingParametersBuffer.size);
     const view = new DataView(buffer);
@@ -109,7 +113,7 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     o += 4;
     view.setInt32(o, Number(this.params.enableAnnotations), le);
     o += 4;
-    view.setInt32(o, this.params.annotationPingPong, le);
+    view.setInt32(o, Number(this.params.annotationPingPong), le);
     o += 4;
     view.setFloat32(o, this.params.sampleRate, le);
     o += 4;

@@ -2,6 +2,8 @@ import type { Camera } from "../renderer/camera.ts";
 import { clamp } from "./Helpers.ts";
 
 export class OrbitCameraController {
+  private static readonly MOUSE_BUTTON = 2;
+
   minDistance = 1;
   maxDistance = 50;
   minPolarAngleRadians = 0.01;
@@ -51,7 +53,7 @@ export class OrbitCameraController {
   }
 
   private onMouseDown = (e: MouseEvent) => {
-    if (!this.active) return;
+    if (e.button !== OrbitCameraController.MOUSE_BUTTON || !this.active) return;
 
     this.isDragging = true;
     this.lastX = e.clientX;
@@ -79,7 +81,9 @@ export class OrbitCameraController {
     this.updateCamera();
   };
 
-  private onMouseUp = () => {
+  private onMouseUp = (e: MouseEvent) => {
+    if (e.button !== OrbitCameraController.MOUSE_BUTTON) return;
+
     this.isDragging = false;
   };
 

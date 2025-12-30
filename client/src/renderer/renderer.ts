@@ -8,6 +8,7 @@ import { Camera, type CameraParams } from "./camera.ts";
 import { BindGroup } from "./bindGroup.ts";
 import { VolumeManager } from "./volumeManager.ts";
 import { ClippingPlaneManager } from "./clippingPlaneManager.ts";
+import { AnnotationManager } from "./annotations/annotationManager.ts";
 
 export interface DeviceInfo {
   adapter: GPUAdapter;
@@ -21,6 +22,8 @@ export interface OutputInfo {
   width: number;
   height: number;
 }
+
+type RequiredLimits = Omit<GPUSupportedLimits, "__brand">;
 
 export async function initializeDevice(
   canvas: HTMLCanvasElement,
@@ -42,16 +45,18 @@ export async function initializeDevice(
     throw new Error("No GPU adapter found");
   }
 
-  const requiredLimits = {
+  // TODO Make some sort of global define for this
+  const requiredLimits: Partial<RequiredLimits> = {
     maxTextureDimension3D: adapter.limits.maxTextureDimension3D,
     maxBufferSize: adapter.limits.maxBufferSize,
+    ...VolumeRenderer.REQUIRED_LIMITS,
   };
 
   console.log("Requesting device with limits:", requiredLimits);
 
   const deviceDescriptor: GPUDeviceDescriptor = {
     ...deviceOptions,
-    requiredLimits: { ...requiredLimits },
+    requiredLimits: requiredLimits,
   };
 
   const device = await adapter.requestDevice(deviceDescriptor);
@@ -93,6 +98,21 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
       texture: { sampleType: "float", viewDimension: "3d" },
     },
     {
+      binding: 4,
+      visibility: GPUShaderStage.FRAGMENT,
+      texture: { sampleType: "float", viewDimension: "3d" },
+    },
+    {
+      binding: 5,
+      visibility: GPUShaderStage.FRAGMENT,
+      texture: { sampleType: "float", viewDimension: "3d" },
+    },
+    {
+      binding: 6,
+      visibility: GPUShaderStage.FRAGMENT,
+      buffer: { type: "read-only-storage" },
+    },
+    {
       binding: 7,
       visibility: GPUShaderStage.FRAGMENT,
       buffer: { type: "uniform" },
@@ -120,12 +140,17 @@ const DEPTH_TEXTURE_FORMAT: GPUTextureFormat = "depth24plus";
 export type RendererCameraParameters = Omit<CameraParams, "aspectRatio">;
 
 export class VolumeRenderer {
+  static REQUIRED_LIMITS: Partial<RequiredLimits> = {
+    maxComputeInvocationsPerWorkgroup: 512,
+  };
+
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
   volumeManager: VolumeManager;
   clippingPlaneManager: ClippingPlaneManager;
   renderingParameters: RenderingParametersBuffer;
+  annotationManager: AnnotationManager;
   camera: Camera;
   width: number;
   height: number;
@@ -181,11 +206,21 @@ export class VolumeRenderer {
       this.camera,
       this.volumeManager
     );
+    this.annotationManager = new AnnotationManager(
+      this.device,
+      this.volumeManager,
+      this.camera,
+      this.clippingPlaneManager,
+      this.renderingParameters
+    );
 
     this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
     this.bindGroup.setResource(0, this.camera);
     this.bindGroup.setResource(2, this.volumeManager.volume);
     this.bindGroup.setResource(3, this.volumeManager.volume);
+    this.bindGroup.setResource(4, this.annotationManager.annotationVolumes[0]);
+    this.bindGroup.setResource(5, this.annotationManager.annotationVolumes[1]);
+    this.bindGroup.setResource(6, this.annotationManager.annotationsDataBuffer);
     this.bindGroup.setResource(7, this.volumeManager.volumeParameterBuffer);
     this.bindGroup.setResource(8, this.renderingParameters);
     this.bindGroup.setResource(9, this.volumeManager.channelData);
@@ -225,16 +260,6 @@ export class VolumeRenderer {
 
     this.render();
   }
-
-  // setFullscreen() {
-  //   const channelParams = this.volumeManager.channelData.getParameters(0);
-  //   this.camera.setFullscreen(
-  //     vec3.fromValues(1, 0, 0),
-  //     this.renderingParameters.params.clippingPlaneNormal,
-  //     this.renderingParameters.params.clippingPlaneOrigin,
-  //     channelParams.ratio
-  //   );
-  // }
 
   getDepthTexture(): GPUTexture {
     if (
