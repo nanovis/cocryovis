@@ -34,7 +34,7 @@ import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import * as Utils from "../../../utils/Helpers";
 import DeleteDialog from "../../shared/DeleteDialog";
-import { CONFIG } from "../../../Constants.mjs";
+import { CONFIG } from "../../../Constants";
 import "../../../App.css";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";

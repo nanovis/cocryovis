@@ -1,4 +1,4 @@
-export const DEFAULT_TF = Object.freeze({
+export const DEFAULT_TF = {
   prefix: "00-TF-DEFAULT",
   defaultTransferFunction: {
     rampLow: 0.01,
@@ -57,4 +57,4 @@ export const DEFAULT_TF = Object.freeze({
       },
     },
   ],
-});
+} as const;

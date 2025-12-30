@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { DEFAULT_TF } from "../DefaultTransferFunctions";
+import { DEFAULT_TF } from "../DefaultTransferFunctions.ts";
 import ToastContainer from "./ToastContainer";
 import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
 import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
