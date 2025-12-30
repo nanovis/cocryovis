@@ -13,15 +13,14 @@ export interface RenderingParameters {
 
   clippingEnabled: boolean;
   enableAnnotations: boolean;
-  annotationPingPong: boolean;
   sampleRate: number;
-
   aoRadius: number;
+
   aoStrength: number;
   aoNumSamples: number;
   shadowQuality: number;
-
   shadowStrength: number;
+
   shadowRadius: number;
   shadowMin: number;
   shadowMax: number;
@@ -40,15 +39,14 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
 
     clippingEnabled: false,
     enableAnnotations: true,
-    annotationPingPong: true,
     sampleRate: 5.0,
-
     aoRadius: 1.0,
+
     aoStrength: 0.9,
     aoNumSamples: 5,
     shadowQuality: 1.0,
-
     shadowStrength: 0.5,
+
     shadowRadius: 0.2,
     shadowMin: 0.0,
     shadowMax: 1.0,
@@ -113,27 +111,28 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     o += 4;
     view.setInt32(o, Number(this.params.enableAnnotations), le);
     o += 4;
-    view.setInt32(o, Number(this.params.annotationPingPong), le);
-    o += 4;
     view.setFloat32(o, this.params.sampleRate, le);
     o += 4;
-
     view.setFloat32(o, this.params.aoRadius, le);
     o += 4;
+
     view.setFloat32(o, this.params.aoStrength, le);
     o += 4;
     view.setInt32(o, this.params.aoNumSamples, le);
     o += 4;
     view.setFloat32(o, this.params.shadowQuality, le);
     o += 4;
-
     view.setFloat32(o, this.params.shadowStrength, le);
     o += 4;
+
     view.setFloat32(o, this.params.shadowRadius, le);
     o += 4;
     view.setFloat32(o, this.params.shadowMin, le);
     o += 4;
     view.setFloat32(o, this.params.shadowMax, le);
+    o += 4;
+    // buffer
+    view.setInt32(o, 0, le);
     o += 4;
 
     return buffer;

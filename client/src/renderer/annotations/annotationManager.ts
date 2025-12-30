@@ -1,4 +1,5 @@
 import annotateComputeShader from "../../assets/shaders/annotate.comp.wgsl?raw";
+import copyKernelComputeShader from "../../assets/shaders/copy_kernel.comp.wgsl?raw";
 import clear3dComputeShader from "../../assets/shaders/clear3d.comp.wgsl?raw";
 
 import { BindGroup } from "../bindGroup.ts";
@@ -49,11 +50,15 @@ export class AnnotationManager {
 
   readonly annotationParameterBuffer: AnnotationParametersBuffer;
   readonly annotationsDataBuffer: AnnotationsDataBuffer;
-  private readonly annotationBindGroups: [BindGroup, BindGroup];
+
+  private readonly annotateBindGroup: BindGroup;
+  private readonly copyKernelBindGroup: BindGroup;
+
   readonly annotationVolumes: [AnnotationVolume, AnnotationVolume];
+
   private readonly annotatePipeline: GPUComputePipeline;
+  private readonly copyKernelPipeline: GPUComputePipeline;
   private readonly clear3dPipeline: GPUComputePipeline;
-  private ping: boolean = true;
 
   private previousMousePosition: { x: number; y: number } | undefined;
 
@@ -78,13 +83,14 @@ export class AnnotationManager {
       new AnnotationVolume(device, volumeManager, "Annotation Volume Pong"),
     ];
 
-    this.annotationBindGroups = [
-      this.setupBindGroup(this.annotationVolumes[1], this.annotationVolumes[0]),
-      this.setupBindGroup(this.annotationVolumes[0], this.annotationVolumes[1]),
-    ];
+    this.annotateBindGroup = this.setupBindGroup(
+      this.annotationVolumes[0],
+      this.annotationVolumes[1]
+    );
 
     const pipelineLayout = device.createPipelineLayout({
-      bindGroupLayouts: [this.annotationBindGroups[0].getBindGroupLayout()],
+      label: "Annotation Pipeline Layout",
+      bindGroupLayouts: [this.annotateBindGroup.getBindGroupLayout()],
     });
 
     this.annotatePipeline = this.device.createComputePipeline({
@@ -108,6 +114,25 @@ export class AnnotationManager {
         }),
       },
     });
+
+    this.copyKernelBindGroup = this.setupBindGroup(
+      this.annotationVolumes[1],
+      this.annotationVolumes[0]
+    );
+
+    this.copyKernelPipeline = this.device.createComputePipeline({
+      label: "Copy Kernel Compute Pipeline",
+      layout: device.createPipelineLayout({
+        label: "Copy Kernel Pipeline Layout",
+        bindGroupLayouts: [this.copyKernelBindGroup.getBindGroupLayout()],
+      }),
+      compute: {
+        module: device.createShaderModule({
+          label: "Copy Kernel Compute Shader",
+          code: copyKernelComputeShader,
+        }),
+      },
+    });
   }
 
   private setupBindGroup(
@@ -121,12 +146,8 @@ export class AnnotationManager {
     return bindGroup;
   }
 
-  getReadTexture() {
-    return this.annotationVolumes[this.ping ? 0 : 1].getTexture();
-  }
-
-  getWriteTexture() {
-    return this.annotationVolumes[this.ping ? 0 : 1].getTexture();
+  getAnnotationVolume() {
+    return this.annotationVolumes[0];
   }
 
   computeBlockSizeFromKernel(kernelSize: number) {
@@ -228,7 +249,6 @@ export class AnnotationManager {
     vertex[2] = (vertex[2] / ratio[2]) * 0.5 + 0.5;
 
     this.applyAnnotation(vertex, addAnnotation, volumeIndex);
-    this.applyAnnotation(vertex, addAnnotation, volumeIndex);
   }
 
   private applyAnnotation(
@@ -254,17 +274,14 @@ export class AnnotationManager {
 
     this.annotationParameterBuffer.set({
       vertex: vec4.fromValues(vertex[0], vertex[1], vertex[2], 0),
-      pingPong: this.ping,
       addAnnotation: addAnnotation,
       annotationVolume: volumeIndex,
     });
 
-    const pingPongIndex = this.ping ? 0 : 1;
+    const annotateBindGroup = this.annotateBindGroup.getGPUBindGroup();
+    const copyKernelBindGroup = this.copyKernelBindGroup.getGPUBindGroup();
 
-    const gpuBindGroup =
-      this.annotationBindGroups[pingPongIndex].getGPUBindGroup();
-
-    if (!gpuBindGroup) {
+    if (!annotateBindGroup || !copyKernelBindGroup) {
       return;
     }
 
@@ -277,36 +294,35 @@ export class AnnotationManager {
     const pass = encoder.beginComputePass();
 
     pass.setPipeline(this.annotatePipeline);
-    pass.setBindGroup(0, gpuBindGroup);
+    pass.setBindGroup(0, annotateBindGroup);
+    pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
+
+    pass.setPipeline(this.copyKernelPipeline);
+    pass.setBindGroup(0, copyKernelBindGroup);
     pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
 
     pass.end();
 
     this.device.queue.submit([encoder.finish()]);
-
-    this.ping = !this.ping;
-    this.renderingParametersBuffer.set({
-      annotationPingPong: this.ping,
-    });
   }
 
   computeBlockSizeFromVolumeSize(volumeSize: number) {
     return Math.ceil(volumeSize / AnnotationManager.CLEAR_WORKGROUP_SIZE);
   }
 
-  private clearAnnotationsVolume(
-    annotationVolumeIndex: 0 | 1,
-    channelIndex: number
-  ) {
+  // TODO make a single compute shader that clears both
+  clearAnnotations(channelIndex: number) {
     const volumeTexture = this.volumeManager.volume.getTexture();
     if (!volumeTexture) {
       return;
     }
 
-    const gpuBindGroup =
-      this.annotationBindGroups[annotationVolumeIndex].getGPUBindGroup();
+    const annotateBindGroup = this.annotateBindGroup.getGPUBindGroup();
 
-    if (!gpuBindGroup) {
+    // This is probably not the best idea, but lets assume those bind groups stay aligned
+    const copyKernelBindGroup = this.copyKernelBindGroup.getGPUBindGroup();
+
+    if (!annotateBindGroup || !copyKernelBindGroup) {
       return;
     }
 
@@ -334,19 +350,14 @@ export class AnnotationManager {
     const pass = encoder.beginComputePass();
 
     pass.setPipeline(this.clear3dPipeline);
-    pass.setBindGroup(0, gpuBindGroup);
+    pass.setBindGroup(0, annotateBindGroup);
     pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
 
-    pass.setBindGroup(1, gpuBindGroup);
+    pass.setBindGroup(1, copyKernelBindGroup);
     pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
 
     pass.end();
 
     this.device.queue.submit([encoder.finish()]);
-  }
-
-  clearAnnotations(channelIndex: number) {
-    this.clearAnnotationsVolume(0, channelIndex);
-    this.clearAnnotationsVolume(1, channelIndex);
   }
 }

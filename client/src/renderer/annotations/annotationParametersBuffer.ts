@@ -6,7 +6,6 @@ export interface AnnotationParameters {
   kernelSize: vec4;
   clearMask: vec4;
 
-  pingPong: boolean;
   addAnnotation: boolean;
   annotationVolume: number;
 }
@@ -17,7 +16,6 @@ export class AnnotationParametersBuffer extends WebGpuBuffer {
     kernelSize: vec4.fromValues(25, 25, 25, 0),
     clearMask: vec4.create(),
 
-    pingPong: false,
     addAnnotation: true,
     annotationVolume: 0,
   };
@@ -72,13 +70,13 @@ export class AnnotationParametersBuffer extends WebGpuBuffer {
       view.setInt32(o + i * 4, this.params.clearMask[i], le);
     o += 16;
 
-    view.setInt32(o, Number(this.params.pingPong), le);
-    o += 4;
     view.setInt32(o, Number(this.params.addAnnotation), le);
     o += 4;
     view.setInt32(o, this.params.annotationVolume, le);
     o += 4;
     // Buffer
+    view.setInt32(o, 0, le);
+    o += 4;
     view.setInt32(o, 0, le);
     o += 4;
 

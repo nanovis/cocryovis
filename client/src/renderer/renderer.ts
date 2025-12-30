@@ -103,11 +103,6 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
       texture: { sampleType: "float", viewDimension: "3d" },
     },
     {
-      binding: 5,
-      visibility: GPUShaderStage.FRAGMENT,
-      texture: { sampleType: "float", viewDimension: "3d" },
-    },
-    {
       binding: 6,
       visibility: GPUShaderStage.FRAGMENT,
       buffer: { type: "read-only-storage" },
@@ -218,8 +213,7 @@ export class VolumeRenderer {
     this.bindGroup.setResource(0, this.camera);
     this.bindGroup.setResource(2, this.volumeManager.volume);
     this.bindGroup.setResource(3, this.volumeManager.volume);
-    this.bindGroup.setResource(4, this.annotationManager.annotationVolumes[0]);
-    this.bindGroup.setResource(5, this.annotationManager.annotationVolumes[1]);
+    this.bindGroup.setResource(4, this.annotationManager.getAnnotationVolume());
     this.bindGroup.setResource(6, this.annotationManager.annotationsDataBuffer);
     this.bindGroup.setResource(7, this.volumeManager.volumeParameterBuffer);
     this.bindGroup.setResource(8, this.renderingParameters);

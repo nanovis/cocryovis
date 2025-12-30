@@ -32,8 +32,6 @@ import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
 import ToastContainer from "../../../utils/ToastContainer";
 import type { ClippingPlaneType } from "../../../renderer/clippingPlaneManager.ts";
-import { readRChannelFromRGBA3DTexture } from "../../../renderer/export.ts";
-import { downloadBlob } from "../../../utils/Helpers";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -121,7 +119,7 @@ interface Props {
 }
 
 const Visualization = observer(({ open, close }: Props) => {
-  const { user, uiState, renderer } = useMst();
+  const { user, uiState } = useMst();
 
   const activeProject = user.userProjects.activeProject;
   const visualizedVolume = uiState.visualizedVolume;
@@ -478,27 +476,6 @@ const Visualization = observer(({ open, close }: Props) => {
               />
             </Field>
           </div>
-
-          <Button
-            onClick={async () => {
-              if (!renderer) return;
-
-              const annotationTexture =
-                renderer.annotationManager.getReadTexture();
-              if (!annotationTexture) return;
-              const buffer = await readRChannelFromRGBA3DTexture(
-                renderer.device,
-                annotationTexture
-              );
-              const blob = new Blob([buffer], {
-                type: "application/octet-stream",
-              });
-              downloadBlob(blob, "annotations.raw");
-            }}
-          >
-            Download Annotations
-          </Button>
-
           {/* Set Clipping Plane */}
           <Field label="Clipping Plane">
             <RadioGroup

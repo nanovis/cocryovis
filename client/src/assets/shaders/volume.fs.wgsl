@@ -39,18 +39,17 @@ struct Param
 
   clippingEnabled : i32,
   enableAnnotations : i32,
-  annotationPingPong : i32,
 	sampleRate : f32,
-
 	aoRadius : f32,
-	aoStrength : f32,
-	aoNumSamples : i32,
-	shadowQuality : f32,
 
-	shadowStrength : f32,
-	shadowRadius : f32,
+  aoStrength : f32,
+  aoNumSamples : i32,
+  shadowQuality : f32,
+  shadowStrength : f32,
+
+  shadowRadius : f32,
   shadowMin: f32,
-	shadowMax: f32,
+  shadowMax: f32,
 }
 
 struct VolumeParameters {
@@ -69,8 +68,7 @@ struct ClippingPlane {
 @group(0) @binding(0) var<uniform> camera : Camera;
 @group(0) @binding(2) var s : sampler;
 @group(0) @binding(3) var volume0 : texture_3d<f32>;
-@group(0) @binding(4) var volume2 : texture_3d<f32>;
-@group(0) @binding(5) var volume3 : texture_3d<f32>;
+@group(0) @binding(4) var annotationVolume : texture_3d<f32>;
 @group(0) @binding(6) var<storage, read> annotations: array<vec4<f32>>;
 @group(0) @binding(7) var<uniform> volumeParameters : VolumeParameters;
 @group(0) @binding(8) var<uniform> param : Param;
@@ -175,21 +173,6 @@ fn isClipped(pos : vec3<f32>) -> bool
   var r = dot(pos, clippingPlane.normal.xyz);
 
   return d > r;
-}
-
-fn dataReadAnnotation(pos : vec3<f32>) -> vec4<f32>
-{
-	var result : vec4<f32>;
-
-	if(bool(param.annotationPingPong))
-	{
-	  result = textureSampleLevel(volume3, s, pos, 0.0);
-	}
-	else {
-		result = textureSampleLevel(volume2, s, pos, 0.0);
-	}
-
-	return result;
 }
 
 fn dataRead(pos : vec3<f32>) -> vec4<f32>
@@ -342,7 +325,7 @@ fn main(
     var annotationColor = vec4<f32>(0, 0, 0, 0);
     if(enableAnnotations)
     {
-      var annotationVec = dataReadAnnotation(isec1);
+      var annotationVec = textureSampleLevel(annotationVolume, s, isec1, 0.0);
       for (var i: i32 = 0; i < 4; i += 1) {
         var alpha: f32 = annotations[i].a * annotationVec[i];
         if (alpha > annotationColor.a) {

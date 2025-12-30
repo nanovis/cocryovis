@@ -20,7 +20,10 @@ class BindGroupEntry {
   }
 
   getResourceEntry(): GPUBindingResource | undefined {
-    if (!this.resource) return undefined;
+    if (!this.resource) {
+      console.warn(`No resource set for binding ${this.getBindingIndex()}.`);
+      return undefined;
+    }
 
     if (this.resource instanceof WebGpuBuffer) {
       return this.resource.getBuffer();

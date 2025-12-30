@@ -1,8 +1,6 @@
 struct Param 
 {
-	volumeSize : vec4<u32>,
 	vertex : vec4<f32>,
-	pingPong : vec4<f32>,
 	kernelSize : vec4<f32>,
 	clearMask : vec4<f32>,
 
