@@ -4,10 +4,18 @@ interface Props {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   onDrag: (normalizedX: number, normalizedY: number) => void;
   onWheel?: (direction: number, event: WheelEvent<HTMLCanvasElement>) => void;
+  syncToFrame?: boolean;
 }
 
-export function useCanvasControls({ canvasRef, onDrag, onWheel }: Props) {
+export function useCanvasControls({
+  canvasRef,
+  onDrag,
+  onWheel,
+  syncToFrame = true,
+}: Props) {
   const isPrimaryDown = useRef(false);
+  const frameRef = useRef<number | null>(null);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -34,12 +42,26 @@ export function useCanvasControls({ canvasRef, onDrag, onWheel }: Props) {
 
       const { offsetX, offsetY } = event.nativeEvent;
 
-      const x = offsetX / canvas.width;
-      const y = offsetY / canvas.height;
+      if (!syncToFrame)
+        return onDrag(offsetX / canvas.width, offsetY / canvas.height);
 
-      onDrag(x, y);
+      lastPosRef.current = {
+        x: offsetX / canvas.width,
+        y: offsetY / canvas.height,
+      };
+
+      if (frameRef.current == null) {
+        frameRef.current = requestAnimationFrame(() => {
+          frameRef.current = null;
+
+          const pos = lastPosRef.current;
+          if (!pos) return;
+
+          onDrag(pos.x, pos.y);
+        });
+      }
     },
-    [canvasRef, onDrag]
+    [canvasRef, onDrag, syncToFrame]
   );
 
   const handleWheel = useCallback(
