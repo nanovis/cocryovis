@@ -1,4 +1,4 @@
-import type { VolumeSettings } from "./volumeSettings.ts";
+import type { VolumeSettings } from "./volumeSettings";
 
 /**
  * MRC file into a RAW and JSON file using streaming/chunked.

@@ -4,16 +4,16 @@ import clear3dShader from "@/assets/shaders/clear3d.comp.wgsl?raw";
 import annotateReadWriteShader from "@/assets/shaders/annotate_readwrite.comp.wgsl?raw";
 import clear3dReadWriteShader from "@/assets/shaders/clear3d_readwrite.comp.wgsl?raw";
 
-import { BindGroup } from "../core/bindGroup.ts";
-import { AnnotationParametersBuffer } from "./annotationParametersBuffer.ts";
-import { AnnotationVolume } from "./annotationVolume.ts";
-import type { VolumeManager } from "../volume/volumeManager.ts";
+import { BindGroup } from "../core/bindGroup";
+import { AnnotationParametersBuffer } from "./annotationParametersBuffer";
+import { AnnotationVolume } from "./annotationVolume";
+import type { VolumeManager } from "../volume/volumeManager";
 import { mat4, vec3, vec4 } from "gl-matrix";
-import type { Camera } from "../core/camera.ts";
-import { intersectRayPlane } from "../utilities/math.ts";
-import type { ClippingPlaneManager } from "../volume/clippingPlaneManager.ts";
-import type { RenderingParametersBuffer } from "../renderingParametersBuffer.ts";
-import { AnnotationsDataBuffer } from "./annotationsDataBuffer.ts";
+import type { Camera } from "../core/camera";
+import { intersectRayPlane } from "../utilities/math";
+import type { ClippingPlaneManager } from "../volume/clippingPlaneManager";
+import type { RenderingParametersBuffer } from "../renderingParametersBuffer";
+import { AnnotationsDataBuffer } from "./annotationsDataBuffer";
 
 const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
   entries: [

@@ -15,10 +15,10 @@ import { useState } from "react";
 import * as Utils from "../../utils/Helpers";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import { VolumeData, VolumeDescriptor } from "../../utils/volumeSettings.ts";
+import { VolumeData, VolumeDescriptor } from "../../utils/volumeSettings";
 import ToastContainer from "../../utils/ToastContainer";
-import { convertMRCToRaw } from "../../utils/MrcParser.ts";
-import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager.ts";
+import { convertMRCToRaw } from "../../utils/MrcParser";
+import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager";
 
 const enum WidgetIndices {
   Visualization = 0,

@@ -1,5 +1,5 @@
-import type { Camera } from "../renderer/core/camera.ts";
-import { clamp } from "./Helpers.ts";
+import type { Camera } from "../renderer/core/camera";
+import { clamp } from "./Helpers";
 
 export class OrbitCameraController {
   private static readonly MOUSE_BUTTON = 2;

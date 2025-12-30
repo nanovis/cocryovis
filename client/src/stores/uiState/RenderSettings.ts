@@ -4,13 +4,13 @@ import {
   type SnapshotIn,
 } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
-import type { RenderingParameters } from "../../renderer/renderingParametersBuffer.ts";
+import type { RenderingParameters } from "../../renderer/renderingParametersBuffer";
 import {
   type RendererCameraParameters,
   type VolumeRenderer,
-} from "../../renderer/renderer.ts";
-import { RootStore } from "../RootStore.ts";
-import { clamp } from "../../renderer/utilities/math.ts";
+} from "../../renderer/renderer";
+import { RootStore } from "../RootStore";
+import { clamp } from "../../renderer/utilities/math";
 
 export const RenderSettings = types
   .model({

@@ -25,7 +25,7 @@ import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import { getLoggedUserData, login, register } from "./api/users";
 import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/ToastContainer";
-import RendererCanvas from "./components/RendererCanvas/RendererCanvas.tsx";
+import RendererCanvas from "./components/RendererCanvas/RendererCanvas";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height

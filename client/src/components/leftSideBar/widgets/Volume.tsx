@@ -51,7 +51,7 @@ import {
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
 import type { ResultInstance } from "../../../stores/userState/ResultModel";
-import type { VolumeDescriptor } from "../../../utils/volumeSettings.ts";
+import type { VolumeDescriptor } from "../../../utils/volumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
 import type { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
@@ -68,7 +68,7 @@ import { getResultData } from "../../../api/results";
 import ToastContainer from "../../../utils/ToastContainer";
 import EditDialog from "./elements/EditDialog";
 import type { JSX } from "react/jsx-runtime";
-import { fileMapToVisualizationConfig } from "../../../utils/volumeVisualization.ts";
+import { fileMapToVisualizationConfig } from "../../../utils/volumeVisualization";
 
 const useStyles = makeStyles({
   visualizeButton: {

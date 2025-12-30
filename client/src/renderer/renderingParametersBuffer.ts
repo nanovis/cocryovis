@@ -1,5 +1,5 @@
 import { vec4 } from "gl-matrix";
-import { WebGpuBuffer } from "./core/webGpuBuffer.ts";
+import { WebGpuBuffer } from "./core/webGpuBuffer";
 
 export interface RenderingParameters {
   clippingPlaneOrigin: vec4;

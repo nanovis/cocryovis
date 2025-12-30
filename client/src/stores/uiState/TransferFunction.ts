@@ -2,8 +2,8 @@ import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { types, getParentOfType, flow, isAlive } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
 import * as Utils from "../../utils/Helpers";
-import type { VolumeRenderer } from "../../renderer/renderer.ts";
-import { RootStore } from "../RootStore.ts";
+import type { VolumeRenderer } from "../../renderer/renderer";
+import { RootStore } from "../RootStore";
 import { transferFunctionSchema } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 
 export const TransferFunction = types

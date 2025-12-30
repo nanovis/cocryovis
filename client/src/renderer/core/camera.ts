@@ -1,5 +1,5 @@
 import { glMatrix, mat4, vec3 } from "gl-matrix";
-import { WebGpuBuffer } from "./webGpuBuffer.ts";
+import { WebGpuBuffer } from "./webGpuBuffer";
 
 export interface CameraParams {
   position: vec3;

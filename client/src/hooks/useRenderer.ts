@@ -3,7 +3,7 @@ import {
   initializeDevice,
   type RendererCameraParameters,
   VolumeRenderer,
-} from "../renderer/renderer.ts";
+} from "../renderer/renderer";
 import { vec3 } from "gl-matrix";
 import type { RenderingParameters } from "@/renderer/renderingParametersBuffer";
 import { CONFIG } from "../Constants";

@@ -5,8 +5,8 @@ import {
 } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
 import { TransferFunction } from "./TransferFunction";
-import { RootStore } from "../RootStore.ts";
-import type { VolumeRenderer } from "../../renderer/renderer.ts";
+import { RootStore } from "../RootStore";
+import type { VolumeRenderer } from "../../renderer/renderer";
 
 export const VolVisSettings = types
   .model({

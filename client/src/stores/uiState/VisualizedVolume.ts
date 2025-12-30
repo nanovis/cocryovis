@@ -20,11 +20,11 @@ import type { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
 import { downloadRawFile } from "../../api/volumeData";
 import { getVolumeWithSparseVolumes } from "../../api/volume";
 import ToastContainer from "../../utils/ToastContainer";
-import type { VolumeRenderer } from "../../renderer/renderer.ts";
-import { RootStore } from "../RootStore.ts";
+import type { VolumeRenderer } from "../../renderer/renderer";
+import { RootStore } from "../RootStore";
 import { clamp } from "../../utils/Helpers";
-import type { ClippingPlaneType } from "../../renderer/volume/clippingPlaneManager.ts";
-import type { OrbitCameraController } from "../../utils/orbitCameraController.ts";
+import type { ClippingPlaneType } from "../../renderer/volume/clippingPlaneManager";
+import type { OrbitCameraController } from "../../utils/orbitCameraController";
 
 export type visualizedObjectInstances =
   | VolumeInstance

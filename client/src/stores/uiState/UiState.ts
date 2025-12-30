@@ -13,9 +13,9 @@ import { VisualizedVolume } from "./VisualizedVolume";
 import { RenderSettings } from "./RenderSettings";
 import { UploadDialog } from "./UploadDialog";
 import { TiltSeriesDialog } from "./TiltSeriesDialog";
-import { visualizeVolumeFromConfig } from "../../utils/volumeVisualization.ts";
-import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager.ts";
-import { RootStore } from "../RootStore.ts";
+import { visualizeVolumeFromConfig } from "../../utils/volumeVisualization";
+import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager";
+import { RootStore } from "../RootStore";
 
 export const UiState = types
   .model({

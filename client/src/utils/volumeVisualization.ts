@@ -1,21 +1,21 @@
 import { getType } from "mobx-state-tree";
-import type { VolVisSettingsSnapshotIn } from "../stores/uiState/VolVisSettings.ts";
+import type { VolVisSettingsSnapshotIn } from "../stores/uiState/VolVisSettings";
 import type {
   visualizedObjectInstances,
   VisualizedVolumeSnapshotIn,
-} from "../stores/uiState/VisualizedVolume.ts";
-import { Volume } from "../stores/userState/VolumeModel.ts";
-import { Result } from "../stores/userState/ResultModel.ts";
-import { SparseLabelVolume } from "../stores/userState/SparseVolumeModel.ts";
-import { PseudoLabelVolume } from "../stores/userState/PseudoVolumeModel.ts";
-import { VolumeData, VolumeDescriptor } from "./volumeSettings.ts";
-import type { VolumeRenderer } from "../renderer/renderer.ts";
+} from "../stores/uiState/VisualizedVolume";
+import { Volume } from "../stores/userState/VolumeModel";
+import { Result } from "../stores/userState/ResultModel";
+import { SparseLabelVolume } from "../stores/userState/SparseVolumeModel";
+import { PseudoLabelVolume } from "../stores/userState/PseudoVolumeModel";
+import { VolumeData, VolumeDescriptor } from "./volumeSettings";
+import type { VolumeRenderer } from "../renderer/renderer";
 import {
   visualizationConfigSchema,
   volumeSettings,
 } from "#schemas/componentSchemas/volume-settings-schema.mjs";
-import type { FileMap } from "./Helpers.ts";
-import type { VisualizationDescriptor } from "../renderer/volume/volumeManager.ts";
+import type { FileMap } from "./Helpers";
+import type { VisualizationDescriptor } from "../renderer/volume/volumeManager";
 
 const CONFIG_FILE_NAME = "config.json";
 

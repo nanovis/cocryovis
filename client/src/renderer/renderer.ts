@@ -3,12 +3,12 @@ import volumeFragmentShader from "@/assets/shaders/volume.fs.wgsl?raw";
 import {
   RenderingParametersBuffer,
   type RenderingParameters,
-} from "./renderingParametersBuffer.ts";
-import { Camera, type CameraParams } from "./core/camera.ts";
-import { BindGroup } from "./core/bindGroup.ts";
-import { VolumeManager } from "./volume/volumeManager.ts";
-import { ClippingPlaneManager } from "./volume/clippingPlaneManager.ts";
-import { AnnotationManager } from "./annotations/annotationManager.ts";
+} from "./renderingParametersBuffer";
+import { Camera, type CameraParams } from "./core/camera";
+import { BindGroup } from "./core/bindGroup";
+import { VolumeManager } from "./volume/volumeManager";
+import { ClippingPlaneManager } from "./volume/clippingPlaneManager";
+import { AnnotationManager } from "./annotations/annotationManager";
 
 export interface DeviceInfo {
   adapter: GPUAdapter;

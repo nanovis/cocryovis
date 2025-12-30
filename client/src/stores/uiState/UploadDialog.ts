@@ -7,7 +7,7 @@ import {
   VolumeDescriptor,
   type VolumeDescriptorSettings,
   volumeDescriptorSettingsSchema,
-} from "../../utils/volumeSettings.ts";
+} from "../../utils/volumeSettings";
 import * as Utils from "../../utils/Helpers";
 import type { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 import { getTomographyMetadataFromCryoETId } from "../../api/cryoEt";

@@ -1,4 +1,4 @@
-import { WebGpuBuffer } from "../core/webGpuBuffer.ts";
+import { WebGpuBuffer } from "../core/webGpuBuffer";
 import { vec4 } from "gl-matrix";
 
 export interface ClippingParameters {

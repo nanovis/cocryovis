@@ -1,4 +1,4 @@
-import { WebGpuBuffer } from "../core/webGpuBuffer.ts";
+import { WebGpuBuffer } from "../core/webGpuBuffer";
 import type { vec3 } from "gl-matrix";
 
 interface AnnotationData {

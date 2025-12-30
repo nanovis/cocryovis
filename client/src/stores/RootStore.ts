@@ -8,8 +8,8 @@ import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
 import ToastContainer from "../utils/ToastContainer";
 import { getErrorMessage } from "../utils/Helpers";
-import type { VolumeRenderer } from "../renderer/renderer.ts";
-import type { OrbitCameraController } from "../utils/orbitCameraController.ts";
+import type { VolumeRenderer } from "../renderer/renderer";
+import type { OrbitCameraController } from "../utils/orbitCameraController";
 
 const CookieName = "LoggedUser";
 

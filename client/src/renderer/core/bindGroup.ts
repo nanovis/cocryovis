@@ -1,5 +1,5 @@
-import { WebGpuBuffer } from "./webGpuBuffer.ts";
-import type { WebGpuTexture } from "./webGpuTexture.ts";
+import { WebGpuBuffer } from "./webGpuBuffer";
+import type { WebGpuTexture } from "./webGpuTexture";
 
 class BindGroupEntry {
   private bindGroupLayoutEntry: GPUBindGroupLayoutEntry;

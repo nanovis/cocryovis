@@ -31,8 +31,8 @@ import {
 import {
   fileTypeOptions,
   type VolumeDescriptor,
-} from "../../utils/volumeSettings.ts";
-import { volumeSettingsFromJson } from "../../utils/volumeSettings.ts";
+} from "../../utils/volumeSettings";
+import { volumeSettingsFromJson } from "../../utils/volumeSettings";
 import React from "react";
 import type { UploadDialogInstance } from "../../stores/uiState/UploadDialog";
 import {
