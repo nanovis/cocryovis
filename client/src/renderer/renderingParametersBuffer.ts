@@ -2,8 +2,6 @@ import { vec4 } from "gl-matrix";
 import { WebGpuBuffer } from "./core/webGpuBuffer";
 
 export interface RenderingParameters {
-  clippingPlaneOrigin: vec4;
-  clippingPlaneNormal: vec4;
   clearColor: vec4;
 
   enableEarlyRayTermination: boolean;
@@ -11,25 +9,22 @@ export interface RenderingParameters {
   enableAmbientOcclusion: boolean;
   enableSoftShadows: boolean;
 
-  clippingEnabled: boolean;
   enableAnnotations: boolean;
   sampleRate: number;
   aoRadius: number;
-
   aoStrength: number;
+
   aoNumSamples: number;
   shadowQuality: number;
   shadowStrength: number;
-
   shadowRadius: number;
+
   shadowMin: number;
   shadowMax: number;
 }
 
 export class RenderingParametersBuffer extends WebGpuBuffer {
   params: RenderingParameters = {
-    clippingPlaneOrigin: vec4.create(),
-    clippingPlaneNormal: vec4.create(),
     clearColor: vec4.fromValues(0, 0, 0, 1),
 
     enableEarlyRayTermination: true,
@@ -37,17 +32,16 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     enableAmbientOcclusion: true,
     enableSoftShadows: true,
 
-    clippingEnabled: false,
-    enableAnnotations: true,
+    enableAnnotations: false,
     sampleRate: 5.0,
     aoRadius: 1.0,
-
     aoStrength: 0.9,
+
     aoNumSamples: 5,
     shadowQuality: 1.0,
     shadowStrength: 0.5,
-
     shadowRadius: 0.2,
+
     shadowMin: 0.0,
     shadowMax: 1.0,
   };
@@ -87,14 +81,6 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     const le = true;
 
     for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.params.clippingPlaneOrigin[i], le);
-    o += 16;
-
-    for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.params.clippingPlaneNormal[i], le);
-    o += 16;
-
-    for (let i = 0; i < 4; i++)
       view.setFloat32(o + i * 4, this.params.clearColor[i], le);
     o += 16;
 
@@ -107,31 +93,31 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
     view.setInt32(o, Number(this.params.enableSoftShadows), le);
     o += 4;
 
-    view.setInt32(o, Number(this.params.clippingEnabled), le);
-    o += 4;
     view.setInt32(o, Number(this.params.enableAnnotations), le);
     o += 4;
     view.setFloat32(o, this.params.sampleRate, le);
     o += 4;
     view.setFloat32(o, this.params.aoRadius, le);
     o += 4;
-
     view.setFloat32(o, this.params.aoStrength, le);
     o += 4;
+
     view.setInt32(o, this.params.aoNumSamples, le);
     o += 4;
     view.setFloat32(o, this.params.shadowQuality, le);
     o += 4;
     view.setFloat32(o, this.params.shadowStrength, le);
     o += 4;
-
     view.setFloat32(o, this.params.shadowRadius, le);
     o += 4;
+
     view.setFloat32(o, this.params.shadowMin, le);
     o += 4;
     view.setFloat32(o, this.params.shadowMax, le);
     o += 4;
     // buffer
+    view.setInt32(o, 0, le);
+    o += 4;
     view.setInt32(o, 0, le);
     o += 4;
 

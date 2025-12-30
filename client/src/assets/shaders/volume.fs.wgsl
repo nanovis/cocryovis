@@ -28,8 +28,6 @@ struct ChannelData
 
 struct Param
 {
-	clippingPlaneOrigin : vec4<f32>,
-	clippingPlaneNormal : vec4<f32>,
 	clearColor : vec4<f32>,
 
 	enableEarlyRayTermination : i32,
@@ -37,17 +35,16 @@ struct Param
 	enableAmbientOcclusion : i32,
 	enableSoftShadows : i32,
 
-  clippingEnabled : i32,
   enableAnnotations : i32,
 	sampleRate : f32,
 	aoRadius : f32,
-
   aoStrength : f32,
+
   aoNumSamples : i32,
   shadowQuality : f32,
   shadowStrength : f32,
-
   shadowRadius : f32,
+
   shadowMin: f32,
   shadowMax: f32,
 }
