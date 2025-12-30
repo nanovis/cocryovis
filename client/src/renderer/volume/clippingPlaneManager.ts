@@ -1,7 +1,7 @@
 import { ClippingParametersBuffer } from "./clippingParametersBuffer.ts";
 import { mat4, vec3, vec4 } from "gl-matrix";
-import { clamp } from "./math.ts";
-import type { Camera } from "./camera.ts";
+import { clamp } from "../utilities/math.ts";
+import type { Camera } from "../core/camera.ts";
 import type { VolumeManager } from "./volumeManager.ts";
 
 export type ClippingPlaneType = "view-aligned" | "x" | "y" | "z" | "none";

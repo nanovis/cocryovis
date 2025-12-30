@@ -18,7 +18,7 @@ import VolumeUploadDialog from "../shared/VolumeUploadDialog";
 import { VolumeData, VolumeDescriptor } from "../../utils/volumeSettings.ts";
 import ToastContainer from "../../utils/ToastContainer";
 import { convertMRCToRaw } from "../../utils/MrcParser.ts";
-import type { VisualizationDescriptor } from "../../renderer/volumeManager.ts";
+import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager.ts";
 
 const enum WidgetIndices {
   Visualization = 0,

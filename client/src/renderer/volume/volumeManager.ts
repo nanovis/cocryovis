@@ -1,8 +1,8 @@
 import { Volume } from "./volume.ts";
 import { ChannelData } from "./channelData.ts";
-import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
-import { pickDefaultTF } from "../utils/Helpers.ts";
-import { CONFIG } from "../Constants";
+import type { VolumeDescriptor } from "../../utils/volumeSettings.ts";
+import { pickDefaultTF } from "../../utils/Helpers.ts";
+import { CONFIG } from "../../Constants.ts";
 import { VolumeParameterBuffer } from "./volumeParameterBuffer.ts";
 import { mat4 } from "gl-matrix";
 

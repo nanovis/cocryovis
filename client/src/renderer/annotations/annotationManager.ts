@@ -4,14 +4,14 @@ import clear3dShader from "../../assets/shaders/clear3d.comp.wgsl?raw";
 import annotateReadWriteShader from "../../assets/shaders/annotate_readwrite.comp.wgsl?raw";
 import clear3dReadWriteShader from "../../assets/shaders/clear3d_readwrite.comp.wgsl?raw";
 
-import { BindGroup } from "../bindGroup.ts";
+import { BindGroup } from "../core/bindGroup.ts";
 import { AnnotationParametersBuffer } from "./annotationParametersBuffer.ts";
 import { AnnotationVolume } from "./annotationVolume.ts";
-import type { VolumeManager } from "../volumeManager.ts";
+import type { VolumeManager } from "../volume/volumeManager.ts";
 import { mat4, vec3, vec4 } from "gl-matrix";
-import type { Camera } from "../camera.ts";
-import { intersectRayPlane } from "../math.ts";
-import type { ClippingPlaneManager } from "../clippingPlaneManager.ts";
+import type { Camera } from "../core/camera.ts";
+import { intersectRayPlane } from "../utilities/math.ts";
+import type { ClippingPlaneManager } from "../volume/clippingPlaneManager.ts";
 import type { RenderingParametersBuffer } from "../renderingParametersBuffer.ts";
 import { AnnotationsDataBuffer } from "./annotationsDataBuffer.ts";
 

@@ -1,6 +1,6 @@
 import { streamVolumesToGPU } from "./volumeLoader.ts";
-import type { VolumeDescriptor } from "../utils/volumeSettings.ts";
-import { WebGpuTexture } from "./webGpuTexture.ts";
+import type { VolumeDescriptor } from "../../utils/volumeSettings.ts";
+import { WebGpuTexture } from "../core/webGpuTexture.ts";
 
 export class Volume extends WebGpuTexture {
   async loadData(volumeDescriptors: VolumeDescriptor[]) {

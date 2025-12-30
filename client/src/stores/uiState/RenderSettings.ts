@@ -10,7 +10,7 @@ import {
   type VolumeRenderer,
 } from "../../renderer/renderer.ts";
 import { RootStore } from "../RootStore.ts";
-import { clamp } from "../../renderer/math.ts";
+import { clamp } from "../../renderer/utilities/math.ts";
 
 export const RenderSettings = types
   .model({

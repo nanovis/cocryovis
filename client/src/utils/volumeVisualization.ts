@@ -15,7 +15,7 @@ import {
   volumeSettings,
 } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type { FileMap } from "./Helpers.ts";
-import type { VisualizationDescriptor } from "../renderer/volumeManager.ts";
+import type { VisualizationDescriptor } from "../renderer/volume/volumeManager.ts";
 
 const CONFIG_FILE_NAME = "config.json";
 

@@ -1,5 +1,5 @@
-import { WebGpuTexture } from "../webGpuTexture.ts";
-import type { VolumeManager } from "../volumeManager.ts";
+import { WebGpuTexture } from "../core/webGpuTexture.ts";
+import type { VolumeManager } from "../volume/volumeManager.ts";
 
 export class AnnotationVolume extends WebGpuTexture {
   private readonly volumeManager: VolumeManager;

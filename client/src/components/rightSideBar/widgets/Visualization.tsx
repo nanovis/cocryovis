@@ -31,7 +31,7 @@ import ShortcutKey from "../../shared/ShortcutKey";
 import { addAnnotations } from "../../../api/volume";
 import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
 import ToastContainer from "../../../utils/ToastContainer";
-import type { ClippingPlaneType } from "../../../renderer/clippingPlaneManager.ts";
+import type { ClippingPlaneType } from "../../../renderer/volume/clippingPlaneManager.ts";
 
 const useStyles = makeStyles({
   uploadSection: {

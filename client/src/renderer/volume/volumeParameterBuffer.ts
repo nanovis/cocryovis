@@ -1,4 +1,4 @@
-import { WebGpuBuffer } from "./webGpuBuffer.ts";
+import { WebGpuBuffer } from "../core/webGpuBuffer.ts";
 
 export interface VolumeParameters {
   rawVolumeChannel: number;

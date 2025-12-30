@@ -23,7 +23,7 @@ import ToastContainer from "../../utils/ToastContainer";
 import type { VolumeRenderer } from "../../renderer/renderer.ts";
 import { RootStore } from "../RootStore.ts";
 import { clamp } from "../../utils/Helpers";
-import type { ClippingPlaneType } from "../../renderer/clippingPlaneManager.ts";
+import type { ClippingPlaneType } from "../../renderer/volume/clippingPlaneManager.ts";
 import type { OrbitCameraController } from "../../utils/orbitCameraController.ts";
 
 export type visualizedObjectInstances =

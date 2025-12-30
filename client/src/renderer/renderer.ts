@@ -4,10 +4,10 @@ import {
   RenderingParametersBuffer,
   type RenderingParameters,
 } from "./renderingParametersBuffer.ts";
-import { Camera, type CameraParams } from "./camera.ts";
-import { BindGroup } from "./bindGroup.ts";
-import { VolumeManager } from "./volumeManager.ts";
-import { ClippingPlaneManager } from "./clippingPlaneManager.ts";
+import { Camera, type CameraParams } from "./core/camera.ts";
+import { BindGroup } from "./core/bindGroup.ts";
+import { VolumeManager } from "./volume/volumeManager.ts";
+import { ClippingPlaneManager } from "./volume/clippingPlaneManager.ts";
 import { AnnotationManager } from "./annotations/annotationManager.ts";
 
 export interface DeviceInfo {
