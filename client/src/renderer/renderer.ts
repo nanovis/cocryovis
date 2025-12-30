@@ -52,16 +52,58 @@ export async function initializeDevice(
     ...VolumeRenderer.REQUIRED_LIMITS,
   };
 
-  console.log("Requesting device with limits:", requiredLimits);
+  let device: GPUDevice | undefined;
 
-  const deviceDescriptor: GPUDeviceDescriptor = {
-    ...deviceOptions,
-    requiredLimits: requiredLimits,
-  };
+  const baseRequiredLimits: Partial<RequiredLimits> =
+    deviceOptions?.requiredLimits ?? {};
+  const baseFeatures: Iterable<GPUFeatureName> =
+    deviceOptions?.requiredFeatures ?? [];
 
-  const device = await adapter.requestDevice(deviceDescriptor);
+  const potentialRequiredLimits: Partial<RequiredLimits>[] = [
+    {
+      ...baseRequiredLimits,
+      ...requiredLimits,
+    },
+  ];
+  const potentialRequiredFeatures: Array<GPUFeatureName[]> = [
+    [...baseFeatures, ...VolumeRenderer.OPTIONAL_FEATURES],
+    [...baseFeatures],
+  ];
 
-  console.log("Obtained device with limits:", device.limits);
+  const deviceDescriptors: GPUDeviceDescriptor[] = [];
+  for (const requiredLimits of potentialRequiredLimits) {
+    for (const requiredFeatures of potentialRequiredFeatures) {
+      deviceDescriptors.push({
+        ...deviceOptions,
+        requiredLimits,
+        requiredFeatures,
+      });
+    }
+  }
+
+  for (const deviceDescriptor of deviceDescriptors) {
+    try {
+      console.log("Requesting device with limits:", deviceDescriptor);
+      device = await adapter.requestDevice(deviceDescriptor);
+      break;
+    } catch (e) {
+      if (e instanceof TypeError) {
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  if (!device) {
+    throw new Error("No GPU device with the required limits could be created");
+  }
+
+  console.log(
+    "Obtained device with limits:",
+    device.limits,
+    "and features",
+    Array.from(device.features.values())
+  );
 
   const context = canvas.getContext("webgpu");
 
@@ -135,9 +177,12 @@ const DEPTH_TEXTURE_FORMAT: GPUTextureFormat = "depth24plus";
 export type RendererCameraParameters = Omit<CameraParams, "aspectRatio">;
 
 export class VolumeRenderer {
-  static REQUIRED_LIMITS: Partial<RequiredLimits> = {
+  static readonly REQUIRED_LIMITS: Partial<RequiredLimits> = {
     maxComputeInvocationsPerWorkgroup: 512,
-  };
+  } as const;
+  static readonly OPTIONAL_FEATURES: Iterable<GPUFeatureName> = [
+    "texture-formats-tier2",
+  ] as const;
 
   device: GPUDevice;
   context: GPUCanvasContext | undefined;
@@ -166,10 +211,12 @@ export class VolumeRenderer {
       output,
       context,
       parameters,
+      forceWriteOnlyAnnotations,
     }: {
       output?: OutputInfo;
       context?: GPUCanvasContext;
       parameters?: Partial<RenderingParameters>;
+      forceWriteOnlyAnnotations?: boolean;
     } = {}
   ) {
     this.device = device;
@@ -206,7 +253,8 @@ export class VolumeRenderer {
       this.volumeManager,
       this.camera,
       this.clippingPlaneManager,
-      this.renderingParameters
+      this.renderingParameters,
+      forceWriteOnlyAnnotations
     );
 
     this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);

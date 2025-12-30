@@ -6,6 +6,7 @@ import {
 } from "../renderer/renderer.ts";
 import { vec3 } from "gl-matrix";
 import type { RenderingParameters } from "../renderer/renderingParametersBuffer.ts";
+import { CONFIG } from "../Constants.mjs";
 
 const defaultCameraParameters: RendererCameraParameters = {
   position: vec3.fromValues(0, 0, -3),
@@ -47,6 +48,7 @@ export default function useRenderer(
         {
           context: deviceInfo.context,
           parameters: parameters,
+          forceWriteOnlyAnnotations: CONFIG.forceWriteOnlyAnnotations,
         }
       );
       rendererRef.current = renderer;

@@ -1,6 +1,8 @@
-import annotateComputeShader from "../../assets/shaders/annotate.comp.wgsl?raw";
-import copyKernelComputeShader from "../../assets/shaders/copy_kernel.comp.wgsl?raw";
-import clear3dComputeShader from "../../assets/shaders/clear3d.comp.wgsl?raw";
+import annotateShader from "../../assets/shaders/annotate.comp.wgsl?raw";
+import copyKernelShader from "../../assets/shaders/copy_kernel.comp.wgsl?raw";
+import clear3dShader from "../../assets/shaders/clear3d.comp.wgsl?raw";
+import annotateReadWriteShader from "../../assets/shaders/annotate_readwrite.comp.wgsl?raw";
+import clear3dReadWriteShader from "../../assets/shaders/clear3d_readwrite.comp.wgsl?raw";
 
 import { BindGroup } from "../bindGroup.ts";
 import { AnnotationParametersBuffer } from "./annotationParametersBuffer.ts";
@@ -37,10 +39,31 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
   ],
 };
 
+const readWriteGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+  entries: [
+    {
+      binding: 0,
+      visibility: GPUShaderStage.COMPUTE,
+      buffer: { type: "uniform" },
+    },
+    {
+      binding: 1,
+      visibility: GPUShaderStage.COMPUTE,
+      storageTexture: {
+        access: "read-write",
+        format: "rgba8unorm",
+        viewDimension: "3d",
+      },
+    },
+  ],
+};
+
 export class AnnotationManager {
   private static readonly ANNOTATE_WORKGROUP_SIZE = 4;
   private static readonly CLEAR_WORKGROUP_SIZE = 4;
   private static readonly EPSILON = 0.002;
+
+  private readonly readwrite: boolean;
 
   private readonly device: GPUDevice;
   private volumeManager: VolumeManager;
@@ -52,12 +75,13 @@ export class AnnotationManager {
   readonly annotationsDataBuffer: AnnotationsDataBuffer;
 
   private readonly annotateBindGroup: BindGroup;
-  private readonly copyKernelBindGroup: BindGroup;
+  private readonly copyKernelBindGroup: BindGroup | undefined;
 
-  readonly annotationVolumes: [AnnotationVolume, AnnotationVolume];
+  readonly pingVolume: AnnotationVolume;
+  readonly pongVolume: AnnotationVolume | undefined;
 
   private readonly annotatePipeline: GPUComputePipeline;
-  private readonly copyKernelPipeline: GPUComputePipeline;
+  private readonly copyKernelPipeline: GPUComputePipeline | undefined;
   private readonly clear3dPipeline: GPUComputePipeline;
 
   private previousMousePosition: { x: number; y: number } | undefined;
@@ -67,8 +91,20 @@ export class AnnotationManager {
     volumeManager: VolumeManager,
     camera: Camera,
     clippingPlaneManager: ClippingPlaneManager,
-    renderingParametersBuffer: RenderingParametersBuffer
+    renderingParametersBuffer: RenderingParametersBuffer,
+    forceWriteOnlyPipeline: boolean = false
   ) {
+    this.readwrite =
+      !forceWriteOnlyPipeline &&
+      device.features.has("texture-formats-tier2") &&
+      navigator.gpu.wgslLanguageFeatures.has(
+        "readonly_and_readwrite_storage_textures"
+      );
+    console.log(
+      "Annotation pipeline variant: ",
+      this.readwrite ? "Read-Write" : "Write-Only"
+    );
+
     this.device = device;
     this.volumeManager = volumeManager;
     this.camera = camera;
@@ -78,15 +114,18 @@ export class AnnotationManager {
     this.annotationParameterBuffer = new AnnotationParametersBuffer(device);
     this.annotationsDataBuffer = new AnnotationsDataBuffer(device);
 
-    this.annotationVolumes = [
-      new AnnotationVolume(device, volumeManager, "Annotation Volume Ping"),
-      new AnnotationVolume(device, volumeManager, "Annotation Volume Pong"),
-    ];
-
-    this.annotateBindGroup = this.setupBindGroup(
-      this.annotationVolumes[0],
-      this.annotationVolumes[1]
+    this.pingVolume = new AnnotationVolume(
+      device,
+      volumeManager,
+      "Annotation Volume Ping"
     );
+    this.pongVolume = new AnnotationVolume(
+      device,
+      volumeManager,
+      "Annotation Volume Pong"
+    );
+
+    this.annotateBindGroup = this.createAnnotateBindGroup();
 
     const pipelineLayout = device.createPipelineLayout({
       label: "Annotation Pipeline Layout",
@@ -99,7 +138,7 @@ export class AnnotationManager {
       compute: {
         module: device.createShaderModule({
           label: "Annotation Compute Shader",
-          code: annotateComputeShader,
+          code: this.readwrite ? annotateReadWriteShader : annotateShader,
         }),
       },
     });
@@ -110,47 +149,64 @@ export class AnnotationManager {
       compute: {
         module: device.createShaderModule({
           label: "Clear 3D Compute Shader",
-          code: clear3dComputeShader,
+          code: this.readwrite ? clear3dReadWriteShader : clear3dShader,
         }),
       },
     });
 
-    this.copyKernelBindGroup = this.setupBindGroup(
-      this.annotationVolumes[1],
-      this.annotationVolumes[0]
-    );
+    if (!this.readwrite) {
+      this.copyKernelBindGroup = new BindGroup(
+        this.device,
+        bindGroupLayoutDescriptor
+      );
+      this.copyKernelBindGroup.setResource(0, this.annotationParameterBuffer);
+      this.copyKernelBindGroup.setResource(1, this.pingVolume);
+      this.copyKernelBindGroup.setResource(2, this.pongVolume);
 
-    this.copyKernelPipeline = this.device.createComputePipeline({
-      label: "Copy Kernel Compute Pipeline",
-      layout: device.createPipelineLayout({
-        label: "Copy Kernel Pipeline Layout",
-        bindGroupLayouts: [this.copyKernelBindGroup.getBindGroupLayout()],
-      }),
-      compute: {
-        module: device.createShaderModule({
-          label: "Copy Kernel Compute Shader",
-          code: copyKernelComputeShader,
+      this.copyKernelPipeline = this.device.createComputePipeline({
+        label: "Copy Kernel Compute Pipeline",
+        layout: device.createPipelineLayout({
+          label: "Copy Kernel Pipeline Layout",
+          bindGroupLayouts: [this.copyKernelBindGroup.getBindGroupLayout()],
         }),
-      },
-    });
+        compute: {
+          module: device.createShaderModule({
+            label: "Copy Kernel Compute Shader",
+            code: copyKernelShader,
+          }),
+        },
+      });
+    }
   }
 
-  private setupBindGroup(
-    readVolume: AnnotationVolume,
-    writeVolume: AnnotationVolume
-  ) {
-    const bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
-    bindGroup.setResource(0, this.annotationParameterBuffer);
-    bindGroup.setResource(1, writeVolume);
-    bindGroup.setResource(2, readVolume);
-    return bindGroup;
+  private createAnnotateBindGroup() {
+    if (this.readwrite) {
+      const bindGroup = new BindGroup(
+        this.device,
+        readWriteGroupLayoutDescriptor
+      );
+      bindGroup.setResource(0, this.annotationParameterBuffer);
+      bindGroup.setResource(1, this.pingVolume);
+      return bindGroup;
+    } else {
+      if (!this.pongVolume) {
+        throw new Error(
+          "Without read write storage textures, annotation requires pong volume"
+        );
+      }
+      const bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
+      bindGroup.setResource(0, this.annotationParameterBuffer);
+      bindGroup.setResource(1, this.pongVolume);
+      bindGroup.setResource(2, this.pingVolume);
+      return bindGroup;
+    }
   }
 
   getAnnotationVolume() {
-    return this.annotationVolumes[0];
+    return this.pingVolume;
   }
 
-  computeBlockSizeFromKernel(kernelSize: number) {
+  private computeBlockSizeFromKernel(kernelSize: number) {
     return Math.ceil(
       (kernelSize * 2 + 1) / AnnotationManager.ANNOTATE_WORKGROUP_SIZE
     );
@@ -279,9 +335,9 @@ export class AnnotationManager {
     });
 
     const annotateBindGroup = this.annotateBindGroup.getGPUBindGroup();
-    const copyKernelBindGroup = this.copyKernelBindGroup.getGPUBindGroup();
+    const copyKernelBindGroup = this.copyKernelBindGroup?.getGPUBindGroup();
 
-    if (!annotateBindGroup || !copyKernelBindGroup) {
+    if (!annotateBindGroup || (!this.readwrite && !copyKernelBindGroup)) {
       return;
     }
 
@@ -297,20 +353,24 @@ export class AnnotationManager {
     pass.setBindGroup(0, annotateBindGroup);
     pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
 
-    pass.setPipeline(this.copyKernelPipeline);
-    pass.setBindGroup(0, copyKernelBindGroup);
-    pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
+    if (!this.readwrite) {
+      if (!this.copyKernelPipeline) {
+        throw new Error("Copy kernel pipeline not found");
+      }
+      pass.setPipeline(this.copyKernelPipeline);
+      pass.setBindGroup(0, copyKernelBindGroup);
+      pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
+    }
 
     pass.end();
 
     this.device.queue.submit([encoder.finish()]);
   }
 
-  computeBlockSizeFromVolumeSize(volumeSize: number) {
+  private computeBlockSizeFromVolumeSize(volumeSize: number) {
     return Math.ceil(volumeSize / AnnotationManager.CLEAR_WORKGROUP_SIZE);
   }
 
-  // TODO make a single compute shader that clears both
   clearAnnotations(channelIndex: number) {
     const volumeTexture = this.volumeManager.volume.getTexture();
     if (!volumeTexture) {
@@ -320,9 +380,9 @@ export class AnnotationManager {
     const annotateBindGroup = this.annotateBindGroup.getGPUBindGroup();
 
     // This is probably not the best idea, but lets assume those bind groups stay aligned
-    const copyKernelBindGroup = this.copyKernelBindGroup.getGPUBindGroup();
+    const copyKernelBindGroup = this.copyKernelBindGroup?.getGPUBindGroup();
 
-    if (!annotateBindGroup || !copyKernelBindGroup) {
+    if (!annotateBindGroup || (!this.readwrite && !copyKernelBindGroup)) {
       return;
     }
 
@@ -353,8 +413,10 @@ export class AnnotationManager {
     pass.setBindGroup(0, annotateBindGroup);
     pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
 
-    pass.setBindGroup(1, copyKernelBindGroup);
-    pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
+    if (!this.readwrite) {
+      pass.setBindGroup(1, copyKernelBindGroup);
+      pass.dispatchWorkgroups(numBlocksX, numBlocksY, numBlocksZ);
+    }
 
     pass.end();
 
