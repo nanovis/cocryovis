@@ -1,4 +1,4 @@
-import type { Camera } from "../renderer/core/camera";
+import type { Camera } from "@/renderer/core/camera";
 import { clamp } from "./Helpers";
 
 export class OrbitCameraController {

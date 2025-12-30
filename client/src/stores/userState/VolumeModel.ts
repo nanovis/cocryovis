@@ -18,7 +18,7 @@ import {
   type FileTypeOptions,
   type VolumeDescriptorSettings,
   type VolumeSettings,
-} from "../../utils/volumeSettings";
+} from "@/utils/volumeSettings";
 import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import type z from "zod";
 import type {
@@ -31,14 +31,14 @@ import type {
 } from "#schemas/volume-path-schema.mjs";
 import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";
-import { getVolumesFromProjectDeep } from "../../api/volume";
+import { getVolumesFromProjectDeep } from "@/api/volume";
 import * as volumeApi from "../../api/volume";
 import {
   createFromFiles,
   createFromMrcFile,
   createFromUrl,
   deleteVolumeData,
-} from "../../api/volumeData";
+} from "@/api/volumeData";
 import ToastContainer from "../../utils/ToastContainer";
 
 export type LabeledVolumeTypes =

@@ -3,10 +3,10 @@ import {
   initializeDevice,
   type RendererCameraParameters,
   VolumeRenderer,
-} from "../renderer/renderer";
+} from "@/renderer/renderer";
 import { vec3 } from "gl-matrix";
 import type { RenderingParameters } from "@/renderer/renderingParametersBuffer";
-import { CONFIG } from "../Constants";
+import { CONFIG } from "@/Constants";
 
 const defaultCameraParameters: RendererCameraParameters = {
   position: vec3.fromValues(0, 0, -3),

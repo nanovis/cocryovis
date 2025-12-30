@@ -7,10 +7,10 @@ import {
   VolumeDescriptor,
   type VolumeDescriptorSettings,
   volumeDescriptorSettingsSchema,
-} from "../../utils/volumeSettings";
+} from "@/utils/volumeSettings";
 import * as Utils from "../../utils/Helpers";
 import type { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
-import { getTomographyMetadataFromCryoETId } from "../../api/cryoEt";
+import { getTomographyMetadataFromCryoETId } from "@/api/cryoEt";
 import ToastContainer from "../../utils/ToastContainer";
 import type z from "zod";
 

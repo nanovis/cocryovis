@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import useRenderer from "../../hooks/useRenderer";
 import { makeStyles } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../stores/RootStore";
-import { CONFIG } from "../../Constants";
-import { OrbitCameraController } from "../../utils/orbitCameraController";
-import { useCanvasControls } from "../../hooks/useCanvasControls";
+import { useMst } from "@/stores/RootStore";
+import { CONFIG } from "@/Constants";
+import { OrbitCameraController } from "@/utils/orbitCameraController";
+import { useCanvasControls } from "@/hooks/useCanvasControls";
 
 const useStyles = makeStyles({
   canvasContainer: {

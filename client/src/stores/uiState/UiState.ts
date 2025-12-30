@@ -13,8 +13,8 @@ import { VisualizedVolume } from "./VisualizedVolume";
 import { RenderSettings } from "./RenderSettings";
 import { UploadDialog } from "./UploadDialog";
 import { TiltSeriesDialog } from "./TiltSeriesDialog";
-import { visualizeVolumeFromConfig } from "../../utils/volumeVisualization";
-import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager";
+import { visualizeVolumeFromConfig } from "@/utils/volumeVisualization";
+import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 import { RootStore } from "../RootStore";
 
 export const UiState = types

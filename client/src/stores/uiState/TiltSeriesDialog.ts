@@ -5,7 +5,7 @@ import {
   BooleanInputField,
   NumberInputField,
   StringInputFieldType,
-} from "../../utils/Input";
+} from "@/utils/Input";
 
 export const TiltSeriesDialog = types
   .model({

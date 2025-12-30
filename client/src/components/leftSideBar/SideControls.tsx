@@ -6,7 +6,7 @@ import NanoOtzi from "./widgets/NanoOtzi";
 import Models from "./widgets/Models";
 import Local from "./widgets/Local";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../stores/RootStore";
+import { useMst } from "@/stores/RootStore";
 import globalStyles from "../GlobalStyles";
 import {
   Button,
@@ -25,7 +25,7 @@ import {
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import DeleteDialog from "../shared/DeleteDialog";
 import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "../../utils/Helpers";
+import { getErrorMessage } from "@/utils/Helpers";
 
 const enum WidgetIndices {
   Volume = 0,

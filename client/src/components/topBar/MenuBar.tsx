@@ -11,11 +11,11 @@ import {
   PeopleAdd20Filled,
 } from "@fluentui/react-icons";
 import { observer } from "mobx-react-lite";
-import { rootStore, useMst } from "../../stores/RootStore";
+import { rootStore, useMst } from "@/stores/RootStore";
 import ShareProject from "./ShareProject";
 import KaustLogo from "./icons/kaust_logo.svg";
 import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "../../utils/Helpers";
+import { getErrorMessage } from "@/utils/Helpers";
 
 const useStyles = makeStyles({
   menubar: {

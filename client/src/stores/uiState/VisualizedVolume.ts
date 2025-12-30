@@ -17,14 +17,14 @@ import type { PseudoVolumeInstance } from "../userState/PseudoVolumeModel";
 import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
 import type z from "zod";
 import type { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
-import { downloadRawFile } from "../../api/volumeData";
-import { getVolumeWithSparseVolumes } from "../../api/volume";
+import { downloadRawFile } from "@/api/volumeData";
+import { getVolumeWithSparseVolumes } from "@/api/volume";
 import ToastContainer from "../../utils/ToastContainer";
-import type { VolumeRenderer } from "../../renderer/renderer";
+import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "../RootStore";
-import { clamp } from "../../utils/Helpers";
-import type { ClippingPlaneType } from "../../renderer/volume/clippingPlaneManager";
-import type { OrbitCameraController } from "../../utils/orbitCameraController";
+import { clamp } from "@/utils/Helpers";
+import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
+import type { OrbitCameraController } from "@/utils/orbitCameraController";
 
 export type visualizedObjectInstances =
   | VolumeInstance

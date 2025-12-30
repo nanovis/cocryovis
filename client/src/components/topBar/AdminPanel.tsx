@@ -28,10 +28,10 @@ import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
 import type { publicUser } from "#schemas/user-path-schema.mjs";
 import type z from "zod";
-import { adminDeleteUser, getAllUsers } from "../../api/users";
-import { useMst } from "../../stores/RootStore";
+import { adminDeleteUser, getAllUsers } from "@/api/users";
+import { useMst } from "@/stores/RootStore";
 import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "../../utils/Helpers";
+import { getErrorMessage } from "@/utils/Helpers";
 
 const useStyles = makeStyles({
   container: {

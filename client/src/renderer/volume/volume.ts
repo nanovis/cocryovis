@@ -1,5 +1,5 @@
 import { streamVolumesToGPU } from "./volumeLoader";
-import type { VolumeDescriptor } from "../../utils/volumeSettings";
+import type { VolumeDescriptor } from "@/utils/volumeSettings";
 import { WebGpuTexture } from "../core/webGpuTexture";
 
 export class Volume extends WebGpuTexture {

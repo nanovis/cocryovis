@@ -1,21 +1,21 @@
 import { getType } from "mobx-state-tree";
-import type { VolVisSettingsSnapshotIn } from "../stores/uiState/VolVisSettings";
+import type { VolVisSettingsSnapshotIn } from "@/stores/uiState/VolVisSettings";
 import type {
   visualizedObjectInstances,
   VisualizedVolumeSnapshotIn,
-} from "../stores/uiState/VisualizedVolume";
-import { Volume } from "../stores/userState/VolumeModel";
-import { Result } from "../stores/userState/ResultModel";
-import { SparseLabelVolume } from "../stores/userState/SparseVolumeModel";
-import { PseudoLabelVolume } from "../stores/userState/PseudoVolumeModel";
+} from "@/stores/uiState/VisualizedVolume";
+import { Volume } from "@/stores/userState/VolumeModel";
+import { Result } from "@/stores/userState/ResultModel";
+import { SparseLabelVolume } from "@/stores/userState/SparseVolumeModel";
+import { PseudoLabelVolume } from "@/stores/userState/PseudoVolumeModel";
 import { VolumeData, VolumeDescriptor } from "./volumeSettings";
-import type { VolumeRenderer } from "../renderer/renderer";
+import type { VolumeRenderer } from "@/renderer/renderer";
 import {
   visualizationConfigSchema,
   volumeSettings,
 } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type { FileMap } from "./Helpers";
-import type { VisualizationDescriptor } from "../renderer/volume/volumeManager";
+import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 
 const CONFIG_FILE_NAME = "config.json";
 

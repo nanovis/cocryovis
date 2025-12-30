@@ -10,11 +10,11 @@ import {
 import { useState } from "react";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
+import { useMst } from "@/stores/RootStore";
 import UserHistoryTable from "./elements/UserHistoryTable";
 import TaskQueueTable from "./elements/TaskQueueTable";
 import Paganation from "../../shared/Pagination";
-import { getErrorMessage } from "../../../utils/Helpers";
+import { getErrorMessage } from "@/utils/Helpers";
 import ToastContainer from "../../../utils/ToastContainer";
 
 const useStyles = makeStyles({

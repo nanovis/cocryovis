@@ -9,8 +9,8 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
-import { getErrorMessage } from "../../utils/Helpers";
-import { useMst } from "../../stores/RootStore";
+import { getErrorMessage } from "@/utils/Helpers";
+import { useMst } from "@/stores/RootStore";
 
 const useStyles = makeStyles({
   container: {

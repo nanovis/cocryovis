@@ -34,41 +34,41 @@ import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import * as Utils from "../../../utils/Helpers";
 import DeleteDialog from "../../shared/DeleteDialog";
-import { CONFIG } from "../../../Constants";
+import { CONFIG } from "@/Constants";
 import "../../../App.css";
 import globalStyles from "../../GlobalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
 import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
+import { useMst } from "@/stores/RootStore";
 import type {
   LabeledVolumeTypes,
   VolumeInstance,
-} from "../../../stores/userState/VolumeModel";
+} from "@/stores/userState/VolumeModel";
 import {
   WriteAccessTooltipContent,
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
-import type { ResultInstance } from "../../../stores/userState/ResultModel";
-import type { VolumeDescriptor } from "../../../utils/volumeSettings";
+import type { ResultInstance } from "@/stores/userState/ResultModel";
+import type { VolumeDescriptor } from "@/utils/volumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
-import type { SparseVolumeInstance } from "../../../stores/userState/SparseVolumeModel";
-import type { PseudoVolumeInstance } from "../../../stores/userState/PseudoVolumeModel";
-import type { VolVisSettingsSnapshotIn } from "../../../stores/uiState/VolVisSettings";
-import type { VisualizedVolumeSnapshotIn } from "../../../stores/uiState/VisualizedVolume";
-import { DEFAULT_TF } from "../../../DefaultTransferFunctions";
-import { queuePseudoLabelsGeneration } from "../../../api/ilastik";
-import { queueTiltSeriesReconstruction } from "../../../api/cryoEt";
+import type { SparseVolumeInstance } from "@/stores/userState/SparseVolumeModel";
+import type { PseudoVolumeInstance } from "@/stores/userState/PseudoVolumeModel";
+import type { VolVisSettingsSnapshotIn } from "@/stores/uiState/VolVisSettings";
+import type { VisualizedVolumeSnapshotIn } from "@/stores/uiState/VisualizedVolume";
+import { DEFAULT_TF } from "@/DefaultTransferFunctions";
+import { queuePseudoLabelsGeneration } from "@/api/ilastik";
+import { queueTiltSeriesReconstruction } from "@/api/cryoEt";
 import {
   downloadFullVolumeData,
   getVolumeVisualizationFiles,
-} from "../../../api/volumeData";
-import { getResultData } from "../../../api/results";
+} from "@/api/volumeData";
+import { getResultData } from "@/api/results";
 import ToastContainer from "../../../utils/ToastContainer";
 import EditDialog from "./elements/EditDialog";
 import type { JSX } from "react/jsx-runtime";
-import { fileMapToVisualizationConfig } from "../../../utils/volumeVisualization";
+import { fileMapToVisualizationConfig } from "@/utils/volumeVisualization";
 
 const useStyles = makeStyles({
   visualizeButton: {

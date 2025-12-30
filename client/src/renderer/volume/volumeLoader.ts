@@ -1,8 +1,8 @@
 import {
   type VolumeDescriptor,
   type VolumeDescriptorSettings,
-} from "../../utils/volumeSettings";
-import { CONFIG } from "../../Constants";
+} from "@/utils/volumeSettings";
+import { CONFIG } from "@/Constants";
 
 function getVoxelRange(params: VolumeDescriptorSettings): {
   min: number;

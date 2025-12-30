@@ -22,14 +22,14 @@ import {
 } from "@fluentui/react-components";
 import { Document20Regular } from "@fluentui/react-icons";
 import globalStyles from "../GlobalStyles";
-import type { TiltSeriesDialogInstance } from "../../stores/uiState/TiltSeriesDialog";
+import type { TiltSeriesDialogInstance } from "@/stores/uiState/TiltSeriesDialog";
 import {
   BooleanInputValidatedField,
   NumberInputValidatedField,
 } from "./ValidatedFields";
 import { observer } from "mobx-react-lite";
-import type { NumberInputField } from "../../utils/Input";
-import { BooleanInputField } from "../../utils/Input";
+import type { NumberInputField } from "@/utils/Input";
+import { BooleanInputField } from "@/utils/Input";
 import * as Utils from "../../utils/Helpers";
 import ToastContainer from "../../utils/ToastContainer";
 

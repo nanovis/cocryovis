@@ -24,14 +24,14 @@ import { useRef, useState } from "react";
 import * as Utils from "../../../utils/Helpers";
 import globalStyles from "../../GlobalStyles";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
+import { useMst } from "@/stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
-import type { VolVisSettingsInstance } from "../../../stores/uiState/VolVisSettings";
+import type { VolVisSettingsInstance } from "@/stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
-import { addAnnotations } from "../../../api/volume";
-import { updateAnnotations, updateVolumeData } from "../../../api/volumeData";
+import { addAnnotations } from "@/api/volume";
+import { updateAnnotations, updateVolumeData } from "@/api/volumeData";
 import ToastContainer from "../../../utils/ToastContainer";
-import type { ClippingPlaneType } from "../../../renderer/volume/clippingPlaneManager";
+import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 
 const useStyles = makeStyles({
   uploadSection: {

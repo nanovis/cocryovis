@@ -28,18 +28,15 @@ import {
   Checkmark24Filled,
   Info24Regular,
 } from "@fluentui/react-icons";
-import {
-  fileTypeOptions,
-  type VolumeDescriptor,
-} from "../../utils/volumeSettings";
-import { volumeSettingsFromJson } from "../../utils/volumeSettings";
+import { fileTypeOptions, type VolumeDescriptor } from "@/utils/volumeSettings";
+import { volumeSettingsFromJson } from "@/utils/volumeSettings";
 import React from "react";
-import type { UploadDialogInstance } from "../../stores/uiState/UploadDialog";
+import type { UploadDialogInstance } from "@/stores/uiState/UploadDialog";
 import {
   endianOptions,
   formatOptions,
   Tabs,
-} from "../../stores/uiState/UploadDialog";
+} from "@/stores/uiState/UploadDialog";
 import globalStyles from "../GlobalStyles";
 import { observer } from "mobx-react-lite";
 import CZIIIcon from "./CZIIIcon";

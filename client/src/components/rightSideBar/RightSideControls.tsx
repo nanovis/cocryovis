@@ -1,7 +1,7 @@
 import Visualization from "./widgets/Visualization";
 import RenderSettings from "./widgets/RenderSettings";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../stores/RootStore";
+import { useMst } from "@/stores/RootStore";
 import globalStyles from "../GlobalStyles";
 import { Button, tokens, Tooltip } from "@fluentui/react-components";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
@@ -15,10 +15,10 @@ import { useState } from "react";
 import * as Utils from "../../utils/Helpers";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import { VolumeData, VolumeDescriptor } from "../../utils/volumeSettings";
+import { VolumeData, VolumeDescriptor } from "@/utils/volumeSettings";
 import ToastContainer from "../../utils/ToastContainer";
-import { convertMRCToRaw } from "../../utils/MrcParser";
-import type { VisualizationDescriptor } from "../../renderer/volume/volumeManager";
+import { convertMRCToRaw } from "@/utils/MrcParser";
+import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 
 const enum WidgetIndices {
   Visualization = 0,
