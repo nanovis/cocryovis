@@ -155,7 +155,9 @@ export default class PseudoLabeledVolumeData extends VolumeData {
                         id: volumeId,
                     },
                 },
-                dataFile: {},
+                dataFile: {
+                    create: {},
+                },
                 name: Utils.stripExtension(fileName),
             },
             include: { dataFile: true },

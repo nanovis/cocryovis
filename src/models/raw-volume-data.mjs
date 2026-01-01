@@ -116,7 +116,7 @@ export default class RawVolumeData extends VolumeData {
      * @param {number} volumeId
      * @param {PendingUpload} file
      * @param {Prisma.TransactionClient | undefined} [client]
-     * @returns {Promise<object>}
+     * @returns {Promise<RawVolumeDataDB>}
      */
     static async createFromMrcFile(creatorId, volumeId, file, client) {
         return await Volume.withWriteLock(
@@ -153,7 +153,9 @@ export default class RawVolumeData extends VolumeData {
                                     },
                                 },
                                 ...RawVolumeData.fromSettingSchema(settings),
-                                dataFile: {},
+                                dataFile: {
+                                    create: {},
+                                },
                                 name: Utils.stripExtension(rawFileName),
                             },
                         });
@@ -180,7 +182,7 @@ export default class RawVolumeData extends VolumeData {
                                 rawFilePath
                             );
 
-                            return await tx.rawVolumeDataFile.update({
+                            await tx.rawVolumeDataFile.update({
                                 where: {
                                     id: volumeData.dataFileId,
                                 },
@@ -190,6 +192,8 @@ export default class RawVolumeData extends VolumeData {
                                     mrcFilePath: mrcFilePath,
                                 },
                             });
+
+                            return volumeData;
                         } catch (error) {
                             if (folderPath != null) {
                                 await fsPromises.rm(folderPath, {

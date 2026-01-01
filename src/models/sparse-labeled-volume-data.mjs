@@ -148,7 +148,9 @@ export default class SparseLabeledVolumeData extends VolumeData {
                     },
                 },
                 ...SparseLabeledVolumeData.fromSettingSchema(settings),
-                dataFile: {},
+                dataFile: {
+                    create: {},
+                },
                 name: Utils.stripExtension(fileName),
             },
         });
