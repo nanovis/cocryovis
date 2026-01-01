@@ -84,15 +84,24 @@ const useStyles = makeStyles({
     flexWrap: "wrap",
   },
   volumes: {
-    display: "table",
     width: "100%",
+    display: "grid",
+    gridTemplateColumns: "auto auto",
+    alignItems: "center",
   },
   volumesRow: {
-    display: "table-row",
-    "& > *": {
-      display: "table-cell",
-      verticalAlign: "middle",
-    },
+    display: "contents",
+  },
+  volumesHeader: {
+    marginBottom: "8px",
+  },
+  settingsGrid: {
+    display: "grid",
+    gridTemplateColumns: "180px 1fr",
+    alignItems: "center",
+  },
+  settingsGridRow: {
+    display: "contents",
   },
   tfIcon: {
     display: "flex",
@@ -538,86 +547,87 @@ const Visualization = observer(({ open, close }: Props) => {
             </RadioGroup>
           </Field>
 
-          <Field label="Clipping Plane Offset">
-            <Slider
-              disabled={
-                actionsDisabled() || visualizedVolume?.clippingPlane === "none"
-              }
-              value={
-                visualizedVolume?.clippingPlaneOffset
-                  ? visualizedVolume.clippingPlaneOffset * 100
-                  : 0
-              }
-              min={-100}
-              max={100}
-              onChange={(_, data) =>
-                visualizedVolume?.setClippingOffset(data.value / 100)
-              }
-            />
-          </Field>
-
-          <Tooltip
-            content={
+          <div className={classes.settingsGrid}>
+            <div className={classes.settingsGridRow}>
               <Text>
-                Shows raw volume when any clipping plane is enabled
-                <ShortcutKey content="R" />
+                Clipping Plane Offset [{visualizedVolume?.clippingPlaneOffset}]
               </Text>
-            }
-            relationship="description"
-            appearance="inverted"
-            positioning="after"
-          >
-            <Label style={{ display: "flex", alignItems: "center" }}>
-              Show Raw Clipping Plane
-              <Switch
-                labelPosition="before"
-                style={{ marginLeft: 10 }}
-                disabled={
-                  actionsDisabled() ||
-                  visualizedVolume?.rawSettings === undefined ||
-                  visualizedVolume.clippingPlane === "none"
-                }
-                checked={
-                  visualizedVolume?.rawSettings !== undefined &&
-                  visualizedVolume.showRawClippingPlane
-                }
-                min={1}
-                max={200}
-                onChange={(_, data) =>
-                  visualizedVolume?.setShowRawClippingPlane(data.checked)
-                }
-              />
-            </Label>
-          </Tooltip>
-
-          <Tooltip
-            content={
-              <Text>
-                Toggle fullscreen mode <ShortcutKey content="F" />
-              </Text>
-            }
-            relationship="description"
-            appearance="inverted"
-            positioning="after"
-          >
-            <Label style={{ display: "flex", alignItems: "center" }}>
-              Fullscreen
-              <Switch
-                labelPosition="before"
-                style={{ marginLeft: 105 }}
+              <Slider
                 disabled={
                   actionsDisabled() ||
                   visualizedVolume?.clippingPlane === "none"
                 }
-                checked={visualizedVolume?.fullscreen ?? false}
-                min={1}
-                max={200}
+                value={
+                  visualizedVolume?.clippingPlaneOffset
+                    ? visualizedVolume.clippingPlaneOffset * 100
+                    : 0
+                }
+                min={-100}
+                max={100}
                 onChange={(_, data) =>
-                  visualizedVolume?.setFullscreen(data.checked)
+                  visualizedVolume?.setClippingOffset(data.value / 100)
                 }
               />
-            </Label>
-          </Tooltip>
+            </div>
+            <Tooltip
+              content={
+                <Text>
+                  Shows raw volume when any clipping plane is enabled
+                  <ShortcutKey content="R" />
+                </Text>
+              }
+              relationship="description"
+              appearance="inverted"
+              positioning="after"
+            >
+              <div className={classes.settingsGridRow}>
+                <Text>Show Raw Clipping Plane</Text>
+                <Switch
+                  disabled={
+                    actionsDisabled() ||
+                    visualizedVolume?.rawSettings === undefined ||
+                    visualizedVolume.clippingPlane === "none"
+                  }
+                  checked={
+                    visualizedVolume?.rawSettings !== undefined &&
+                    visualizedVolume.showRawClippingPlane
+                  }
+                  min={1}
+                  max={200}
+                  onChange={(_, data) =>
+                    visualizedVolume?.setShowRawClippingPlane(data.checked)
+                  }
+                />
+              </div>
+            </Tooltip>
+
+            <Tooltip
+              content={
+                <Text>
+                  Toggle fullscreen mode <ShortcutKey content="F" />
+                </Text>
+              }
+              relationship="description"
+              appearance="inverted"
+              positioning="after"
+            >
+              <div className={classes.settingsGridRow}>
+                <Text>Fullscreen</Text>
+                <Switch
+                  disabled={
+                    actionsDisabled() ||
+                    visualizedVolume?.clippingPlane === "none"
+                  }
+                  checked={visualizedVolume?.fullscreen ?? false}
+                  min={1}
+                  max={200}
+                  onChange={(_, data) =>
+                    visualizedVolume?.setFullscreen(data.checked)
+                  }
+                />
+              </div>
+            </Tooltip>
+          </div>
 
           <hr
             style={{
@@ -626,15 +636,16 @@ const Visualization = observer(({ open, close }: Props) => {
               borderColor: tokens.colorNeutralBackground1Hover,
             }}
           />
-          <h3 style={{ fontWeight: "100", margin: 0 }}>Volumes(s)</h3>
+          <h3 style={{ fontWeight: "100", margin: 0 }}>Volume(s)</h3>
           {volVisSettings && (
             <>
               <div className={classes.volumes}>
-                <div className={classes.volumesRow}>
-                  <h5>Name</h5>
-                  <h5>Visible</h5>
-                  <h5>Clipping</h5>
-                </div>
+                <Text className={classes.volumesHeader} weight="semibold">
+                  Name
+                </Text>
+                <Text className={classes.volumesHeader} weight="semibold">
+                  Visible
+                </Text>
                 {volumeSettings?.map(
                   (settingsInstance: VolVisSettingsInstance, index: number) => (
                     <div key={index} className={classes.volumesRow}>
@@ -645,12 +656,6 @@ const Visualization = observer(({ open, close }: Props) => {
                           settingsInstance.setVisibility(data.checked);
                         }}
                       />
-                      {/*<Switch*/}
-                      {/*  checked={settingsInstance.clipping}*/}
-                      {/*  onChange={(event) =>*/}
-                      {/*    handleClippingChange(event, settingsInstance)*/}
-                      {/*  }*/}
-                      {/*/>*/}
                     </div>
                   )
                 )}
