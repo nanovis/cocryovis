@@ -15,7 +15,11 @@ import { useState } from "react";
 import * as Utils from "../../utils/Helpers";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
-import { VolumeData, VolumeDescriptor } from "@/utils/volumeSettings";
+import {
+  fetchVolumeFromUrl,
+  VolumeData,
+  VolumeDescriptor,
+} from "@/utils/volumeSettings";
 import ToastContainer from "../../utils/ToastContainer";
 import { convertMRCToRaw } from "@/utils/MrcParser";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
@@ -36,17 +40,32 @@ const SideControls = observer(() => {
     const toastContainer = new ToastContainer();
 
     try {
-      toastContainer.loading("Parsing volume files...");
-
       let descriptor = volumeDescriptor;
 
       if (
         descriptor.volumeData.file &&
         Utils.isMrcFile(descriptor.volumeData.file.name)
       ) {
+        toastContainer.loading("Converting volume files...");
         const { rawFile, settings } = await convertMRCToRaw(
           descriptor.volumeData.file
         );
+        descriptor = new VolumeDescriptor(
+          new VolumeData({ file: rawFile }),
+          settings
+        );
+      } else if (
+        descriptor.volumeData.url !== undefined &&
+        descriptor.volumeData.fileType === "mrc"
+      ) {
+        toastContainer.loading("Downloading volume files...");
+        const file = await fetchVolumeFromUrl(
+          descriptor.volumeData.url,
+          descriptor.volumeData.fileType
+        );
+
+        toastContainer.loading("Converting volume files...");
+        const { rawFile, settings } = await convertMRCToRaw(file);
         descriptor = new VolumeDescriptor(
           new VolumeData({ file: rawFile }),
           settings

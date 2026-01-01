@@ -113,7 +113,7 @@ export class VolumeDescriptor {
   }
 }
 
-async function fetchVolumeFromUrl(
+export async function fetchVolumeFromUrl(
   url: string,
   fileType: FileTypeOptions
 ): Promise<File> {
