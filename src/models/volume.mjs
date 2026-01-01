@@ -2,13 +2,10 @@
 
 import DatabaseModel, { withTransaction } from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
-import SparseLabeledVolumeData from "./sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "./pseudo-labeled-volume-data.mjs";
 import fsPromises from "fs/promises";
 import appConfig from "../tools/config.mjs";
-import Utils from "../tools/utils.mjs";
 import path from "path";
-import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
@@ -228,88 +225,6 @@ export default class Volume extends DatabaseModel {
                 return deletedVolume;
             });
         });
-    }
-
-    /**
-     * @param {number} id
-     * @param {number} creatorId
-     * @typedef {object} xyz
-     * @property {number} x
-     * @property {number} y
-     * @property {number} z
-     * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
-     * @param {Prisma.TransactionClient | undefined} [client]
-     * @returns {Promise<SparseLabelVolumeDataDB>}
-     */
-    static async addAnnotations(id, creatorId, annotations, client) {
-        let tempFolderPath = null;
-
-        return this.withWriteLock(
-            id,
-            [SparseLabeledVolumeData.modelName],
-            async () => {
-                try {
-                    tempFolderPath = Utils.createTemporaryFolder(
-                        Volume.annotationsTempDirectory
-                    );
-
-                    const outputFile =
-                        Utils.stripExtension(annotations[0].volumeName) +
-                        "_annotated.raw";
-                    const outputPath = path.join(tempFolderPath, outputFile);
-                    const settings = await annotationsToVolume(
-                        annotations,
-                        outputPath
-                    );
-                    return await withTransaction(
-                        client,
-                        async (tx) => {
-                            const volume = await tx.volume.findUnique({
-                                where: { id: id },
-                                include: {
-                                    sparseVolumes: true,
-                                },
-                            });
-
-                            if (
-                                volume.sparseVolumes.length >=
-                                appConfig.maxVolumeChannels
-                            ) {
-                                throw new ApiError(
-                                    400,
-                                    "Volume already has maximum number of Manual Labels"
-                                );
-                            }
-
-                            const sparseVolume =
-                                await SparseLabeledVolumeData.fromRawFile(
-                                    outputPath,
-                                    creatorId,
-                                    volume.id,
-                                    settings,
-                                    tx
-                                );
-
-                            return sparseVolume;
-                        },
-                    );
-
-                } finally {
-                    if (tempFolderPath !== null) {
-                        try {
-                            await fsPromises.rm(tempFolderPath, {
-                                force: true,
-                                recursive: true,
-                            });
-                        } catch {
-                            console.error(
-                                `Failed to remove temporary folder: ${tempFolderPath}`
-                            );
-                        }
-                    }
-                }
-            }
-        );
     }
 
     /**

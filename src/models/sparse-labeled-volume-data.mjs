@@ -5,17 +5,14 @@ import prismaManager from "../tools/prisma-manager.mjs";
 import fsPromises from "fs/promises";
 import path from "path";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
-import Volume from "./volume.mjs";
-import { ApiError } from "../tools/error-handler.mjs";
-import { PendingLocalFile, PendingUpload } from "../tools/file-handler.mjs";
 import Utils from "../tools/utils.mjs";
-import { annotationsToVolume } from "../tools/annotations-to-volume.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import { Prisma } from "@prisma/client";
 import { withTransaction } from "./database-model.mjs";
 
 /**
  * @import z from "zod"
+ * @import { PendingUpload } from "../tools/file-handler.mjs";
  * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
@@ -223,92 +220,5 @@ export default class SparseLabeledVolumeData extends VolumeData {
                 });
             }
         });
-    }
-
-    /**
-     * @param {number} labelId
-     * @param {number} volumeId
-     * @param {import("../tools/annotations-to-volume.mjs").AnnotationsEntry[]} annotations
-     * @param {boolean} saveAsNew
-     * @returns {Promise<SparseLabelVolumeDataDB>}
-     */
-    static async updateAnnotations(
-        labelId,
-        volumeId,
-        annotations,
-        saveAsNew = false
-    ) {
-        let tempFolderPath = null;
-
-        return await this.withWriteLock(
-            volumeId,
-            [SparseLabeledVolumeData.modelName],
-            async () => {
-                try {
-                    const volumeData =
-                        await SparseLabeledVolumeData.getWithData(labelId);
-                    const volumeDataSettings =
-                        SparseLabeledVolumeData.toSettingSchema(volumeData);
-
-                    tempFolderPath = Utils.createTemporaryFolder(
-                        Volume.annotationsTempDirectory
-                    );
-
-                    const outputFile =
-                        Utils.stripExtension(annotations[0].volumeName) +
-                        "_annotated.raw";
-                    const outputPath = path.join(tempFolderPath, outputFile);
-
-                    let settings;
-
-                    if (!saveAsNew) {
-                        const currentData = await new PendingLocalFile(
-                            volumeData.dataFile.rawFilePath
-                        ).getData();
-                        settings = await annotationsToVolume(
-                            annotations,
-                            outputPath,
-                            currentData
-                        );
-                    } else {
-                        settings = await annotationsToVolume(
-                            annotations,
-                            outputPath
-                        );
-                    }
-
-                    if (
-                        settings.size.x !== volumeDataSettings.size.x ||
-                        settings.size.y !== volumeDataSettings.size.y ||
-                        settings.size.z !== volumeDataSettings.size.z
-                    ) {
-                        throw new ApiError(
-                            400,
-                            "Annotations dimensions mismatch the volume data dimensions."
-                        );
-                    }
-
-                    const file = new PendingLocalFile(outputPath);
-
-                    return await SparseLabeledVolumeData.setRawData(
-                        labelId,
-                        file
-                    );
-                } finally {
-                    if (tempFolderPath !== null) {
-                        try {
-                            await fsPromises.rm(tempFolderPath, {
-                                force: true,
-                                recursive: true,
-                            });
-                        } catch {
-                            console.error(
-                                `Failed to remove temporary folder: ${tempFolderPath}`
-                            );
-                        }
-                    }
-                }
-            }
-        );
     }
 }

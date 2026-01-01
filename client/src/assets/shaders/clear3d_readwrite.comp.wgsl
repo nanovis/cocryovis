@@ -3,11 +3,11 @@ requires readonly_and_readwrite_storage_textures;
 struct Param
 {
 	vertex : vec4<f32>,
-	kernelSize : vec4<f32>,
+	kernelSize : vec4<i32>,
 	clearMask : vec4<f32>,
 
-	addAnnotation : f32,
-  annotationVolume : u32,
+	addAnnotation : i32,
+  annotationVolume : i32,
 }
 
 @group(0) @binding(0) var<uniform> param : Param;

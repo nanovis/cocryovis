@@ -14,6 +14,7 @@ import { intersectRayPlane } from "../utilities/math";
 import type { ClippingPlaneManager } from "../volume/clippingPlaneManager";
 import type { RenderingParametersBuffer } from "../renderingParametersBuffer";
 import { AnnotationsDataBuffer } from "./annotationsDataBuffer";
+import { readChannelFromRGBA3DTexture } from "@/renderer/utilities/export";
 
 const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
   entries: [
@@ -377,6 +378,18 @@ export class AnnotationManager {
       return;
     }
 
+    if (channelIndex == -1) {
+      this.annotationParameterBuffer.set({
+        clearMask: vec4.fromValues(1, 1, 1, 1),
+      });
+    } else {
+      const clearMask = vec4.fromValues(0, 0, 0, 0);
+      clearMask[channelIndex] = 1;
+      this.annotationParameterBuffer.set({
+        clearMask: clearMask,
+      });
+    }
+
     const annotateBindGroup = this.annotateBindGroup.getGPUBindGroup();
 
     // This is probably not the best idea, but lets assume those bind groups stay aligned
@@ -394,18 +407,6 @@ export class AnnotationManager {
       volumeTexture.depthOrArrayLayers
     );
 
-    if (channelIndex == -1) {
-      this.annotationParameterBuffer.set({
-        clearMask: vec4.fromValues(1, 1, 1, 1),
-      });
-    } else {
-      const clearMask = vec4.fromValues(0, 0, 0, 0);
-      clearMask[channelIndex] = 1;
-      this.annotationParameterBuffer.set({
-        clearMask: clearMask,
-      });
-    }
-
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginComputePass();
 
@@ -421,5 +422,17 @@ export class AnnotationManager {
     pass.end();
 
     this.device.queue.submit([encoder.finish()]);
+  }
+
+  async exportAnnotation(channelIndex: number) {
+    const volumeTexture = this.getAnnotationVolume().getTexture();
+    if (!volumeTexture) {
+      return;
+    }
+    return await readChannelFromRGBA3DTexture(
+      this.device,
+      volumeTexture,
+      channelIndex
+    );
   }
 }

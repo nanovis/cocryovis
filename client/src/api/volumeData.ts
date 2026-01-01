@@ -130,13 +130,15 @@ export async function updateAnnotations(
   idVolumeData: number,
   request: z.input<typeof updateAnnotationsSchema>
 ) {
+  const formData = new FormData();
+  formData.append("rawFile", request.rawFile);
+
   const response = await Utils.sendApiRequest(
     `volume/${idVolume}/volumeData/SparseLabeledVolumeData/${idVolumeData}/update-annotations`,
     {
       method: "PUT",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
+      body: formData,
     }
   );
   const volumeData: z.infer<typeof sparseLabelVolumeDataSchema> =

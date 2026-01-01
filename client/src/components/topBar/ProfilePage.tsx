@@ -104,7 +104,6 @@ const ProfilePage = observer(() => {
     setUsername(user.username);
     setEmail(user.email);
     setShowChangePage(false);
-    console.log("a");
   };
 
   const changeUserInformation = async () => {

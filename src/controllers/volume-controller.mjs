@@ -112,25 +112,6 @@ export default class VolumeController {
      * @param {Request} req
      * @param {Response} res
      */
-    static async addAnnotations(req, res) {
-        const { params, body } = validateSchema(req, {
-            paramsSchema: idVolume,
-            bodySchema: annotationsSchema,
-        });
-
-        const sparseLabel = await Volume.addAnnotations(
-            params.idVolume,
-            Number(req.session.user.id),
-            body
-        );
-
-        res.json(sparseLabel);
-    }
-
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
     static async update(req, res) {
         const { params, body } = validateSchema(req, {
             paramsSchema: idVolume,

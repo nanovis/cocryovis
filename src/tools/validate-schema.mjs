@@ -42,9 +42,9 @@ export function checkAndThrowValidationError(validation) {
  * @param {Request} req
  * @param {{ bodySchema?: B, paramsSchema?: P, querySchema?: Q }} [schemas]
  * @returns {{
- *   body?: z.infer<B>,
- *   params?: z.infer<P>,
- *   query?: z.infer<Q>
+ *   body?: z.output<B>,
+ *   params?: z.output<P>,
+ *   query?: z.output<Q>
  * }}
  */
 export default function validateSchema(

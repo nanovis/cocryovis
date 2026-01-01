@@ -63,6 +63,9 @@ type VolumeDataInput =
   | {
       url: string;
       fileType: FileTypeOptions;
+    }
+  | {
+      arrayBuffer: ArrayBuffer;
     };
 
 export class VolumeData {
@@ -79,7 +82,7 @@ export class VolumeData {
         throw new Error("Invalid file type.");
       }
     }
-    if (!this.url && !this.file) {
+    if (!this.url && !this.file && !this.arrayBuffer) {
       throw new Error("VolumeData must have either url, file, or data.");
     }
   }

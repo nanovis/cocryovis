@@ -120,9 +120,6 @@ projectsApi.get(`/volume/:idVolume`, restrictReadVolumeAccess, VolumeController.
 // Remove Volume
 projectsApi.delete(`/volume/:idVolume`, restrictApi, VolumeController.deleteVolume);
 
-// Process Manual Labels
-projectsApi.put(`/volume/:idVolume/add-annotations`, restrictApi, VolumeController.addAnnotations);
-
 /////// VOLUME DATA
 
 const readVolumeDataPrefix = "/volumeData/:type/:idVolumeData";

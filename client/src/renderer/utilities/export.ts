@@ -1,7 +1,12 @@
-export async function readRChannelFromRGBA3DTexture(
+export async function readChannelFromRGBA3DTexture(
   device: GPUDevice,
-  texture: GPUTexture
+  texture: GPUTexture,
+  channel: number
 ) {
+  if (channel < 0 || channel > 3) {
+    throw new Error("channel must be 0 (R), 1 (G), 2 (B), or 3 (A)");
+  }
+
   const width = texture.width;
   const height = texture.height;
   const depth = texture.depthOrArrayLayers;
@@ -31,11 +36,10 @@ export async function readRChannelFromRGBA3DTexture(
   );
   device.queue.submit([encoder.finish()]);
 
-  // Map and extract R channel
   await readBuffer.mapAsync(GPUMapMode.READ);
 
   const src = new Uint8Array(readBuffer.getMappedRange());
-  const rChannel = new Uint8Array(width * height * depth);
+  const channelData = new Uint8Array(width * height * depth);
 
   let dst = 0;
 
@@ -46,8 +50,8 @@ export async function readRChannelFromRGBA3DTexture(
       let row = sliceOffset + y * bytesPerRow;
 
       for (let x = 0; x < width; x++) {
-        rChannel[dst++] = src[row]; // R
-        row += 4; // skip G,B,A
+        channelData[dst++] = src[row + channel];
+        row += 4; // next pixel
       }
     }
   }
@@ -55,5 +59,5 @@ export async function readRChannelFromRGBA3DTexture(
   readBuffer.unmap();
   readBuffer.destroy();
 
-  return rChannel;
+  return channelData;
 }

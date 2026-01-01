@@ -42,7 +42,13 @@ const RendererCanvas = observer(() => {
   const canvasControls = useCanvasControls({
     canvasRef,
     onDrag: (x, y) => {
-      rootStore.renderer?.annotationManager.processAnnotation(x, y, true, 0);
+      if (!rootStore.uiState.visualizedVolume) return;
+      rootStore.renderer?.annotationManager.processAnnotation(
+        x,
+        y,
+        !rootStore.uiState.visualizedVolume.eraseMode,
+        rootStore.uiState.visualizedVolume.manualLabelIndex
+      );
     },
     onWheel: (direction, event) => {
       if (!event.shiftKey) return;

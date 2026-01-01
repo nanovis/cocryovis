@@ -20,7 +20,6 @@ import {
     fileSchema,
     singleFileSchema,
 } from "./componentSchemas/file-schema.mjs";
-import { annotationsSchema } from "./volume-path-schema.mjs";
 import {
     volumeDescriptorSettings,
     volumeSettings,
@@ -59,8 +58,7 @@ export const fromUrlSchema = z
     });
 
 export const updateAnnotationsSchema = z.object({
-    annotation: annotationsSchema,
-    saveAsNew: z.boolean().default(false),
+    rawFile: fileSchema,
 });
 
 export const idVolumeAndType = z

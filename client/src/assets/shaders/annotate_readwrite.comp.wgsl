@@ -4,7 +4,7 @@ struct Param
 {
 	vertex : vec4<f32>,
 	kernelSize : vec4<i32>,
-	clearMask : vec4<i32>,
+	clearMask : vec4<f32>,
 
 	addAnnotation : i32,
   annotationVolume : i32,

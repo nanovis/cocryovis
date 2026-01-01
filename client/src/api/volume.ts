@@ -10,7 +10,6 @@ import type {
   volumeSchema,
   volumeUpdateSchema,
 } from "#schemas/componentSchemas/volume-schema.mjs";
-import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 
 export async function getVolumesFromProjectDeep(id: number) {
   const response = await Utils.sendApiRequest(`project/${id}/volumes/deep`, {
@@ -40,7 +39,7 @@ export async function getVolumeWithSparseVolumes(Id: number) {
     sparseVolumes: "true",
   };
   const response = await Utils.sendApiRequest(
-    `/volume/${Id}`,
+    `volume/${Id}`,
     {
       method: "GET",
     },
@@ -55,18 +54,6 @@ export async function deleteVolume(volumeId: number) {
     method: "DELETE",
     credentials: "include",
   });
-}
-
-export async function addAnnotations(id: number, request: string) {
-  const response = await Utils.sendApiRequest(`volume/${id}/add-annotations`, {
-    method: "PUT",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: request,
-  });
-  const sparseLabel: z.infer<typeof sparseLabelVolumeDataSchema> =
-    await response.json();
-  return sparseLabel;
 }
 
 export async function updateVolume(

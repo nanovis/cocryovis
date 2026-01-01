@@ -17,7 +17,7 @@ import type { PseudoVolumeInstance } from "../userState/PseudoVolumeModel";
 import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
 import type z from "zod";
 import type { getVolumeSchema } from "#schemas/volume-path-schema.mjs";
-import { downloadRawFile } from "@/api/volumeData";
+import { downloadFullVolumeData } from "@/api/volumeData";
 import { getVolumeWithSparseVolumes } from "@/api/volume";
 import ToastContainer from "../../utils/ToastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
@@ -25,6 +25,8 @@ import { RootStore } from "../RootStore";
 import { clamp } from "@/utils/Helpers";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 import type { OrbitCameraController } from "@/utils/orbitCameraController";
+import type { VolumeDescriptor } from "@/utils/volumeSettings";
+import { fileMapToVisualizationConfig } from "@/utils/volumeVisualization";
 
 export type visualizedObjectInstances =
   | VolumeInstance
@@ -34,14 +36,12 @@ export type visualizedObjectInstances =
   | undefined;
 
 async function loadSparseLabelVolumesIntoAnnotations(
+  renderer: VolumeRenderer,
   volume: VolumeInstance,
   toastContainer: ToastContainer
 ) {
-  if (!window.WasmModule) {
-    throw new Error("WasmModule is not loaded.");
-  }
   const sparseVolumeArray = volume.sparseVolumeArray;
-  const volumeNames = new window.WasmModule.VectorString();
+  const volumeDescriptors: VolumeDescriptor[] = [];
   for (let i = 0; i < sparseVolumeArray.length; i++) {
     const sparseVolume = sparseVolumeArray[i];
     toastContainer.loading(
@@ -50,18 +50,29 @@ async function loadSparseLabelVolumesIntoAnnotations(
 
     await Utils.waitForNextFrame();
 
-    const contents = await downloadRawFile(sparseVolume.id);
+    const contents = await downloadFullVolumeData(
+      "SparseLabeledVolumeData",
+      sparseVolume.id
+    );
     const fileMap = await Utils.zipToFileMap(contents);
-    const rawFile = fileMap.values().next().value;
-    if (!rawFile) {
-      throw new Error("No annotation volume found.");
+    const visualizationConfig = await fileMapToVisualizationConfig(fileMap);
+    if (visualizationConfig.descriptors.length < 1) {
+      throw new Error("No volume data found in the sparse label volume.");
     }
-    const rawFileContent = await rawFile.arrayBuffer();
-    const data = new Uint8Array(rawFileContent);
-    const fileName = `SparseLabeledVolumeData-${sparseVolume.id}`;
-    window.WasmModule.FS.writeFile(fileName, data);
-    volumeNames.push_back(fileName);
-
+    volumeDescriptors.push(visualizationConfig.descriptors[0]);
+  }
+  if (sparseVolumeArray.length > 0) {
+    await renderer.annotationManager.pingVolume.loadData(volumeDescriptors);
+  }
+  for (let i = sparseVolumeArray.length; i < 4; i++) {
+    const color = Utils.fromHexColor(volume.sparseLabelColors[i]);
+    renderer.annotationManager.annotationsDataBuffer.setAnnotationData(i, {
+      color: [color.r / 255, color.g / 255, color.b / 255, 1],
+      enabled: false,
+    });
+  }
+  for (let i = 0; i < sparseVolumeArray.length; i++) {
+    const sparseVolume = sparseVolumeArray[i];
     let r = 1;
     let g = 1;
     let b = 1;
@@ -72,20 +83,11 @@ async function loadSparseLabelVolumesIntoAnnotations(
       g = color.g / 255;
       b = color.b / 255;
     }
-    volume.setShownAnnotation(i, true);
-    window.WasmModule.set_annotation_color(i, r, g, b);
+    renderer.annotationManager.annotationsDataBuffer.setAnnotationData(i, {
+      color: [r, g, b, 1],
+      enabled: true,
+    });
   }
-  for (let i = sparseVolumeArray.length; i < 4; i++) {
-    const color = Utils.fromHexColor(volume.sparseLabelColors[i]);
-    volume.setShownAnnotation(i, false);
-    window.WasmModule.set_annotation_color(
-      i,
-      color.r / 255,
-      color.g / 255,
-      color.b / 255
-    );
-  }
-  window.WasmModule.load_volume_into_annotation(volumeNames);
 }
 
 export const VisualizedVolume = types
@@ -149,6 +151,9 @@ export const VisualizedVolume = types
       }
     },
     setFullscreen(enable: boolean) {
+      if (!self.renderer) {
+        return;
+      }
       if (enable === self.fullscreen) {
         return;
       }
@@ -157,48 +162,49 @@ export const VisualizedVolume = types
       }
       self.fullscreen = enable;
       self.orbitCameraController?.setActive(!enable);
-      self.renderer?.clippingPlaneManager.setFullscreen(enable);
+      self.renderer.clippingPlaneManager.setFullscreen(enable);
     },
     setShowRawClippingPlane(enable: boolean) {
+      if (!self.renderer) {
+        return;
+      }
       if (enable && self.rawSettings === undefined) {
         return;
       }
       self.showRawClippingPlane = enable;
-      self.renderer?.volumeManager.volumeParameterBuffer.set({
+      self.renderer.volumeManager.volumeParameterBuffer.set({
         rawClippingPlane: enable,
       });
     },
     setEraseMode(enable: boolean) {
-      if (!window.WasmModule) {
-        return;
-      }
       if (!self.canEditLabels || !self.labelEditingMode) {
         return;
       }
 
       self.eraseMode = enable;
-      window.WasmModule.set_annotation_mode(!enable);
     },
     setClippingOffset(offset: number) {
+      if (!self.renderer) {
+        return;
+      }
       if (self.clippingPlane === "none") {
         return;
       }
       self.clippingPlaneOffset = clamp(offset, -1, 1);
-      self.renderer?.clippingPlaneManager.setClippingPlaneOffset(offset);
+      self.renderer.clippingPlaneManager.setClippingPlaneOffset(offset);
     },
   }))
   .actions((self) => ({
     setManualLabelIndex(index: number) {
-      if (!window.WasmModule) {
-        return;
-      }
       self.manualLabelIndex = index;
-      window.WasmModule.set_annotation_channel(index);
       self.volume?.setShownAnnotation(index, true);
     },
     setClippingPlane(clippingPlane: ClippingPlaneType) {
+      if (!self.renderer) {
+        return;
+      }
       self.clippingPlane = clippingPlane;
-      self.renderer?.clippingPlaneManager.setClippingPlane(clippingPlane);
+      self.renderer.clippingPlaneManager.setClippingPlane(clippingPlane);
       if (self.fullscreen && clippingPlane === "none") {
         self.setFullscreen(false);
       }
@@ -207,15 +213,14 @@ export const VisualizedVolume = types
       self.setClippingOffset(self.clippingPlaneOffset + offset);
     },
     clearActiveAnnotationChannel() {
-      if (
-        !window.WasmModule ||
-        self.manualLabelIndex > 4 ||
-        self.manualLabelIndex < 0
-      ) {
+      if (!self.renderer) {
+        return;
+      }
+      if (self.manualLabelIndex > 4 || self.manualLabelIndex < 0) {
         return;
       }
       self.saveAsNew[self.manualLabelIndex] = true;
-      window.WasmModule.clear_annotations(self.manualLabelIndex);
+      self.renderer.annotationManager.clearAnnotations(self.manualLabelIndex);
     },
   }))
   .actions((self) => ({
@@ -223,15 +228,17 @@ export const VisualizedVolume = types
       self.resetSaveAsNew();
       if (!enable) {
         self.labelEditingMode = false;
-        window.WasmModule?.enable_annotation_mode(false);
-        window.WasmModule?.clear_annotations(-1);
+        self.renderer?.renderingParameters.set({
+          enableAnnotations: false,
+        });
+        self.renderer?.annotationManager.clearAnnotations(-1);
         return;
       }
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Fetching volume data...");
-        if (!window.WasmModule) {
-          throw new Error("WasmModule is not loaded.");
+        if (!self.renderer) {
+          throw new Error("Renderer is not initialized.");
         }
         if (self.volume === undefined) {
           throw new Error("Only raw volumes can be labeled.");
@@ -244,6 +251,7 @@ export const VisualizedVolume = types
         }
         self.volume.setSparseVolumes(volume.sparseVolumes);
         yield loadSparseLabelVolumesIntoAnnotations(
+          self.renderer,
           self.volume,
           toastContainer
         );
@@ -252,7 +260,9 @@ export const VisualizedVolume = types
         }
 
         self.labelEditingMode = enable;
-        window.WasmModule.enable_annotation_mode(true);
+        self.renderer.renderingParameters.set({
+          enableAnnotations: true,
+        });
         self.setManualLabelIndex(0);
 
         if (self.clippingPlane === "none") {

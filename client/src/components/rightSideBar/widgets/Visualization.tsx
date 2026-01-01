@@ -28,8 +28,11 @@ import { useMst } from "@/stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import type { VolVisSettingsInstance } from "@/stores/uiState/VolVisSettings";
 import ShortcutKey from "../../shared/ShortcutKey";
-import { addAnnotations } from "@/api/volume";
-import { updateAnnotations, updateVolumeData } from "@/api/volumeData";
+import {
+  createFromFiles,
+  updateAnnotations,
+  updateVolumeData,
+} from "@/api/volumeData";
 import ToastContainer from "../../../utils/ToastContainer";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 
@@ -119,7 +122,7 @@ interface Props {
 }
 
 const Visualization = observer(({ open, close }: Props) => {
-  const { user, uiState } = useMst();
+  const { user, uiState, renderer } = useMst();
 
   const activeProject = user.userProjects.activeProject;
   const visualizedVolume = uiState.visualizedVolume;
@@ -143,20 +146,55 @@ const Visualization = observer(({ open, close }: Props) => {
     const toastContainer = new ToastContainer();
     try {
       toastContainer.loading("Saving annotations...");
-      if (!window.WasmModule) {
-        throw new Error("Wasm module not initialized!");
+      if (!renderer) {
+        throw new Error("Renderer not initialized!");
       }
       if (!visualizedVolume?.canEditLabels) {
         throw new Error("Only raw volumes can be labeled.");
       }
 
       setProcessingSaveAnnotations(true);
-      const annotationData = window.WasmModule.get_annotations();
+      const annotationData = await renderer.annotationManager.exportAnnotation(
+        visualizedVolume.manualLabelIndex
+      );
+
+      if (!annotationData) {
+        throw new Error("No annotations to save.");
+      }
 
       if (
         visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
       ) {
-        let sparseLabel = await addAnnotations(volume.id, annotationData);
+        // let sparseLabel = await addAnnotations(volume.id, annotationData);
+        if (!volume.rawData) {
+          throw new Error("Volume missing raw data.");
+        }
+        const filename = `volume-channel-${visualizedVolume.manualLabelIndex}.raw`;
+        let sparseLabel = await createFromFiles(
+          "SparseLabeledVolumeData",
+          volume.id,
+          {
+            rawFile: new File([annotationData], filename, {
+              type: "application/octet-stream",
+            }),
+            volumeSettings: {
+              file: filename,
+              size: {
+                x: volume.rawData.sizeX,
+                y: volume.rawData.sizeY,
+                z: volume.rawData.sizeZ,
+              },
+              ratio: {
+                x: volume.rawData.ratioX,
+                y: volume.rawData.ratioY,
+                z: volume.rawData.ratioZ,
+              },
+              bytesPerVoxel: 1,
+              usedBits: 8,
+              isLittleEndian: true,
+            },
+          }
+        );
 
         sparseLabel = await updateVolumeData(
           "SparseLabeledVolumeData",
@@ -169,12 +207,16 @@ const Visualization = observer(({ open, close }: Props) => {
         const sparseLabelVolume =
           volume.sparseVolumeArray[visualizedVolume.manualLabelIndex];
 
-        const annotation = JSON.parse(annotationData);
+        const rawFile = new File(
+          [annotationData],
+          `volume-channel-${visualizedVolume.manualLabelIndex}.raw`,
+          {
+            type: "application/octet-stream",
+          }
+        );
 
         await updateAnnotations(volume.id, sparseLabelVolume.id, {
-          annotation: annotation,
-          saveAsNew:
-            visualizedVolume.saveAsNew[visualizedVolume.manualLabelIndex],
+          rawFile: rawFile,
         });
       }
       toastContainer.success("Annotations saved.");

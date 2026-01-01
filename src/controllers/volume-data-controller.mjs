@@ -20,14 +20,13 @@ import {
     idVolumeAndType,
     idVolumeDataAndType,
     idVolumeVolumeDataTypeParams,
-    updateAnnotationsSchema,
     volumeDataUpdate,
 } from "#schemas/volume-data-path-schema.mjs";
 import VolumeData from "../models/volume-data.mjs";
+import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
  * @typedef { import("express").Request } Request
  * @typedef { import("express").Response } Response
  */
@@ -86,7 +85,9 @@ export default class VolumeDataController {
             "Content-Disposition",
             `attachment; filename="${path.basename(volumeData.dataFile.rawFilePath)}"`
         );
-        const fileStream = fileSystem.createReadStream(volumeData.dataFile.rawFilePath);
+        const fileStream = fileSystem.createReadStream(
+            volumeData.dataFile.rawFilePath
+        );
         fileStream.pipe(res);
 
         fileStream.on("error", (err) => {
@@ -145,7 +146,7 @@ export default class VolumeDataController {
         });
 
         if (!req.files || !req.files.rawFile) {
-            throw new ApiError(400, "s");
+            throw new ApiError(400, "Missing files.");
         }
 
         let files = req.files.rawFile;
@@ -161,8 +162,7 @@ export default class VolumeDataController {
             files,
             VolumeDataClass.acceptedFileExtensions
         );
-        /** @type {z.infer<typeof volumeSettings>} */
-        const settings = JSON.parse(req.body.settings);
+        const settings = volumeSettings.parse(JSON.parse(req.body.settings));
 
         const volumeData = await VolumeDataClass.createFromFiles(
             req.session.user.id,
@@ -346,7 +346,7 @@ export default class VolumeDataController {
         });
 
         if (
-            VolumeDataType.mapName(params.type) != VolumeDataType.RawVolumeData
+            VolumeDataType.mapName(params.type) !== VolumeDataType.RawVolumeData
         ) {
             throw new ApiError(
                 400,
@@ -391,13 +391,13 @@ export default class VolumeDataController {
      * @param {Response} res
      */
     static async updateAnnotations(req, res) {
-        const { params, body } = validateSchema(req, {
+        const { params } = validateSchema(req, {
             paramsSchema: idVolumeVolumeDataTypeParams,
-            bodySchema: updateAnnotationsSchema,
+            // bodySchema: updateAnnotationsSchema,
         });
 
         if (
-            VolumeDataType.mapName(params.type) !=
+            VolumeDataType.mapName(params.type) !==
             VolumeDataType.SparseLabeledVolumeData
         ) {
             throw new ApiError(
@@ -405,13 +405,25 @@ export default class VolumeDataController {
                 "This operation is only avaliable on Manual Label Volumes."
             );
         }
-        const saveAsNew = body.saveAsNew ?? false;
 
-        const sparseLabel = await SparseLabeledVolumeData.updateAnnotations(
+        if (!req.files || !req.files.rawFile) {
+            throw new ApiError(400, "Missing files.");
+        }
+
+        let files = req.files.rawFile;
+        if (!Array.isArray(files)) {
+            files = [files];
+        }
+
+        const unpackedFiles = await unpackFiles(files, ["raw"]);
+
+        const rawFile = unpackedFiles.find(
+            (file) => file.fileExtension === ".raw"
+        );
+
+        const sparseLabel = await SparseLabeledVolumeData.setRawData(
             params.idVolumeData,
-            params.idVolume,
-            body.annotation,
-            saveAsNew
+            rawFile
         );
 
         res.json(sparseLabel);

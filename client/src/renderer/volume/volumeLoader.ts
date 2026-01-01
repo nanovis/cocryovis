@@ -200,9 +200,10 @@ function uploadBatch(
 
 export async function streamVolumesToGPU(
   device: GPUDevice,
+  texture: GPUTexture,
   descriptors: VolumeDescriptor[],
   batchSize = 8
-): Promise<GPUTexture> {
+): Promise<void> {
   if (descriptors.length < 1) {
     throw new Error("At least one volume descriptor is required");
   }
@@ -217,7 +218,11 @@ export async function streamVolumesToGPU(
     throw new Error("Volume descriptor settings are missing");
   }
 
-  const size = descriptors[0].settings.size;
+  const size = {
+    x: texture.width,
+    y: texture.height,
+    z: texture.depthOrArrayLayers,
+  };
 
   for (const d of descriptors) {
     if (d.settings === undefined) {
@@ -228,17 +233,6 @@ export async function streamVolumesToGPU(
       throw new Error("All volumes must have identical dimensions");
     }
   }
-
-  const texture = device.createTexture({
-    size: {
-      width: size.x,
-      height: size.y,
-      depthOrArrayLayers: size.z,
-    },
-    dimension: "3d",
-    format: "rgba8unorm",
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-  });
 
   for (let z = 0; z < size.z; z += batchSize) {
     const actualDepth = Math.min(batchSize, size.z - z);
@@ -268,6 +262,4 @@ export async function streamVolumesToGPU(
       z
     );
   }
-
-  return texture;
 }

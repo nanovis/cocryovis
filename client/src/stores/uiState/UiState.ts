@@ -16,6 +16,7 @@ import { TiltSeriesDialog } from "./TiltSeriesDialog";
 import { visualizeVolumeFromConfig } from "@/utils/volumeVisualization";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 import { RootStore } from "../RootStore";
+import type { VolumeRenderer } from "@/renderer/renderer";
 
 export const UiState = types
   .model({
@@ -34,6 +35,12 @@ export const UiState = types
   })
   .volatile(() => ({
     isSignInOrSignUpInProgress: false,
+  }))
+  .views((self) => ({
+    get renderer(): VolumeRenderer | null {
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      return rootStore.renderer;
+    },
   }))
   .actions((self) => ({
     setOpenLeftWidget(id: number) {
@@ -100,8 +107,11 @@ export const UiState = types
       }
     },
     setKernelSize(kernalSize: number) {
+      if (!self.renderer) return;
       self.kernelSize = kernalSize;
-      window.WasmModule?.setAnnotationKernelSize(kernalSize);
+      self.renderer.annotationManager.annotationParameterBuffer.set({
+        kernelSize: [kernalSize, kernalSize, kernalSize, 0],
+      });
     },
     setVizualizedVolume(properties: VisualizedVolumeSnapshotIn) {
       self.visualizedVolume = VisualizedVolume.create(properties);

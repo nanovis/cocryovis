@@ -1,5 +1,5 @@
 import type { Instance, SnapshotIn } from "mobx-state-tree";
-import { flow, isAlive, types } from "mobx-state-tree";
+import { flow, isAlive, types, getParentOfType } from "mobx-state-tree";
 import type { RawVolumeSnapshotIn } from "./RawVolumeModel";
 import { RawVolume } from "./RawVolumeModel";
 import type {
@@ -40,6 +40,8 @@ import {
   deleteVolumeData,
 } from "@/api/volumeData";
 import ToastContainer from "../../utils/ToastContainer";
+import type { VolumeRenderer } from "@/renderer/renderer";
+import { RootStore } from "@/stores/RootStore";
 
 export type LabeledVolumeTypes =
   | "SparseLabeledVolumeData"
@@ -78,6 +80,10 @@ export const Volume = types
     get pseudoVolumeArray() {
       return Array.from(self.pseudoVolumes.values());
     },
+    get renderer(): VolumeRenderer | null {
+      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      return rootStore.renderer;
+    },
   }))
   .actions((self) => ({
     setEditingSparseVolumeData(volumeData: SparseVolumeInstance | undefined) {
@@ -107,24 +113,32 @@ export const Volume = types
       });
     },
     setSparseLabelColor(index: number, color: string) {
+      if (!self.renderer) return;
       self.sparseLabelColors[index] = color;
 
-      if (window.WasmModule) {
-        const parsedColor = Utils.fromHexColor(color);
-        window.WasmModule.set_annotation_color(
-          index,
-          parsedColor.r / 255,
-          parsedColor.g / 255,
-          parsedColor.b / 255
-        );
-      }
+      const parsedColor = Utils.fromHexColor(color);
+      self.renderer.annotationManager.annotationsDataBuffer.setAnnotationData(
+        index,
+        {
+          color: [
+            parsedColor.r / 255,
+            parsedColor.g / 255,
+            parsedColor.b / 255,
+            1,
+          ],
+        }
+      );
     },
     setShownAnnotation(index: number, show: boolean) {
+      if (!self.renderer) return;
       self.shownAnnotations[index] = show;
 
-      if (window.WasmModule) {
-        window.WasmModule.show_annotation(index, self.shownAnnotations[index]);
-      }
+      self.renderer.annotationManager.annotationsDataBuffer.setAnnotationData(
+        index,
+        {
+          enabled: show,
+        }
+      );
     },
   }))
   .actions((self) => ({

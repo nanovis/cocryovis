@@ -67,7 +67,7 @@ export class AnnotationParametersBuffer extends WebGpuBuffer {
     o += 16;
 
     for (let i = 0; i < 4; i++)
-      view.setInt32(o + i * 4, this.params.clearMask[i], le);
+      view.setFloat32(o + i * 4, this.params.clearMask[i], le);
     o += 16;
 
     view.setInt32(o, Number(this.params.addAnnotation), le);
