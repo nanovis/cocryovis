@@ -550,7 +550,8 @@ const Visualization = observer(({ open, close }: Props) => {
           <div className={classes.settingsGrid}>
             <div className={classes.settingsGridRow}>
               <Text>
-                Clipping Plane Offset [{visualizedVolume?.clippingPlaneOffset}]
+                Clipping Plane Offset [
+                {visualizedVolume?.clippingPlaneOffset.toFixed(2)}]
               </Text>
               <Slider
                 disabled={
