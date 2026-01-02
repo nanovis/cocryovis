@@ -1,3 +1,6 @@
+import { detect } from "detect-browser";
+import { CHROMIUM_BASED_BROWSERS } from "@/constants";
+
 export class WebGpuTexture {
   protected texture: GPUTexture | undefined;
   protected view: GPUTextureView | undefined;
@@ -29,6 +32,11 @@ export class WebGpuTexture {
     size: GPUExtent3DDictStrict,
     bytesPerVoxel: number
   ) {
+    const browser = detect();
+    if (browser && !CHROMIUM_BASED_BROWSERS.includes(browser.name)) {
+      return false;
+    }
+
     const maxBufferSize = this.device.limits.maxBufferSize;
     const byteSize =
       size.width *

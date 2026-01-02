@@ -8,4 +8,13 @@ export const CONFIG = {
   forceWriteOnlyAnnotations: false,
 } as const;
 
+export const CHROMIUM_BASED_BROWSERS: string[] = [
+  "edge-chromium",
+  "chrome",
+  "crios",
+  "yandexbrowser",
+  "samsung",
+  "opera",
+] as const;
+
 export const DEFAULT_URL = "http://localhost:8080";
