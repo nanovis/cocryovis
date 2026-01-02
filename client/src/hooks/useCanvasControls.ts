@@ -1,7 +1,13 @@
-import { useCallback, useRef, type WheelEvent } from "react";
+import {
+  useCallback,
+  useRef,
+  type WheelEvent,
+  type MouseEvent,
+  type RefObject,
+} from "react";
 
 interface Props {
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   onDrag: (normalizedX: number, normalizedY: number) => void;
   onWheel?: (direction: number, event: WheelEvent<HTMLCanvasElement>) => void;
   syncToFrame?: boolean;
@@ -18,23 +24,20 @@ export function useCanvasControls({
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleMouseDown = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
+    (event: MouseEvent<HTMLCanvasElement>) => {
       if (event.button !== 0) return;
       isPrimaryDown.current = true;
     },
     []
   );
 
-  const handleMouseUp = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
-      if (event.button !== 0) return;
-      isPrimaryDown.current = false;
-    },
-    []
-  );
+  const handleMouseUp = useCallback((event: MouseEvent<HTMLCanvasElement>) => {
+    if (event.button !== 0) return;
+    isPrimaryDown.current = false;
+  }, []);
 
   const handleMouseMove = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
+    (event: MouseEvent<HTMLCanvasElement>) => {
       if (!isPrimaryDown.current) return;
 
       const canvas = canvasRef.current;
@@ -65,7 +68,7 @@ export function useCanvasControls({
   );
 
   const handleWheel = useCallback(
-    (event: React.WheelEvent<HTMLCanvasElement>) => {
+    (event: WheelEvent<HTMLCanvasElement>) => {
       if (!onWheel) return;
 
       const direction = event.deltaY < 0 ? 1 : -1;
