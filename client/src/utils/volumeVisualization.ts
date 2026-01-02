@@ -18,7 +18,7 @@ import {
   VolumeData,
   VolumeDescriptor,
   volumeSettingsFromJson,
-} from "./volumeSettings";
+} from "./volumeDescriptor";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { visualizationConfigSchema } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type { FileMap } from "./Helpers";

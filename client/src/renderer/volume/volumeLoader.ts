@@ -1,7 +1,7 @@
 import {
   type VolumeDescriptor,
   type VolumeDescriptorSettings,
-} from "@/utils/volumeSettings";
+} from "@/utils/volumeDescriptor";
 import { CONFIG } from "@/Constants";
 import { clamp } from "@/renderer/utilities/math";
 

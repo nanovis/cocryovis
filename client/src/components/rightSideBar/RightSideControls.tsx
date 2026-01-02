@@ -19,7 +19,7 @@ import {
   fetchVolumeFromUrl,
   VolumeData,
   VolumeDescriptor,
-} from "@/utils/volumeSettings";
+} from "@/utils/volumeDescriptor";
 import ToastContainer from "../../utils/ToastContainer";
 import { convertMRCToRaw } from "@/utils/MrcParser";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";

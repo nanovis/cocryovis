@@ -18,7 +18,7 @@ import {
   type FileTypeOptions,
   type VolumeDescriptorSettings,
   type VolumeSettings,
-} from "@/utils/volumeSettings";
+} from "@/utils/volumeDescriptor";
 import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import type z from "zod";
 import type {

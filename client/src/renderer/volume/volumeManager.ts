@@ -1,6 +1,6 @@
 import { Volume } from "./volume";
 import { ChannelData } from "./channelData";
-import type { VolumeDescriptor } from "@/utils/volumeSettings";
+import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
 import { pickDefaultTF } from "@/utils/Helpers";
 import { CONFIG } from "@/Constants";
 import { VolumeParameterBuffer } from "./volumeParameterBuffer";

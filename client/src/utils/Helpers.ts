@@ -4,7 +4,7 @@ import ToastContainer from "./ToastContainer";
 import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
 import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
-import type { TransferFunction } from "@/utils/volumeSettings";
+import type { TransferFunction } from "@/utils/volumeDescriptor";
 
 export type FileMap = Map<string, File>;
 

@@ -1,4 +1,4 @@
-import type { VolumeSettings } from "./volumeSettings";
+import type { VolumeSettings } from "./volumeDescriptor";
 
 /**
  * MRC file into a RAW and JSON file using streaming/chunked.

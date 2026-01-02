@@ -28,8 +28,11 @@ import {
   Checkmark24Filled,
   Info24Regular,
 } from "@fluentui/react-icons";
-import { fileTypeOptions, type VolumeDescriptor } from "@/utils/volumeSettings";
-import { volumeSettingsFromJson } from "@/utils/volumeSettings";
+import {
+  fileTypeOptions,
+  type VolumeDescriptor,
+} from "@/utils/volumeDescriptor";
+import { volumeSettingsFromJson } from "@/utils/volumeDescriptor";
 import React from "react";
 import type { UploadDialogInstance } from "@/stores/uiState/UploadDialog";
 import {

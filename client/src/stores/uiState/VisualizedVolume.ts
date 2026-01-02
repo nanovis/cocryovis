@@ -25,7 +25,7 @@ import { RootStore } from "../RootStore";
 import { clamp } from "@/utils/Helpers";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 import type { OrbitCameraController } from "@/utils/orbitCameraController";
-import type { VolumeDescriptor } from "@/utils/volumeSettings";
+import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
 import { fileMapToVisualizationConfig } from "@/utils/volumeVisualization";
 
 export type visualizedObjectInstances =

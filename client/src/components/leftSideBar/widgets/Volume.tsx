@@ -54,7 +54,7 @@ import type { ResultInstance } from "@/stores/userState/ResultModel";
 import {
   type TransferFunction,
   VolumeDescriptor,
-} from "@/utils/volumeSettings";
+} from "@/utils/volumeDescriptor";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
 import {
   SparseLabelVolume,

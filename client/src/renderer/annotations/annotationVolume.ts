@@ -1,6 +1,6 @@
 import { WebGpuTexture } from "../core/webGpuTexture";
 import type { VolumeManager } from "../volume/volumeManager";
-import type { VolumeDescriptor } from "@/utils/volumeSettings";
+import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
 import { streamVolumesToGPU } from "@/renderer/volume/volumeLoader";
 
 export class AnnotationVolume extends WebGpuTexture {
