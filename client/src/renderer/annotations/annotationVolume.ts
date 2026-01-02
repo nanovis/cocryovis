@@ -5,9 +5,6 @@ import { streamVolumesToGPU } from "@/renderer/utilities/volumeLoader";
 
 export class AnnotationVolume extends WebGpuTexture {
   private readonly volumeManager: VolumeManager;
-  private width: number | undefined;
-  private height: number | undefined;
-  private depth: number | undefined;
   private readonly label: string;
 
   constructor(device: GPUDevice, volumeManager: VolumeManager, label: string) {
@@ -25,7 +22,7 @@ export class AnnotationVolume extends WebGpuTexture {
       const descriptor = volumeDescriptors[0];
       const settings = await descriptor.getSettings();
 
-      const { texture, view } = this.createTexture(
+      const { texture, view } = this.createAnnotationTexture(
         settings.size.x,
         settings.size.y,
         settings.size.z
@@ -37,33 +34,26 @@ export class AnnotationVolume extends WebGpuTexture {
     await streamVolumesToGPU(this.device, this.texture, volumeDescriptors);
   }
 
-  private createTexture(width: number, height: number, depth: number) {
-    this.texture?.destroy();
-    const texture = this.device.createTexture({
+  private createAnnotationTexture(
+    width: number,
+    height: number,
+    depth: number
+  ) {
+    return this.createTexture({
       label: this.label,
+      format: "rgba8unorm",
+      dimension: "3d",
       size: {
         width: width,
         height: height,
         depthOrArrayLayers: depth,
       },
-      format: "rgba8unorm",
-      dimension: "3d",
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.COPY_SRC |
         GPUTextureUsage.COPY_DST,
     });
-
-    const view = texture.createView({
-      dimension: "3d",
-    });
-
-    this.width = width;
-    this.height = height;
-    this.depth = depth;
-
-    return { texture, view };
   }
 
   update() {
@@ -73,14 +63,15 @@ export class AnnotationVolume extends WebGpuTexture {
     }
 
     if (
-      this.width === volumeTexture.width &&
-      this.height === volumeTexture.height &&
-      this.depth === volumeTexture.depthOrArrayLayers
+      this.texture &&
+      this.texture.width === volumeTexture.width &&
+      this.texture.height === volumeTexture.height &&
+      this.texture.depthOrArrayLayers === volumeTexture.depthOrArrayLayers
     ) {
       return;
     }
 
-    const { texture, view } = this.createTexture(
+    const { texture, view } = this.createAnnotationTexture(
       volumeTexture.width,
       volumeTexture.height,
       volumeTexture.depthOrArrayLayers

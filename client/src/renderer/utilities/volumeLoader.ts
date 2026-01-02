@@ -165,7 +165,7 @@ export async function streamVolumesToGPU(
   device: GPUDevice,
   texture: GPUTexture,
   descriptors: VolumeDescriptor[],
-  batchSize = 8
+  batchSize: number = 128
 ): Promise<void> {
   if (!descriptors.length)
     throw new Error("At least one volume descriptor is required");
@@ -210,6 +210,8 @@ export async function streamVolumesToGPU(
   for (let z = 0; z < size.z; z += batchSize) {
     const depth = Math.min(batchSize, size.z - z);
     const channels: Uint8Array[] = [];
+
+    console.log("Loading volume slab:", z, "to", z + depth);
 
     for (let c = 0; c < descriptors.length; c++) {
       const slab = readRawSlab(buffers[c], settings[c], z, depth);

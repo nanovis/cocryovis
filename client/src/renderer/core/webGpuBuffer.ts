@@ -1,5 +1,5 @@
 export abstract class WebGpuBuffer {
-  protected device: GPUDevice;
+  protected readonly device: GPUDevice;
   protected buffer: GPUBuffer;
   protected destroyed: boolean = false;
   protected label: string;
