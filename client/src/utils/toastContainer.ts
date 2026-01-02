@@ -3,14 +3,9 @@ import type {
   ToastId,
   useToastController,
 } from "@fluentui/react-components";
-import {
-  Link,
-  Spinner,
-  Toast,
-  ToastTitle,
-  ToastTrigger,
-} from "@fluentui/react-components";
 import type { JSX } from "react/jsx-runtime";
+import { LoadingToast, MessageToast } from "@/components/shared/toastViews";
+import { createElement } from "react";
 
 type ToastFunctions = ReturnType<typeof useToastController>;
 type ToastOptions = Parameters<ToastFunctions["dispatchToast"]>[1];
@@ -71,45 +66,17 @@ export default class ToastContainer {
   }
 
   loading(message: string) {
-    const content = (
-      <Toast>
-        <ToastTitle media={<Spinner size="tiny" />}>{message}</ToastTitle>
-      </Toast>
-    );
+    const content = createElement(LoadingToast, { message });
     this.createOrUpdateToast(content, DEFAULT_LOADING_PARAMETERS);
   }
 
   success(message: string) {
-    const content = (
-      <Toast>
-        <ToastTitle
-          action={
-            <ToastTrigger>
-              <Link>Close</Link>
-            </ToastTrigger>
-          }
-        >
-          {message}
-        </ToastTitle>
-      </Toast>
-    );
+    const content = createElement(MessageToast, { message });
     this.createOrUpdateToast(content, DEFAULT_SUCCESS_PARAMETERS);
   }
 
   error(message: string) {
-    const content = (
-      <Toast>
-        <ToastTitle
-          action={
-            <ToastTrigger>
-              <Link>Close</Link>
-            </ToastTrigger>
-          }
-        >
-          {message}
-        </ToastTitle>
-      </Toast>
-    );
+    const content = createElement(MessageToast, { message });
     this.createOrUpdateToast(content, DEFAULT_ERROR_PARAMETERS);
   }
 
