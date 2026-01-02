@@ -31,7 +31,6 @@ export class AnnotationParametersBuffer extends WebGpuBuffer {
       "Annotation Parameters Buffer"
     );
     Object.assign(this.params, init);
-    this.device = device;
   }
 
   protected createBuffer(size: number): GPUBuffer {

@@ -22,7 +22,6 @@ export class VolumeParameterBuffer extends WebGpuBuffer {
   constructor(device: GPUDevice, init?: Partial<VolumeParameters>) {
     super(device, VolumeParameterBuffer.size, "Volume Parameters Buffer");
     Object.assign(this.params, init);
-    this.device = device;
   }
 
   protected createBuffer(size: number): GPUBuffer {

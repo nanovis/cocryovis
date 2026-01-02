@@ -21,7 +21,6 @@ export class ClippingParametersBuffer extends WebGpuBuffer {
   constructor(device: GPUDevice, init?: Partial<ClippingParameters>) {
     super(device, ClippingParametersBuffer.size, "Clipping Parameters Buffer");
     Object.assign(this.params, init);
-    this.device = device;
   }
 
   protected createBuffer(size: number): GPUBuffer {
