@@ -23,14 +23,12 @@ export class AnnotationVolume extends WebGpuTexture {
 
     if (!this.texture) {
       const descriptor = volumeDescriptors[0];
-      if (!descriptor.settings) {
-        throw new Error("Volume descriptor is missing settings");
-      }
+      const settings = await descriptor.getSettings();
 
       const { texture, view } = this.createTexture(
-        descriptor.settings.size.x,
-        descriptor.settings.size.y,
-        descriptor.settings.size.z
+        settings.size.x,
+        settings.size.y,
+        settings.size.z
       );
       this.texture = texture;
       this.view = view;

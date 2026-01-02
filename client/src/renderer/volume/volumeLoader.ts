@@ -174,10 +174,7 @@ export async function streamVolumesToGPU(
       `Number of volumes exceeds the maximum supported: ${CONFIG.maxRenderedVolumes}`
     );
 
-  const settings = descriptors.map((d) => {
-    if (!d.settings) throw new Error("Missing volume settings");
-    return d.settings;
-  });
+  const settings = await Promise.all(descriptors.map((d) => d.getSettings()));
 
   const size = {
     x: texture.width,

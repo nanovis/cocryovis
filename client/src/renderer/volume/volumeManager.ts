@@ -65,11 +65,13 @@ export class VolumeManager {
         color = { x: 255, y: 255, z: 255 };
       }
 
-      const ratio = descriptor.settings?.ratio;
-      const ratioArray = ratio ? [ratio.x, ratio.y, ratio.z] : [1, 1, 1];
+      const settings = await descriptor.getSettings();
 
-      const size = descriptor.settings?.size;
-      const sizeArray = size ? [size.x, size.y, size.z] : [1, 1, 1];
+      const ratio = settings.ratio;
+      const ratioArray = [ratio.x, ratio.y, ratio.z];
+
+      const size = settings.size;
+      const sizeArray = [size.x, size.y, size.z];
 
       const maxSize = Math.max(...sizeArray);
       const scaledRatio = ratioArray.map(

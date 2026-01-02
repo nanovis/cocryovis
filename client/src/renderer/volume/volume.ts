@@ -8,15 +8,14 @@ export class Volume extends WebGpuTexture {
       throw new Error("No volume descriptors provided");
     }
     const descriptor = volumeDescriptors[0];
-    if (!descriptor.settings) {
-      throw new Error("Volume descriptor is missing settings");
-    }
+
+    const settings = await descriptor.getSettings();
 
     this.texture = this.device.createTexture({
       size: {
-        width: descriptor.settings.size.x,
-        height: descriptor.settings.size.y,
-        depthOrArrayLayers: descriptor.settings.size.z,
+        width: settings.size.x,
+        height: settings.size.y,
+        depthOrArrayLayers: settings.size.z,
       },
       dimension: "3d",
       format: "rgba8unorm",

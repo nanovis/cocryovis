@@ -15,7 +15,8 @@ import {
   type PseudoVolumeInstance,
 } from "@/stores/userState/PseudoVolumeModel";
 import {
-  VolumeData,
+  RawFileVolumeData,
+  type VolumeData,
   VolumeDescriptor,
   volumeSettingsFromJson,
 } from "./volumeDescriptor";
@@ -80,7 +81,7 @@ export async function fileMapToVisualizationConfig(
       if (!volumeFile) {
         throw new Error(`Missing raw volume file: ${rawFilePath}`);
       }
-      volumeData = new VolumeData({ file: volumeFile });
+      volumeData = new RawFileVolumeData(volumeFile);
       volumeDataMap.set(rawFilePath, volumeData);
     }
     const volumeDescriptor: VolumeDescriptor = new VolumeDescriptor(

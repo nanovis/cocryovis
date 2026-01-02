@@ -3,9 +3,11 @@ import { flow, getParentOfType, isAlive, types } from "mobx-state-tree";
 import {
   fileTypeOptions,
   type FileTypeOptions,
-  VolumeData,
+  MrcFileVolumeData,
+  MrcUrlVolumeData,
+  RawFileVolumeData,
+  RawUrlVolumeData,
   VolumeDescriptor,
-  type VolumeDescriptorSettings,
   volumeDescriptorSettingsSchema,
 } from "@/utils/volumeDescriptor";
 import * as Utils from "../../utils/helpers";
@@ -129,10 +131,12 @@ export const FileUploadInputs = types
         throw new Error("Missing file.");
       }
 
-      let settings: VolumeDescriptorSettings | undefined;
+      if (self.isMrcUpload) {
+        return new VolumeDescriptor(new MrcFileVolumeData(self.pendingFile));
+      }
 
       if (self.isRawUpload) {
-        settings = volumeDescriptorSettingsSchema.parse({
+        const settings = volumeDescriptorSettingsSchema.parse({
           size: {
             x: self.width,
             y: self.height,
@@ -148,12 +152,13 @@ export const FileUploadInputs = types
           bytesPerVoxel: bytesPerVoxel,
           usedBits: usedBits,
         });
+        return new VolumeDescriptor(
+          new RawFileVolumeData(self.pendingFile),
+          settings
+        );
       }
 
-      return new VolumeDescriptor(
-        new VolumeData({ file: self.pendingFile }),
-        settings
-      );
+      throw new Error("Invalid file type.");
     },
   }));
 
@@ -255,6 +260,10 @@ export const UrlUploadInputs = types
         throw new Error("Missing URL.");
       }
 
+      if (self.fileType === "mrc") {
+        return new VolumeDescriptor(new MrcUrlVolumeData(self.url));
+      }
+
       const settings = volumeDescriptorSettingsSchema.parse({
         size: {
           x: self.width,
@@ -272,10 +281,7 @@ export const UrlUploadInputs = types
         usedBits: usedBits,
       });
 
-      return new VolumeDescriptor(
-        new VolumeData({ url: self.url, fileType: self.fileType }),
-        settings
-      );
+      return new VolumeDescriptor(new RawUrlVolumeData(self.url), settings);
     },
   }));
 
@@ -364,9 +370,7 @@ export const CryoETUploadInputs = types
       }
     }),
     generateVolumeDescriptor(): VolumeDescriptor {
-      return new VolumeDescriptor(
-        new VolumeData({ url: self.url, fileType: "mrc" })
-      );
+      return new VolumeDescriptor(new MrcUrlVolumeData(self.url));
     },
   }));
 

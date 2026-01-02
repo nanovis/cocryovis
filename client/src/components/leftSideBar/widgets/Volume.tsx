@@ -52,6 +52,10 @@ import {
 } from "../../shared/WriteAccessTooltip";
 import type { ResultInstance } from "@/stores/userState/ResultModel";
 import {
+  MrcFileVolumeData,
+  MrcUrlVolumeData,
+  RawFileVolumeData,
+  RawUrlVolumeData,
   type TransferFunction,
   VolumeDescriptor,
 } from "@/utils/volumeDescriptor";
@@ -291,45 +295,24 @@ const Volume = observer(({ open, close }: Props) => {
         throw new Error("No volume selected.");
       }
 
-      if (volumeDescriptor.volumeData.url) {
-        if (!volumeDescriptor.volumeData.fileType) {
-          throw new Error("No file type specified.");
-        }
-        await selectedVolume.uploadFromUrl(
-          volumeDescriptor.volumeData.url,
-          volumeDescriptor.volumeData.fileType,
-          volumeDescriptor.settings
-        );
-      } else if (volumeDescriptor.volumeData.file) {
-        if (Utils.isMrcFile(volumeDescriptor.volumeData.file.name)) {
-          try {
-            await selectedVolume.uploadMrcVolume(
-              volumeDescriptor.volumeData.file
-            );
-          } catch (error) {
-            if (error instanceof Error) {
-              throw new Error("Error converting MRC file:" + error.message);
-            } else {
-              throw new Error("Error converting MRC file.");
-            }
-          }
-        } else if (Utils.isRawFile(volumeDescriptor.volumeData.file.name)) {
-          if (!volumeDescriptor.settings) {
-            throw new Error("Missing volume settings.");
-          }
-          await selectedVolume.uploadRawVolume(
-            volumeDescriptor.volumeData.file,
-            {
-              ...volumeDescriptor.settings,
-              file: volumeDescriptor.volumeData.file.name,
-            }
-          );
-        } else {
-          throw new Error("Invalid file format.");
-        }
+      const volumeData = volumeDescriptor.volumeData;
+      if (volumeData instanceof MrcUrlVolumeData) {
+        await selectedVolume.uploadFromUrl(volumeData.url, "mrc");
+      } else if (volumeData instanceof RawUrlVolumeData) {
+        const settings = await volumeDescriptor.getSettings();
+        await selectedVolume.uploadFromUrl(volumeData.url, "raw", settings);
+      } else if (volumeData instanceof MrcFileVolumeData) {
+        await selectedVolume.uploadMrcVolume(volumeData.file);
+      } else if (volumeData instanceof RawFileVolumeData) {
+        const settings = await volumeDescriptor.getSettings();
+        await selectedVolume.uploadRawVolume(volumeData.file, {
+          ...settings,
+          file: volumeData.file.name,
+        });
       } else {
         throw new Error("Invalid volume data.");
       }
+
       toastContainer.success("Data uploaded!");
     } catch (error) {
       toastContainer.error(Utils.getErrorMessage(error));

@@ -1,13 +1,13 @@
-import type { VolumeSettings } from "./volumeDescriptor";
+import type { VolumeDescriptorSettings } from "./volumeDescriptor";
 
 /**
  * MRC file into a RAW and JSON file using streaming/chunked.
  * Read the header separately and then processes the data blob in chunks.
  * Float modes (2 and 12), two passes are performed: one to compute min/max and a second to normalize data.
  */
-export async function convertMRCToRaw(
+export async function readMRCHeader(
   mrcFile: File
-): Promise<{ rawFile: File; settings: VolumeSettings }> {
+): Promise<{ mode: number; settings: VolumeDescriptorSettings }> {
   //Read header (first 1024 bytes)
   const headerBuffer = await mrcFile.slice(0, 1024).arrayBuffer();
   const headerView = new DataView(headerBuffer);
@@ -21,10 +21,6 @@ export async function convertMRCToRaw(
   let bytesPerVoxel: number;
   let usedBits: number;
   let isSigned: boolean;
-  let rawDataBlob: Blob;
-
-  // The rest of the file contains the data.
-  const dataBlob = mrcFile.slice(1024);
 
   if (mode === 0 || mode === 1 || mode === 6) {
     // Modes 0, 1, 6: Data can be used directly.
@@ -42,6 +38,41 @@ export async function convertMRCToRaw(
       usedBits = 16;
       isSigned = false;
     }
+  } else if (mode === 2 || mode === 12) {
+    bytesPerVoxel = 1;
+    usedBits = 8;
+    isSigned = false;
+  } else {
+    throw new Error("MRC file data is in an incompatible format.");
+  }
+
+  return {
+    mode: mode,
+    settings: {
+      size: { x: nx, y: ny, z: nz },
+      ratio: { x: 1.0, y: 1.0, z: 1.0 },
+      bytesPerVoxel: bytesPerVoxel,
+      usedBits: usedBits,
+      skipBytes: 0,
+      isLittleEndian: true,
+      isSigned: isSigned,
+      addValue: 0,
+    },
+  };
+}
+
+export async function convertMRCToRaw(
+  mrcFile: File
+): Promise<{ rawFile: File; settings: VolumeDescriptorSettings }> {
+  //Read header (first 1024 bytes)
+  const header = await readMRCHeader(mrcFile);
+
+  let rawDataBlob: Blob;
+
+  // The rest of the file contains the data.
+  const dataBlob = mrcFile.slice(1024);
+
+  if (header.mode === 0 || header.mode === 1 || header.mode === 6) {
     // Read the data stream and collect the chunks.
     const chunks: BlobPart[] = [];
     const reader = dataBlob.stream().getReader();
@@ -52,11 +83,7 @@ export async function convertMRCToRaw(
       chunks.push(value);
     }
     rawDataBlob = new Blob(chunks);
-  } else if (mode === 2 || mode === 12) {
-    bytesPerVoxel = 1;
-    usedBits = 8;
-    isSigned = false;
-
+  } else if (header.mode === 2 || header.mode === 12) {
     // --- First Pass: Determine min and max ---
     let minVal = Infinity;
     let maxVal = -Infinity;
@@ -137,18 +164,5 @@ export async function convertMRCToRaw(
     type: "application/octet-stream",
   });
 
-  // Generate the settings object.
-  const settings: VolumeSettings = {
-    file: rawFileName,
-    size: { x: nx, y: ny, z: nz },
-    ratio: { x: 1.0, y: 1.0, z: 1.0 },
-    bytesPerVoxel: bytesPerVoxel,
-    usedBits: usedBits,
-    skipBytes: 0,
-    isLittleEndian: true,
-    isSigned: isSigned,
-    addValue: 0,
-  };
-
-  return { rawFile, settings };
+  return { rawFile, settings: header.settings };
 }
