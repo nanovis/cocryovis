@@ -1,4 +1,4 @@
-import { streamVolumesToGPU } from "./volumeLoader";
+import { streamVolumesToGPU } from "../utilities/volumeLoader";
 import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
 import { WebGpuTexture } from "../core/webGpuTexture";
 
