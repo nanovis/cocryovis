@@ -1,10 +1,16 @@
-import type { Instance, SnapshotIn } from "mobx-state-tree";
+import {
+  getParentOfType,
+  type Instance,
+  type SnapshotIn,
+} from "mobx-state-tree";
 import { flow, types } from "mobx-state-tree";
 import * as Utils from "../../utils/Helpers";
 import { updateVolumeData } from "@/api/volumeData";
 import ToastContainer from "../../utils/ToastContainer";
 import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import type z from "zod";
+import type { VolumeRenderer } from "@/renderer/renderer";
+import { RootStore } from "@/stores/RootStore";
 
 export const SparseLabelVolume = types
   .model({
@@ -26,6 +32,11 @@ export const SparseLabelVolume = types
     color: types.maybeNull(types.string),
     volumeId: types.integer,
   })
+  .views((self) => ({
+    get renderer(): VolumeRenderer | null {
+      return getParentOfType<typeof RootStore>(self, RootStore).renderer;
+    },
+  }))
   .actions((self) => ({
     updateName: flow(function* updateName(name: string) {
       const sparselabel: z.infer<typeof sparseLabelVolumeDataSchema> =
@@ -48,13 +59,13 @@ export const SparseLabelVolume = types
 
         self.color = sparselabel.color;
 
-        if (window.WasmModule && self.color) {
-          const color = Utils.fromHexColor(self.color);
-          window.WasmModule.set_annotation_color(
+        if (self.renderer) {
+          const color = Utils.fromHexColor(self.color ?? "#FFFFFF");
+          self.renderer.annotationManager.annotationsDataBuffer.setAnnotationData(
             index,
-            color.r / 255,
-            color.g / 255,
-            color.b / 255
+            {
+              color: [color.r / 255, color.g / 255, color.b / 255],
+            }
           );
         }
 
