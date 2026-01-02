@@ -34,10 +34,10 @@ import {
   Hourglass24Regular,
 } from "@fluentui/react-icons";
 import React from "react";
-import globalStyles from "../../../GlobalStyles";
+import globalStyles from "../../../globalStyles";
 import { observer } from "mobx-react-lite";
 import type { TaskHistoryItem } from "../../../../stores/userState/Status";
-import * as Utils from "../../../../utils/Helpers";
+import * as Utils from "../../../../utils/helpers";
 
 const useStyles = makeStyles({
   dataIcon: {

@@ -7,7 +7,7 @@ import {
 } from "mobx-state-tree";
 import { ProjectModels } from "./ModelModel";
 import { ProjectVolumes } from "./VolumeModel";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import type { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
 import type z from "zod";
 import type {
@@ -16,7 +16,7 @@ import type {
 } from "#schemas/project-path-schema.mjs";
 import * as ProjectApi from "../../api/projects";
 import { getDemo } from "../../api/demo";
-import ToastContainer from "../../utils/ToastContainer";
+import ToastContainer from "../../utils/toastContainer";
 
 export const Project = types
   .model({

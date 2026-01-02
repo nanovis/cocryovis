@@ -13,7 +13,7 @@ import type {
 } from "./PseudoVolumeModel";
 import { PseudoLabelVolume } from "./PseudoVolumeModel";
 import { VolumeResults } from "./ResultModel";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import {
   type FileTypeOptions,
   type VolumeDescriptorSettings,
@@ -39,7 +39,7 @@ import {
   createFromUrl,
   deleteVolumeData,
 } from "@/api/volumeData";
-import ToastContainer from "../../utils/ToastContainer";
+import ToastContainer from "../../utils/toastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "@/stores/RootStore";
 

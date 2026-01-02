@@ -5,7 +5,7 @@ import {
   List,
   ListItem,
 } from "@fluentui/react-components";
-import globalStyles from "../../GlobalStyles";
+import globalStyles from "../../globalStyles";
 import { ArrowCircleRight28Regular, Open24Filled } from "@fluentui/react-icons";
 
 interface Props {

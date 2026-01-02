@@ -9,7 +9,7 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
-import { getErrorMessage } from "@/utils/Helpers";
+import { getErrorMessage } from "@/utils/helpers";
 import { useMst } from "@/stores/RootStore";
 
 const useStyles = makeStyles({

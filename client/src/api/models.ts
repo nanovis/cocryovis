@@ -1,5 +1,5 @@
 import type z from "zod";
-import * as Utils from "../utils/Helpers";
+import * as Utils from "../utils/helpers";
 import type {
   modelSchema,
   modelSchemaWithCheckpoint,

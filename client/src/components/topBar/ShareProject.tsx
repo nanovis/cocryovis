@@ -33,7 +33,7 @@ import {
 } from "@fluentui/react-components";
 import type { SyntheticEvent } from "react";
 import { useState, useEffect, useRef } from "react";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import {
   bundleIcon,
   LinkRegular,
@@ -48,7 +48,7 @@ import type { usersArray } from "#schemas/user-path-schema.mjs";
 import type { projectAccessInfoSchema } from "#schemas/project-path-schema.mjs";
 import { getAllUsers } from "@/api/users";
 import { getAccessInfo, setAccess } from "@/api/projects";
-import ToastContainer from "../../utils/ToastContainer";
+import ToastContainer from "../../utils/toastContainer";
 
 const useStyles = makeStyles({
   userSelection: {

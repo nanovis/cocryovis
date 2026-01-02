@@ -1,5 +1,5 @@
 import type z from "zod";
-import * as Utils from "../utils/Helpers";
+import * as Utils from "../utils/helpers";
 import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema.mjs";
 import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema.mjs";

@@ -17,14 +17,14 @@ import type { SignUpCredentials } from "./components/topBar/SignUpPage";
 import SignUpPage from "./components/topBar/SignUpPage";
 import ProfilePage from "./components/topBar/ProfilePage";
 import Cookies from "js-cookie";
-import * as Utils from "./utils/Helpers";
+import * as Utils from "./utils/helpers";
 import { useServerListener } from "./hooks/useServerListener";
 import { observer } from "mobx-react-lite";
 import { useMst } from "./stores/RootStore";
 import { websocketUrl } from "./urls";
 import AdminPanel from "./components/topBar/AdminPanel";
 import { getLoggedUserData, login, register } from "./api/users";
-import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/ToastContainer";
+import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/toastContainer";
 import RendererCanvas from "./components/RendererCanvas/RendererCanvas";
 
 const useStyles = makeStyles({

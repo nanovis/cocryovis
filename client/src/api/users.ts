@@ -8,7 +8,7 @@ import type {
   updateUserSchema,
   usersArray,
 } from "#schemas/user-path-schema.mjs";
-import * as Utils from "../utils/Helpers";
+import * as Utils from "../utils/helpers";
 import type z from "zod";
 
 export async function login(request: z.input<typeof loginSchemaReq>) {

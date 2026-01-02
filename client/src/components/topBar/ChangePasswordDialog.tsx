@@ -15,8 +15,8 @@ import {
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { updateUser } from "../../api/users";
-import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "../../utils/Helpers";
+import ToastContainer from "../../utils/toastContainer";
+import { getErrorMessage } from "../../utils/helpers";
 import { useMst } from "../../stores/RootStore";
 import { observer } from "mobx-react-lite";
 

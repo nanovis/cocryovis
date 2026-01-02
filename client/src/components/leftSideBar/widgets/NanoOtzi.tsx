@@ -20,8 +20,8 @@ import {
   DesktopTower20Regular,
   GlobeDesktop20Regular,
 } from "@fluentui/react-icons";
-import * as Utils from "../../../utils/Helpers";
-import globalStyles from "../../GlobalStyles";
+import * as Utils from "../../../utils/helpers";
+import globalStyles from "../../globalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import ComboboxTagMultiselect from "../../shared/ComboboxTagMultiselect";
 import { observer } from "mobx-react-lite";
@@ -39,7 +39,7 @@ import { queueInference } from "../../../api/nanoOetzi";
 import { getVolumeDataById, getVolumeData } from "../../../api/volumeData";
 import { checkpointToText } from "../../../api/checkpoint";
 import { createResultFromFiles } from "../../../api/results";
-import ToastContainer from "../../../utils/ToastContainer";
+import ToastContainer from "../../../utils/toastContainer";
 import type { JSX } from "react/jsx-runtime";
 
 const useStyles = makeStyles({

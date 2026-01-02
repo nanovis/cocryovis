@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import App from "./app";
+import App from "./App";
 import { RootStoreProvider, rootStore } from "./stores/RootStore";
 
 import {
@@ -9,7 +9,7 @@ import {
   createLightTheme,
 } from "@fluentui/react-components";
 import React from "react";
-import { loadScript } from "./utils/Helpers";
+import { loadScript } from "./utils/helpers";
 
 const customDarkTheme = {
   10: "#030402",

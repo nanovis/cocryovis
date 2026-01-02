@@ -21,17 +21,17 @@ import {
   mergeClasses,
 } from "@fluentui/react-components";
 import { Document20Regular } from "@fluentui/react-icons";
-import globalStyles from "../GlobalStyles";
+import globalStyles from "../globalStyles";
 import type { TiltSeriesDialogInstance } from "@/stores/uiState/TiltSeriesDialog";
 import {
   BooleanInputValidatedField,
   NumberInputValidatedField,
 } from "./ValidatedFields";
 import { observer } from "mobx-react-lite";
-import type { NumberInputField } from "@/utils/Input";
-import { BooleanInputField } from "@/utils/Input";
-import * as Utils from "../../utils/Helpers";
-import ToastContainer from "../../utils/ToastContainer";
+import type { NumberInputField } from "@/utils/input";
+import { BooleanInputField } from "@/utils/input";
+import * as Utils from "../../utils/helpers";
+import ToastContainer from "../../utils/toastContainer";
 
 const useStyles = makeStyles({
   optionsTabCheckbox: {},

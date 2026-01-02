@@ -8,10 +8,10 @@ import {
   type VolumeDescriptorSettings,
   volumeDescriptorSettingsSchema,
 } from "@/utils/volumeDescriptor";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import type { tomogramSchema } from "#schemas/cryoEt-path-schema.mjs";
 import { getTomographyMetadataFromCryoETId } from "@/api/cryoEt";
-import ToastContainer from "../../utils/ToastContainer";
+import ToastContainer from "../../utils/toastContainer";
 import type z from "zod";
 
 export enum Tabs {

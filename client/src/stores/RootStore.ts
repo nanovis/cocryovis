@@ -6,8 +6,8 @@ import { createContext, use } from "react";
 import Cookies from "js-cookie";
 import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
-import ToastContainer from "../utils/ToastContainer";
-import { getErrorMessage } from "@/utils/Helpers";
+import ToastContainer from "../utils/toastContainer";
+import { getErrorMessage } from "@/utils/helpers";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import type { OrbitCameraController } from "@/utils/orbitCameraController";
 

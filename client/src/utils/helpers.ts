@@ -1,6 +1,6 @@
 import JSZip from "jszip";
-import { DEFAULT_TF } from "../DefaultTransferFunctions";
-import ToastContainer from "./ToastContainer";
+import { DEFAULT_TF } from "../defaultTransferFunctions";
+import ToastContainer from "./toastContainer";
 import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
 import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";

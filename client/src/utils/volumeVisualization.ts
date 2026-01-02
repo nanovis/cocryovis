@@ -21,7 +21,7 @@ import {
 } from "./volumeDescriptor";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { visualizationConfigSchema } from "#schemas/componentSchemas/volume-settings-schema.mjs";
-import type { FileMap } from "./Helpers";
+import type { FileMap } from "./helpers";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 
 const CONFIG_FILE_NAME = "config.json";

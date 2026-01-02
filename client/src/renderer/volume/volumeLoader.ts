@@ -2,7 +2,7 @@ import {
   type VolumeDescriptor,
   type VolumeDescriptorSettings,
 } from "@/utils/volumeDescriptor";
-import { CONFIG } from "@/Constants";
+import { CONFIG } from "@/constants";
 import { clamp } from "@/renderer/utilities/math";
 
 function normalizeToUint8PerChannel(

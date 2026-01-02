@@ -15,7 +15,7 @@ import type {
   BooleanInputField,
   DropdownInputField,
   NumberInputField,
-} from "@/utils/Input";
+} from "@/utils/input";
 import { observer } from "mobx-react-lite";
 import type { CSSProperties } from "react";
 

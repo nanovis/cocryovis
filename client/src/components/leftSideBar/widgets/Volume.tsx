@@ -32,11 +32,11 @@ import {
 import { useState, useRef } from "react";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
 import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
-import * as Utils from "../../../utils/Helpers";
+import * as Utils from "../../../utils/helpers";
 import DeleteDialog from "../../shared/DeleteDialog";
-import { CONFIG } from "@/Constants";
+import { CONFIG } from "@/constants";
 import "../../../App.css";
-import globalStyles from "../../GlobalStyles";
+import globalStyles from "../../globalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
 import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
@@ -68,7 +68,7 @@ import {
   getVolumeVisualizationFiles,
 } from "@/api/volumeData";
 import { getResultData } from "@/api/results";
-import ToastContainer from "../../../utils/ToastContainer";
+import ToastContainer from "../../../utils/toastContainer";
 import EditDialog from "./elements/EditDialog";
 import type { JSX } from "react/jsx-runtime";
 import {

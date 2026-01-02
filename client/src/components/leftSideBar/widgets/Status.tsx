@@ -8,14 +8,14 @@ import {
   HourglassHalfRegular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import globalStyles from "../../GlobalStyles";
+import globalStyles from "../../globalStyles";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import UserHistoryTable from "./elements/UserHistoryTable";
 import TaskQueueTable from "./elements/TaskQueueTable";
 import Paganation from "../../shared/Pagination";
-import { getErrorMessage } from "@/utils/Helpers";
-import ToastContainer from "../../../utils/ToastContainer";
+import { getErrorMessage } from "@/utils/helpers";
+import ToastContainer from "../../../utils/toastContainer";
 
 const useStyles = makeStyles({
   contents: {

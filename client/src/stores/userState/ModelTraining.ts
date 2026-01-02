@@ -5,15 +5,15 @@ import { Volume } from "./VolumeModel";
 import { User } from "./UserModel";
 import type { ModelInstance } from "./ModelModel";
 import { Model } from "./ModelModel";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import {
   BooleanInputField,
   DropdownInputField,
   NumberInputField,
   StringInputFieldType,
-} from "../../utils/Input";
+} from "../../utils/input";
 import { queueTraining } from "../../api/nanoOetzi";
-import ToastContainer from "../../utils/ToastContainer";
+import ToastContainer from "../../utils/toastContainer";
 
 export enum lossOptions {
   mse = "Mean Squared Error",

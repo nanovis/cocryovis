@@ -4,9 +4,9 @@ import {
   type SnapshotIn,
 } from "mobx-state-tree";
 import { flow, types } from "mobx-state-tree";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import { updateVolumeData } from "@/api/volumeData";
-import ToastContainer from "../../utils/ToastContainer";
+import ToastContainer from "../../utils/toastContainer";
 import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema.mjs";
 import type z from "zod";
 import type { VolumeRenderer } from "@/renderer/renderer";

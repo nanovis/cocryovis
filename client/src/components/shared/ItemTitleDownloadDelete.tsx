@@ -14,7 +14,7 @@ import {
 import { makeStyles, tokens, Tooltip } from "@fluentui/react-components";
 import DeleteDialog from "./DeleteDialog";
 import { WriteAccessTooltipContentWrapper } from "./WriteAccessTooltip";
-import globalStyles from "../GlobalStyles";
+import globalStyles from "../globalStyles";
 import { observer } from "mobx-react-lite";
 
 const useStyles = makeStyles({

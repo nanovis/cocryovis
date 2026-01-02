@@ -3,9 +3,9 @@ import {
   volumeSettings,
 } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type z from "zod";
-import * as Utils from "./Helpers";
+import * as Utils from "./helpers";
 import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
-import type { FileMap } from "./Helpers";
+import type { FileMap } from "./helpers";
 
 export const BIT_OPTIONS = [8, 16, 32, 64] as const;
 export type BitOptions = (typeof BIT_OPTIONS)[number];

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { makeStyles, Spinner, tokens, Text } from "@fluentui/react-components";
 import { Button, Input } from "@fluentui/react-components";
-import { getErrorMessage } from "@/utils/Helpers";
+import { getErrorMessage } from "@/utils/helpers";
 import { useMst } from "@/stores/RootStore";
 
 const useStyles = makeStyles({

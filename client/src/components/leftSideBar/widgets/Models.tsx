@@ -15,16 +15,16 @@ import {
 import { useState, useRef } from "react";
 import CreateModelDialog from "./elements/CreateModelDialog";
 import DeleteDialog from "../../shared/DeleteDialog";
-import * as Utils from "../../../utils/Helpers";
-import globalStyles from "../../GlobalStyles";
+import * as Utils from "../../../utils/helpers";
+import globalStyles from "../../globalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
 import type { ModelInstance } from "../../../stores/userState/ModelModel";
 import type { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
-import ToastContainer from "../../../utils/ToastContainer";
-import { getErrorMessage } from "../../../utils/Helpers";
+import ToastContainer from "../../../utils/toastContainer";
+import { getErrorMessage } from "../../../utils/helpers";
 import type { JSX } from "react/jsx-runtime";
 
 interface Props {

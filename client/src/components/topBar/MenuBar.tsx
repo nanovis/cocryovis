@@ -14,8 +14,8 @@ import { observer } from "mobx-react-lite";
 import { rootStore, useMst } from "@/stores/RootStore";
 import ShareProject from "./ShareProject";
 import KaustLogo from "./icons/kaust_logo.svg";
-import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "@/utils/Helpers";
+import ToastContainer from "../../utils/toastContainer";
+import { getErrorMessage } from "@/utils/helpers";
 
 const useStyles = makeStyles({
   menubar: {

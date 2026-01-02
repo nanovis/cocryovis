@@ -21,8 +21,8 @@ import {
 } from "@fluentui/react-icons";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
-import * as Utils from "../../../utils/Helpers";
-import globalStyles from "../../GlobalStyles";
+import * as Utils from "../../../utils/helpers";
+import globalStyles from "../../globalStyles";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
@@ -33,7 +33,7 @@ import {
   updateAnnotations,
   updateVolumeData,
 } from "@/api/volumeData";
-import ToastContainer from "../../../utils/ToastContainer";
+import ToastContainer from "../../../utils/toastContainer";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 
 const useStyles = makeStyles({

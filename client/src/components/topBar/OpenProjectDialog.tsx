@@ -14,14 +14,14 @@ import {
   Tooltip,
 } from "@fluentui/react-components";
 import ComboboxSearch from "../shared/ComboboxSearch";
-import globalStyles from "../GlobalStyles";
+import globalStyles from "../globalStyles";
 import { ArrowSync24Regular, People16Filled } from "@fluentui/react-icons";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import type { JSX } from "react/jsx-runtime";
 import type { ProjectInstance } from "@/stores/userState/ProjectModel";
-import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "@/utils/Helpers";
+import ToastContainer from "../../utils/toastContainer";
+import { getErrorMessage } from "@/utils/helpers";
 
 const useStyles = makeStyles({
   combobox: {

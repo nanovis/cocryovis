@@ -3,7 +3,7 @@ import useRenderer from "../../hooks/useRenderer";
 import { makeStyles } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
-import { CONFIG } from "@/Constants";
+import { CONFIG } from "@/constants";
 import { OrbitCameraController } from "@/utils/orbitCameraController";
 import { useCanvasControls } from "@/hooks/useCanvasControls";
 

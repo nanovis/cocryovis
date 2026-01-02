@@ -25,7 +25,7 @@ import {
 } from "@fluentui/react-components";
 import { Hourglass24Regular } from "@fluentui/react-icons";
 import React from "react";
-import globalStyles from "../../../GlobalStyles";
+import globalStyles from "../../../globalStyles";
 import { observer } from "mobx-react-lite";
 import type { TaskQueueItem } from "../../../../stores/userState/Status";
 

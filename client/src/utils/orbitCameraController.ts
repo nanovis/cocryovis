@@ -1,5 +1,5 @@
 import type { Camera } from "@/renderer/core/camera";
-import { clamp } from "./Helpers";
+import { clamp } from "./helpers";
 
 export class OrbitCameraController {
   private static readonly MOUSE_BUTTON = 2;

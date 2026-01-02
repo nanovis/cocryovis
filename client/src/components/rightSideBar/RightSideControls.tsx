@@ -2,7 +2,7 @@ import Visualization from "./widgets/Visualization";
 import RenderSettings from "./widgets/RenderSettings";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
-import globalStyles from "../GlobalStyles";
+import globalStyles from "../globalStyles";
 import { Button, tokens, Tooltip } from "@fluentui/react-components";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import {
@@ -12,7 +12,7 @@ import {
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import About from "./widgets/About";
 import VolumeUploadDialog from "../shared/VolumeUploadDialog";
 import {
@@ -20,8 +20,8 @@ import {
   VolumeData,
   VolumeDescriptor,
 } from "@/utils/volumeDescriptor";
-import ToastContainer from "../../utils/ToastContainer";
-import { convertMRCToRaw } from "@/utils/MrcParser";
+import ToastContainer from "../../utils/toastContainer";
+import { convertMRCToRaw } from "@/utils/mrcParser";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 
 const enum WidgetIndices {

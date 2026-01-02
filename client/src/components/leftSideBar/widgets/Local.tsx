@@ -12,17 +12,17 @@ import {
   Cube20Regular,
   DesktopFlow20Regular,
 } from "@fluentui/react-icons";
-import globalStyles from "../../GlobalStyles";
+import globalStyles from "../../globalStyles";
 import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
 import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
 import { useRef, useState } from "react";
-import * as Utils from "../../../utils/Helpers";
+import * as Utils from "../../../utils/helpers";
 import JSZip from "jszip";
 import saveAs from "file-saver";
 import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { checkpointFileToText } from "../../../api/checkpoint";
-import ToastContainer from "../../../utils/ToastContainer";
+import ToastContainer from "../../../utils/toastContainer";
 
 const useStyles = makeStyles({
   inferenceButtons: {

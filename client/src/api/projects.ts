@@ -7,7 +7,7 @@ import type {
   setAccessSchemaReq,
   setAccessSchemaRes,
 } from "#schemas/project-path-schema.mjs";
-import * as Utils from "../utils/Helpers";
+import * as Utils from "../utils/helpers";
 import type z from "zod";
 
 export async function getAllUserProjectsDeep() {

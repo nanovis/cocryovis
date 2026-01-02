@@ -1,6 +1,6 @@
 import type { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema.mjs";
 import type z from "zod";
-import * as Utils from "../utils/Helpers";
+import * as Utils from "../utils/helpers";
 
 export async function deleteCheckpoint(idCheckpoint: number) {
   await Utils.sendApiRequest(`checkpoint/${idCheckpoint}`, {

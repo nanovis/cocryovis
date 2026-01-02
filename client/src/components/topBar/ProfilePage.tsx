@@ -12,11 +12,11 @@ import {
 } from "@fluentui/react-components";
 import { useState } from "react";
 import DeleteDialog from "../shared/DeleteDialog";
-import GlobalStyles from "../GlobalStyles";
+import GlobalStyles from "../globalStyles";
 import ChangePasswordDialog from "./ChangePasswordDialog";
 import * as usersApi from "../../api/users";
-import ToastContainer from "../../utils/ToastContainer";
-import { getErrorMessage } from "../../utils/Helpers";
+import ToastContainer from "../../utils/toastContainer";
+import { getErrorMessage } from "../../utils/helpers";
 
 const useStyles = makeStyles({
   container: {

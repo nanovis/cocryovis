@@ -22,7 +22,7 @@ import {
   Image,
 } from "@fluentui/react-components";
 import { useState } from "react";
-import * as Utils from "../../utils/Helpers";
+import * as Utils from "../../utils/helpers";
 import {
   ArrowResetFilled,
   Checkmark24Filled,
@@ -40,7 +40,7 @@ import {
   formatOptions,
   Tabs,
 } from "@/stores/uiState/UploadDialog";
-import globalStyles from "../GlobalStyles";
+import globalStyles from "../globalStyles";
 import { observer } from "mobx-react-lite";
 import CZIIIcon from "./CZIIIcon";
 
