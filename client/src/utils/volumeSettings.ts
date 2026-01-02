@@ -1,7 +1,11 @@
-import { volumeSettings } from "#schemas/componentSchemas/volume-settings-schema.mjs";
+import {
+  type transferFunctionSchema,
+  volumeSettings,
+} from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type z from "zod";
 import * as Utils from "./Helpers";
 import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
+import type { FileMap } from "./Helpers";
 
 export const BIT_OPTIONS = [8, 16, 32, 64] as const;
 export type BitOptions = (typeof BIT_OPTIONS)[number];
@@ -21,8 +25,9 @@ export const volumeDescriptorSettingsSchema = volumeSettings.omit({
 export type VolumeDescriptorSettings = z.output<
   typeof volumeDescriptorSettingsSchema
 >;
+export type TransferFunction = z.infer<typeof transferFunctionSchema>;
 
-export function volumeSettingsFromJson(json: string) {
+export function volumeSettingsFromJson(json: string): VolumeSettings {
   const data = JSON.parse(json);
   const volumeSettingsObject = volumeSettings.parse(data);
 
@@ -106,10 +111,43 @@ export class VolumeData {
 export class VolumeDescriptor {
   volumeData: VolumeData;
   readonly settings?: VolumeDescriptorSettings;
+  readonly transferFunction?: TransferFunction;
 
-  constructor(volumeData: VolumeData, settings?: VolumeDescriptorSettings) {
+  constructor(
+    volumeData: VolumeData,
+    settings?: VolumeDescriptorSettings,
+    transferFunction?: TransferFunction
+  ) {
     this.settings = settings;
     this.volumeData = volumeData;
+    this.transferFunction = transferFunction;
+  }
+
+  static async fromFileMap(
+    fileMap: FileMap,
+    transferFunction?: TransferFunction
+  ): Promise<VolumeDescriptor> {
+    let settingsFile: File | undefined;
+    for (const file of fileMap.values()) {
+      if (!settingsFile && file.name.endsWith(".json")) {
+        settingsFile = file;
+        break;
+      }
+    }
+    if (!settingsFile) {
+      throw new Error("Missing volume settings file.");
+    }
+    const settingFileContent = await settingsFile.text();
+    const settings = volumeSettingsFromJson(settingFileContent);
+    const rawFile = fileMap.get(settings.file);
+    if (!rawFile) {
+      throw new Error("Missing volume data file.");
+    }
+    return new VolumeDescriptor(
+      new VolumeData({ file: rawFile }),
+      settings,
+      transferFunction
+    );
   }
 }
 

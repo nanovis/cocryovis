@@ -4,6 +4,7 @@ import ToastContainer from "./ToastContainer";
 import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
 import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
+import type { TransferFunction } from "@/utils/volumeSettings";
 
 export type FileMap = Map<string, File>;
 
@@ -239,7 +240,10 @@ export async function unpackAndcreateFileMap(files: FileList | File[]) {
   return fullFileMap;
 }
 
-export function pickDefaultTF(currentIndex: number, blank = false) {
+export function pickDefaultTF(
+  currentIndex: number,
+  blank = false
+): { tfName: string; tfDefinition: TransferFunction } {
   let tfName = null;
   let tfDefinition = null;
   if (blank) {

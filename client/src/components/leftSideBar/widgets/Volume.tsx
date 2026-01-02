@@ -51,13 +51,16 @@ import {
   WriteAccessTooltipContentWrapper,
 } from "../../shared/WriteAccessTooltip";
 import type { ResultInstance } from "@/stores/userState/ResultModel";
-import type { VolumeDescriptor } from "@/utils/volumeSettings";
+import {
+  type TransferFunction,
+  VolumeDescriptor,
+} from "@/utils/volumeSettings";
 import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
-import type { SparseVolumeInstance } from "@/stores/userState/SparseVolumeModel";
+import {
+  SparseLabelVolume,
+  type SparseVolumeInstance,
+} from "@/stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "@/stores/userState/PseudoVolumeModel";
-import type { VolVisSettingsSnapshotIn } from "@/stores/uiState/VolVisSettings";
-import type { VisualizedVolumeSnapshotIn } from "@/stores/uiState/VisualizedVolume";
-import { DEFAULT_TF } from "@/DefaultTransferFunctions";
 import { queuePseudoLabelsGeneration } from "@/api/ilastik";
 import { queueTiltSeriesReconstruction } from "@/api/cryoEt";
 import {
@@ -68,7 +71,12 @@ import { getResultData } from "@/api/results";
 import ToastContainer from "../../../utils/ToastContainer";
 import EditDialog from "./elements/EditDialog";
 import type { JSX } from "react/jsx-runtime";
-import { fileMapToVisualizationConfig } from "@/utils/volumeVisualization";
+import {
+  fileMapToVisualizationConfig,
+  visualizeVolumeFromConfig,
+} from "@/utils/volumeVisualization";
+import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
+import { getType } from "mobx-state-tree";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -113,7 +121,7 @@ interface Props {
 }
 
 const Volume = observer(({ open, close }: Props) => {
-  const { user, uiState } = useMst();
+  const { user, uiState, renderer } = useMst();
 
   const activeProject = user.userProjects.activeProject;
   const projectVolumes = activeProject?.projectVolumes;
@@ -410,10 +418,31 @@ const Volume = observer(({ open, close }: Props) => {
       toastContainer.loading("Processing visualization data...");
       const fileMap = await Utils.zipToFileMap(contents);
 
-      const visualizationDescriptor =
-        await fileMapToVisualizationConfig(fileMap);
+      let transferFunction: TransferFunction | undefined;
+      if (getType(volumeInstance) === SparseLabelVolume) {
+        const sparseLabelVolume = volumeInstance as SparseVolumeInstance;
+        if (sparseLabelVolume.color) {
+          const color = Utils.fromHexColor(sparseLabelVolume.color);
+          transferFunction = {
+            rampLow: 0,
+            rampHigh: 1,
+            color: {
+              x: color.r,
+              y: color.g,
+              z: color.b,
+            },
+          };
+        }
+      }
+      const volumeDescriptor = await VolumeDescriptor.fromFileMap(
+        fileMap,
+        transferFunction
+      );
 
-      await uiState.visualizeVolume(visualizationDescriptor, volumeInstance);
+      await uiState.visualizeVolume(
+        { descriptors: [volumeDescriptor] },
+        volumeInstance
+      );
 
       toastContainer.dismiss();
     } catch (error) {
@@ -433,36 +462,20 @@ const Volume = observer(({ open, close }: Props) => {
         throw new Error("No volume selected.");
       }
 
+      if (!renderer) {
+        throw new Error("Renderer not initialized.");
+      }
+
       toastContainer.loading(
         `Fetching manual label volume 0/${volume.sparseVolumeArray.length}`
       );
 
-      if (!window.WasmModule) {
-        throw new Error("WasmModule is not loaded.");
-      }
-
-      const volumeVisualizationSettingsArray: VolVisSettingsSnapshotIn[] = [];
-
-      const vizualizedVolume: VisualizedVolumeSnapshotIn = {
-        volVisSettings: volumeVisualizationSettingsArray,
-      };
-
-      const config = {
-        files: [] as string[],
-      };
-
       let volumeArray;
       if (dataType === "SparseLabeledVolumeData") {
         volumeArray = volume.sparseVolumeArray;
-        vizualizedVolume.sparseLabelVolumes = volumeArray.map(
-          (sparseVolume) => sparseVolume.id
-        );
       }
       if (dataType === "PseudoLabeledVolumeData") {
         volumeArray = volume.pseudoVolumeArray;
-        vizualizedVolume.PseudoLabelVolumes = volumeArray.map(
-          (pseudoVolume) => pseudoVolume.id
-        );
       }
 
       if (!volumeArray || volumeArray.length === 0) {
@@ -470,6 +483,10 @@ const Volume = observer(({ open, close }: Props) => {
       }
 
       const type = dataType === "SparseLabeledVolumeData" ? "Manual" : "Pseudo";
+
+      const visualizationDescriptor: VisualizationDescriptor = {
+        descriptors: [],
+      };
 
       for (let i = 0; i < volumeArray.length; i++) {
         const labelVolume = volumeArray[i];
@@ -479,93 +496,39 @@ const Volume = observer(({ open, close }: Props) => {
 
         await Utils.waitForNextFrame();
 
-        const contents = await downloadFullVolumeData(dataType, labelVolume.id);
-        const fileMap = await Utils.zipToFileMap(contents);
-        let settingsFile;
-        let rawFile;
-        for (const [key, value] of fileMap) {
-          if (key.endsWith(".json")) {
-            settingsFile = value;
-          } else if (key.endsWith(".raw")) {
-            rawFile = value;
-          }
-        }
-        if (!settingsFile || !rawFile) {
-          throw new Error("No annotation volume found.");
-        }
-        const settingsData = await settingsFile.text();
-        const settings = JSON.parse(settingsData);
-        const settingsFileName = `settings_${i}.json`;
-        const rawFileName = `raw_${i}.raw`;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        settings.file = rawFileName;
-
-        const rawFileContent = await rawFile.arrayBuffer();
-        const data = new Uint8Array(rawFileContent);
-
-        let color;
-
-        if ("color" in labelVolume) {
-          color = labelVolume.color
+        const color =
+          "color" in labelVolume && labelVolume.color
             ? Utils.fromHexColor(labelVolume.color as string)
             : { r: 255, g: 255, b: 255 };
-        } else {
-          const colorTF = DEFAULT_TF.tfArray[i].color;
-          color = {
-            r: colorTF.x,
-            g: colorTF.y,
-            b: colorTF.z,
-          };
-        }
 
-        const tfName = `transferFunction_${i}`;
-
-        const volumeVisualizationSettings: VolVisSettingsSnapshotIn = {
-          index: i,
-          name: `Annotation ${i}`,
-          type: "volume",
-          transferFunction: {
-            rampLow: 0.01,
-            rampHigh: 0.99,
-            red: color.r,
-            green: color.g,
-            blue: color.b,
-            comment: tfName,
+        const transferFunction: TransferFunction = {
+          rampLow: 0,
+          rampHigh: 1,
+          color: {
+            x: color.r,
+            y: color.g,
+            z: color.b,
           },
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        settings.transferFunction = tfName;
-
-        window.WasmModule.FS.writeFile(rawFileName, data);
-        window.WasmModule.FS.writeFile(
-          settingsFileName,
-          JSON.stringify(settings)
+        const contents = await downloadFullVolumeData(dataType, labelVolume.id);
+        const fileMap = await Utils.zipToFileMap(contents);
+        const volumeDescriptor = await VolumeDescriptor.fromFileMap(
+          fileMap,
+          transferFunction
         );
-        window.WasmModule.FS.writeFile(
-          tfName,
-          JSON.stringify({
-            rampLow: volumeVisualizationSettings.transferFunction.rampLow,
-            rampHigh: volumeVisualizationSettings.transferFunction.rampHigh,
-            color: {
-              x: volumeVisualizationSettings.transferFunction.red,
-              y: volumeVisualizationSettings.transferFunction.green,
-              z: volumeVisualizationSettings.transferFunction.blue,
-            },
-          })
-        );
-
-        config.files.push(settingsFileName);
-        volumeVisualizationSettingsArray.push(volumeVisualizationSettings);
+        visualizationDescriptor.descriptors.push(volumeDescriptor);
       }
 
       toastContainer.loading("Processing rendering data...");
 
-      await Utils.waitForNextFrame();
+      const visualizedVolume = await visualizeVolumeFromConfig(
+        renderer,
+        visualizationDescriptor,
+        volumeArray
+      );
 
-      window.WasmModule.FS.writeFile("config.json", JSON.stringify(config));
-      window.WasmModule.open_volume();
-      uiState.setVizualizedVolume(vizualizedVolume);
+      uiState.setVizualizedVolume(visualizedVolume);
 
       toastContainer.success(`${type} label volumes visualized.`);
     } catch (error) {

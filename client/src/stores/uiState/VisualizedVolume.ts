@@ -32,6 +32,8 @@ export type visualizedObjectInstances =
   | VolumeInstance
   | SparseVolumeInstance
   | PseudoVolumeInstance
+  | SparseVolumeInstance[]
+  | PseudoVolumeInstance[]
   | ResultInstance
   | undefined;
 
@@ -98,7 +100,7 @@ export const VisualizedVolume = types
       types.array(types.reference(SparseLabelVolume))
     ),
     pseudoLabelVolume: types.maybe(types.reference(PseudoLabelVolume)),
-    PseudoLabelVolumes: types.maybe(
+    pseudoLabelVolumes: types.maybe(
       types.array(types.reference(PseudoLabelVolume))
     ),
     result: types.maybe(types.reference(Result)),

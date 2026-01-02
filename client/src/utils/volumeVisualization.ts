@@ -4,16 +4,23 @@ import type {
   visualizedObjectInstances,
   VisualizedVolumeSnapshotIn,
 } from "@/stores/uiState/VisualizedVolume";
-import { Volume } from "@/stores/userState/VolumeModel";
-import { Result } from "@/stores/userState/ResultModel";
-import { SparseLabelVolume } from "@/stores/userState/SparseVolumeModel";
-import { PseudoLabelVolume } from "@/stores/userState/PseudoVolumeModel";
-import { VolumeData, VolumeDescriptor } from "./volumeSettings";
-import type { VolumeRenderer } from "@/renderer/renderer";
+import { Volume, type VolumeInstance } from "@/stores/userState/VolumeModel";
+import { Result, type ResultInstance } from "@/stores/userState/ResultModel";
 import {
-  visualizationConfigSchema,
-  volumeSettings,
-} from "#schemas/componentSchemas/volume-settings-schema.mjs";
+  SparseLabelVolume,
+  type SparseVolumeInstance,
+} from "@/stores/userState/SparseVolumeModel";
+import {
+  PseudoLabelVolume,
+  type PseudoVolumeInstance,
+} from "@/stores/userState/PseudoVolumeModel";
+import {
+  VolumeData,
+  VolumeDescriptor,
+  volumeSettingsFromJson,
+} from "./volumeSettings";
+import type { VolumeRenderer } from "@/renderer/renderer";
+import { visualizationConfigSchema } from "#schemas/componentSchemas/volume-settings-schema.mjs";
 import type { FileMap } from "./Helpers";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 
@@ -65,7 +72,7 @@ export async function fileMapToVisualizationConfig(
       throw new Error(`Missing volume settings file: ${fileName}`);
     }
     const fileContent = await data.text();
-    const settings = volumeSettings.parse(JSON.parse(fileContent));
+    const settings = volumeSettingsFromJson(fileContent);
     const rawFilePath = settings.file;
     let volumeData = volumeDataMap.get(rawFilePath);
     if (!volumeData) {
@@ -104,14 +111,35 @@ export async function visualizeVolumeFromConfig(
   };
 
   if (visualizedObject !== undefined) {
-    if (getType(visualizedObject) === Volume) {
-      visualizedVolume.volume = visualizedObject.id;
+    if (Array.isArray(visualizedObject)) {
+      if (visualizedObject.length < 1) {
+        throw new Error("Empty visualization object array.");
+      }
+      if (getType(visualizedObject[0]) === SparseLabelVolume) {
+        visualizedVolume.sparseLabelVolumes = visualizedObject.map(
+          (sparseVolume) => sparseVolume.id
+        );
+      } else if (getType(visualizedObject[0]) === PseudoLabelVolume) {
+        visualizedVolume.pseudoLabelVolumes = visualizedObject.map(
+          (sparseVolume) => sparseVolume.id
+        );
+      } else {
+        throw new Error("Invalid visualization object array.");
+      }
+    } else if (getType(visualizedObject) === Volume) {
+      visualizedVolume.volume = (visualizedObject as VolumeInstance).id;
     } else if (getType(visualizedObject) === Result) {
-      visualizedVolume.result = visualizedObject.id;
+      visualizedVolume.result = (visualizedObject as ResultInstance).id;
     } else if (getType(visualizedObject) === SparseLabelVolume) {
-      visualizedVolume.sparseLabelVolume = visualizedObject.id;
+      visualizedVolume.sparseLabelVolume = (
+        visualizedObject as SparseVolumeInstance
+      ).id;
     } else if (getType(visualizedObject) === PseudoLabelVolume) {
-      visualizedVolume.pseudoLabelVolume = visualizedObject.id;
+      visualizedVolume.pseudoLabelVolume = (
+        visualizedObject as PseudoVolumeInstance
+      ).id;
+    } else {
+      throw new Error("Invalid visualization object.");
     }
   }
 

@@ -52,8 +52,15 @@ export class VolumeManager {
 
     let tfIndex = 0;
     for (const descriptor of descriptors) {
-      const transferFunction = pickDefaultTF(tfIndex, descriptors.length === 1);
-      let color = transferFunction.tfDefinition.color;
+      let transferFunction = descriptor.transferFunction;
+      if (!transferFunction) {
+        transferFunction = pickDefaultTF(
+          tfIndex,
+          descriptors.length === 1
+        ).tfDefinition;
+      }
+
+      let color = transferFunction.color;
       if (tfIndex === rawVolumeChannel) {
         color = { x: 255, y: 255, z: 255 };
       }
@@ -72,8 +79,8 @@ export class VolumeManager {
       this.channelData.setChannelData(tfIndex, {
         color: [color.x / 255, color.y / 255, color.z / 255],
         ratio: scaledRatio,
-        rampStart: transferFunction.tfDefinition.rampLow,
-        rampEnd: transferFunction.tfDefinition.rampHigh,
+        rampStart: transferFunction.rampLow,
+        rampEnd: transferFunction.rampHigh,
         visible: true,
       });
       tfIndex++;
