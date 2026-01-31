@@ -153,7 +153,12 @@ export const RenderSettings = types
         shadowMin: self.shadowMin,
         shadowMax: self.shadowMax,
 
-        clearColor: [...self.clearColor, 1],
+        clearColor: [
+          self.clearColor[0],
+          self.clearColor[1],
+          self.clearColor[2],
+          1,
+        ],
 
         shadowRadius: self.shadowRadius,
       };

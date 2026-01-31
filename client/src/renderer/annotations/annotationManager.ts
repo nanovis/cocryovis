@@ -223,7 +223,7 @@ export class AnnotationManager {
     volumeIndex: number
   ) {
     if (
-      !this.renderingParametersBuffer.annotationsEnabled() ||
+      !this.renderingParametersBuffer.params.enableAnnotations ||
       this.clippingPlaneManager.getClippingPlaneType() === "none"
     )
       return;
@@ -289,8 +289,8 @@ export class AnnotationManager {
     const t = intersectRayPlane(
       rayOrigin,
       rayDir,
-      clippingPlaneBuffer.clippingPlaneOrigin,
-      clippingPlaneBuffer.clippingPlaneNormal
+      clippingPlaneBuffer.params.clippingPlaneOrigin,
+      clippingPlaneBuffer.params.clippingPlaneNormal
     );
 
     if (t === undefined) {

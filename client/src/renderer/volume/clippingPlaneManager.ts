@@ -42,17 +42,17 @@ export class ClippingPlaneManager {
     if (type === "x") {
       this.clippingPlaneUp = vec3.fromValues(0, 1, 0);
       this.clippingParametersBuffer.set({
-        clippingPlaneNormal: vec4.fromValues(1, 0, 0, 0),
+        clippingPlaneNormal: [1, 0, 0, 0],
       });
     } else if (type === "y") {
       this.clippingPlaneUp = vec3.fromValues(1, 0, 0);
       this.clippingParametersBuffer.set({
-        clippingPlaneNormal: vec4.fromValues(0, 1, 0, 0),
+        clippingPlaneNormal: [0, 1, 0, 0],
       });
     } else if (type === "z") {
       this.clippingPlaneUp = vec3.fromValues(0, 1, 0);
       this.clippingParametersBuffer.set({
-        clippingPlaneNormal: vec4.fromValues(0, 0, -1, 0),
+        clippingPlaneNormal: [0, 0, -1, 0],
       });
     }
   }
@@ -116,28 +116,26 @@ export class ClippingPlaneManager {
       this.clippingPlaneType !== "none" &&
       this.volumeManager.channelData.numberOfChannels > 0
     ) {
+      const clippingPlaneNormal =
+        this.clippingParametersBuffer.params.clippingPlaneNormal;
       if (
         this.lastClippingPlaneOriginUpdate === undefined ||
         !vec3.equals(
           this.lastClippingPlaneOriginUpdate.normal,
-          this.clippingParametersBuffer.clippingPlaneNormal
+          clippingPlaneNormal
         ) ||
         this.lastClippingPlaneOriginUpdate.offset !== this.clippingPlaneOffset
       ) {
         const clippingPlaneOrigin = vec3.create();
         const ratio = this.volumeManager.channelData.getParameters(0).ratio;
-        vec3.multiply(
-          clippingPlaneOrigin,
-          this.clippingParametersBuffer.clippingPlaneNormal,
-          ratio
-        );
+        vec3.multiply(clippingPlaneOrigin, clippingPlaneNormal, ratio);
         vec3.scale(
           clippingPlaneOrigin,
           clippingPlaneOrigin,
           this.clippingPlaneOffset
         );
         this.lastClippingPlaneOriginUpdate = {
-          normal: vec3.clone(this.clippingParametersBuffer.clippingPlaneNormal),
+          normal: vec3.clone(clippingPlaneNormal),
           offset: this.clippingPlaneOffset,
         };
         this.clippingParametersBuffer.set({
@@ -150,11 +148,16 @@ export class ClippingPlaneManager {
       this.fullscreen &&
       this.volumeManager.channelData.numberOfChannels > 0
     ) {
+      const clippingPlaneNormal =
+        this.clippingParametersBuffer.params.clippingPlaneNormal;
+      const clippingPlaneOrigin =
+        this.clippingParametersBuffer.params.clippingPlaneOrigin;
+
       const ratio = this.volumeManager.channelData.getParameters(0);
       this.camera.setFullscreen(
         this.clippingPlaneUp,
-        this.clippingParametersBuffer.clippingPlaneNormal,
-        this.clippingParametersBuffer.clippingPlaneOrigin,
+        clippingPlaneNormal,
+        clippingPlaneOrigin,
         ratio.ratio
       );
     }

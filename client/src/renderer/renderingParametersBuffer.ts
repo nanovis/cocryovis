@@ -1,31 +1,43 @@
-import { vec4 } from "gl-matrix";
-import { WebGpuBuffer } from "./core/webGpuBuffer";
+import { WebGpuBufferBBO } from "@/renderer/core/webGpuBufferBBO";
+import {
+  BoolUint32,
+  type DecodedBuffer,
+  Float32,
+  Float32Vec4,
+  Int32,
+} from "buffer-backed-object";
 
-export interface RenderingParameters {
-  clearColor: vec4;
+const renderingParametersDescriptor = {
+  clearColor: Float32Vec4(),
 
-  enableEarlyRayTermination: boolean;
-  enableJittering: boolean;
-  enableAmbientOcclusion: boolean;
-  enableSoftShadows: boolean;
+  enableEarlyRayTermination: BoolUint32(),
+  enableJittering: BoolUint32(),
+  enableAmbientOcclusion: BoolUint32(),
+  enableSoftShadows: BoolUint32(),
 
-  enableAnnotations: boolean;
-  sampleRate: number;
-  aoRadius: number;
-  aoStrength: number;
+  enableAnnotations: BoolUint32(),
+  sampleRate: Float32(),
+  aoRadius: Float32(),
+  aoStrength: Float32(),
 
-  aoNumSamples: number;
-  shadowQuality: number;
-  shadowStrength: number;
-  shadowRadius: number;
+  aoNumSamples: Int32(),
+  shadowQuality: Float32(),
+  shadowStrength: Float32(),
+  shadowRadius: Float32(),
 
-  shadowMin: number;
-  shadowMax: number;
-}
+  shadowMin: Float32(),
+  shadowMax: Float32(),
+} as const;
 
-export class RenderingParametersBuffer extends WebGpuBuffer {
-  params: RenderingParameters = {
-    clearColor: vec4.fromValues(0, 0, 0, 1),
+export type RenderingParameters = DecodedBuffer<
+  typeof renderingParametersDescriptor
+>;
+
+export class RenderingParametersBuffer extends WebGpuBufferBBO<
+  typeof renderingParametersDescriptor
+> {
+  static readonly defaults: RenderingParameters = {
+    clearColor: [0, 0, 0, 1],
 
     enableEarlyRayTermination: true,
     enableJittering: true,
@@ -44,15 +56,13 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
 
     shadowMin: 0.0,
     shadowMax: 1.0,
-  };
-
-  private dirty: boolean = true;
-
-  private static readonly size = 28 * 4;
+  } as const;
 
   constructor(device: GPUDevice, init?: Partial<RenderingParameters>) {
-    super(device, RenderingParametersBuffer.size, "ParamData Buffer");
-    Object.assign(this.params, init);
+    super(device, renderingParametersDescriptor, "ParamData Buffer", 16);
+    if (init !== undefined) {
+      this.set(init);
+    }
   }
 
   protected createBuffer(size: number): GPUBuffer {
@@ -61,74 +71,5 @@ export class RenderingParametersBuffer extends WebGpuBuffer {
       label: this.label,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
-  }
-
-  set(params: Partial<RenderingParameters>) {
-    this.dirty = true;
-    Object.assign(this.params, params);
-  }
-
-  annotationsEnabled(): boolean {
-    return this.params.enableAnnotations;
-  }
-
-  toBuffer(): ArrayBuffer {
-    const buffer = new ArrayBuffer(RenderingParametersBuffer.size);
-    const view = new DataView(buffer);
-
-    let o = 0;
-    const le = true;
-
-    for (let i = 0; i < 4; i++)
-      view.setFloat32(o + i * 4, this.params.clearColor[i], le);
-    o += 16;
-
-    view.setInt32(o, Number(this.params.enableEarlyRayTermination), le);
-    o += 4;
-    view.setInt32(o, Number(this.params.enableJittering), le);
-    o += 4;
-    view.setInt32(o, Number(this.params.enableAmbientOcclusion), le);
-    o += 4;
-    view.setInt32(o, Number(this.params.enableSoftShadows), le);
-    o += 4;
-
-    view.setInt32(o, Number(this.params.enableAnnotations), le);
-    o += 4;
-    view.setFloat32(o, this.params.sampleRate, le);
-    o += 4;
-    view.setFloat32(o, this.params.aoRadius, le);
-    o += 4;
-    view.setFloat32(o, this.params.aoStrength, le);
-    o += 4;
-
-    view.setInt32(o, this.params.aoNumSamples, le);
-    o += 4;
-    view.setFloat32(o, this.params.shadowQuality, le);
-    o += 4;
-    view.setFloat32(o, this.params.shadowStrength, le);
-    o += 4;
-    view.setFloat32(o, this.params.shadowRadius, le);
-    o += 4;
-
-    view.setFloat32(o, this.params.shadowMin, le);
-    o += 4;
-    view.setFloat32(o, this.params.shadowMax, le);
-    o += 4;
-    // buffer
-    view.setInt32(o, 0, le);
-    o += 4;
-    view.setInt32(o, 0, le);
-    o += 4;
-
-    return buffer;
-  }
-
-  updateBuffer() {
-    if (!this.dirty || this.destroyed) {
-      return;
-    }
-    const data = this.toBuffer();
-    this.device.queue.writeBuffer(this.buffer, 0, data);
-    this.dirty = false;
   }
 }
