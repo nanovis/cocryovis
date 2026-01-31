@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useState } from "react";
 import {
   Button,
@@ -79,7 +79,7 @@ const SignInPage = observer(({ onSignIn }: Props) => {
   const [errorMessage, setErrorMessage] = useState("");
   const classes = useStyles();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     uiState.setIsActive(true);

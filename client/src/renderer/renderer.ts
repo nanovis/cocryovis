@@ -305,8 +305,7 @@ export class VolumeRenderer {
 
   getDepthTexture(): GPUTexture {
     if (
-      this.depthTexture &&
-      this.depthTexture.width === this.width &&
+      this.depthTexture?.width === this.width &&
       this.depthTexture.height === this.height
     ) {
       return this.depthTexture;

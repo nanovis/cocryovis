@@ -125,6 +125,71 @@ const useStyles = makeStyles({
   },
 });
 
+const TFUploadElement = ({
+  settingsInstance,
+}: {
+  settingsInstance: VolVisSettingsInstance;
+}) => {
+  const classes = useStyles();
+  const globalClasses = globalStyles();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const TFFileRef = useRef<HTMLInputElement | null>(null);
+
+  const handleTFUpload = async (
+    event: FileChangeEvent,
+    volVisSettings: VolVisSettingsInstance
+  ) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error("No file selected.");
+      }
+      await volVisSettings.transferFunction.handleTFUpload(
+        event.target.files[0]
+      );
+    } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(`Error: ${error}`);
+      console.error("Error:", error);
+    } finally {
+      if (TFFileRef.current) {
+        TFFileRef.current.value = "";
+      }
+    }
+  };
+
+  return (
+    <div
+      onClick={() => fileInputRef.current?.click()}
+      className={classes.actionButton}
+    >
+      <Tooltip
+        content="Upload Transfer Function"
+        relationship="label"
+        appearance="inverted"
+        positioning="after-top"
+      >
+        <ArrowUpload16Regular
+          className={classes.tfIcon}
+          style={{
+            marginTop: "3px",
+            border: "1px solid",
+            borderRadius: "5px",
+            padding: 8,
+          }}
+        />
+      </Tooltip>
+      <input
+        type="file"
+        onChange={(event) => handleTFUpload(event, settingsInstance)}
+        accept=".json"
+        ref={fileInputRef}
+        className={globalClasses.hiddenInput}
+      />
+    </div>
+  );
+};
+
 interface Props {
   open: boolean;
   close: () => void;
@@ -141,8 +206,6 @@ const Visualization = observer(({ open, close }: Props) => {
 
   const classes = useStyles();
   const globalClasses = globalStyles();
-
-  const TFFileRef = useRef<HTMLInputElement | null>(null);
 
   const [processingSaveAnnotations, setProcessingSaveAnnotations] =
     useState(false);
@@ -277,28 +340,6 @@ const Visualization = observer(({ open, close }: Props) => {
     Utils.downloadBlob(blob, `transferFunction_${volVisSettings.index}.json`);
   };
 
-  const handleTFUpload = async (
-    event: FileChangeEvent,
-    volVisSettings: VolVisSettingsInstance
-  ) => {
-    try {
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("No file selected.");
-      }
-      await volVisSettings.transferFunction.handleTFUpload(
-        event.target.files[0]
-      );
-    } catch (error) {
-      const toastContainer = new ToastContainer();
-      toastContainer.error(`Error: ${error}`);
-      console.error("Error:", error);
-    } finally {
-      if (TFFileRef.current) {
-        TFFileRef.current.value = "";
-      }
-    }
-  };
-
   // const handleClippingChange = (
   //   event: ChangeEvent<HTMLInputElement>,
   //   volumeSettings: VolVisSettingsInstance
@@ -335,45 +376,6 @@ const Visualization = observer(({ open, close }: Props) => {
       processingSaveAnnotations ||
       !visualizedVolume?.canEditLabels ||
       !visualizedVolume.labelEditingMode
-    );
-  };
-
-  const TFUploadElement = ({
-    settingsInstance,
-  }: {
-    settingsInstance: VolVisSettingsInstance;
-  }) => {
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-    return (
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className={classes.actionButton}
-      >
-        <Tooltip
-          content="Upload Transfer Function"
-          relationship="label"
-          appearance="inverted"
-          positioning="after-top"
-        >
-          <ArrowUpload16Regular
-            className={classes.tfIcon}
-            style={{
-              marginTop: "3px",
-              border: "1px solid",
-              borderRadius: "5px",
-              padding: 8,
-            }}
-          />
-        </Tooltip>
-        <input
-          type="file"
-          onChange={(event) => handleTFUpload(event, settingsInstance)}
-          accept=".json"
-          ref={fileInputRef}
-          className={globalClasses.hiddenInput}
-        />
-      </div>
     );
   };
 

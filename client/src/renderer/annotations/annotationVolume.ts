@@ -63,8 +63,7 @@ export class AnnotationVolume extends WebGpuTexture {
     }
 
     if (
-      this.texture &&
-      this.texture.width === volumeTexture.width &&
+      this.texture?.width === volumeTexture.width &&
       this.texture.height === volumeTexture.height &&
       this.texture.depthOrArrayLayers === volumeTexture.depthOrArrayLayers
     ) {

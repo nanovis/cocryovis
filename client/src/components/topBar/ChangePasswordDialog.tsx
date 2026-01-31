@@ -12,7 +12,7 @@ import {
   tokens,
   Spinner,
 } from "@fluentui/react-components";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { updateUser } from "../../api/users";
 import ToastContainer from "../../utils/toastContainer";
@@ -62,9 +62,8 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
   }
 
   // TODO use new React 19 actions
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     const toastContainer = new ToastContainer();
-
     try {
       event.preventDefault();
 
