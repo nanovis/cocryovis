@@ -114,7 +114,7 @@ export class ClippingPlaneManager {
 
     if (
       this.clippingPlaneType !== "none" &&
-      this.volumeManager.channelData.numberOfChannels > 0
+      this.volumeManager.channelData.length > 0
     ) {
       const clippingPlaneNormal =
         this.clippingParametersBuffer.params.clippingPlaneNormal;
@@ -127,7 +127,7 @@ export class ClippingPlaneManager {
         this.lastClippingPlaneOriginUpdate.offset !== this.clippingPlaneOffset
       ) {
         const clippingPlaneOrigin = vec3.create();
-        const ratio = this.volumeManager.channelData.getParameters(0).ratio;
+        const ratio = this.volumeManager.channelData.get(0).ratio;
         vec3.multiply(clippingPlaneOrigin, clippingPlaneNormal, ratio);
         vec3.scale(
           clippingPlaneOrigin,
@@ -144,16 +144,13 @@ export class ClippingPlaneManager {
       }
     }
 
-    if (
-      this.fullscreen &&
-      this.volumeManager.channelData.numberOfChannels > 0
-    ) {
+    if (this.fullscreen && this.volumeManager.channelData.length > 0) {
       const clippingPlaneNormal =
         this.clippingParametersBuffer.params.clippingPlaneNormal;
       const clippingPlaneOrigin =
         this.clippingParametersBuffer.params.clippingPlaneOrigin;
 
-      const ratio = this.volumeManager.channelData.getParameters(0);
+      const ratio = this.volumeManager.channelData.get(0);
       this.camera.setFullscreen(
         this.clippingPlaneUp,
         clippingPlaneNormal,

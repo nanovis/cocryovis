@@ -26,7 +26,9 @@ export class VolumeParameterBuffer extends WebGpuBufferBBO<
   } as const;
 
   constructor(device: GPUDevice, init?: Partial<VolumeParameters>) {
-    super(device, volumeParametersDescriptor, "Volume Parameters Buffer", 16);
+    super(device, volumeParametersDescriptor, "Volume Parameters Buffer", {
+      align: 16,
+    });
 
     this.set(VolumeParameterBuffer.defaults);
     if (init !== undefined) {

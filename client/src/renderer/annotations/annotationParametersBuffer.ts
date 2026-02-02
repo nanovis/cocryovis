@@ -37,7 +37,7 @@ export class AnnotationParametersBuffer extends WebGpuBufferBBO<
       device,
       annotationParametersDescriptor,
       "Annotation Parameters Buffer",
-      16
+      { align: 16 }
     );
 
     this.set(AnnotationParametersBuffer.defaults);

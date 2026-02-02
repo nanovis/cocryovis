@@ -25,12 +25,9 @@ export class ClippingParametersBuffer extends WebGpuBufferBBO<
   } as const;
 
   constructor(device: GPUDevice, init?: Partial<ClippingParameters>) {
-    super(
-      device,
-      clippingParametersDescriptor,
-      "Clipping Parameters Buffer",
-      16
-    );
+    super(device, clippingParametersDescriptor, "Clipping Parameters Buffer", {
+      align: 16,
+    });
 
     this.set(ClippingParametersBuffer.defaults);
     if (init !== undefined) {

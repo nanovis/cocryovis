@@ -28,7 +28,7 @@ export const TransferFunction = types
     updateRenderer() {
       const index = getParentOfType(self, VolVisSettings).index;
 
-      self.renderer?.volumeManager.channelData.setChannelData(index, {
+      self.renderer?.volumeManager.channelData.set(index, {
         rampStart: self.rampLow,
         rampEnd: self.rampHigh,
         color: [self.red / 255, self.green / 255, self.blue / 255, 1],

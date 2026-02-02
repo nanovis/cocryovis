@@ -78,8 +78,8 @@ export class VolumeManager {
         (r, i) => (r * sizeArray[i]) / maxSize
       );
 
-      this.channelData.setChannelData(tfIndex, {
-        color: [color.x / 255, color.y / 255, color.z / 255],
+      this.channelData.set(tfIndex, {
+        color: [color.x / 255, color.y / 255, color.z / 255, 1],
         ratio: scaledRatio,
         rampStart: transferFunction.rampLow,
         rampEnd: transferFunction.rampHigh,

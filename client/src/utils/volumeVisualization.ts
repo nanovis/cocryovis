@@ -154,7 +154,7 @@ export async function visualizeVolumeFromConfig(
     index < visualizationDescriptor.descriptors.length;
     index++
   ) {
-    const channelData = renderer.volumeManager.channelData.getParameters(index);
+    const channelData = renderer.volumeManager.channelData.get(index);
     volumeVisualizationSettings.push({
       index: index,
       name: `Volume ${index}`,
@@ -163,9 +163,9 @@ export async function visualizeVolumeFromConfig(
       transferFunction: {
         rampLow: channelData.rampStart,
         rampHigh: channelData.rampEnd,
-        red: channelData.color[0] * 255,
-        green: channelData.color[1] * 255,
-        blue: channelData.color[2] * 255,
+        red: Math.round(channelData.color[0] * 255),
+        green: Math.round(channelData.color[1] * 255),
+        blue: Math.round(channelData.color[2] * 255),
         comment: `transferFunction_${index}`,
       },
     });

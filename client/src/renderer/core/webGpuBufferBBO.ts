@@ -1,11 +1,21 @@
 import { WebGpuBuffer } from "./webGpuBuffer";
 import {
   BufferBackedObject,
+  ArrayOfBufferBackedObjects,
   type DecodedBuffer,
   type Descriptors,
   nextAlign,
   structSize,
+  structAlign,
 } from "buffer-backed-object";
+
+function descriptorToArrayBufferSize(
+  descriptor: Descriptors,
+  align: number,
+  length: number = 1
+): number {
+  return nextAlign(structSize(descriptor), align) * length;
+}
 
 export abstract class WebGpuBufferBBO<
   T extends Descriptors,
@@ -13,16 +23,18 @@ export abstract class WebGpuBufferBBO<
   protected readonly arrayBuffer: ArrayBuffer;
   protected readonly bufferObject: DecodedBuffer<T>;
   protected dirty: boolean = true;
+  readonly alignment: number;
 
   protected constructor(
     device: GPUDevice,
     descriptor: T,
     label: string,
-    align: number = 4
+    { align = 4 }: { align?: number } = {}
   ) {
-    const size = nextAlign(structSize(descriptor), align);
+    const size = descriptorToArrayBufferSize(descriptor, align);
     super(device, size, label);
 
+    this.alignment = align;
     this.arrayBuffer = new ArrayBuffer(size);
     this.bufferObject = BufferBackedObject(this.arrayBuffer, descriptor, {
       align: align,
@@ -41,6 +53,92 @@ export abstract class WebGpuBufferBBO<
   override updateBuffer() {
     if (!this.dirty || this.destroyed) {
       return;
+    }
+    this.device.queue.writeBuffer(this.buffer, 0, this.arrayBuffer);
+    this.dirty = false;
+  }
+}
+
+export abstract class WebGpuBufferBBOArray<
+  T extends Descriptors,
+> extends WebGpuBuffer {
+  protected readonly arrayBuffer: ArrayBuffer;
+  protected readonly bufferObject: Array<DecodedBuffer<T>>;
+  protected readonly descriptor: T;
+  protected dirty: boolean = true;
+  protected arrayLength: number = 0;
+  readonly alignment: number;
+
+  protected constructor(
+    device: GPUDevice,
+    descriptor: T,
+    label: string,
+    length: number,
+    { align }: { align?: number } = {}
+  ) {
+    if (align === undefined) {
+      align = structAlign(descriptor);
+    }
+    const size = descriptorToArrayBufferSize(descriptor, align, length);
+    super(device, size, label);
+
+    this.arrayLength = length;
+    this.descriptor = descriptor;
+    this.arrayBuffer = new ArrayBuffer(size);
+    this.alignment = align;
+    this.bufferObject = ArrayOfBufferBackedObjects(
+      this.arrayBuffer,
+      descriptor,
+      {
+        length: length,
+        align: align,
+      }
+    );
+  }
+
+  get length(): number {
+    return this.arrayLength;
+  }
+
+  set(index: number, params: Partial<DecodedBuffer<T>>) {
+    this.dirty = true;
+    if (index < 0 || index >= this.arrayLength) {
+      throw new Error("Index out of bounds");
+    }
+    Object.assign(this.bufferObject[index], params);
+  }
+
+  get(index: number): Readonly<DecodedBuffer<T>> {
+    const object = this.bufferObject[index] as
+      | Readonly<DecodedBuffer<T>>
+      | undefined;
+    if (object === undefined) {
+      throw new Error("Index out of bounds");
+    }
+    return object;
+  }
+
+  setLength(length: number) {
+    this.arrayLength = length;
+    const size = descriptorToArrayBufferSize(
+      this.descriptor,
+      this.alignment,
+      length
+    );
+    const newArrayBuffer = new ArrayBuffer(size);
+    const srcView = new Uint8Array(this.arrayBuffer);
+    const dstView = new Uint8Array(newArrayBuffer);
+    const len = Math.min(srcView.length, dstView.length);
+    dstView.set(srcView.subarray(0, len));
+  }
+
+  override updateBuffer() {
+    if (!this.dirty || this.destroyed) {
+      return;
+    }
+    if (this.buffer.size !== this.arrayBuffer.byteLength) {
+      this.buffer.destroy();
+      this.buffer = this.createBuffer(this.arrayBuffer.byteLength);
     }
     this.device.queue.writeBuffer(this.buffer, 0, this.arrayBuffer);
     this.dirty = false;

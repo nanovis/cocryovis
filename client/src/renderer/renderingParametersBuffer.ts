@@ -59,7 +59,9 @@ export class RenderingParametersBuffer extends WebGpuBufferBBO<
   } as const;
 
   constructor(device: GPUDevice, init?: Partial<RenderingParameters>) {
-    super(device, renderingParametersDescriptor, "ParamData Buffer", 16);
+    super(device, renderingParametersDescriptor, "ParamData Buffer", {
+      align: 16,
+    });
 
     this.set(RenderingParametersBuffer.defaults);
     if (init !== undefined) {

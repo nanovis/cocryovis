@@ -26,7 +26,7 @@ export const VolVisSettings = types
   .actions((self) => ({
     setVisibility(visible: boolean) {
       self.visible = visible;
-      self.renderer?.volumeManager.channelData.setChannelData(self.index, {
+      self.renderer?.volumeManager.channelData.set(self.index, {
         visible: visible,
       });
     },

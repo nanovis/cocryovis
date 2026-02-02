@@ -228,7 +228,7 @@ export class AnnotationManager {
     )
       return;
 
-    if (volumeIndex >= this.volumeManager.channelData.numberOfChannels) {
+    if (volumeIndex >= this.volumeManager.channelData.length) {
       console.warn("Attempting to annotate a non-existing volume");
       return;
     }
@@ -297,7 +297,7 @@ export class AnnotationManager {
       return;
     }
 
-    const ratio = this.volumeManager.channelData.getParameters(0).ratio;
+    const ratio = this.volumeManager.channelData.get(0).ratio;
     // const ratio = [1, 1, 1];
 
     const vertex = vec3.scaleAndAdd(vec3.create(), rayOrigin, rayDir, t);
@@ -324,7 +324,7 @@ export class AnnotationManager {
       return;
     }
 
-    if (volumeIndex >= this.volumeManager.channelData.numberOfChannels) {
+    if (volumeIndex >= this.volumeManager.channelData.length) {
       console.warn("Attempting to annotate a non-existing volume");
       return;
     }
