@@ -128,6 +128,10 @@ export const RenderSettings = types
       if (self.shadowMin > self.shadowMax) {
         self.shadowMax = threshold;
       }
+      self.renderer?.renderingParameters.set({
+        shadowMin: self.shadowMin,
+        shadowMax: self.shadowMax,
+      });
     },
     setShadowMax(threshold: number) {
       threshold = clamp(threshold, 0, 1);
@@ -135,6 +139,10 @@ export const RenderSettings = types
       if (self.shadowMax < self.shadowMin) {
         self.shadowMin = threshold;
       }
+      self.renderer?.renderingParameters.set({
+        shadowMin: self.shadowMin,
+        shadowMax: self.shadowMax,
+      });
     },
     getRendererParameters(): Partial<RenderingParameters> {
       return {
