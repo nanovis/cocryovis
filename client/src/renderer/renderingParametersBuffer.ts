@@ -60,12 +60,14 @@ export class RenderingParametersBuffer extends WebGpuBufferBBO<
 
   constructor(device: GPUDevice, init?: Partial<RenderingParameters>) {
     super(device, renderingParametersDescriptor, "ParamData Buffer", 16);
+
+    this.set(RenderingParametersBuffer.defaults);
     if (init !== undefined) {
       this.set(init);
     }
   }
 
-  protected createBuffer(size: number): GPUBuffer {
+  protected override createBuffer(size: number): GPUBuffer {
     return this.device.createBuffer({
       size: size,
       label: this.label,

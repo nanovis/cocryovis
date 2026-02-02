@@ -342,7 +342,7 @@ export class AnnotationManager {
       return;
     }
 
-    const kernelSize = this.annotationParameterBuffer.getKernelSize();
+    const kernelSize = this.annotationParameterBuffer.params.kernelSize;
     const numBlocksX = this.computeBlockSizeFromKernel(kernelSize[0]);
     const numBlocksY = this.computeBlockSizeFromKernel(kernelSize[1]);
     const numBlocksZ = this.computeBlockSizeFromKernel(kernelSize[2]);

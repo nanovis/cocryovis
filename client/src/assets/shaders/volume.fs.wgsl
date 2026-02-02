@@ -30,14 +30,14 @@ struct Param
 {
 	clearColor : vec4<f32>,
 
-	enableEarlyRayTermination : i32,
-	enableJittering : i32,
-	enableAmbientOcclusion : i32,
-	enableSoftShadows : i32,
+	enableEarlyRayTermination : u32,
+	enableJittering : u32,
+	enableAmbientOcclusion : u32,
+	enableSoftShadows : u32,
 
-  enableAnnotations : i32,
+  enableAnnotations : u32,
 	sampleRate : f32,
-	aoRadius : f32,
+  aoRadius : f32,
   aoStrength : f32,
 
   aoNumSamples : i32,

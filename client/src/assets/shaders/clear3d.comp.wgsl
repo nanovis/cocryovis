@@ -4,7 +4,7 @@ struct Param
 	kernelSize : vec4<i32>,
 	clearMask : vec4<f32>,
 
-	addAnnotation : i32,
+	addAnnotation : u32,
   annotationVolume : i32,
 }
 

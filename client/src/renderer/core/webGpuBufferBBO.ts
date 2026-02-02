@@ -7,9 +7,6 @@ import {
   structSize,
 } from "buffer-backed-object";
 
-// Buffer wrapper variant with integrated buffer-backed object.
-// Could use some more generic buffer - layout package (like @solana/buffer-layout)
-
 export abstract class WebGpuBufferBBO<
   T extends Descriptors,
 > extends WebGpuBuffer {
@@ -32,8 +29,6 @@ export abstract class WebGpuBufferBBO<
     });
   }
 
-  protected abstract createBuffer(size: number): GPUBuffer;
-
   set(params: Partial<DecodedBuffer<T>>) {
     this.dirty = true;
     Object.assign(this.bufferObject, params);
@@ -43,7 +38,7 @@ export abstract class WebGpuBufferBBO<
     return this.bufferObject;
   }
 
-  updateBuffer() {
+  override updateBuffer() {
     if (!this.dirty || this.destroyed) {
       return;
     }

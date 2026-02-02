@@ -31,12 +31,14 @@ export class ClippingParametersBuffer extends WebGpuBufferBBO<
       "Clipping Parameters Buffer",
       16
     );
+
+    this.set(ClippingParametersBuffer.defaults);
     if (init !== undefined) {
       this.set(init);
     }
   }
 
-  protected createBuffer(size: number): GPUBuffer {
+  protected override createBuffer(size: number): GPUBuffer {
     return this.device.createBuffer({
       size: size,
       label: this.label,
