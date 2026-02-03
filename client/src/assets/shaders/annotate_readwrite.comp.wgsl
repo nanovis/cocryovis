@@ -15,7 +15,7 @@ struct Param
 
 fn apply_brush(pos : vec3<f32>, delta : vec3<i32>)
 {
-	var kernel = vec3<i32>(i32(param.kernelSize.x), i32(param.kernelSize.y), i32(param.kernelSize.z));
+	var kernel = param.kernelSize.xyz;
 	
 	var strength = pow(f32(delta.x*delta.x)/f32(kernel.x) + 
 					f32(delta.y*delta.y)/f32(kernel.y) +
@@ -48,7 +48,7 @@ fn apply_brush(pos : vec3<f32>, delta : vec3<i32>)
 @compute @workgroup_size(4, 4, 4)
 fn main(@builtin(global_invocation_id) global_id : vec3<u32>) 
 {
-	var kernel = vec3<i32>(i32(param.kernelSize.x), i32(param.kernelSize.y), i32(param.kernelSize.z));
+	var kernel = param.kernelSize.xyz;
 	
 	// Out-of-bounds check
 	if (global_id.x >= u32(kernel.x * 2 + 1) || global_id.y >= u32(kernel.y * 2 + 1) || global_id.z >= u32(kernel.z * 2 + 1)) {

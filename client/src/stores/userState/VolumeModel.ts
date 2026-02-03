@@ -117,28 +117,22 @@ export const Volume = types
       self.sparseLabelColors[index] = color;
 
       const parsedColor = Utils.fromHexColor(color);
-      self.renderer.annotationManager.annotationsDataBuffer.setAnnotationData(
-        index,
-        {
-          color: [
-            parsedColor.r / 255,
-            parsedColor.g / 255,
-            parsedColor.b / 255,
-            1,
-          ],
-        }
-      );
+      self.renderer.annotationManager.annotationsDataBuffer.set(index, {
+        color: [
+          parsedColor.r / 255,
+          parsedColor.g / 255,
+          parsedColor.b / 255,
+          1,
+        ],
+      });
     },
     setShownAnnotation(index: number, show: boolean) {
       if (!self.renderer) return;
       self.shownAnnotations[index] = show;
 
-      self.renderer.annotationManager.annotationsDataBuffer.setAnnotationData(
-        index,
-        {
-          enabled: show,
-        }
-      );
+      self.renderer.annotationManager.annotationsDataBuffer.set(index, {
+        enabled: show,
+      });
     },
   }))
   .actions((self) => ({

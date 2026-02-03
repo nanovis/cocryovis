@@ -1,6 +1,7 @@
 import { vec4 } from "gl-matrix";
 import {
   Float32Vec4,
+  Int32Vec4,
   Int32,
   BoolUint32,
   type DecodedBuffer,
@@ -9,7 +10,7 @@ import { WebGpuBufferBBO } from "@/renderer/core/webGpuBufferBBO";
 
 const annotationParametersDescriptor = {
   vertex: Float32Vec4(),
-  kernelSize: Float32Vec4(),
+  kernelSize: Int32Vec4(),
   clearMask: Float32Vec4(),
 
   addAnnotation: BoolUint32(),

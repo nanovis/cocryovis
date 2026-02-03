@@ -23,7 +23,7 @@ struct ChannelData
   ratio: vec4<f32>,
   rampStart: f32,
   rampEnd: f32,
-  visible: i32,
+  visible: u32,
 }
 
 struct Param
@@ -62,11 +62,16 @@ struct ClippingPlane {
 	enabled : i32,
 };
 
+struct AnnotationChannelData {
+  color : vec4<f32>,
+  enabled: u32,
+}
+
 @group(0) @binding(0) var<uniform> camera : Camera;
 @group(0) @binding(2) var s : sampler;
 @group(0) @binding(3) var volume0 : texture_3d<f32>;
 @group(0) @binding(4) var annotationVolume : texture_3d<f32>;
-@group(0) @binding(6) var<storage, read> annotations: array<vec4<f32>>;
+@group(0) @binding(6) var<storage, read> annotations: array<AnnotationChannelData>;
 @group(0) @binding(7) var<uniform> volumeParameters : VolumeParameters;
 @group(0) @binding(8) var<uniform> param : Param;
 @group(0) @binding(9) var<storage, read> channelData: array<ChannelData>;
@@ -324,9 +329,9 @@ fn main(
     {
       var annotationVec = textureSampleLevel(annotationVolume, s, isec1, 0.0);
       for (var i: i32 = 0; i < 4; i += 1) {
-        var alpha: f32 = annotations[i].a * annotationVec[i];
+        var alpha: f32 = f32(annotations[i].enabled) * annotationVec[i];
         if (alpha > annotationColor.a) {
-          annotationColor = vec4<f32>(annotations[i].rgb, alpha);
+          annotationColor = vec4<f32>(annotations[i].color.rgb, alpha);
         }
       }
     }

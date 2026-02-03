@@ -61,12 +61,9 @@ export const SparseLabelVolume = types
 
         if (self.renderer) {
           const color = Utils.fromHexColor(self.color ?? "#FFFFFF");
-          self.renderer.annotationManager.annotationsDataBuffer.setAnnotationData(
-            index,
-            {
-              color: [color.r / 255, color.g / 255, color.b / 255],
-            }
-          );
+          self.renderer.annotationManager.annotationsDataBuffer.set(index, {
+            color: [color.r / 255, color.g / 255, color.b / 255, 1],
+          });
         }
 
         toastContainer.dismiss();

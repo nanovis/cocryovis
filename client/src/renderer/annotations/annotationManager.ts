@@ -330,7 +330,7 @@ export class AnnotationManager {
     }
 
     this.annotationParameterBuffer.set({
-      vertex: vec4.fromValues(vertex[0], vertex[1], vertex[2], 0),
+      vertex: [vertex[0], vertex[1], vertex[2], 0],
       addAnnotation: addAnnotation,
       annotationVolume: volumeIndex,
     });

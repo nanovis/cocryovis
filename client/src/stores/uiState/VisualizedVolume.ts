@@ -68,7 +68,7 @@ async function loadSparseLabelVolumesIntoAnnotations(
   }
   for (let i = sparseVolumeArray.length; i < 4; i++) {
     const color = Utils.fromHexColor(volume.sparseLabelColors[i]);
-    renderer.annotationManager.annotationsDataBuffer.setAnnotationData(i, {
+    renderer.annotationManager.annotationsDataBuffer.set(i, {
       color: [color.r / 255, color.g / 255, color.b / 255, 1],
       enabled: false,
     });
@@ -85,7 +85,7 @@ async function loadSparseLabelVolumesIntoAnnotations(
       g = color.g / 255;
       b = color.b / 255;
     }
-    renderer.annotationManager.annotationsDataBuffer.setAnnotationData(i, {
+    renderer.annotationManager.annotationsDataBuffer.set(i, {
       color: [r, g, b, 1],
       enabled: true,
     });
