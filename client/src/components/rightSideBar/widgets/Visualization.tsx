@@ -198,12 +198,6 @@ interface Props {
 const Visualization = observer(({ open, close }: Props) => {
   const { user, uiState, renderer } = useMst();
 
-  const activeProject = user.userProjects.activeProject;
-  const visualizedVolume = uiState.visualizedVolume;
-  const volVisSettings = visualizedVolume?.volVisSettings;
-  const volumeSettings = visualizedVolume?.volumeSettings;
-  const volume = visualizedVolume?.volume;
-
   const classes = useStyles();
   const globalClasses = globalStyles();
 
@@ -211,7 +205,10 @@ const Visualization = observer(({ open, close }: Props) => {
     useState(false);
 
   const handleSaveAnnotations = async () => {
-    if (annotationsActionsDisabled() || volume === undefined) {
+    if (
+      annotationsActionsDisabled() ||
+      uiState.visualizedVolume?.volume === undefined
+    ) {
       return;
     }
 
@@ -221,13 +218,13 @@ const Visualization = observer(({ open, close }: Props) => {
       if (!renderer) {
         throw new Error("Renderer not initialized!");
       }
-      if (!visualizedVolume?.canEditLabels) {
+      if (!uiState.visualizedVolume.canEditLabels) {
         throw new Error("Only raw volumes can be labeled.");
       }
 
       setProcessingSaveAnnotations(true);
       const annotationData = await renderer.annotationManager.exportAnnotation(
-        visualizedVolume.manualLabelIndex
+        uiState.visualizedVolume.manualLabelIndex
       );
 
       if (!annotationData) {
@@ -235,16 +232,17 @@ const Visualization = observer(({ open, close }: Props) => {
       }
 
       if (
-        visualizedVolume.manualLabelIndex >= volume.sparseVolumeArray.length
+        uiState.visualizedVolume.manualLabelIndex >=
+        uiState.visualizedVolume.volume.sparseVolumeArray.length
       ) {
         // let sparseLabel = await addAnnotations(volume.id, annotationData);
-        if (!volume.rawData) {
+        if (!uiState.visualizedVolume.volume.rawData) {
           throw new Error("Volume missing raw data.");
         }
-        const filename = `volume-channel-${visualizedVolume.manualLabelIndex}.raw`;
+        const filename = `volume-channel-${uiState.visualizedVolume.manualLabelIndex}.raw`;
         let sparseLabel = await createFromFiles(
           "SparseLabeledVolumeData",
-          volume.id,
+          uiState.visualizedVolume.volume.id,
           {
             rawFile: new File([annotationData], filename, {
               type: "application/octet-stream",
@@ -252,14 +250,14 @@ const Visualization = observer(({ open, close }: Props) => {
             volumeSettings: {
               file: filename,
               size: {
-                x: volume.rawData.sizeX,
-                y: volume.rawData.sizeY,
-                z: volume.rawData.sizeZ,
+                x: uiState.visualizedVolume.volume.rawData.sizeX,
+                y: uiState.visualizedVolume.volume.rawData.sizeY,
+                z: uiState.visualizedVolume.volume.rawData.sizeZ,
               },
               ratio: {
-                x: volume.rawData.ratioX,
-                y: volume.rawData.ratioY,
-                z: volume.rawData.ratioZ,
+                x: uiState.visualizedVolume.volume.rawData.ratioX,
+                y: uiState.visualizedVolume.volume.rawData.ratioY,
+                z: uiState.visualizedVolume.volume.rawData.ratioZ,
               },
               bytesPerVoxel: 1,
               usedBits: 8,
@@ -271,25 +269,36 @@ const Visualization = observer(({ open, close }: Props) => {
         sparseLabel = await updateVolumeData(
           "SparseLabeledVolumeData",
           sparseLabel.id,
-          { color: volume.sparseLabelColors[visualizedVolume.manualLabelIndex] }
+          {
+            color:
+              uiState.visualizedVolume.volume.sparseLabelColors[
+                uiState.visualizedVolume.manualLabelIndex
+              ],
+          }
         );
 
-        volume.addSparseVolume(sparseLabel);
+        uiState.visualizedVolume.volume.addSparseVolume(sparseLabel);
       } else {
         const sparseLabelVolume =
-          volume.sparseVolumeArray[visualizedVolume.manualLabelIndex];
+          uiState.visualizedVolume.volume.sparseVolumeArray[
+            uiState.visualizedVolume.manualLabelIndex
+          ];
 
         const rawFile = new File(
           [annotationData],
-          `volume-channel-${visualizedVolume.manualLabelIndex}.raw`,
+          `volume-channel-${uiState.visualizedVolume.manualLabelIndex}.raw`,
           {
             type: "application/octet-stream",
           }
         );
 
-        await updateAnnotations(volume.id, sparseLabelVolume.id, {
-          rawFile: rawFile,
-        });
+        await updateAnnotations(
+          uiState.visualizedVolume.volume.id,
+          sparseLabelVolume.id,
+          {
+            rawFile: rawFile,
+          }
+        );
       }
       toastContainer.success("Annotations saved.");
     } catch (error) {
@@ -305,7 +314,7 @@ const Visualization = observer(({ open, close }: Props) => {
       return;
     }
 
-    visualizedVolume?.clearActiveAnnotationChannel();
+    uiState.visualizedVolume?.clearActiveAnnotationChannel();
   };
 
   const downloadTF = (volVisSettings: VolVisSettingsInstance) => {
@@ -351,16 +360,16 @@ const Visualization = observer(({ open, close }: Props) => {
     event: ChangeEvent<HTMLInputElement>,
     upper: boolean
   ) => {
-    if (!visualizedVolume?.rawSettings) {
+    if (!uiState.visualizedVolume?.rawSettings) {
       return;
     }
 
     if (!upper) {
-      visualizedVolume.rawSettings.transferFunction.setRampLow(
+      uiState.visualizedVolume.rawSettings.transferFunction.setRampLow(
         Number(event.target.value)
       );
     } else {
-      visualizedVolume.rawSettings.transferFunction.setRampHigh(
+      uiState.visualizedVolume.rawSettings.transferFunction.setRampHigh(
         Number(event.target.value)
       );
     }
@@ -374,8 +383,8 @@ const Visualization = observer(({ open, close }: Props) => {
     return (
       actionsDisabled() ||
       processingSaveAnnotations ||
-      !visualizedVolume?.canEditLabels ||
-      !visualizedVolume.labelEditingMode
+      !uiState.visualizedVolume?.canEditLabels ||
+      !uiState.visualizedVolume.labelEditingMode
     );
   };
 
@@ -415,13 +424,13 @@ const Visualization = observer(({ open, close }: Props) => {
               content={
                 <WriteAccessTooltipContentWrapper
                   content={
-                    visualizedVolume?.manualLabelIndex
-                      ? `Saves annotations into Manual Label ${visualizedVolume.manualLabelIndex}.`
+                    uiState.visualizedVolume?.manualLabelIndex
+                      ? `Saves annotations into Manual Label ${uiState.visualizedVolume.manualLabelIndex}.`
                       : "Saves annotations into selected manual label."
                   }
                   hasWriteAccess={
                     annotationsActionsDisabled() ||
-                    activeProject?.hasWriteAccess
+                    user.userProjects.activeProject?.hasWriteAccess
                   }
                 />
               }
@@ -431,7 +440,8 @@ const Visualization = observer(({ open, close }: Props) => {
                 onClick={handleSaveAnnotations}
                 className={classes.Button}
                 disabled={
-                  annotationsActionsDisabled() || !activeProject?.hasWriteAccess
+                  annotationsActionsDisabled() ||
+                  !user.userProjects.activeProject?.hasWriteAccess
                 }
               >
                 Save Annotation
@@ -478,15 +488,15 @@ const Visualization = observer(({ open, close }: Props) => {
                   <Button
                     className={mergeClasses(
                       classes.DrawEraseButton,
-                      visualizedVolume &&
-                        !visualizedVolume.eraseMode &&
+                      uiState.visualizedVolume &&
+                        !uiState.visualizedVolume.eraseMode &&
                         classes.DrawEraseButtonToggled
                     )}
                     disabled={annotationsActionsDisabled()}
                     icon={<EditFilled />}
                     appearance="outline"
                     onClick={() => {
-                      visualizedVolume?.setEraseMode(false);
+                      uiState.visualizedVolume?.setEraseMode(false);
                     }}
                   />
                 </Tooltip>
@@ -504,14 +514,14 @@ const Visualization = observer(({ open, close }: Props) => {
                     disabled={annotationsActionsDisabled()}
                     className={mergeClasses(
                       classes.DrawEraseButton,
-                      visualizedVolume &&
-                        visualizedVolume.eraseMode &&
+                      uiState.visualizedVolume &&
+                        uiState.visualizedVolume.eraseMode &&
                         classes.DrawEraseButtonToggled
                     )}
                     icon={<EraserFilled />}
                     appearance="outline"
                     onClick={() => {
-                      visualizedVolume?.setEraseMode(true);
+                      uiState.visualizedVolume?.setEraseMode(true);
                     }}
                     style={{ marginLeft: "5px" }}
                   />
@@ -532,9 +542,9 @@ const Visualization = observer(({ open, close }: Props) => {
           {/* Set Clipping Plane */}
           <Field label="Clipping Plane">
             <RadioGroup
-              value={visualizedVolume?.clippingPlane ?? "none"}
+              value={uiState.visualizedVolume?.clippingPlane ?? "none"}
               onChange={(_, data) => {
-                visualizedVolume?.setClippingPlane(
+                uiState.visualizedVolume?.setClippingPlane(
                   data.value as ClippingPlaneType
                 );
               }}
@@ -553,22 +563,22 @@ const Visualization = observer(({ open, close }: Props) => {
             <div className={classes.settingsGridRow}>
               <Text>
                 Clipping Plane Offset [
-                {visualizedVolume?.clippingPlaneOffset.toFixed(2)}]
+                {uiState.visualizedVolume?.clippingPlaneOffset.toFixed(2)}]
               </Text>
               <Slider
                 disabled={
                   actionsDisabled() ||
-                  visualizedVolume?.clippingPlane === "none"
+                  uiState.visualizedVolume?.clippingPlane === "none"
                 }
                 value={
-                  visualizedVolume?.clippingPlaneOffset
-                    ? visualizedVolume.clippingPlaneOffset * 100
+                  uiState.visualizedVolume?.clippingPlaneOffset
+                    ? uiState.visualizedVolume.clippingPlaneOffset * 100
                     : 0
                 }
                 min={-100}
                 max={100}
                 onChange={(_, data) =>
-                  visualizedVolume?.setClippingOffset(data.value / 100)
+                  uiState.visualizedVolume?.setClippingOffset(data.value / 100)
                 }
               />
             </div>
@@ -588,17 +598,19 @@ const Visualization = observer(({ open, close }: Props) => {
                 <Switch
                   disabled={
                     actionsDisabled() ||
-                    visualizedVolume?.rawSettings === undefined ||
-                    visualizedVolume.clippingPlane === "none"
+                    uiState.visualizedVolume?.rawSettings === undefined ||
+                    uiState.visualizedVolume.clippingPlane === "none"
                   }
                   checked={
-                    visualizedVolume?.rawSettings !== undefined &&
-                    visualizedVolume.showRawClippingPlane
+                    uiState.visualizedVolume?.rawSettings !== undefined &&
+                    uiState.visualizedVolume.showRawClippingPlane
                   }
                   min={1}
                   max={200}
                   onChange={(_, data) =>
-                    visualizedVolume?.setShowRawClippingPlane(data.checked)
+                    uiState.visualizedVolume?.setShowRawClippingPlane(
+                      data.checked
+                    )
                   }
                 />
               </div>
@@ -619,13 +631,13 @@ const Visualization = observer(({ open, close }: Props) => {
                 <Switch
                   disabled={
                     actionsDisabled() ||
-                    visualizedVolume?.clippingPlane === "none"
+                    uiState.visualizedVolume?.clippingPlane === "none"
                   }
-                  checked={visualizedVolume?.fullscreen ?? false}
+                  checked={uiState.visualizedVolume?.fullscreen ?? false}
                   min={1}
                   max={200}
                   onChange={(_, data) =>
-                    visualizedVolume?.setFullscreen(data.checked)
+                    uiState.visualizedVolume?.setFullscreen(data.checked)
                   }
                 />
               </div>
@@ -640,7 +652,7 @@ const Visualization = observer(({ open, close }: Props) => {
             }}
           />
           <h3 style={{ fontWeight: "100", margin: 0 }}>Volume(s)</h3>
-          {volVisSettings && (
+          {uiState.visualizedVolume?.volVisSettings && (
             <>
               <div className={classes.volumes}>
                 <Text className={classes.volumesHeader} weight="semibold">
@@ -649,7 +661,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 <Text className={classes.volumesHeader} weight="semibold">
                   Visible
                 </Text>
-                {volumeSettings?.map(
+                {uiState.visualizedVolume.volumeSettings.map(
                   (settingsInstance: VolVisSettingsInstance, index: number) => (
                     <div key={index} className={classes.volumesRow}>
                       <span>{settingsInstance.name.substring(0, 40)}</span>
@@ -662,7 +674,7 @@ const Visualization = observer(({ open, close }: Props) => {
                     </div>
                   )
                 )}
-                {visualizedVolume.rawSettings && (
+                {uiState.visualizedVolume.rawSettings && (
                   <>
                     <div
                       className={classes.volumesRow}
@@ -676,8 +688,8 @@ const Visualization = observer(({ open, close }: Props) => {
                         <Label>Min value</Label>
                         <Slider
                           value={
-                            visualizedVolume.rawSettings.transferFunction
-                              .rampLow * 100
+                            uiState.visualizedVolume.rawSettings
+                              .transferFunction.rampLow * 100
                           }
                           min={0}
                           max={100}
@@ -688,8 +700,8 @@ const Visualization = observer(({ open, close }: Props) => {
                         <Label>Max value</Label>
                         <Slider
                           value={
-                            visualizedVolume.rawSettings.transferFunction
-                              .rampHigh * 100
+                            uiState.visualizedVolume.rawSettings
+                              .transferFunction.rampHigh * 100
                           }
                           min={0}
                           max={100}
@@ -712,7 +724,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 Transfer Function(s)
               </h3>
 
-              {volumeSettings?.map(
+              {uiState.visualizedVolume.volumeSettings.map(
                 (settingsInstance: VolVisSettingsInstance, index: number) => (
                   <div key={index} className={classes.transferFunctions}>
                     <input
