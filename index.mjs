@@ -86,6 +86,8 @@ const startServer = async () => {
         path.join(".", "views", "project"),
     ]);
 
+    console.log("Running environment: ", app.get("env"));
+
     // middleware
     if (app.get("env") !== "production" && process.env.DELAY !== undefined) {
         app.use(delay(Number(process.env.DELAY)));
@@ -141,7 +143,12 @@ const startServer = async () => {
             helmet({
                 contentSecurityPolicy: {
                     directives: {
+                        defaultSrc: ["'self'"],
                         scriptSrc: ["'self'", "'unsafe-eval'"],
+                        connectSrc: [
+                            "'self'",
+                            "https://files.cryoetdataportal.cziscience.com",
+                        ],
                     },
                 },
                 originAgentCluster: false,
