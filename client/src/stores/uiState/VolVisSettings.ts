@@ -7,10 +7,12 @@ import { types } from "mobx-state-tree";
 import { TransferFunction } from "./TransferFunction";
 import { RootStore } from "../RootStore";
 import type { VolumeRenderer } from "@/renderer/renderer";
+import { v4 as uuid } from "uuid";
 
 export const VolVisSettings = types
   .model({
-    index: types.identifierNumber,
+    id: types.optional(types.identifier, () => uuid()),
+    index: types.number,
     name: types.string,
     transferFunction: TransferFunction,
     visible: types.optional(types.boolean, true),

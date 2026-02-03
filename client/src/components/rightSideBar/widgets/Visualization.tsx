@@ -662,8 +662,11 @@ const Visualization = observer(({ open, close }: Props) => {
                   Visible
                 </Text>
                 {uiState.visualizedVolume.volumeSettings.map(
-                  (settingsInstance: VolVisSettingsInstance, index: number) => (
-                    <div key={index} className={classes.volumesRow}>
+                  (settingsInstance: VolVisSettingsInstance) => (
+                    <div
+                      key={settingsInstance.id}
+                      className={classes.volumesRow}
+                    >
                       <span>{settingsInstance.name.substring(0, 40)}</span>
                       <Switch
                         checked={settingsInstance.visible}
@@ -725,8 +728,11 @@ const Visualization = observer(({ open, close }: Props) => {
               </h3>
 
               {uiState.visualizedVolume.volumeSettings.map(
-                (settingsInstance: VolVisSettingsInstance, index: number) => (
-                  <div key={index} className={classes.transferFunctions}>
+                (settingsInstance: VolVisSettingsInstance) => (
+                  <div
+                    key={settingsInstance.id}
+                    className={classes.transferFunctions}
+                  >
                     <input
                       className={classes.colorPicker}
                       type="color"
@@ -788,10 +794,7 @@ const Visualization = observer(({ open, close }: Props) => {
                         />
                       </Tooltip>
                     </div>
-                    <TFUploadElement
-                      key={index}
-                      settingsInstance={settingsInstance}
-                    />
+                    <TFUploadElement settingsInstance={settingsInstance} />
                   </div>
                 )
               )}

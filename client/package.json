@@ -16,6 +16,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-use-websocket": "4.13.0",
+    "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
