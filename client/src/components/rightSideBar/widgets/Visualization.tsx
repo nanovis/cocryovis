@@ -677,44 +677,42 @@ const Visualization = observer(({ open, close }: Props) => {
                     </div>
                   )
                 )}
-                {uiState.visualizedVolume.rawSettings && (
-                  <>
-                    <div
-                      className={classes.volumesRow}
-                      style={{ height: "13px" }}
-                    />
-                    <div className={classes.volumesRow}>
-                      <Label style={{ verticalAlign: "top" }}>
-                        Raw Volume Contribution
-                      </Label>
-                      <div className={classes.sliderContainer}>
-                        <Label>Min value</Label>
-                        <Slider
-                          value={
-                            uiState.visualizedVolume.rawSettings
-                              .transferFunction.rampLow * 100
-                          }
-                          min={0}
-                          max={100}
-                          onChange={(event) => handleChangeRW(event, false)}
-                        />
-                      </div>
-                      <div className={classes.sliderContainer}>
-                        <Label>Max value</Label>
-                        <Slider
-                          value={
-                            uiState.visualizedVolume.rawSettings
-                              .transferFunction.rampHigh * 100
-                          }
-                          min={0}
-                          max={100}
-                          onChange={(event) => handleChangeRW(event, true)}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
+              {uiState.visualizedVolume.rawSettings && (
+                <>
+                  <h3
+                    style={{ fontWeight: "100", margin: 0, marginTop: "6px" }}
+                  >
+                    Raw Volume Contribution
+                  </h3>
+                  <div style={{ display: "flex", flexDirection: "row" }}>
+                    <div className={classes.sliderContainer}>
+                      <Label>Min value</Label>
+                      <Slider
+                        value={
+                          uiState.visualizedVolume.rawSettings.transferFunction
+                            .rampLow * 100
+                        }
+                        min={0}
+                        max={100}
+                        onChange={(event) => handleChangeRW(event, false)}
+                      />
+                    </div>
+                    <div className={classes.sliderContainer}>
+                      <Label>Max value</Label>
+                      <Slider
+                        value={
+                          uiState.visualizedVolume.rawSettings.transferFunction
+                            .rampHigh * 100
+                        }
+                        min={0}
+                        max={100}
+                        onChange={(event) => handleChangeRW(event, true)}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
               <hr
                 style={{
                   margin: "12px 0",
