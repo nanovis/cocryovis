@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import useRenderer from "../../hooks/useRenderer";
-import { makeStyles } from "@fluentui/react-components";
+import { makeStyles, Spinner } from "@fluentui/react-components";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import { CONFIG } from "@/constants";
@@ -17,6 +17,12 @@ const useStyles = makeStyles({
     height: "100%",
     display: "block",
   },
+  message: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+  },
 });
 
 const RendererCanvas = observer(() => {
@@ -25,7 +31,7 @@ const RendererCanvas = observer(() => {
   const classes = useStyles();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const rendererRef = useRenderer(canvasRef, {
+  const { rendererRef, isPending, error } = useRenderer(canvasRef, {
     parameters: rootStore.uiState.renderSettings.getRendererParameters(),
     cameraParameters: rootStore.uiState.renderSettings.getCameraParameters(),
     onReady: (renderer) => {
@@ -83,6 +89,10 @@ const RendererCanvas = observer(() => {
 
   return (
     <div className={classes.canvasContainer}>
+      {isPending && (
+        <Spinner className={classes.message} label={"Loading..."} />
+      )}
+      {error && <div className={classes.message}>{error}</div>}
       <canvas ref={canvasRef} className={classes.canvas} {...canvasControls} />
     </div>
   );

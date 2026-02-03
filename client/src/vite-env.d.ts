@@ -5,7 +5,8 @@ interface ViteTypeOptions {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_API_URL: string;
+  readonly VITE_API_URL: string | undefined;
+  readonly VITE_NO_WEBGPU: string | undefined;
 }
 
 interface ImportMeta {

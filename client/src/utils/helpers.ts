@@ -46,6 +46,10 @@ export async function sendApiRequest(
   return response;
 }
 
+export function toBoolean(value: string | undefined): boolean {
+  return value?.trim().toLowerCase() === "true";
+}
+
 export function getFileNameFromPath(path: string | null | undefined) {
   return path?.replace(/^.*[\\/]/, "");
 }

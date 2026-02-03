@@ -9,12 +9,7 @@ import { BindGroup } from "./core/bindGroup";
 import { VolumeManager } from "./volume/volumeManager";
 import { ClippingPlaneManager } from "./volume/clippingPlaneManager";
 import { AnnotationManager } from "./annotations/annotationManager";
-
-export interface DeviceInfo {
-  adapter: GPUAdapter;
-  device: GPUDevice;
-  context: GPUCanvasContext;
-}
+import { toBoolean } from "@/utils/helpers";
 
 export interface OutputInfo {
   outputFormat: GPUTextureFormat;
@@ -25,24 +20,21 @@ export interface OutputInfo {
 
 type RequiredLimits = Omit<GPUSupportedLimits, "__brand">;
 
-export async function initializeDevice(
-  canvas: HTMLCanvasElement,
-  {
-    adapterOptions,
-    deviceOptions,
-  }: {
-    adapterOptions?: GPURequestAdapterOptions;
-    deviceOptions?: GPUDeviceDescriptor;
-  } = {}
-): Promise<DeviceInfo> {
+export async function obtainDevice({
+  adapterOptions,
+  deviceOptions,
+}: {
+  adapterOptions?: GPURequestAdapterOptions;
+  deviceOptions?: GPUDeviceDescriptor;
+} = {}): Promise<{ adapter: GPUAdapter; device: GPUDevice }> {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!navigator.gpu) {
-    throw new Error("WebGPU not supported");
+  if (toBoolean(import.meta.env.VITE_NO_WEBGPU) || !navigator.gpu) {
+    throw new Error("WebGPU is not supported.");
   }
 
   const adapter = await navigator.gpu.requestAdapter(adapterOptions);
   if (!adapter) {
-    throw new Error("No GPU adapter found");
+    throw new Error("No GPU adapter found.");
   }
 
   // TODO Make some sort of global define for this
@@ -95,7 +87,7 @@ export async function initializeDevice(
   }
 
   if (!device) {
-    throw new Error("No GPU device with the required limits could be created");
+    throw new Error("No GPU device with the required limits could be created.");
   }
 
   console.log(
@@ -105,10 +97,19 @@ export async function initializeDevice(
     Array.from(device.features.values())
   );
 
+  return { adapter, device };
+}
+
+export function obtainContext(
+  device: GPUDevice,
+  canvas: HTMLCanvasElement
+): GPUCanvasContext {
   const context = canvas.getContext("webgpu");
 
   if (!context) {
-    throw new Error("WebGPU not supported");
+    throw new Error(
+      "Failed to initialize the WebGPU context, please refresh the page."
+    );
   }
 
   const format = navigator.gpu.getPreferredCanvasFormat();
@@ -119,7 +120,7 @@ export async function initializeDevice(
     alphaMode: "opaque",
   });
 
-  return { adapter, device, context };
+  return context;
 }
 
 const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {

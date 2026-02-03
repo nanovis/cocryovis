@@ -10,6 +10,7 @@ import {
 } from "@fluentui/react-components";
 import React from "react";
 import { loadScript } from "./utils/helpers";
+import { obtainDevice } from "@/renderer/renderer";
 
 const customDarkTheme = {
   10: "#030402",
@@ -94,6 +95,9 @@ const Main = () => {
       window.WasmModule = null;
       await loadScript("/index.js");
 
+      // Check for WebGPU
+      await obtainDevice();
+
       // eslint-disable-next-line react-hooks/immutability
       window.WasmModule = await window.createVolumeRenderer({
         canvas: document.getElementById("canvas"),
@@ -156,7 +160,11 @@ const Main = () => {
       console.log(e);
       const spinner = document.getElementById("loading-spinner");
       if (spinner) {
-        spinner.innerHTML = `<div style="color: white">WebGPU not found, please refresh the page.</div>`;
+        if (e instanceof Error) {
+          spinner.innerHTML = `<div style="color: white">${e.message}</div>`;
+        } else {
+          spinner.innerHTML = `<div style="color: white">WebGPU not found, please refresh the page.</div>`;
+        }
       }
     }
   }

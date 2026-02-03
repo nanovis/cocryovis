@@ -1,6 +1,13 @@
-import { type RefObject, useEffect, useRef, useTransition } from "react";
 import {
-  initializeDevice,
+  type RefObject,
+  useEffect,
+  useRef,
+  useTransition,
+  useState,
+} from "react";
+import {
+  obtainContext,
+  obtainDevice,
   type RendererCameraParameters,
   VolumeRenderer,
 } from "@/renderer/renderer";
@@ -31,28 +38,39 @@ export default function useRenderer(
 ) {
   const rendererRef = useRef<VolumeRenderer | null>(null);
   const onReadyRef = useRef<typeof onReady>(onReady);
-  const [_isPending, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let destroyed = false;
     startTransition(async () => {
-      if (!canvasRef.current || destroyed) return;
-      const deviceInfo = await initializeDevice(canvasRef.current);
-      const rendererCameraParameters: RendererCameraParameters = {
-        ...defaultCameraParameters,
-        ...cameraParameters,
-      };
-      const renderer = new VolumeRenderer(
-        deviceInfo.device,
-        rendererCameraParameters,
-        {
-          context: deviceInfo.context,
-          parameters: parameters,
-          forceWriteOnlyAnnotations: CONFIG.forceWriteOnlyAnnotations,
+      try {
+        if (!canvasRef.current || destroyed) return;
+        const deviceInfo = await obtainDevice();
+        const context = obtainContext(deviceInfo.device, canvasRef.current);
+
+        const rendererCameraParameters: RendererCameraParameters = {
+          ...defaultCameraParameters,
+          ...cameraParameters,
+        };
+        const renderer = new VolumeRenderer(
+          deviceInfo.device,
+          rendererCameraParameters,
+          {
+            context: context,
+            parameters: parameters,
+            forceWriteOnlyAnnotations: CONFIG.forceWriteOnlyAnnotations,
+          }
+        );
+        rendererRef.current = renderer;
+        onReadyRef.current?.(renderer);
+      } catch (e) {
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError(`Error while initializing renderer: ${e}`);
         }
-      );
-      rendererRef.current = renderer;
-      onReadyRef.current?.(renderer);
+      }
     });
 
     return () => {
@@ -62,5 +80,9 @@ export default function useRenderer(
     };
   }, [canvasRef]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return rendererRef;
+  return {
+    rendererRef,
+    isPending,
+    error,
+  };
 }
