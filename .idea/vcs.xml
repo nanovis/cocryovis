@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/Proximal_CryoET" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/gctffind" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/motioncor3" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/nano-oetzi" vcs="Git" />
+  </component>
+</project>

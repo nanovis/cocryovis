@@ -1,0 +1,10 @@
+{
+  "name": "@cocryovis/schemas",
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
+  "peerDependencies": {
+    "zod": "^4.2.1"
+  }
+}
