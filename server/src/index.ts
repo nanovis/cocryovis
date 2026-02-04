@@ -28,223 +28,219 @@ import { delay } from "./middleware/delay.mjs";
 const SqliteStore = sqlite3SessionStore(session);
 
 const startServer = async () => {
-    program
-        .option("--port <number>", "port number")
-        .option("--host <string>", "host name")
-        .option("--https", "use HTTPS")
-        .option("--demoProject <number>", "demo project index");
+  program
+    .option("--port <number>", "port number")
+    .option("--host <string>", "host name")
+    .option("--https", "use HTTPS")
+    .option("--demoProject <number>", "demo project index");
 
-    program.parse(process.argv);
+  program.parse(process.argv);
 
-    const options = program.opts();
+  const options = program.opts();
 
-    const host = options.host ?? process.env.HOST ?? "localhost";
-    const useHttps = options.https ?? process.env.HTTPS === "true";
+  const host = options.host ?? process.env.HOST ?? "localhost";
+  const useHttps = options.https ?? process.env.HTTPS === "true";
 
-    const port =
-        options.port || Number(process.env.PORT) || (useHttps ? 443 : 8080);
+  const port =
+    options.port || Number(process.env.PORT) || (useHttps ? 443 : 8080);
 
-    const demoProjectIndex = options.demoProject || appConfig.demoProjectIndex;
-    appConfig.demoProjectIndex = demoProjectIndex;
+  const demoProjectIndex = options.demoProject || appConfig.demoProjectIndex;
+  appConfig.demoProjectIndex = demoProjectIndex;
 
-    const seassionsPath = process.env.SESSIONS_PATH || "./database/sessions.db";
+  const seassionsPath = process.env.SESSIONS_PATH || "./database/sessions.db";
 
-    const app = express();
+  const app = express();
 
-    const allowedOrigins = [
-        "http://localhost:3000",
-        "https://files.cryoetdataportal.cziscience.com",
-    ];
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://files.cryoetdataportal.cziscience.com",
+  ];
 
-    const corsOptions = {
-        origin: allowedOrigins,
-        credentials: true,
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization",
-            "Content-Disposition",
-            "Origin",
-            "X-Requested-With",
-        ],
-        exposedHeaders: ["Content-Disposition"],
-        methods: ["GET", "POST", "PUT", "DELETE"],
-    };
+  const corsOptions = {
+    origin: allowedOrigins,
+    credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Content-Disposition",
+      "Origin",
+      "X-Requested-With",
+    ],
+    exposedHeaders: ["Content-Disposition"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  };
 
-    app.use(cors(corsOptions));
+  app.use(cors(corsOptions));
 
-    // config
-    app.set("view engine", "ejs");
-    app.set("views", [
-        path.join(".", "views"),
-        path.join(".", "views", "project"),
-    ]);
+  // config
+  app.set("view engine", "ejs");
+  app.set("views", [
+    path.join(".", "views"),
+    path.join(".", "views", "project"),
+  ]);
 
-    console.log("Running environment: ", app.get("env"));
+  console.log("Running environment: ", app.get("env"));
 
-    // middleware
-    if (app.get("env") !== "production" && process.env.DELAY !== undefined) {
-        app.use(delay(Number(process.env.DELAY)));
-    }
-    app.use(express.urlencoded({ extended: true }));
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
+  // middleware
+  if (app.get("env") !== "production" && process.env.DELAY !== undefined) {
+    app.use(delay(Number(process.env.DELAY)));
+  }
+  app.use(express.urlencoded({ extended: true }));
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
+  app.use(
+    fileUpload({
+      createParentPath: true,
+      useTempFiles: true,
+      tempFileDir: path.join(appConfig.tempPath, "upload"),
+    })
+  );
+
+  const sessionsDir = path.dirname(seassionsPath);
+  if (!fileSystem.existsSync(sessionsDir)) {
+    fileSystem.mkdirSync(sessionsDir, { recursive: true, mode: 0o775 });
+  }
+
+  const sessionsDB = new Database(seassionsPath);
+  sessionsDB.pragma("journal_mode = WAL");
+
+  const sess = {
+    name: appConfig.cookieName,
+    store: new SqliteStore({
+      client: sessionsDB,
+      expired: {
+        clear: true,
+        intervalMs: 10 * 60 * 1000, // 10 minutes
+      },
+    }),
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.SESSION_SECRET,
+    rolling: true,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
+      sameSite: "strict",
+    },
+  };
+
+  // @ts-ignore
+  const sessionParser = session(sess);
+
+  if (app.get("env") === "production") {
+    app.set("trust proxy", 1);
+    sess.cookie.secure = true;
+    sess.cookie.httpOnly = true;
     app.use(
-        fileUpload({
-            createParentPath: true,
-            useTempFiles: true,
-            tempFileDir: path.join(appConfig.tempPath, "upload"),
-        })
-    );
-
-    const sessionsDir = path.dirname(seassionsPath);
-    if (!fileSystem.existsSync(sessionsDir)) {
-        fileSystem.mkdirSync(sessionsDir, { recursive: true, mode: 0o775 });
-    }
-
-    const sessionsDB = new Database(seassionsPath);
-    sessionsDB.pragma("journal_mode = WAL");
-
-    const sess = {
-        name: appConfig.cookieName,
-        store: new SqliteStore({
-            client: sessionsDB,
-            expired: {
-                clear: true,
-                intervalMs: 10 * 60 * 1000, // 10 minutes
-            },
-        }),
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.SESSION_SECRET,
-        rolling: true,
-        cookie: {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
-            sameSite: "strict",
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-eval'"],
+            connectSrc: [
+              "'self'",
+              "https://files.cryoetdataportal.cziscience.com",
+            ],
+          },
         },
-    };
+        originAgentCluster: false,
+        crossOriginOpenerPolicy: false,
+      })
+    );
+  }
+  console.log("Writing OpenAPI");
+  writeOpenApi();
+  const file = fileSystem.readFileSync("./openapi.yaml", "utf8");
+  const swaggerDocument = YAML.parse(file, { maxAliasCount: -1 });
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-    // @ts-ignore
-    const sessionParser = session(sess);
+  app.use(sessionParser);
 
-    if (app.get("env") === "production") {
-        app.set("trust proxy", 1);
-        sess.cookie.secure = true;
-        sess.cookie.httpOnly = true;
-        app.use(
-            helmet({
-                contentSecurityPolicy: {
-                    directives: {
-                        defaultSrc: ["'self'"],
-                        scriptSrc: ["'self'", "'unsafe-eval'"],
-                        connectSrc: [
-                            "'self'",
-                            "https://files.cryoetdataportal.cziscience.com",
-                        ],
-                    },
-                },
-                originAgentCluster: false,
-                crossOriginOpenerPolicy: false,
-            })
-        );
-    }
-    console.log("Writing OpenAPI");
-    writeOpenApi();
-    const file = fileSystem.readFileSync("./openapi.yaml", "utf8");
-    const swaggerDocument = YAML.parse(file, { maxAliasCount: -1 });
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use(responseSanitizer);
 
-    app.use(sessionParser);
+  app.use(checkCookieAge);
 
-    app.use(responseSanitizer);
+  // API
+  app.use("/api", projectsApi);
 
-    app.use(checkCookieAge);
+  const clientPath = path.join("client", "build");
+  console.log("Client path: ", clientPath);
 
-    // API
-    app.use("/api", projectsApi);
+  if (fileSystem.existsSync(clientPath)) {
+    app.use("/", express.static(clientPath));
+    app.use("/demo/", express.static(clientPath));
+    app.use("/project/:id", express.static(clientPath));
+  } else {
+    console.warn("No client build found, serving api only!");
+  }
 
-    const clientPath = path.join("client", "build");
-    console.log("Client path: ", clientPath);
+  app.use("/logs", express.static("logs", { index: false }));
 
-    if (fileSystem.existsSync(clientPath)) {
-        app.use("/", express.static(clientPath));
-        app.use("/demo/", express.static(clientPath));
-        app.use("/project/:id", express.static(clientPath));
-    } else {
-        console.warn("No client build found, serving api only!");
+  let server = null;
+
+  if (useHttps) {
+    console.log("Initializing https server");
+
+    let keyContent = null;
+    if (process.env.SSL_KEY_CONTENT) {
+      keyContent = Buffer.from(process.env.SSL_KEY_CONTENT, "base64").toString(
+        "utf8"
+      );
+    } else if (process.env.SSL_KEY_PATH) {
+      keyContent = fileSystem.readFileSync(process.env.SSL_KEY_PATH);
     }
 
-    app.use("/logs", express.static("logs", { index: false }));
-
-    let server = null;
-
-    if (useHttps) {
-        console.log("Initializing https server");
-
-        let keyContent = null;
-        if (process.env.SSL_KEY_CONTENT) {
-            keyContent = Buffer.from(
-                process.env.SSL_KEY_CONTENT,
-                "base64"
-            ).toString("utf8");
-        } else if (process.env.SSL_KEY_PATH) {
-            keyContent = fileSystem.readFileSync(process.env.SSL_KEY_PATH);
-        }
-
-        let certContent = null;
-        if (process.env.SSL_CRT_CONTENT) {
-            certContent = Buffer.from(
-                process.env.SSL_CRT_CONTENT,
-                "base64"
-            ).toString("utf8");
-        } else if (process.env.SSL_CRT_PATH) {
-            certContent = fileSystem.readFileSync(process.env.SSL_CRT_PATH);
-        }
-
-        if (!keyContent || !certContent) {
-            console.error(
-                "No SSL key or certificate provided, exiting with error!"
-            );
-            process.exit(1);
-        }
-
-        server = https.createServer(
-            {
-                key: keyContent,
-                cert: certContent,
-            },
-            app
-        );
-    } else {
-        console.log("Initializing http server");
-        server = http.createServer(app);
+    let certContent = null;
+    if (process.env.SSL_CRT_CONTENT) {
+      certContent = Buffer.from(process.env.SSL_CRT_CONTENT, "base64").toString(
+        "utf8"
+      );
+    } else if (process.env.SSL_CRT_PATH) {
+      certContent = fileSystem.readFileSync(process.env.SSL_CRT_PATH);
     }
-    // Websockets
-    WebSocketManager.initializeWebSocketInstance(server, sessionParser);
 
-    // 404 Error
-    app.use(function (req, res) {
-        res.status(404).json({
-            name: "Bad Url",
-            message: "Sorry, this page does not exist.",
-        });
+    if (!keyContent || !certContent) {
+      console.error("No SSL key or certificate provided, exiting with error!");
+      process.exit(1);
+    }
+
+    server = https.createServer(
+      {
+        key: keyContent,
+        cert: certContent,
+      },
+      app
+    );
+  } else {
+    console.log("Initializing http server");
+    server = http.createServer(app);
+  }
+  // Websockets
+  WebSocketManager.initializeWebSocketInstance(server, sessionParser);
+
+  // 404 Error
+  app.use(function (req, res) {
+    res.status(404).json({
+      name: "Bad Url",
+      message: "Sorry, this page does not exist.",
     });
+  });
 
-    app.use(logErrors);
-    app.use(clientErrorHandler);
+  app.use(logErrors);
+  app.use(clientErrorHandler);
 
-    await TaskHistory.clearOngoing();
-    if (appConfig.cleanTempOnStartup) {
-        await fileSystem.promises.rm(appConfig.tempPath, {
-            recursive: true,
-            force: true,
-        });
-    }
-
-    server.listen(port, host, () => {
-        console.log("listening on " + host + ":" + port);
+  await TaskHistory.clearOngoing();
+  if (appConfig.cleanTempOnStartup) {
+    await fileSystem.promises.rm(appConfig.tempPath, {
+      recursive: true,
+      force: true,
     });
+  }
+
+  server.listen(port, host, () => {
+    console.log("listening on " + host + ":" + port);
+  });
 };
 
 startServer();

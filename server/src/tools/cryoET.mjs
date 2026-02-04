@@ -13,20 +13,18 @@ import Utils from "./utils.mjs";
  * @returns {Promise<z.infer<tomogramSchema>>}
  */
 export async function fetchCtyoETTomogramMetadata(id) {
-    let errOutput = "";
+  let errOutput = "";
 
-    try {
-        let output = "";
-        await Utils.runPythonScript(
-            "fetch-cryoET-tomogram_by_id.py",
-            [id.toString()],
-            (value) => (output += value),
-            (value) => (errOutput += value)
-        );
-        return JSON.parse(output);
-    } catch {
-        throw new Error(
-            "Failed to fetch cryoET tomogram metadata: " + errOutput
-        );
-    }
+  try {
+    let output = "";
+    await Utils.runPythonScript(
+      "fetch-cryoET-tomogram_by_id.py",
+      [id.toString()],
+      (value) => (output += value),
+      (value) => (errOutput += value)
+    );
+    return JSON.parse(output);
+  } catch {
+    throw new Error("Failed to fetch cryoET tomogram metadata: " + errOutput);
+  }
 }

@@ -14,25 +14,22 @@ import { ApiError } from "./error-handler.mjs";
  * @returns {string}
  */
 function replaceStrinInError(input) {
-    return input.replace(/\bString\b/g, "Form");
+  return input.replace(/\bString\b/g, "Form");
 }
 
 /**
  * @param {z.ZodSafeParseResult<any>} validation
  */
 export function checkAndThrowValidationError(validation) {
-    if (!validation.success) {
-        const validationError = fromError(validation.error, {
-            maxIssuesInMessage: 1,
-            prefix: undefined,
-            includePath: false,
-        });
+  if (!validation.success) {
+    const validationError = fromError(validation.error, {
+      maxIssuesInMessage: 1,
+      prefix: undefined,
+      includePath: false,
+    });
 
-        throw new ApiError(
-            400,
-            replaceStrinInError(validationError.toString())
-        );
-    }
+    throw new ApiError(400, replaceStrinInError(validationError.toString()));
+  }
 }
 
 /**
@@ -48,26 +45,26 @@ export function checkAndThrowValidationError(validation) {
  * }}
  */
 export default function validateSchema(
-    req,
-    { bodySchema, paramsSchema, querySchema } = {}
+  req,
+  { bodySchema, paramsSchema, querySchema } = {}
 ) {
-    const result = {};
-    if (bodySchema !== undefined) {
-        const bodyValidation = bodySchema.safeParse(req.body);
-        checkAndThrowValidationError(bodyValidation);
-        result.body = bodyValidation.data;
-    }
+  const result = {};
+  if (bodySchema !== undefined) {
+    const bodyValidation = bodySchema.safeParse(req.body);
+    checkAndThrowValidationError(bodyValidation);
+    result.body = bodyValidation.data;
+  }
 
-    if (paramsSchema !== undefined) {
-        const paramsValidation = paramsSchema.safeParse(req.params);
-        checkAndThrowValidationError(paramsValidation);
-        result.params = paramsValidation.data;
-    }
+  if (paramsSchema !== undefined) {
+    const paramsValidation = paramsSchema.safeParse(req.params);
+    checkAndThrowValidationError(paramsValidation);
+    result.params = paramsValidation.data;
+  }
 
-    if (querySchema !== undefined) {
-        const queryValidation = querySchema.safeParse(req.query);
-        checkAndThrowValidationError(queryValidation);
-        result.query = queryValidation.data;
-    }
-    return result;
+  if (querySchema !== undefined) {
+    const queryValidation = querySchema.safeParse(req.query);
+    checkAndThrowValidationError(queryValidation);
+    result.query = queryValidation.data;
+  }
+  return result;
 }

@@ -9,19 +9,19 @@ import validateSchema from "../tools/validate-schema.mjs";
  * @typedef { import("express").Response } Response
  */
 export default class IlastikController {
-    /**
-     * @param {Ilastik} ilastik
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async queuePseudoLabelsGeneration(ilastik, req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idVolume });
+  /**
+   * @param {Ilastik} ilastik
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async queuePseudoLabelsGeneration(ilastik, req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idVolume });
 
-        await ilastik.queueLabelGeneration(
-            params.idVolume,
-            Number(req.session.user.id)
-        );
+    await ilastik.queueLabelGeneration(
+      params.idVolume,
+      Number(req.session.user.id)
+    );
 
-        res.sendStatus(201);
-    }
+    res.sendStatus(201);
+  }
 }

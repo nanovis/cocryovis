@@ -1,15 +1,15 @@
 {
-    "watch": [
-        "tools",
-        "controllers-api",
-        "middleware",
-        "models",
-        "modules/nano-oetzi",
-        "routes",
-        "./index.mjs",
-        "./config.json"
-    ],
-    "ext": "mjs",
-    "ignore": ["node_modules"],
-    "delay": "1000"
+  "watch": [
+    "tools",
+    "controllers-api",
+    "middleware",
+    "models",
+    "modules/nano-oetzi",
+    "routes",
+    "./index.mjs",
+    "./config.json"
+  ],
+  "ext": "mjs",
+  "ignore": ["node_modules"],
+  "delay": "1000"
 }

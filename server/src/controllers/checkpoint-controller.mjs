@@ -16,120 +16,118 @@ import { idModel } from "@cocryovis/schemas/componentSchemas/model-schema";
  */
 
 export default class CheckpointController {
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async getCheckpoint(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async getCheckpoint(req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
 
-        const checkpoint = await Checkpoint.getById(params.idCheckpoint);
-        res.json(checkpoint);
+    const checkpoint = await Checkpoint.getById(params.idCheckpoint);
+    res.json(checkpoint);
+  }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async getCheckpointsFromModel(req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idModel });
+
+    const checkpoints = await Checkpoint.getFromModel(params.idModel);
+    res.json(checkpoints);
+  }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async uploadCheckpoints(req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idModel });
+
+    if (!req.files || !req.files.files) {
+      throw new ApiError(400, "No files uploaded.");
     }
 
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async getCheckpointsFromModel(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idModel });
+    const checkpoints = await Checkpoint.createFromFiles(
+      Number(req.session.user.id),
+      params.idModel,
+      Array.isArray(req.files.files) ? req.files.files : [req.files.files]
+    );
 
-        const checkpoints = await Checkpoint.getFromModel(params.idModel);
-        res.json(checkpoints);
+    res.status(201).json(checkpoints);
+  }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async downloadCheckpoint(req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
+
+    const checkpoint = await Checkpoint.getById(params.idCheckpoint);
+    let data = prepareDataForDownload(
+      [checkpoint.filePath],
+      path.basename(checkpoint.filePath)
+    );
+    res.set("Content-Type", "application/zip");
+    res.set("Content-Disposition", "attachment; filename=" + data.name);
+    res.send(data.zipBuffer);
+  }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async deleteCheckpoint(req, res) {
+    const { params } = validateSchema(req, {
+      paramsSchema: idCheckpoint,
+    });
+
+    await Checkpoint.del(params.idCheckpoint);
+
+    res.sendStatus(204);
+  }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async checkpointToText(req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
+
+    const checkpoint = await Checkpoint.getById(params.idCheckpoint);
+
+    if (!checkpoint.filePath) {
+      throw new ApiError(400, "Checkpoint is missing a file.");
     }
 
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async uploadCheckpoints(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idModel });
+    const checkpointTxt = await Utils.ckptToText(checkpoint.filePath);
 
-        if (!req.files || !req.files.files) {
-            throw new ApiError(400, "No files uploaded.");
-        }
+    res.send(checkpointTxt);
+  }
 
-        const checkpoints = await Checkpoint.createFromFiles(
-            Number(req.session.user.id),
-            params.idModel,
-            Array.isArray(req.files.files) ? req.files.files : [req.files.files]
-        );
-
-        res.status(201).json(checkpoints);
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async checkpointFileToText(req, res) {
+    if (!req.files || !req.files.checkpoint) {
+      throw new ApiError(400, "No files uploaded.");
     }
 
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async downloadCheckpoint(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
-
-        const checkpoint = await Checkpoint.getById(params.idCheckpoint);
-        let data = prepareDataForDownload(
-            [checkpoint.filePath],
-            path.basename(checkpoint.filePath)
-        );
-        res.set("Content-Type", "application/zip");
-        res.set("Content-Disposition", "attachment; filename=" + data.name);
-        res.send(data.zipBuffer);
+    if (Array.isArray(req.files.checkpoint)) {
+      throw new ApiError(
+        400,
+        "Only one checkpoint file can be parsed at a time."
+      );
     }
 
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async deleteCheckpoint(req, res) {
-        const { params } = validateSchema(req, {
-            paramsSchema: idCheckpoint,
-        });
+    /** @type {fileUpload.UploadedFile} */
+    const checkpointFile = req.files.checkpoint;
+    //FIXME bad error output
+    const checkpointTxt = await Utils.ckptToText(checkpointFile.tempFilePath);
 
-        await Checkpoint.del(params.idCheckpoint);
-
-        res.sendStatus(204);
-    }
-
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async checkpointToText(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
-
-        const checkpoint = await Checkpoint.getById(params.idCheckpoint);
-
-        if (!checkpoint.filePath) {
-            throw new ApiError(400, "Checkpoint is missing a file.");
-        }
-
-        const checkpointTxt = await Utils.ckptToText(checkpoint.filePath);
-
-        res.send(checkpointTxt);
-    }
-
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async checkpointFileToText(req, res) {
-        if (!req.files || !req.files.checkpoint) {
-            throw new ApiError(400, "No files uploaded.");
-        }
-
-        if (Array.isArray(req.files.checkpoint)) {
-            throw new ApiError(
-                400,
-                "Only one checkpoint file can be parsed at a time."
-            );
-        }
-
-        /** @type {fileUpload.UploadedFile} */
-        const checkpointFile = req.files.checkpoint;
-        //FIXME bad error output
-        const checkpointTxt = await Utils.ckptToText(
-            checkpointFile.tempFilePath
-        );
-
-        res.send(checkpointTxt);
-    }
+    res.send(checkpointTxt);
+  }
 }

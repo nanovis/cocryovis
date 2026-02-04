@@ -21,17 +21,17 @@ import Utils from "./utils.mjs";
  * @param {LogFile} logFile
  */
 export async function rawToH5(
-    rawVolumePath,
-    dimensions,
-    usedBits,
-    isSigned,
-    littleEndian,
-    outputPath,
-    datasetName,
-    logFile = null
+  rawVolumePath,
+  dimensions,
+  usedBits,
+  isSigned,
+  littleEndian,
+  outputPath,
+  datasetName,
+  logFile = null
 ) {
-    // prettier-ignore
-    const params = [
+  // prettier-ignore
+  const params = [
         path.join("./python-scripts", "raw-to-h5.py"),
         "-r", rawVolumePath,
         "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
@@ -42,15 +42,15 @@ export async function rawToH5(
         "-o", outputPath
     ]
 
-    await Utils.runScript(
-        appConfig.ilastik.python,
-        params,
-        null,
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
-    );
+  await Utils.runScript(
+    appConfig.ilastik.python,
+    params,
+    null,
+    (value) => logFile.writeLog(value),
+    (value) => logFile.writeLog(value)
+  );
 
-    return outputPath;
+  return outputPath;
 }
 
 /**
@@ -61,14 +61,14 @@ export async function rawToH5(
  * @param {LogFile} logFile
  */
 export async function labelsToH5(
-    labelPaths,
-    dimensions,
-    outputPath,
-    datasetName,
-    logFile = null
+  labelPaths,
+  dimensions,
+  outputPath,
+  datasetName,
+  logFile = null
 ) {
-    // prettier-ignore
-    const params = [
+  // prettier-ignore
+  const params = [
         path.join("./python-scripts", "labels-to-h5.py"),
         "-l", ...labelPaths,
         "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
@@ -77,15 +77,15 @@ export async function labelsToH5(
         "-log", "True"
     ];
 
-    await Utils.runScript(
-        appConfig.ilastik.python,
-        params,
-        null,
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
-    );
+  await Utils.runScript(
+    appConfig.ilastik.python,
+    params,
+    null,
+    (value) => logFile.writeLog(value),
+    (value) => logFile.writeLog(value)
+  );
 
-    return outputPath;
+  return outputPath;
 }
 
 /**
@@ -95,26 +95,26 @@ export async function labelsToH5(
  * @param {LogFile} logFile
  */
 export async function H5ToLabels(
-    labelPath,
-    datasetName,
-    outputPath,
-    logFile = null
+  labelPath,
+  datasetName,
+  outputPath,
+  logFile = null
 ) {
-    // prettier-ignore
-    const params = [
+  // prettier-ignore
+  const params = [
         path.join("./python-scripts", "h5-to-labels.py"),
         "-l", labelPath,
         "-s", datasetName,
         "-o", outputPath
     ];
 
-    await Utils.runScript(
-        appConfig.ilastik.python,
-        params,
-        null,
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
-    );
+  await Utils.runScript(
+    appConfig.ilastik.python,
+    params,
+    null,
+    (value) => logFile.writeLog(value),
+    (value) => logFile.writeLog(value)
+  );
 
-    return outputPath;
+  return outputPath;
 }

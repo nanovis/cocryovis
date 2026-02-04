@@ -10,17 +10,15 @@ import validateSchema from "../tools/validate-schema.mjs";
  */
 
 export default class CryoETController {
-    /**
-     * @param {Request} req
-     * @param {Response} res
-     */
-    static async getTomographyMetadataFromCryoETId(req, res) {
-        const { params } = validateSchema(req, { paramsSchema: idTomogram });
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static async getTomographyMetadataFromCryoETId(req, res) {
+    const { params } = validateSchema(req, { paramsSchema: idTomogram });
 
-        const metadata = await fetchCtyoETTomogramMetadata(
-            params.idTomogram
-        );
+    const metadata = await fetchCtyoETTomogramMetadata(params.idTomogram);
 
-        res.status(200).json(metadata);
-    }
+    res.status(200).json(metadata);
+  }
 }

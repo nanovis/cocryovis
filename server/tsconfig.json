@@ -1,17 +1,17 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
+  "compilerOptions": {
+    "outDir": "./dist",
 
-        "target": "ES2024",
-        "module": "es2022",
-        "moduleResolution": "bundler",
-        "strict": false,
-        "allowJs": true,
-        "checkJs": true,
-        "esModuleInterop": true,
-        "paths": {
-            "@cocryovis/schemas/*": ["../schemas/src/*.ts"]
-        }
-    },
-    "include": ["src", "../schemas/src"],
+    "target": "ES2024",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "strict": false,
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "paths": {
+      "@cocryovis/schemas/*": ["../schemas/src/*.ts"]
+    }
+  },
+  "include": ["src", "../schemas/src"]
 }

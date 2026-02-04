@@ -1,55 +1,55 @@
 {
-    "idleSessionExpirationMin": 720,
-    "tempPath": "./data/temp",
-    "cookieName": "CoCryoViSCookie",
-    "cleanTempOnStartup": true,
-    "dataPath": "./data",
-    "maxVolumeChannels": 4,
-    "safeMode": false,
-    "logPath": "./logs/",
-    "ilastikQueueSize": 20,
-    "gpuQueueSize": 20,
-    "compressionLevel": 9,
+  "idleSessionExpirationMin": 720,
+  "tempPath": "./data/temp",
+  "cookieName": "CoCryoViSCookie",
+  "cleanTempOnStartup": true,
+  "dataPath": "./data",
+  "maxVolumeChannels": 4,
+  "safeMode": false,
+  "logPath": "./logs/",
+  "ilastikQueueSize": 20,
+  "gpuQueueSize": 20,
+  "compressionLevel": 9,
+  "python": "python",
+  "ilastik": {
+    "path": "./modules/ilastik/",
+    "scripts_path": "bin/",
+    "python": "./modules/ilastik/bin/python",
+    "inference": "run_ilastik.sh",
+    "create_project_command": "train_headless.py",
+    "model_file_name": "model_project.ilp",
+    "cleanTemporaryFiles": true
+  },
+  "nanoOetzi": {
+    "path": "./modules/nano-oetzi/",
+    "scripts": "segmentation/",
     "python": "python",
-    "ilastik": {
-        "path": "./modules/ilastik/",
-        "scripts_path": "bin/",
-        "python": "./modules/ilastik/bin/python",
-        "inference": "run_ilastik.sh",
-        "create_project_command": "train_headless.py",
-        "model_file_name": "model_project.ilp",
-        "cleanTemporaryFiles": true
+    "meanFiltering": {
+      "command": "mean_filtering.py"
     },
-    "nanoOetzi": {
-        "path": "./modules/nano-oetzi/",
-        "scripts": "segmentation/",
-        "python": "python",
-        "meanFiltering": {
-            "command": "mean_filtering.py"
-        },
-        "inference": {
-            "command": "inference_script.py",
-            "defaultModel": "four_classes_model.ckpt",
-            "cleanTemporaryFiles": true
-        },
-        "training": {
-            "command": "train.py",
-            "cleanTemporaryFiles": true
-        }
+    "inference": {
+      "command": "inference_script.py",
+      "defaultModel": "four_classes_model.ckpt",
+      "cleanTemporaryFiles": true
     },
-    "Proximal_CryoET": {
-        "path": "./modules/Proximal_CryoET/CUDA_PROXIMAL_SART/build",
-        "executable": "CUDA_PROXIMAL_SART"
-    },
-    "MotionCor3": {
-        "path": "./modules/motioncor3/",
-        "executable": "MotionCor3"
-    },
-    "GCtfFind": {
-        "path": "./modules/gctffind/",
-        "executable": "GCtfFind"
-    },
-    "IMOD": {
-        "path": "./modules/imod/IMOD/bin"
+    "training": {
+      "command": "train.py",
+      "cleanTemporaryFiles": true
     }
+  },
+  "Proximal_CryoET": {
+    "path": "./modules/Proximal_CryoET/CUDA_PROXIMAL_SART/build",
+    "executable": "CUDA_PROXIMAL_SART"
+  },
+  "MotionCor3": {
+    "path": "./modules/motioncor3/",
+    "executable": "MotionCor3"
+  },
+  "GCtfFind": {
+    "path": "./modules/gctffind/",
+    "executable": "GCtfFind"
+  },
+  "IMOD": {
+    "path": "./modules/imod/IMOD/bin"
+  }
 }

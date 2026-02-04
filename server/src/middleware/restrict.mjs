@@ -3,8 +3,8 @@
 import { ApiError } from "../tools/error-handler.mjs";
 import Project from "../models/project.mjs";
 import {
-    VolumeDataFactory,
-    VolumeDataType,
+  VolumeDataFactory,
+  VolumeDataType,
 } from "../models/volume-data-factory.mjs";
 import Volume from "../models/volume.mjs";
 import Model from "../models/model.mjs";
@@ -21,17 +21,16 @@ import appConfig from "../tools/config.mjs";
  * @param {import("express").Request} req
  */
 export function isActiveSession(req) {
-    return req.session !== undefined && req.session.user !== undefined;
+  return req.session !== undefined && req.session.user !== undefined;
 }
 
 /**
  * @param {import("express").Request} req
  */
 export function sessionExpired(req) {
-    return (
-        req.session?.cookie !== undefined &&
-        req.session.cookie.expires < new Date()
-    );
+  return (
+    req.session?.cookie !== undefined && req.session.cookie.expires < new Date()
+  );
 }
 
 /**
@@ -40,12 +39,12 @@ export function sessionExpired(req) {
  * @param {import("express").NextFunction} next
  */
 export function checkCookieAge(req, res, next) {
-    if (sessionExpired(req)) {
-        req.session.destroy(() => {
-            res.clearCookie(appConfig.cookieName);
-        });
-    }
-    next();
+  if (sessionExpired(req)) {
+    req.session.destroy(() => {
+      res.clearCookie(appConfig.cookieName);
+    });
+  }
+  next();
 }
 
 /**
@@ -54,10 +53,10 @@ export function checkCookieAge(req, res, next) {
  * @param {import("express").NextFunction} next
  */
 export function restrictApi(req, res, next) {
-    if (!isActiveSession(req)) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
-    next();
+  if (!isActiveSession(req)) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
+  next();
 }
 
 /**
@@ -66,10 +65,10 @@ export function restrictApi(req, res, next) {
  * @param {import("express").NextFunction} next
  */
 export async function restrictAdminAccess(req, res, next) {
-    if (!isActiveSession(req) || !req?.session?.user?.admin) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
-    next();
+  if (!isActiveSession(req) || !req?.session?.user?.admin) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
+  next();
 }
 
 /**
@@ -77,20 +76,20 @@ export async function restrictAdminAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToProject(project, userId) {
-    if (project.publicAccess === 1) {
-        return true;
-    }
-    if (!userId) {
-        return false;
-    }
-    if (project.ownerId === userId) {
-        return true;
-    }
-    const projectAccess = await Project.getUserAccessInfo(project.id, userId);
-    if (projectAccess >= 0) {
-        return true;
-    }
+  if (project.publicAccess === 1) {
+    return true;
+  }
+  if (!userId) {
     return false;
+  }
+  if (project.ownerId === userId) {
+    return true;
+  }
+  const projectAccess = await Project.getUserAccessInfo(project.id, userId);
+  if (projectAccess >= 0) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -99,15 +98,15 @@ async function userHasReadAccessToProject(project, userId) {
  * @param {import("express").NextFunction} next
  */
 export async function restrictReadProjectAccess(req, res, next) {
-    const projectId = Number(req.params.idProject);
-    const project = await Project.getById(projectId);
-    if (!project) {
-        throw new ApiError(404, `Project ${projectId} not found!`);
-    }
-    if (!(await userHasReadAccessToProject(project, req.session?.user?.id))) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
-    next();
+  const projectId = Number(req.params.idProject);
+  const project = await Project.getById(projectId);
+  if (!project) {
+    throw new ApiError(404, `Project ${projectId} not found!`);
+  }
+  if (!(await userHasReadAccessToProject(project, req.session?.user?.id))) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
+  next();
 }
 
 // VOLUME
@@ -117,12 +116,12 @@ export async function restrictReadProjectAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToVolume(volumeId, userId) {
-    const volume = await Volume.getById(volumeId, { project: true });
-    if (!volume) {
-        throw new ApiError(404, `Volume ${volumeId} not found!`);
-    }
+  const volume = await Volume.getById(volumeId, { project: true });
+  if (!volume) {
+    throw new ApiError(404, `Volume ${volumeId} not found!`);
+  }
 
-    return await userHasReadAccessToProject(volume.project, userId);
+  return await userHasReadAccessToProject(volume.project, userId);
 }
 
 /**
@@ -131,13 +130,13 @@ async function userHasReadAccessToVolume(volumeId, userId) {
  * @param {import("express").NextFunction} next
  */
 export async function restrictReadVolumeAccess(req, res, next) {
-    const volumeId = Number(req.params.idVolume);
+  const volumeId = Number(req.params.idVolume);
 
-    if (!(await userHasReadAccessToVolume(volumeId, req.session?.user?.id))) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
+  if (!(await userHasReadAccessToVolume(volumeId, req.session?.user?.id))) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
 
-    next();
+  next();
 }
 
 // VOLUME DATA
@@ -148,17 +147,17 @@ export async function restrictReadVolumeAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToVolumeData(
-    volumeDataId,
-    volumeDataType,
-    userId
+  volumeDataId,
+  volumeDataType,
+  userId
 ) {
-    const volumeData =
-        await VolumeDataFactory.getClass(volumeDataType).getById(volumeDataId);
-    if (!volumeData) {
-        return false;
-    }
+  const volumeData =
+    await VolumeDataFactory.getClass(volumeDataType).getById(volumeDataId);
+  if (!volumeData) {
+    return false;
+  }
 
-    return await userHasReadAccessToVolume(volumeData.volumeId, userId);
+  return await userHasReadAccessToVolume(volumeData.volumeId, userId);
 }
 
 /**
@@ -167,20 +166,20 @@ async function userHasReadAccessToVolumeData(
  * @param {import("express").NextFunction} next
  */
 export async function restrictReadVolumeDataAccess(req, res, next) {
-    const volumeDataId = Number(req.params.idVolumeData);
-    const volumeDataType = req.params.type;
+  const volumeDataId = Number(req.params.idVolumeData);
+  const volumeDataType = req.params.type;
 
-    if (
-        !(await userHasReadAccessToVolumeData(
-            volumeDataId,
-            VolumeDataType.mapName(volumeDataType),
-            req.session?.user?.id
-        ))
-    ) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
+  if (
+    !(await userHasReadAccessToVolumeData(
+      volumeDataId,
+      VolumeDataType.mapName(volumeDataType),
+      req.session?.user?.id
+    ))
+  ) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
 
-    next();
+  next();
 }
 
 // RESULT
@@ -189,11 +188,11 @@ export async function restrictReadVolumeDataAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToResult(resultId, userId) {
-    const result = await Result.getById(resultId);
-    if (!result) {
-        throw new ApiError(404, `Volume ${result.volumeId} not found!`);
-    }
-    return await userHasReadAccessToVolume(result.volumeId, userId);
+  const result = await Result.getById(resultId);
+  if (!result) {
+    throw new ApiError(404, `Volume ${result.volumeId} not found!`);
+  }
+  return await userHasReadAccessToVolume(result.volumeId, userId);
 }
 
 /**
@@ -202,13 +201,13 @@ async function userHasReadAccessToResult(resultId, userId) {
  * @param {import("express").NextFunction} next
  */
 export async function restrictReadResultAccess(req, res, next) {
-    const resultId = Number(req.params.idResult);
+  const resultId = Number(req.params.idResult);
 
-    if (!(await userHasReadAccessToResult(resultId, req.session?.user?.id))) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
+  if (!(await userHasReadAccessToResult(resultId, req.session?.user?.id))) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
 
-    next();
+  next();
 }
 
 // MODEL
@@ -218,11 +217,11 @@ export async function restrictReadResultAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToModel(modelId, userId) {
-    const model = await Model.getById(modelId, { project: true });
-    if (!model) {
-        throw new ApiError(404, `Volume ${modelId} not found!`);
-    }
-    return await userHasReadAccessToProject(model.project, userId);
+  const model = await Model.getById(modelId, { project: true });
+  if (!model) {
+    throw new ApiError(404, `Volume ${modelId} not found!`);
+  }
+  return await userHasReadAccessToProject(model.project, userId);
 }
 
 /**
@@ -231,13 +230,13 @@ async function userHasReadAccessToModel(modelId, userId) {
  * @param {import("express").NextFunction} next
  */
 export async function restrictReadModelAccess(req, res, next) {
-    const modelId = Number(req.params.idModel);
+  const modelId = Number(req.params.idModel);
 
-    if (!(await userHasReadAccessToModel(modelId, req.session?.user?.id))) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
+  if (!(await userHasReadAccessToModel(modelId, req.session?.user?.id))) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
 
-    next();
+  next();
 }
 
 // CHECKPOINT
@@ -247,8 +246,8 @@ export async function restrictReadModelAccess(req, res, next) {
  * @param {number | undefined} userId
  */
 async function userHasReadAccessToCheckpoint(checkpointId, userId) {
-    const checkpoint = await Checkpoint.getById(checkpointId);
-    return await userHasReadAccessToModel(checkpoint.modelId, userId);
+  const checkpoint = await Checkpoint.getById(checkpointId);
+  return await userHasReadAccessToModel(checkpoint.modelId, userId);
 }
 
 /**
@@ -257,16 +256,13 @@ async function userHasReadAccessToCheckpoint(checkpointId, userId) {
  * @param {import("express").NextFunction} next
  */
 export async function restrictReadCheckpointAccess(req, res, next) {
-    const checkpointId = Number(req.params.idCheckpoint);
+  const checkpointId = Number(req.params.idCheckpoint);
 
-    if (
-        !(await userHasReadAccessToCheckpoint(
-            checkpointId,
-            req.session?.user?.id
-        ))
-    ) {
-        throw new ApiError(403, `Access to ${req.path} denied!`);
-    }
+  if (
+    !(await userHasReadAccessToCheckpoint(checkpointId, req.session?.user?.id))
+  ) {
+    throw new ApiError(403, `Access to ${req.path} denied!`);
+  }
 
-    next();
+  next();
 }

@@ -16,41 +16,40 @@ import { IlastikPath } from "@cocryovis/schemas/Ilastik-path-schema";
 import { nanoOetziPath } from "@cocryovis/schemas/nano-oetzi-path-schema";
 import { cryoEtPath } from "@cocryovis/schemas/cryoEt-path-schema";
 
-
 // Makes errors readable
 zod.config({
-    customError: createErrorMap(),
+  customError: createErrorMap(),
 });
 
 const document = createDocument(
-    {
-        openapi: "3.1.0",
-        info: {
-            title: "My API",
-            version: "1.0.0",
-        },
-        servers: [
-            {
-                url: "http://localhost:8080/api",
-            },
-        ],
-        paths: {
-            ...userPath,
-            ...projectPath,
-            ...volumePath,
-            ...volumeDataPath,
-            ...modelsPath,
-            ...checkPointPath,
-            ...resultPath,
-            ...demoPath,
-            ...IlastikPath,
-            ...nanoOetziPath,
-            ...cryoEtPath,
-        },
+  {
+    openapi: "3.1.0",
+    info: {
+      title: "My API",
+      version: "1.0.0",
     },
-    { reused: "inline" }
+    servers: [
+      {
+        url: "http://localhost:8080/api",
+      },
+    ],
+    paths: {
+      ...userPath,
+      ...projectPath,
+      ...volumePath,
+      ...volumeDataPath,
+      ...modelsPath,
+      ...checkPointPath,
+      ...resultPath,
+      ...demoPath,
+      ...IlastikPath,
+      ...nanoOetziPath,
+      ...cryoEtPath,
+    },
+  },
+  { reused: "inline" }
 );
 export function writeOpenApi() {
-    const yaml = YAML.stringify(document);
-    fs.writeFileSync("openapi.yaml", yaml);
+  const yaml = YAML.stringify(document);
+  fs.writeFileSync("openapi.yaml", yaml);
 }
