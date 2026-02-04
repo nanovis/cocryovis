@@ -4,7 +4,7 @@ import Utils from "./utils.mjs";
 
 /**
  * @import z from "zod"
- * @import { tomogramSchema } from "@cocryovis/schemas/cryoEt-path-schema.mjs"
+ * @import { tomogramSchema } from "@cocryovis/schemas/cryoEt-path-schema"
  */
 
 /**

@@ -11,7 +11,7 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeQuerySchema } from "@cocryovis/schemas/volume-path-schema.mjs"
+ * @import { volumeQuerySchema } from "@cocryovis/schemas/volume-path-schema"
  * @typedef { import("@prisma/client").Project } ProjectDB
  * @typedef { import("@prisma/client").ProjectAccess } ProjectAccess
  * @typedef { { volumes?: boolean | { include: z.infer<volumeQuerySchema> }, models?: boolean | { include: { checkpoints: boolean } }, owner?: boolean } } Options

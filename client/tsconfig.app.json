@@ -26,10 +26,10 @@
     "checkJs": true,
 
     "paths": {
-      "#schemas/*": ["../schemas/*"],
+      "#schemas/*": ["../schemas/src/*"],
       "@/*": ["./src/*"]
     },
     "types": ["@webgpu/types"]
   },
-  "include": ["src", "../schemas"]
+  "include": ["src", "../schemas/src"]
 }

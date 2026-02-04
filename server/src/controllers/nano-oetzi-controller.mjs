@@ -1,6 +1,6 @@
 // @ts-check
 
-import { inferenceIds, trainingReq } from "@cocryovis/schemas/nano-oetzi-path-schema.mjs";
+import { inferenceIds, trainingReq } from "@cocryovis/schemas/nano-oetzi-path-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
 

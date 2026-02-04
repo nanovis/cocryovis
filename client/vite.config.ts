@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        "#schemas": path.resolve(__dirname, "../schemas"),
+        "#schemas": path.resolve(__dirname, "../schemas/src"),
       },
     },
     server: {

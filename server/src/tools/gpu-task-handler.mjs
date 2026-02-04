@@ -22,8 +22,8 @@ import appConfig from "./config.mjs";
 
 /**
  * @import z from "zod"
- * @import { trainingOptions } from "@cocryovis/schemas/nano-oetzi-path-schema.mjs";
- * @import { IMODOptions, CTFOptions, tiltSeriesOptions, motionCorrectionOptions } from "@cocryovis/schemas/cryoEt-path-schema.mjs"
+ * @import { trainingOptions } from "@cocryovis/schemas/nano-oetzi-path-schema";
+ * @import { IMODOptions, CTFOptions, tiltSeriesOptions, motionCorrectionOptions } from "@cocryovis/schemas/cryoEt-path-schema"
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  * @typedef { import("@prisma/client").Volume } VolumeDB

@@ -21,9 +21,9 @@ import {
     idVolumeDataAndType,
     idVolumeVolumeDataTypeParams,
     volumeDataUpdate,
-} from "@cocryovis/schemas/volume-data-path-schema.mjs";
+} from "@cocryovis/schemas/volume-data-path-schema";
 import VolumeData from "../models/volume-data.mjs";
-import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema.mjs";
+import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 /**
  * @import z from "zod"

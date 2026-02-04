@@ -1,14 +1,14 @@
 // @ts-check
 
 import Model from "../models/model.mjs";
-import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema.mjs";
+import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema";
 import {
     createModelSchema,
     getModelQuerySchema,
     idModelAndidProject,
-} from "@cocryovis/schemas/models-path-schema.mjs";
+} from "@cocryovis/schemas/models-path-schema";
 import validateSchema from "../tools/validate-schema.mjs";
-import { idModel } from "@cocryovis/schemas/componentSchemas/model-schema.mjs";
+import { idModel } from "@cocryovis/schemas/componentSchemas/model-schema";
 
 /**
  * @typedef { import("express").Request } Request

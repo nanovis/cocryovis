@@ -9,7 +9,7 @@ import { MissingResourceError } from "../tools/error-handler.mjs";
 /**
  * @typedef { import("@prisma/client").Model } ModelDB
  * @import z from "zod"
- * @import { getModelQuerySchema } from "@cocryovis/schemas/models-path-schema.mjs";
+ * @import { getModelQuerySchema } from "@cocryovis/schemas/models-path-schema";
  * @typedef {z.infer<typeof getModelQuerySchema>} Options
  */
 

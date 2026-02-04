@@ -11,7 +11,7 @@ import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 import { Prisma } from "@prisma/client";
 
 /**
- * @import { publicUser } from "@cocryovis/schemas/user-path-schema.mjs"
+ * @import { publicUser } from "@cocryovis/schemas/user-path-schema"
  * @import z from "zod"
  * @typedef { import("@prisma/client").User } UserDB
  * @typedef {z.infer<publicUser>} PublicUser

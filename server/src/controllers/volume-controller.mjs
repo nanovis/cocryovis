@@ -1,17 +1,17 @@
 // @ts-check
 
 import Volume from "../models/volume.mjs";
-import { annotationsSchema } from "@cocryovis/schemas/volume-path-schema.mjs";
-import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema.mjs";
+import { annotationsSchema } from "@cocryovis/schemas/volume-path-schema";
+import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema";
 import {
     idVolume,
     volumeUpdateSchema,
-} from "@cocryovis/schemas/componentSchemas/volume-schema.mjs";
+} from "@cocryovis/schemas/componentSchemas/volume-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
     createVolumeReq,
     volumeQuerySchema,
-} from "@cocryovis/schemas/volume-path-schema.mjs";
+} from "@cocryovis/schemas/volume-path-schema";
 
 /**
  * @typedef { import("express").Request } Request

@@ -1,6 +1,6 @@
 // @ts-check
 
-import { idTomogram } from "@cocryovis/schemas/cryoEt-path-schema.mjs";
+import { idTomogram } from "@cocryovis/schemas/cryoEt-path-schema";
 import { fetchCtyoETTomogramMetadata } from "../tools/cryoET.mjs";
 import validateSchema from "../tools/validate-schema.mjs";
 

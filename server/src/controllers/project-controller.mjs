@@ -1,11 +1,11 @@
 // @ts-check
 
 import Project from "../models/project.mjs";
-import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema.mjs";
+import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema";
 import {
     projectCreateSchemaReq,
     setAccessSchemaReq,
-} from "@cocryovis/schemas/project-path-schema.mjs";
+} from "@cocryovis/schemas/project-path-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 
 /**

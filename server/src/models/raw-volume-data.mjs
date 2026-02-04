@@ -17,7 +17,7 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema.mjs";
+ * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  */
 

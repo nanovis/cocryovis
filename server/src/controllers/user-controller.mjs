@@ -11,7 +11,7 @@ import {
     registerSchema,
     statusQuery,
     updateUserSchema,
-} from "@cocryovis/schemas/user-path-schema.mjs";
+} from "@cocryovis/schemas/user-path-schema";
 
 /**
  * @typedef { import("express").Request } Request

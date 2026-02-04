@@ -4,17 +4,17 @@ import YAML from "yaml";
 import { createDocument } from "zod-openapi";
 import { createErrorMap } from "zod-validation-error";
 import zod from "zod";
-import { userPath } from "@cocryovis/schemas/user-path-schema.mjs";
-import { projectPath } from "@cocryovis/schemas/project-path-schema.mjs";
-import { volumePath } from "@cocryovis/schemas/volume-path-schema.mjs";
-import { volumeDataPath } from "@cocryovis/schemas/volume-data-path-schema.mjs";
-import { modelsPath } from "@cocryovis/schemas/models-path-schema.mjs";
-import { checkPointPath } from "@cocryovis/schemas/checkpoint-path-schema.mjs";
-import { resultPath } from "@cocryovis/schemas/result-path-schema.mjs";
-import { demoPath } from "@cocryovis/schemas/demo-path-schema.mjs";
-import { IlastikPath } from "@cocryovis/schemas/Ilastik-path-schema.mjs";
-import { nanoOetziPath } from "@cocryovis/schemas/nano-oetzi-path-schema.mjs";
-import { cryoEtPath } from "@cocryovis/schemas/cryoEt-path-schema.mjs";
+import { userPath } from "@cocryovis/schemas/user-path-schema";
+import { projectPath } from "@cocryovis/schemas/project-path-schema";
+import { volumePath } from "@cocryovis/schemas/volume-path-schema";
+import { volumeDataPath } from "@cocryovis/schemas/volume-data-path-schema";
+import { modelsPath } from "@cocryovis/schemas/models-path-schema";
+import { checkPointPath } from "@cocryovis/schemas/checkpoint-path-schema";
+import { resultPath } from "@cocryovis/schemas/result-path-schema";
+import { demoPath } from "@cocryovis/schemas/demo-path-schema";
+import { IlastikPath } from "@cocryovis/schemas/Ilastik-path-schema";
+import { nanoOetziPath } from "@cocryovis/schemas/nano-oetzi-path-schema";
+import { cryoEtPath } from "@cocryovis/schemas/cryoEt-path-schema";
 
 
 // Makes errors readable

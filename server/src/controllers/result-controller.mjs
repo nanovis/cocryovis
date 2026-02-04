@@ -7,12 +7,12 @@ import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import appConfig from "../tools/config.mjs";
-import { idResult } from "@cocryovis/schemas/componentSchemas/result-schema.mjs";
+import { idResult } from "@cocryovis/schemas/componentSchemas/result-schema";
 import validateSchema from "../tools/validate-schema.mjs";
-import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema.mjs";
+import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
 
 /**
- * @import { createFromFilesSchema } from "@cocryovis/schemas/result-path-schema.mjs"
+ * @import { createFromFilesSchema } from "@cocryovis/schemas/result-path-schema"
  * @import z from "zod"
  * @typedef { import("express").Request } Request
  * @typedef { import("express").Response } Response

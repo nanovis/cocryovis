@@ -17,7 +17,7 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeQuerySchema } from "@cocryovis/schemas/volume-path-schema.mjs"
+ * @import { volumeQuerySchema } from "@cocryovis/schemas/volume-path-schema"
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
