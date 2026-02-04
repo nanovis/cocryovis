@@ -23,7 +23,7 @@ import {
     volumeDataUpdate,
 } from "@cocryovis/schemas/volume-data-path-schema";
 import VolumeData from "../models/volume-data.mjs";
-import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import { volumeSettings } from "../../../schemas/dist/componentSchemas/volume-settings-schema.js";
 
 /**
  * @import z from "zod"

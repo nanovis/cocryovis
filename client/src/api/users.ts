@@ -7,7 +7,7 @@ import type {
   statusSchema,
   updateUserSchema,
   usersArray,
-} from "#schemas/user-path-schema.mjs";
+} from "#schemas/user-path-schema";
 import * as Utils from "../utils/helpers";
 import type z from "zod";
 

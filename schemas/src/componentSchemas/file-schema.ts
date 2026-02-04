@@ -1,5 +1,3 @@
-// @ts-check
-
 import z from "zod";
 
 export const fileSchema = z.file().mime("application/zip");

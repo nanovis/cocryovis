@@ -3,7 +3,7 @@ import * as Utils from "../utils/helpers";
 import type {
   inferenceIds,
   trainingReq,
-} from "#schemas/nano-oetzi-path-schema.mjs";
+} from "#schemas/nano-oetzi-path-schema";
 
 export async function queueInference(request: z.input<typeof inferenceIds>) {
   await Utils.sendApiRequest(`queue-inference`, {

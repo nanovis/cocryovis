@@ -3,11 +3,11 @@ import * as Utils from "../utils/helpers";
 import type {
   modelSchema,
   modelSchemaWithCheckpoint,
-} from "#schemas/componentSchemas/model-schema.mjs";
+} from "#schemas/componentSchemas/model-schema";
 import type {
   createModelSchema,
   getModelQuerySchema,
-} from "#schemas/models-path-schema.mjs";
+} from "#schemas/models-path-schema";
 
 export async function getModelsFromProjectWithCheckpoints(id: number) {
   const query: z.input<typeof getModelQuerySchema> = {

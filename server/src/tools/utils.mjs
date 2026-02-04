@@ -11,7 +11,7 @@ const execPromise = promisify(exec);
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+ * @import { volumeSettings } from "../../../schemas/dist/componentSchemas/volume-settings-schema.js";
  */
 export default class Utils {
     /**

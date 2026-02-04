@@ -1,10 +1,10 @@
 import {
   type transferFunctionSchema,
   volumeSettings,
-} from "#schemas/componentSchemas/volume-settings-schema.mjs";
+} from "#schemas/componentSchemas/volume-settings-schema";
 import type z from "zod";
 import * as Utils from "./helpers";
-import { fileTypeSchema } from "#schemas/volume-data-path-schema.mjs";
+import { fileTypeSchema } from "#schemas/volume-data-path-schema";
 import { type FileMap, isMrcFile, isRawFile } from "./helpers";
 import { convertMRCToRaw, readMRCHeader } from "@/utils/mrcParser";
 

@@ -5,11 +5,11 @@ import type {
   getVolumeSchema,
   volumeQuerySchema,
   volumesDeepSchemaRes,
-} from "#schemas/volume-path-schema.mjs";
+} from "#schemas/volume-path-schema";
 import type {
   volumeSchema,
   volumeUpdateSchema,
-} from "#schemas/componentSchemas/volume-schema.mjs";
+} from "#schemas/componentSchemas/volume-schema";
 
 export async function getVolumesFromProjectDeep(id: number) {
   const response = await Utils.sendApiRequest(`project/${id}/volumes/deep`, {

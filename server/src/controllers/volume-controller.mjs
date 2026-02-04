@@ -2,11 +2,11 @@
 
 import Volume from "../models/volume.mjs";
 import { annotationsSchema } from "@cocryovis/schemas/volume-path-schema";
-import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema";
+import { idProject } from "../../../schemas/dist/componentSchemas/project-schema.js";
 import {
     idVolume,
     volumeUpdateSchema,
-} from "@cocryovis/schemas/componentSchemas/volume-schema";
+} from "../../../schemas/dist/componentSchemas/volume-schema.js";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
     createVolumeReq,

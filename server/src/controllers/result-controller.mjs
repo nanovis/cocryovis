@@ -7,9 +7,9 @@ import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import appConfig from "../tools/config.mjs";
-import { idResult } from "@cocryovis/schemas/componentSchemas/result-schema";
+import { idResult } from "../../../schemas/dist/componentSchemas/result-schema.js";
 import validateSchema from "../tools/validate-schema.mjs";
-import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
+import { idVolume } from "../../../schemas/dist/componentSchemas/volume-schema.js";
 
 /**
  * @import { createFromFilesSchema } from "@cocryovis/schemas/result-path-schema"

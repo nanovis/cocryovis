@@ -1,4 +1,4 @@
-import type { projectSchema } from "#schemas/componentSchemas/project-schema.mjs";
+import type { projectSchema } from "#schemas/componentSchemas/project-schema";
 import type {
   projectAccessInfoSchema,
   projectCreateSchemaReq,
@@ -6,7 +6,7 @@ import type {
   projectsSchemaDeepRes,
   setAccessSchemaReq,
   setAccessSchemaRes,
-} from "#schemas/project-path-schema.mjs";
+} from "#schemas/project-path-schema";
 import * as Utils from "../utils/helpers";
 import type z from "zod";
 

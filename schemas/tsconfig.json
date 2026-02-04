@@ -3,11 +3,12 @@
     "rootDir": "./src",
     "outDir": "./dist",
 
-    "module": "nodenext",
-    "target": "esnext",
+    "module": "es2022",
+    "target": "es2024",
     // For nodejs:
     "lib": ["esnext"],
     "types": ["node"],
+    "moduleResolution": "bundler",
 
     // Other Outputs
     "sourceMap": true,
@@ -19,7 +20,7 @@
     // "exactOptionalPropertyTypes": true,
 
     // Style Options
-    "noImplicitReturns": false,
+    "noImplicitReturns": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -27,7 +28,7 @@
     // "noPropertyAccessFromIndexSignature": true,
 
     // Recommended Options
-    "strict": false,
+    "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
@@ -39,5 +40,5 @@
     "checkJs": true,
     "esModuleInterop": true
   },
-  "include": ["src"],
+  "include": ["src"]
 }

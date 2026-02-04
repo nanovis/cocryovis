@@ -3,7 +3,7 @@
   "type": "module",
   "exports": {
     "./*": {
-      "import": "./dist/*.mjs",
+      "import": "./dist/*.js",
       "types": "./dist/*.d.ts"
     }
   },
@@ -11,18 +11,26 @@
     "dist"
   ],
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsup",
+    "format": "prettier --write .",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint --fix .",
+    "upgrade:check": "npx npm-check-updates --format group",
+    "upgrade": "npx npm-check-updates -u"
   },
   "peerDependencies": {
-    "zod": "^4.2.1",
-    "zod-openapi": "^5.4.5",
+    "zod": "^4.3.6",
+    "zod-openapi": "^5.4.6",
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.2.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "eslint": "^9.39.2",
+    "npm-check-updates": "^19.3.2",
+    "prettier": "^3.8.1",
+    "typescript-eslint": "^8.54.0"
   }
 }

@@ -1,7 +1,7 @@
 // @ts-check
 
 import Project from "../models/project.mjs";
-import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema";
+import { idProject } from "../../../schemas/dist/componentSchemas/project-schema.js";
 import {
     projectCreateSchemaReq,
     setAccessSchemaReq,
