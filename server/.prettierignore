@@ -1,17 +1,20 @@
 src/routes/api/projects.mjs
 data/
+database/
 demo/
 logs/
 modules/
 node_modules/
 sessions/
 transfer-functions/
+dist/
 *.json
 *.log
 *.sh
 *.yaml
 *.yml
 *.md
+*.env
 
 !package.json
 !tsconfig*.json

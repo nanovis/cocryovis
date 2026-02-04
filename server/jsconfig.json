@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "checkJs": true,
-    "module": "es2022",
-    "target": "ES2024",
-    "moduleResolution": "bundler"
-  },
-  "exclude": ["node_modules"]
-}
