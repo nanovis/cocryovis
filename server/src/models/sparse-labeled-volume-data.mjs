@@ -13,7 +13,7 @@ import { withTransaction } from "./database-model.mjs";
 /**
  * @import z from "zod"
  * @import { PendingUpload } from "../tools/file-handler.mjs";
- * @import { volumeSettings } from "../../../schemas/dist/componentSchemas/volume-settings-schema.js";
+ * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  */
 

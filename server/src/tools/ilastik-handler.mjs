@@ -19,7 +19,7 @@ import TaskHistory from "../models/task-history.mjs";
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "../../../schemas/dist/componentSchemas/volume-settings-schema.js";
+ * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").Volume } VolumeDB
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB

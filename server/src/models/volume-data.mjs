@@ -14,7 +14,7 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "../../../schemas/dist/componentSchemas/volume-settings-schema.js";
+ * @import { volumeDescriptorSettings, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
@@ -70,7 +70,7 @@ export default class VolumeData extends DatabaseModel {
     }
 
     /**
-     * @param {z.infer<typeof volumeSettings>} settings
+     * @param {z.infer<typeof volumeDescriptorSettings>} settings
      */
     static fromSettingSchema(settings) {
         return {
@@ -139,7 +139,7 @@ export default class VolumeData extends DatabaseModel {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload[]} files
-     * @param {z.infer<typeof volumeSettings>} settings
+     * @param {z.infer<typeof volumeDescriptorSettings>} settings
      * @param {boolean?} skipLock
      * @param {Prisma.TransactionClient | undefined} [client]
      * @returns {Promise<object>}

@@ -1,36 +1,29 @@
-// @ts-check
-/*
-    VolWeb
-
-    author: @CirilBohak
-    organization: @nanovis
-*/
 import "dotenv/config";
 
 import express from "express";
 import path from "path";
 import fileSystem from "fs";
 import session from "express-session";
-import { projectsApi } from "./src/routes/api/projects.mjs";
+import { projectsApi } from "./routes/api/projects.mjs";
 import bodyParser from "body-parser";
 import cors from "cors";
 import fileUpload from "express-fileupload";
 import Database from "better-sqlite3";
 import sqlite3SessionStore from "better-sqlite3-session-store";
 import helmet from "helmet";
-import appConfig from "./src/tools/config.mjs";
-import { logErrors, clientErrorHandler } from "./src/tools/error-handler.mjs";
-import WebSocketManager from "./src/tools/websocket-manager.mjs";
+import appConfig from "./tools/config.mjs";
+import { logErrors, clientErrorHandler } from "./tools/error-handler.mjs";
+import WebSocketManager from "./tools/websocket-manager.mjs";
 import http from "http";
 import https from "https";
-import TaskHistory from "./src/models/task-history.mjs";
-import { responseSanitizer } from "./src/middleware/sanitizer.mjs";
-import { checkCookieAge } from "./src/middleware/restrict.mjs";
+import TaskHistory from "./models/task-history.mjs";
+import { responseSanitizer } from "./middleware/sanitizer.mjs";
+import { checkCookieAge } from "./middleware/restrict.mjs";
 import { program } from "commander";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yaml";
-import { writeOpenApi } from "./src/tools/open-api-generator.mjs";
-import { delay } from "./src/middleware/delay.mjs";
+import { writeOpenApi } from "./tools/open-api-generator.mjs";
+import { delay } from "./middleware/delay.mjs";
 
 const SqliteStore = sqlite3SessionStore(session);
 
@@ -138,7 +131,7 @@ const startServer = async () => {
     if (app.get("env") === "production") {
         app.set("trust proxy", 1);
         sess.cookie.secure = true;
-        sess.cookie.HttpOnly = true;
+        sess.cookie.httpOnly = true;
         app.use(
             helmet({
                 contentSecurityPolicy: {

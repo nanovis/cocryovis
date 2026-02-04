@@ -1,6 +1,6 @@
 // @ts-check
 
-import { idVolume } from "../../../schemas/dist/componentSchemas/volume-schema.js";
+import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 
 /**

@@ -17,7 +17,7 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "../../../schemas/dist/componentSchemas/volume-settings-schema.js";
+ * @import { volumeDescriptorSettings, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  */
 
@@ -91,7 +91,7 @@ export default class RawVolumeData extends VolumeData {
      * @param {number} creatorId
      * @param {number} volumeId
      * @param {PendingUpload[]} files
-     * @param {z.infer<typeof volumeSettings>} settings
+     * @param {z.infer<typeof volumeDescriptorSettings>} settings
      * @param {boolean?} skipLock
      * @returns {Promise<RawVolumeDataDB>}
      */

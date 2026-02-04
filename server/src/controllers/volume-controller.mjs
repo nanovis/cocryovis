@@ -1,12 +1,11 @@
 // @ts-check
 
 import Volume from "../models/volume.mjs";
-import { annotationsSchema } from "@cocryovis/schemas/volume-path-schema";
-import { idProject } from "../../../schemas/dist/componentSchemas/project-schema.js";
+import { idProject } from "@cocryovis/schemas/componentSchemas/project-schema";
 import {
     idVolume,
     volumeUpdateSchema,
-} from "../../../schemas/dist/componentSchemas/volume-schema.js";
+} from "@cocryovis/schemas/componentSchemas/volume-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 import {
     createVolumeReq,

@@ -6,9 +6,9 @@ import { prepareDataForDownload } from "../tools/file-handler.mjs";
 import path from "path";
 import Utils from "../tools/utils.mjs";
 import fileUpload from "express-fileupload";
-import { idCheckpoint } from "../../../schemas/dist/componentSchemas/checkpoint-schema.js";
+import { idCheckpoint } from "@cocryovis/schemas/componentSchemas/checkpoint-schema";
 import validateSchema from "../tools/validate-schema.mjs";
-import { idModel } from "../../../schemas/dist/componentSchemas/model-schema.js";
+import { idModel } from "@cocryovis/schemas/componentSchemas/model-schema";
 
 /**
  * @typedef { import("express").Request } Request

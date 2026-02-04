@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@cocryovis/schemas": "file:../schemas",
     "@fluentui/react-components": "^9.72.11",
     "buffer-backed-object": "github:Scurek/buffer-backed-object#main",
     "detect-browser": "^5.3.0",
