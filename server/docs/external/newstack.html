@@ -1,0 +1,1082 @@
+
+<!-- saved from url=(0053)https://bio3d.colorado.edu/imod/doc/man/newstack.html -->
+<html data-lt-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>newstack</title><style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><style>.resizable-component[data-v-761d614a]{position:absolute}.resizable-component>.resizable-r[data-v-761d614a]{cursor:e-resize;height:100%;top:0;width:6px;z-index:90}.resizable-component>.resizable-r[data-v-761d614a],.resizable-component>.resizable-rb[data-v-761d614a]{display:block;position:absolute;right:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rb[data-v-761d614a]{bottom:-6px;cursor:se-resize;height:12px;width:12px;z-index:91}.resizable-component>.resizable-b[data-v-761d614a]{cursor:s-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-b[data-v-761d614a],.resizable-component>.resizable-lb[data-v-761d614a]{bottom:-6px;display:block;height:12px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-lb[data-v-761d614a]{cursor:sw-resize;left:-6px;width:12px;z-index:91}.resizable-component>.resizable-l[data-v-761d614a]{cursor:w-resize;height:100%;top:0;z-index:90}.resizable-component>.resizable-l[data-v-761d614a],.resizable-component>.resizable-lt[data-v-761d614a]{display:block;left:-6px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none;width:12px}.resizable-component>.resizable-lt[data-v-761d614a]{cursor:nw-resize;height:12px;top:-6px;z-index:91}.resizable-component>.resizable-t[data-v-761d614a]{cursor:n-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-rt[data-v-761d614a],.resizable-component>.resizable-t[data-v-761d614a]{display:block;height:12px;position:absolute;top:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rt[data-v-761d614a]{cursor:ne-resize;right:-6px;width:12px;z-index:91}</style><style>.it-language-selector{--it-lang-selector-bg:#c7ccd1;--it-lang-selector-btn-rad:15px;--it-lang-selector-cnt-rad:16px;border-radius:999rem;display:flex;font-size:14px;height:32px;min-width:200px;position:relative}.it-language-selector>main{margin-left:4px}.it-language-selector>.it-btn,.it-language-selector>section .it-btn{height:32px}.it-language-selector>section{flex-grow:1;padding:0 1px;position:relative;width:50%}.it-language-selector>section .it-btn{font-size:13px;margin:0!important;width:100%}.it-language-selector>section .it-btn:last-child{border-radius:var(--it-lang-selector-btn-rad)}.it-language-selector>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-selector>section>div[role=dialog]{background:var(--it-lang-selector-bg);display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-selector>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-selector[data-direction=down] .it-btn{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}.it-language-selector[data-direction=down]>section>div[role=dialog]{border-radius:0 0 var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad);top:100%}.it-language-selector[data-direction=down]>section>div[role=dialog]>.it-btn:last-child,.it-language-selector[data-direction=up] .it-btn{border-radius:0 0 var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad)}.it-language-selector[data-direction=up]>section>div[role=dialog]{border-radius:var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad) 0 0;bottom:100%}.it-language-selector[data-direction=up]>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}</style><style>.it-language-settings{--it-lang-settings-bg:#c7ccd1;--it-lang-settings-btn-rad:15px;--it-lang-settings-cnt-rad:16px;border-radius:999rem;display:flex;font-size:13px;height:32px;position:relative}.it-language-settings>main{margin-left:4px}.it-language-settings span.it-btn{pointer-events:none}.it-language-settings>.it-btn,.it-language-settings>section .it-btn{height:32px}.it-language-settings>section{flex-grow:1;margin-left:4px;margin-top:2px;padding:0 1px;position:relative}.it-language-settings>section[aria-current=false]{border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0}.it-language-settings>section:has(label){background-color:var(--it-lang-settings-bg)}.it-language-settings>section>label{background:var(--it-lang-settings-bg);border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);color:inherit;font-size:8px;font-weight:600;left:0;letter-spacing:.01em;line-height:1.2;margin:0;padding:3px 5px 2px;position:absolute;text-align:center;text-transform:uppercase;top:100%;width:100%}.it-language-settings>section>label+.it-btn{padding:8px 24px 8px 12px}.it-language-settings>section .it-btn{border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);box-shadow:none;font-size:13px;margin:0!important;width:100%}.it-language-settings>section .it-btn:last-child{border-radius:var(--it-lang-settings-btn-rad)}.it-language-settings>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-settings>section>div[role=dialog]{background:var(--it-lang-settings-bg);border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0;bottom:100%;display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-settings>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-settings>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad) 0 0}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}:root{--it-editor-width:clamp(28rem,30vw,36rem);--it-editor-height:clamp(14rem,35vh,24rem);--it-editor-padding-top:calc(0.5rem + var(--it-top-toolbar-height));--it-editor-padding-bottom:calc(0.5rem + var(--it-bottom-toolbar-height)*0.5);--it-editor-padding-left:clamp(24px,3%,100px);--it-editor-padding-right:var(--it-editor-padding-left);--it-editor-msg-bottom-padding:10px;--it-editor-color-bg:var(--it-color-white);--it-editor-color-bg-semi-transparent:hsla(0,0%,100%,.9);--it-editor-color-scrollbar-bg:#ddd;--it-editor-added-bg:rgba(92,185,69,.1);--it-editor-added:#5cb945;--it-editor-added-selection:rgba(92,185,69,.5);--it-editor-removed:#cc3434}.it-editor,.it-editor-wrapper{display:flex}.it-editor{background-color:var(--it-editor-color-bg);border:2px solid var(--it-color-primary);border-radius:var(--it-radius);box-shadow:var(--it-shadow-lg);color:var(--it-color-text);flex-direction:column;font-size:var(--it-font-size-base);height:100%;margin-left:auto;margin-top:auto;outline:none;position:relative;transition:width .15s,height .15s,border-color .25s;width:100%}.it-editor * ::-moz-selection{background-color:var(--it-selection-color)}.it-editor * ::selection{background-color:var(--it-selection-color)}[dir=rtl] .it-editor{margin-left:0;margin-right:auto}.it-editor .it-reqs{display:flex;flex-wrap:wrap;font-size:12px;justify-content:space-between;justify-content:flex-end;margin-right:8px;text-align:right}[dir=rtl] .it-editor .it-reqs{margin-left:8px;margin-right:0}.it-editor .it-reqs>a{margin-left:5px}[dir=rtl] .it-editor .it-reqs>a{margin-left:0;margin-right:5px}.it-editor.it-editor-loading{height:var(--it-editor-height,calc(90px + var(--it-editor-msg-bottom-padding)));width:320px}.it-editor.it-editor-error{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:320px}.it-editor.it-editor-error.it-editor-error-lg{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:350px}.it-editor .it-limit-notice{font-size:13px;padding:0}.it-editor .it-limit-notice h3{font-size:15px;font-weight:500}.it-editor .it-limit-notice>div{margin-top:12px}.it-editor .it-limit-notice svg{height:auto;margin-bottom:12px;max-width:75px}.it-editor ::-webkit-scrollbar{height:var(--it-scrollbar-width);width:var(--it-scrollbar-width);z-index:99999999}.it-editor ::-webkit-scrollbar-track,.it-editor :hover::-webkit-scrollbar-track{background:var(--it-editor-color-scrollbar-bg)}.it-editor ::-webkit-scrollbar-thumb{background:var(--it-color-primary)}.it-editor ::-webkit-scrollbar-thumb:active,.it-editor ::-webkit-scrollbar-thumb:hover{background:var(--it-color-primary-darker);cursor:-webkit-grab;cursor:grab}.it-editor .noTextDiff span mark{display:none!important}.it-editor .noTextDiff span.api-removed{display:none}.it-editor .noTextDiff span.api-added{background-color:transparent;color:inherit}.it-editor *{font-family:var(--it-font-primary)!important}.it-editor pre{border:0;box-sizing:border-box;flex:1;font-family:inherit!important;font-size:16px;line-height:1.7;margin:0;max-height:100%;outline:none;overflow-x:hidden;overflow-y:scroll;padding:var(--it-editor-padding-top) var(--it-editor-padding-right) var(--it-editor-padding-bottom) var(--it-editor-padding-left);white-space:pre-wrap;width:100%}.it-editor pre span.original>mark{display:none}.it-editor pre span.api-added,.it-editor pre span.api-removed{position:relative}.it-editor pre span.api-added>*,.it-editor pre span.api-removed>*{display:inline-block;position:relative}.it-editor pre span.api-added>*>mark,.it-editor pre span.api-removed>*>mark{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;bottom:100%;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;left:50%;line-height:1.5;margin:0;padding:0;position:absolute;transform:translate(-50%);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .reject-icon{align-items:center;background:var(--it-editor-color-bg);border-radius:4px;display:inline-flex;padding:4px 8px;position:relative}.it-editor pre span.api-added>*>mark .accept-icon.hover,.it-editor pre span.api-added>*>mark .accept-icon:hover,.it-editor pre span.api-added>*>mark .reject-icon.hover,.it-editor pre span.api-added>*>mark .reject-icon:hover,.it-editor pre span.api-removed>*>mark .accept-icon.hover,.it-editor pre span.api-removed>*>mark .accept-icon:hover,.it-editor pre span.api-removed>*>mark .reject-icon.hover,.it-editor pre span.api-removed>*>mark .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor pre span.api-added>*>mark .accept-icon svg,.it-editor pre span.api-added>*>mark .reject-icon svg,.it-editor pre span.api-removed>*>mark .accept-icon svg,.it-editor pre span.api-removed>*>mark .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor pre span.api-added>*>mark .accept-icon svg use,.it-editor pre span.api-added>*>mark .reject-icon svg use,.it-editor pre span.api-removed>*>mark .accept-icon svg use,.it-editor pre span.api-removed>*>mark .reject-icon svg use{fill:var(--it-color-primary)}.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor pre span.api-added>*>mark>i,.it-editor pre span.api-removed>*>mark>i{font-size:16px;margin-left:3px}.it-editor pre span.api-added>*>mark:after,.it-editor pre span.api-removed>*>mark:after{border:4px solid transparent;border-top:4px solid var(--it-color-contrast-medium);content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-editor pre span.api-added.active,.it-editor pre span.api-removed.active{background-color:var(--it-color-bg-change-highlight)}.it-editor pre span.api-added{background-color:var(--it-editor-added-bg);border-bottom:2px solid var(--it-editor-added);position:relative}.it-editor pre span.api-added::-moz-selection,.it-editor pre span.api-added ::-moz-selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-added::selection,.it-editor pre span.api-added ::selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-removed{position:relative;text-decoration:line-through}.it-editor pre span.api-removed:before{content:"";pointer-events:none}.it-editor pre span.api-removed.selected>span{background-color:var(--it-selection-color)}.it-editor pre span.api-removed:not(.it-es)+span:not(.it-ss){margin-left:4px}.it-editor pre span.api-removed>span:after{color:var(--it-editor-removed);content:attr(data-removedtext);pointer-events:none;text-decoration:line-through}.it-editor pre span.api-added:not(.it-es)+span.api-removed:not(.it-noss),.it-editor pre span.original:not(.it-es)+span.api-removed:not(.it-noss){margin-left:4px}.it-editor .it-editor-top-toolbar{background-image:linear-gradient(to bottom,var(--it-editor-color-bg) 50%,transparent 100%);border-top-left-radius:var(--it-radius);border-top-right-radius:var(--it-radius);height:var(--it-top-toolbar-height);padding:10px 16px 5px;top:0;z-index:99}.it-editor .it-editor-bottom-toolbar{bottom:0;height:var(--it-bottom-toolbar-height);padding:10px 16px;transform:translateY(50%)}.it-editor .it-editor-bottom-toolbar,.it-editor .it-editor-bottom-toolbar:before{border-bottom-left-radius:var(--it-radius);border-bottom-right-radius:var(--it-radius)}.it-editor .it-editor-bottom-toolbar:before{background-image:linear-gradient(to top,var(--it-editor-color-bg) 15%,transparent 100%);content:"";height:80%;left:0;position:absolute;top:10%;transform:translateY(-50%);width:100%}.it-editor .it-editor-error-msg,.it-editor .it-editor-loader{align-items:center;display:flex;font-size:14px;height:100%;justify-content:center;padding:1.2rem;pointer-events:none;position:relative;text-align:center;width:100%;z-index:100}.it-editor .it-editor-error-msg>svg,.it-editor .it-editor-loader>svg{margin-right:10px}[dir=rtl] .it-editor .it-editor-error-msg>svg,[dir=rtl] .it-editor .it-editor-loader>svg{margin-left:10px;margin-right:0}.it-editor .it-editor-error-msg{padding:1.2rem 1.2rem .6rem}.it-editor .it-editor-error-msg:last-child{padding-bottom:calc(1.2rem + var(--it-editor-msg-bottom-padding))}.it-pointer-events-all{pointer-events:all!important}.it-editor-toolbar{display:flex;justify-content:space-between;left:0;position:absolute;right:var(--it-scrollbar-width);z-index:100}[dir=rtl] .it-editor-toolbar{left:var(--it-scrollbar-width);right:0}.it-editor-close-warning{align-items:center;background-color:var(--it-editor-color-bg-semi-transparent);border-radius:var(--it-radius);display:flex;justify-content:center;overflow:hidden;text-align:center;z-index:100}.it-editor-close-warning,.it-editor-drag{height:100%;left:0;position:absolute;top:0;width:100%}.it-editor-accept-reject-tooltip{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;line-height:1.5;margin:0;opacity:0;padding:0;position:absolute;transition:opacity .2s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor-accept-reject-tooltip .accept-icon,.it-editor-accept-reject-tooltip .reject-icon{align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:var(--it-editor-color-bg);border-radius:5px;border-width:0;cursor:pointer;display:inline-flex;padding:4px 8px;position:relative}.it-editor-accept-reject-tooltip .accept-icon.hover,.it-editor-accept-reject-tooltip .accept-icon:hover,.it-editor-accept-reject-tooltip .reject-icon.hover,.it-editor-accept-reject-tooltip .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon svg,.it-editor-accept-reject-tooltip .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor-accept-reject-tooltip .accept-icon svg use,.it-editor-accept-reject-tooltip .reject-icon svg use{fill:var(--it-color-primary)}.it-editor-accept-reject-tooltip .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor-accept-reject-tooltip .reject-icon:hover{border-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor-accept-reject-tooltip>i{font-size:16px;margin-left:3px}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}.it-editor.it-editor-onboarding{--it-editor-onboarding-list-bullet-size:20px;bottom:48px;font-size:14px;font-weight:500;height:auto;padding:20px;position:absolute;right:32px;width:315px}.it-editor.it-editor-onboarding .it-editor-bottom-toolbar:before{display:none}.it-editor.it-editor-onboarding>main>p{margin-bottom:10px;margin-top:20px;text-align:center}.it-editor.it-editor-onboarding>main>p>span{border:1px solid #ccc;border-radius:6px;font-weight:700;margin:0 2px;padding:3px 5px}.it-editor.it-editor-onboarding header{border-bottom:1px solid #ddd;display:flex;margin-bottom:12px;padding-bottom:12px}.it-editor.it-editor-onboarding header h3{font-size:1.15em;margin:0}.it-editor.it-editor-onboarding header p{margin:3px 0 0}.it-editor.it-editor-onboarding header div:first-child{min-width:calc(var(--it-editor-onboarding-list-bullet-size)*1.5)}.it-editor.it-editor-onboarding header div:first-child svg{height:24px;width:24px}.it-editor-onboarding-list{counter-reset:item;font-size:.95em;margin-left:0;padding-left:0}.it-editor-onboarding-list li{align-items:center;display:flex;margin-bottom:8px}.it-editor-onboarding-list li:before{align-items:center;background-color:#4b5058;border-radius:999rem;color:#f4f4f6;content:counter(item);counter-increment:item;display:inline-flex;font-size:.9em;font-weight:600;height:var(--it-editor-onboarding-list-bullet-size);justify-content:center;margin-right:calc(var(--it-editor-onboarding-list-bullet-size)*.5);min-width:var(--it-editor-onboarding-list-bullet-size)}</style><style>@import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap);</style><style>#it-editor{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;bottom:2rem;left:1rem;pointer-events:none;position:fixed;right:1rem;top:1rem;z-index:9999999}#it-editor>div{height:100%;pointer-events:none;width:100%}#it-editor>div>*{pointer-events:all}#it-editor *{box-sizing:border-box}#it-editor h1,#it-editor h2,#it-editor h3,#it-editor h4{font-weight:500}#it-editor .it-pointer-events-none{pointer-events:none}.fadeup-enter-active,.fadeup-leave-active{transform:translateY(0);transition:opacity .1s ease,transform .1s}.fadeup-enter-from,.fadeup-leave-to{opacity:0;transform:translateY(1rem)}.fade-enter-active,.fade-leave-active{transition:opacity .1s}.fade-enter-from,.fade-leave-to{opacity:0}</style></head><body data-new-gr-c-s-check-loaded="14.1271.0" data-gr-ext-installed=""><a name="TOP"></a><pre>newstack(1)                 General Commands Manual                newstack(1)
+
+
+
+<b>NAME</b>
+       newstack - Make a new mrc image stack.
+
+<b>SYNOPSIS</b>
+       newstack  [options]  input_file(s)  output_file
+
+<b>DESCRIPTION</b>
+       Newstack is a general stack editor to move images into, out of, or
+       between stacks.  It can float the images to a common range or mean of
+       density. It can bin images and apply a general linear transformations
+       as well as a specified rotation or expansion. It can put the output
+       into a smaller or larger array and independently recenter each image
+       separately from the transformation.  Images can be taken from multiple
+       input files and placed into multiple output files.
+
+<b>OPTIONS</b>
+       Newstack uses the PIP package for input (see the manual page for
+       <a href="https://bio3d.colorado.edu/imod/doc/man/pip.html">pip</a>) and can take input interactively only for options available
+       before conversion to PIP, to maintain compatibility with old command
+       files.  The options accepted by the old newst script are all accepted
+       by newstack.  Almost all options can be abbreviated to one or two let-
+       ters.  The following options can be specified either as command line
+       arguments (with the -) or one per line in a command file or parameter
+       file (without the -).  Options can be abbreviated to unique letters;
+       the currently valid abbreviations for short names are shown in paren-
+       theses.  However, if you are using short names in a script or command
+       file, always use at least 3 letters, because new options might use the
+       same one or two initial letters.
+
+       In Windows, Newstack expands wildcards ('*' and '?') for input file-
+       names internally, which is particularly useful without Cygwin.  It can
+       also be used in Cygwin when the command line is too long after expan-
+       sion; enclose the names with wildcards in quotes to keep the shell from
+       expanding then.  On other systems, when there are too many input files,
+       use the script <a href="https://bio3d.colorado.edu/imod/doc/man/expandargs.html">Expandargs</a> to produce a file that can be used with
+       the <b>-filein</b> option.  That script can also handle ranges enclosed in
+       square brackets.
+
+   <b>INPUT</b> <b>AND</b> <b>OUTPUT</b> <b>FILE</b> <b>OPTIONS</b>
+         These options are involved in specifying input and output files.
+
+       <b>-input</b> <b>(-in)</b> OR <b>-InputFile</b>     <i>File</i> <i>name</i>
+              Input image file.  Input files may also be entered after all
+              arguments on the command line, as long as an output file is the
+              last name on the command line.  Files entered with this option
+              will be processed before files at the end of the command line,
+              if any.  (Successive entries accumulate)
+
+       <b>-output</b> <b>(-ou)</b> OR <b>-OutputFile</b>   <i>File</i> <i>name</i>
+              Output image file.  The last filename on the command line will
+              also be treated as an output file, following any specified by
+              this option.  (Successive entries accumulate)
+
+       <b>-fileinlist</b> <b>(-filei)</b> OR <b>-FileOfInputs</b>    <i>File</i> <i>name</i>
+              Name of file with list of input files and sections to read.  The
+              format of the file is:
+                 number of input files
+                 name of first file to read
+                 list of sections to read from first file
+                 name of second file to read
+                 list of sections to read from second file
+                 ...
+              If this option is used, no input filenames may be specified with
+              the -input option or as non-option arguments on the command
+              line.  The section lists are allowed to have 8 times as many
+              characters as the maximum number of sections, which is 1,000,000
+              by default but can be changed with the <b>-megasec</b> option.  A file
+              list can be constructed for a set of input files with the
+              <a href="https://bio3d.colorado.edu/imod/doc/man/expandargs.html">Expandargs</a> script.
+
+       <b>-fileoutlist</b> <b>(-fileo)</b> OR <b>-FileOfOutputs</b>       <i>File</i> <i>name</i>
+              Name of file with list of output files and number of sections to
+              place in each.  The format of the file is the number of output
+              files on the first line, the first file to write on the next
+              line, number of sections to write on next line, next filename on
+              next line, etc.  If this option is used, no output filenames may
+              be specified with the -output option or as the last file on the
+              command line.
+
+       <b>-reverse</b> <b>(-rev)</b> OR <b>-ReverseInputFileOrder</b>     <i>Integer</i>
+              Process some or all of the input files in reverse order.  Enter
+              0 to reverse the order for all files, a number N greater than 0
+              to process only the first N files in reverse order, or a number
+              N less than 0 to reverse only the last N files.  This option
+              allows you to stack sequentially numbered files in a desired
+              order and still enter them with wild cards on a command line.
+              No other entries, such as multiple section lists, are reversed;
+              they all apply to the files in the order that they are pro-
+              cessed.  There must be at least the given number of input files,
+              entered with <b>-input</b> or as non-option arguments.
+
+       <b>-split</b> <b>(-sp)</b> OR <b>-SplitStartingNumber</b>     <i>Integer</i>
+              Starting number for a series of numbered output files, where one
+              section will be placed in each file.  There must be only one
+              output file name entered, and it will be taken as the root name
+              for the output files.  A dot and the number will be appended to
+              the root name for each file unless an extension is entered with
+              the -append option.  The number of digits used for the number
+              will be the same for all files so that they will list in order.
+
+       <b>-append</b> <b>(-appe)</b> OR <b>-AppendExtension</b>      <i>Text</i> <i>string</i>
+              Extension to append to the filenames in a series of numbered
+              files.  With this option, files will be named like "rootnnn.ext"
+              instead of "root.nnn", where "root" is the root name entered as
+              the output file name, and "ext" is the extension entered with
+              this option.
+
+       <b>-format</b> <b>(-fo)</b> OR <b>-FormatOfOutputFile</b>     <i>Text</i> <i>string</i>
+              Set output file format to MRC, TIFF, HDF (if the package sup-
+              ports HDF), or JPEG (if the package supports JPEG) by entering
+              MRC, TIF, TIFF, HDF, JPG, JPEG, or any lower case form of these.
+              Only a single image can be output to a JPEG file.  This entry
+              overrides a default format set with the environment variable
+              IMOD_OUTPUT_FORMAT.
+
+       <b>-compression</b> <b>(-com)</b> OR <b>-HDFCompressionIndex</b>   <i>Integer</i>
+              Sets the level of ZIP compression when writing to an HDF file.
+              Compression values range from 1 (fastest, least compressed) to 9
+              (slowest, most compressed), or 0 for no compression.  This entry
+              overrides a value for compression set by the IMOD_HDF_COMPRES-
+              SION environment variable.
+
+       <b>-volumes</b> <b>(-vo)</b> OR <b>-VolumesToRead</b>    <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              If any HDF files containing multiple volumes are included in the
+              input file list, this option must be entered to specify which
+              volume to read from such a file.  Enter a volume number for each
+              input file, numbered from 1, at least up until the last multi-
+              volume HDF file in the input file list.  Enter 1 for an HDF file
+              with only one volume or a stack of 2D images, or for other file
+              types.
+
+       <b>-3d</b> <b>(-3)</b> OR <b>-Store3DVolumes</b>    <i>Integer</i>
+              This option controls whether data are stored in a 3D volume in
+              an HDF file.  If 1 is entered, a new HDF file will be created
+              (overriding the default output type) and data will be stored as
+              3D volume rather than a stack of 2D images.  If 2 or 3 are
+              entered, the output file must be an existing HDF file with data
+              stored as volumes, and data will be stored in a new 3D volume.
+              A value of 3 is used by <a href="https://bio3d.colorado.edu/imod/doc/man/makepyramid.html">Makepyramid</a> to cause Newstack to
+              insert the attribute "image_pyramid".  By default, if an HDF
+              output file is being created, it will be stored as a volume if
+              the first input file is an HDF file with volume storage.  A
+              value of -1 will cause an output HDF file to be organized as a
+              stack even if the input file has volumes.
+
+       <b>-chunk</b> <b>(-ch)</b> OR <b>-ChunkSizesInXYZ</b>    <i>Three</i> <i>integers</i>
+              Set target chunk sizes in X, Y, and Z for 3D volumes stored in
+              HDF files.  Based on the target, an actual chunk size will be
+              chosen in each dimension that minimizes the amount of extra
+              image area created by making a set of full tiles.  When the tar-
+              get value already evenly divides the image size in a dimension,
+              that target will be used.  If this option is entered, the output
+              file will be an HDF file with data stored as a 3D volume, making
+              it unnecessary to enter -3d or -format.  The default is for 3D
+              volumes to be stored with no tiling in X and Y and a chunk size
+              of 1 in Z, or with the tiling and chunk size of the first input
+              file if it is an HDF file stored as a 3D volume.
+
+       <b>-mdoc</b> <b>(-md)</b> OR <b>-UseMdocFiles</b>
+              This option allows data about each image section in metadata
+              autodoc (.mdoc) files to be transferred and managed much as data
+              in the extended header of an MRC file are.  With it selected,
+              the program will search for a matching .mdoc file for each input
+              file that is not HDF, and create a matching .mdoc file for each
+              output file that is not HDF.  (A matching file is one with .mdoc
+              appended to the image filename, as SerialEM creates).  Metadata
+              about each image slice in ZValue sections will be transferred
+              between autodocs and the ZValue will be renumbered appropri-
+              ately.  Thus, data can be transferred from one .mdoc to another,
+              if input and output files are MRC; from an .mdoc into the
+              attributes of an HDF file if input is MRC and output is HDF; or
+              from HDF attributes into an .mdoc if input is HDF and output is
+              MRC.  When input and output are both HDF, attributes are trans-
+              ferred automatically.  As of IMOD 4.11, metadata in autodoc sec-
+              tions other than ZValue ones will be transferred in their
+              entirety.^ If there is a single image in the input file, an
+              .mdoc file produced by SerialEM along with a stack of frames
+              will also be accepted as a valid source of metadata for the
+              image.  These .mdoc files have a single section named "FrameSet"
+              and no global information about the image size or mode at the
+              top.  Their contents will be transferred to ZValue sections in
+              the new .mdoc file
+
+       <b>-remove</b> <b>(-rem)</b> OR <b>-RemoveForMdocName</b>     <i>Text</i> <i>string</i>
+              This entry and the next one allow use of .mdoc files whose name
+              endings do not match those of the corresponding image files.
+              The two entries specify how to get from the current name of the
+              input image file to the image file name upon which the .mdoc is
+              based.  For this option, enter the text to be removed from the
+              end of the image file name.  If necessary, use the <b>-addback</b>
+              option to restore the full original image file name.  For exam-
+              ple, if a stack of frames is saved into "originalName.tif" and
+              the metadata into "originalName.tif.mdoc", then they are aligned
+              and summed into a single image file "originalName_ali.mrc", the
+              entry to this option would be "_ali.mrc" to get to "original-
+              Name".  The entry to <b>-addback</b> would be ".tif" to restore the
+              original extension and get back to "originalName.tif".  The pro-
+              gram would then look for and find the .mdoc "original-
+              Name.tif.mdoc".
+
+       <b>-addback</b> <b>(-ad)</b> OR <b>-AddBackForMdocName</b>    <i>Text</i> <i>string</i>
+              String to add back to image file name after removing the string
+              specified by the <b>-remove</b> option (which must also be entered), to
+              obtain a file name for which there is a matching .mdoc.
+
+       <b>-pixel</b> <b>(-pi)</b> OR <b>-PixelSizeFromMdoc</b>
+              Set the pixel size in the header of each output file from the
+              value of "PixelSpacing" in an .mdoc file associated with the
+              input file, or in the metadata of an HDF file.  Specifically,
+              the pixel size for an output file is set from the value for the
+              first section going into that file.  When outputting one image
+              per file, such as with the <b>-split</b> option, each file will have
+              the correct pixel size.  Output .mdoc files are not created
+              unless <b>-mdoc</b> is also entered.
+
+       <b>-tilt</b> <b>(-ti)</b> OR <b>-TiltAngleFile</b>       <i>File</i> <i>name</i>
+              Name of file with tilt angles, one per line, to substitute or
+              insert into the metadata of the output file(s).  The successive
+              angles in the file will be placed into the output in order, so
+              the angles in the file should be in the same order as the
+              intended order of the output.  Angles can subsequently be
+              retrieved with <a href="https://bio3d.colorado.edu/imod/doc/man/extracttilts.html">Extracttilts</a>.  If the input file(s) have
+              extended headers with either the SerialEM or Agard/FEI format,
+              the new values will be substituted for existing angles and other
+              extended header items will be preserved.  (There must already be
+              angles in the SerialEM header, and all input files must have the
+              same type of extended header.)  If the input file(s) have no
+              extended header, angles will be placed into an extended header
+              in the Agard/FEI format (just 1 floating point number per sec-
+              tion).  (In this case, all input files must have no extended
+              header.)  Tilt angles can also be replaced or inserted if output
+              file(s) are HDF, with or without an incoming .mdoc file; and
+              tilt angles in .mdoc files associated with MRC files will be
+              maintained as well.  If just an extension is entered (for exam-
+              ple, ".tlt"), the program will look for a file with the root
+              name of the input image file and this extension.
+
+       <b>-reorder</b> <b>(-reo)</b> OR <b>-ReorderByTiltAngle</b>   <i>Integer</i>
+              Reorder sections by tilt angle, which are taken either from an
+              extended header or from a file of current angles specified with
+              the <b>-angle</b> option.  If any input file does not have angles in
+              its extended header, the angles must be supplied with the <b>-angle</b>
+              option.  Enter 1 or -1 to have sections put in increasing or
+              decreasing order by angle.  If angles are provided with the
+              <b>-angle</b> option, you can also enter 2 or -2 to have the reordered
+              angles inserted into the extended header.  Reordering is compat-
+              ible with the section selection options below except <b>-twodir</b>;
+              the subset of sections specified by them will be output in order
+              by their angles.  The <b>-tilt</b> option cannot be combined with this
+              one.  There must be only one output file.  If there is more than
+              one input file, the sections will be ordered separately for each
+              one.
+
+       <b>-angle</b> <b>(-ang)</b> OR <b>-AngleFileToReorder</b>     <i>File</i> <i>name</i>
+              File with tilt angles to use for reordering sections by angle
+              with the <b>-reorder</b> option.  The file must contain one angle per
+              output section, each on its own line (not one per section in the
+              input file, if a subset of sections is being used.)  The angles
+              should be in the same order as the input sections.  The angles
+              in this file override any angles present in the extended header,
+              but they will replace the angles copied over in the extended
+              header only if <b>-reorder</b> is entered with 2 or -2.
+
+       <b>-newangle</b> <b>(-new)</b> OR <b>-NewAngleOutputFile</b>       <i>Integer</i>
+              File for output of tilt angles after reordering with the
+              <b>-reorder</b> option.  This option can be used regardless of whether
+              original angles are supplied with the <b>-angle</b> option.
+
+   <b>SECTION</b> <b>SELECTION</b> <b>OPTIONS</b>
+         These options are used to specify which sections are read and written
+
+       <b>-secs</b> <b>(-se)</b> OR <b>-SectionsToRead</b>      <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of sections to read from an input file, numbered from 0
+              unless -fromone is entered.  Ranges may be entered (e.g.,
+              1-3,5,8), and / may be used to specify all sections in the file.
+              If multiple lists are entered with multiple input files, each
+              one will be applied to the respective input file.  If no list is
+              entered for a file, all sections will be read.  When there is a
+              single input file, multiple entries will simply be concatenated
+              to make one list.  Such entries may be necessary for entering
+              very long lists, because each list entry is limited to 100,000
+              characters.  (Successive entries accumulate)
+
+       <b>-samesec</b> <b>(-sa)</b> OR <b>-SameSectionsToRead</b>
+              Read the same set of sections from all input files, without hav-
+              ing to enter a section list for each file.  The <b>-secs</b> options
+              must be entered only once.
+
+       <b>-fromone</b> <b>(-fr)</b> OR <b>-NumberedFromOne</b>
+              With this option section numbers entered with the -secs,
+              -replace, and -exclude options, line numbers entered with -use-
+              lines, and field numbers entered with -fields are numbered from
+              1 instead of 0.
+
+       <b>-exclude</b> <b>(-exc)</b> OR <b>-ExcludeSections</b>      <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of sections to exclude from the input file(s).  Exclusion
+              is applied to the entire section list after it has been composed
+              from other section-specifying options.  Any number in the sec-
+              tion list contained in this exclusion list is removed from the
+              section list, no matter how many times that number appears.
+              Thus, one exclude entry can be used to exclude the same set of
+              section numbers from multiple input files. The list can consist
+              of ranges; sections are numbered from 0 unless -fromone is
+              entered.
+
+       <b>-twodir</b> <b>(-tw)</b> OR <b>-TwoDirectionTiltSeries</b>
+              Combine two files from the two halves of a bidirectional tilt
+              series, where each half is taken in opposite directions of tilt
+              from a common starting angle.  The sections will be stacked in
+              inverted order for the first file.  There must be two input
+              files, and section lists cannot be entered.
+
+       <b>-skip</b> <b>(-sk)</b> OR <b>-SkipSectionIncrement</b>     <i>Integer</i>
+              Increment for reading a regularly spaced subset of the sections
+              in the list from the input file.  Enter 2 to take every other
+              section, 3 to take every third section, etc.  Note that the
+              increment is used to select from the input list, not from all
+              the sections in the file.
+
+       <b>-numout</b> <b>(-nu)</b> OR <b>-NumberToOutput</b>    <i>Multiple</i> <i>integers</i>
+              Number of sections to write to each output file, when there are
+              multiple output files.  These numbers may be listed in sequence
+              in one entry, or in several entries.  (Successive entries accu-
+              mulate)
+
+       <b>-replace</b> <b>(-rep)</b> OR <b>-ReplaceSections</b>      <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of section numbers at which to write images into an exist-
+              ing output file, numbered from 0 unless -fromone is entered.
+              There must be only a single output file, its size in X and Y
+              must be appropriate, and the given sections must already exist
+              in the file.  The minimum and maximum density in the file header
+              will be modified by the min and max of the sections being writ-
+              ten, so they can become more extreme but not less extreme.  The
+              mean density will not be changed.
+
+       <b>-blank</b> <b>(-bl)</b> OR <b>-BlankOutput</b>
+              Output blank sections for nonexistent section numbers in input
+              file, namely for section numbers less than 0 or more than the NZ
+              - 1.  The sections are filled with the mean value of the input
+              file or with a fill value if one is entered with the -fill
+              option; this value is then scaled in the same way that actual
+              data are.
+
+   <b>OPTIONS</b> <b>FOR</b> <b>OPERATING</b> <b>ON</b> <b>IMAGES</b>
+         These options specify geometrical operations performed on the images.
+
+       <b>-offset</b> <b>(-of)</b> OR <b>-OffsetsInXandY</b>    <i>Multiple</i> <i>floats</i>
+              X and Y center offsets for each section.  This is an offset to
+              the center of the area from which image will be taken, so a pos-
+              itive offset in X will move images to the left.  If images are
+              being reduced with <b>-bin</b>, <b>-shrink</b>, or <b>-ftreduce</b>, the entry should
+              be in unbinned pixels.  Enter one X,Y pair to apply a single
+              offset to all sections.  If other transformations are being
+              applied to the sections, these offsets will generally be com-
+              bined with those operations, and non-integer offsets are mean-
+              ingful.  Otherwise, the nearest integer offset will generally be
+              applied, except when the <b>-phase</b>, <b>-ftreduce</b>, or <b>-ftexpand</b> option
+              is used and the offsets are applied in Fourier space.  (Succes-
+              sive entries accumulate)
+
+       <b>-applyfirst</b> <b>(-appl)</b> OR <b>-ApplyOffsetsFirst</b>
+              Apply offsets in X and Y before transforming image, which will
+              make a rotated image come from a predictable location.  The
+              default is to apply offsets after, which shifts the transformed
+              image instead.  This option is relevant only when offsets are
+              combined with either general linear transformations or rotation,
+              expansion, or shrinkage; when shifts are applied in Fourier
+              space with the <b>-ftreduce</b> option, they are always considered as
+              unbinned shifts and thus occur before the reduction.
+
+       <b>-xform</b> <b>(-x)</b> OR <b>-TransformFile</b>       <i>File</i> <i>name</i>
+              File with one or more linear transformations to apply to images;
+              if there is only one transform it will be applied to all images.
+
+       <b>-uselines</b> <b>(-use)</b> OR <b>-UseTransformLines</b>   <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              A list of the line numbers of lines of transforms to use in the
+              transform file (numbered from 0 unless -fromone is entered).
+              Ranges are allowed.  The default is for the line numbers to
+              match the input section numbers, unless there is just one trans-
+              form in the file.  To have a single transform applied to all of
+              the sections, just enter a single number.  (Successive entries
+              accumulate)
+
+       <b>-onexform</b> <b>(-on)</b> OR <b>-OneTransformPerFile</b>
+              Apply one transform line for each input file.  The default is
+              for the first transform to be applied to the first file, the
+              second transform to the second file, etc., in which case the
+              transform file must have at least one line per input file.  Oth-
+              erwise, -uselines can be used to specify which transform to
+              apply for each file, in which case at least one line must be
+              specified per input file.
+
+       <b>-phase</b> <b>(-ph)</b> OR <b>-PhaseShiftFFT</b>
+              Shift images by taking a Fourier transform, changing phases
+              appropriately, and taking an inverse Fourier transform, rather
+              than by interpolating in real space.  In principle, this method
+              preserves high frequencies better than interpolation does.  The
+              method can be used only if images are just being shifted or
+              scaled with the <b>-ftreduce</b> or <b>-ftexpand</b> option, not when they are
+              rotated, expanded, shrunk, stretched, warped, or undistorted.
+              The shifts can be specified in two ways: with the <b>-offset</b>
+              option, or as linear transforms that contain only shifts (i.e.,
+              transform lines containing "1 0 0 1" followed by the shifts in X
+              and Y).  This option can be used together with either <b>-bin</b> or
+              <b>-shrink</b>, but not both, because the data are scaled down when
+              read in.  The option need not be entered when doing image reduc-
+              tion in Fourier space with the <b>-ftreduce</b> option, as any shifts
+              will then be applied as addition phase shifts in the cropping
+              operation.
+
+       <b>-rotate</b> <b>(-ro)</b> OR <b>-RotateByAngle</b>     <i>Floating</i> <i>point</i>
+              Rotate all images by the given angle in degrees, positive for a
+              counterclockwise rotation.  Rotation is applied after binning
+              and transformation, if any.  It can be combined with linear
+              transforms but not with warping transforms.  If the rotation is
+              by +90 or -90 degrees and no output size is specified, then the
+              X and Y sizes of the image will be transposed so the the output
+              file will show the whole rotated image.  For any other rotation
+              angles, you will get the same output size as the input image
+              unless you enter a new size explicitly.
+
+       <b>-expand</b> <b>(-exp)</b> OR <b>-ExpandByFactor</b>   <i>Floating</i> <i>point</i>
+              Scale all images up in size by the given factor, greater than 1
+              to expand, or less than 1 to shrink with ordinary interpolation.
+              Scaling is applied after binning and transformation, if any.  It
+              can be combined with linear transforms but not with warping
+              transforms.  If no output size is specified, the size of the
+              input image will be scaled appropriately so that the output will
+              contain the entire image.
+
+       <b>-shrink</b> <b>(-sh)</b> OR <b>-ShrinkByFactor</b>    <i>Floating</i> <i>point</i>
+              Scale all images down in size by the given factor, a value
+              greater than 1, using antialias filtering.  This option should
+              be used for large image reductions, because using ordinary
+              interpolation will give aliasing artifacts that appear primarily
+              as noise.  Even binning will give some aliasing, especially for
+              images rich in information above the highest frequency that will
+              be retained in the reduced image.  Shrinking can be applied
+              either after binning or in place of binning.  With no binning,
+              it can be followed by rotation, general transformation, or dis-
+              tortion correction, although only an integer shrinkage factor
+              can be used with warping transformations.  With binning, it can-
+              not be used with these other operations.  If no output size is
+              specified, the size of the input image will be scaled appropri-
+              ately so that the output will contain the entire image.
+
+       <b>-antialias</b> <b>(-ant)</b> OR <b>-AntialiasFilter</b>    <i>Integer</i>
+              Type of antialiasing filter to use when reducing images with the
+              -shrink option.  In addition, if this option is entered along
+              with -bin and without -shrink, it will cause image reduction to
+              be done with antialias filtering instead of by simple binning.
+              The available types of filters are:
+                  1: Box - equivalent to binning
+                  2: Blackman - fast but not as good at antialiasing as slower
+                                filters
+                  3: Triangle - fast but smooths more than Blackman
+                  4: Mitchell - good at antialiasing, smooths a bit
+                  5: Lanczos 2 lobes - good at antialiasing, less smoothing
+                                than Mitchell
+                  6: Lanczos 3 lobes - slower, even less smoothing but more
+                                risk of ringing
+              The default is 6 for Lanczos 3 as of IMOD 4.7.  Although many
+              people consider Lanczos 2 the best compromise among the various
+              factors, that sentiment may be based on images of natural scenes
+              where there are sharp edges. Enter a negative number to select
+              the default, whatever it is set to.
+
+       <b>-bin</b> <b>(-bi)</b> OR <b>-BinByFactor</b>     <i>Integer</i>
+              Use ordinary binning to reduce images in size by the given fac-
+              tor, or use antialias filtering to reduce images by this factor
+              if the -antialias option is entered and -shrink is not.  The
+              value of a binned pixel is the average of pixel values in each
+              block of pixels being binned. Binning is applied before all
+              other image transformations.  If no output size is specified,
+              the size of the input image will be scaled appropriately so that
+              the output will contain the entire image.  If the <b>-oddeven</b>
+              option is not entered, the binned size in a dimension will be
+              made even or odd depending on whether the input file's size is
+              even or odd, respectively, which can result in an output size
+              one pixel bigger even when the input size divided by the binning
+              is an integer.
+
+       <b>-oddeven</b> <b>(-od)</b> OR <b>-AllowOddEvenChange</b>
+              Allow the output size from binning in a dimension to be odd when
+              the input size is even, or even when the input size is odd, but
+              only when this will add just 1 pixel to the size that results
+              from integer division instead of 2.
+
+       <b>-ftreduce</b> <b>(-ftr)</b> OR <b>-FourierReduceByFactor</b>    <i>Floating</i> <i>point</i>
+              Scale all images down in size by the given factor by cropping
+              the Fourier transform.  This reduction method provides complete
+              removal of frequencies above the highest frequency being
+              retained (i.e., antialiasing) with no attenuation of the
+              retained frequencies.  However, this option is slower than image
+              reduction in real space and cannot be used with any other image
+              transformation, reduction, or warping except simple shifting.
+              Shifts to keep the image centered will be applied in Fourier
+              space during the cropping operation, so this option implies the
+              <b>-phase</b> option and any other shifts that you choose to enter will
+              be applied along with this.  Shifts can be entered either with
+              the <b>-offset</b> option or as linear transformations containing only
+              shifts.  Currently, the reduction factor must be either an inte-
+              ger, or an integer divided by 2, 3, 4, 5, 6, 8, or 10.  Thus,
+              2.7, 1.375, 3.75, 1.333, and 2.167 are all acceptable factors.
+              Factors that are integers divided by 3 or 6 must be entered with
+              three decimal places, as in the last two examples.  The actual
+              factor applied in those cases will be a ratio of integers, not
+              the entered number, and be within 0.001 of the entered factor.
+              If the factor is not acceptable, the program exits with an
+              error.
+
+       <b>-ftexpand</b> <b>(-fte)</b> OR <b>-FourierExpandByFactor</b>    <i>Floating</i> <i>point</i>
+              Scale all images up in size by the given factor by padding the
+              Fourier transform.  This expansion method provides complete
+              preservation of the existing spatial frequencies without intro-
+              ducing any higher frequencies in the result, as linear or cubic
+              interpolation would.  However, this option is slower than real-
+              space interpolation and has all the features and limitations
+              just described for the <b>-ftreduce</b> option.
+
+       <b>-noise</b> <b>(-no)</b> OR <b>-NoisePadForFFT</b>
+              Use tapered noise based on nearby pixels along the edge of an
+              image to pad an image for reduction and/or shifting in Fourier
+              space.  The default is to pad with a simple taper that makes
+              streaks outside the edge of the image, which may appear as
+              structure if shifted into the image area.  For low-dose images,
+              these streaks may look odd or otherwise cause trouble, which can
+              be avoided by using this option.  This is the padding method
+              used in <a href="https://bio3d.colorado.edu/imod/doc/man/alignframes.html">Alignframes</a>.
+
+       <b>-distort</b> <b>(-d)</b> OR <b>-DistortionField</b>   <i>File</i> <i>name</i>
+              Image distortion field file to use for undistorting images.  The
+              undistortion is applied before any transformations.
+
+       <b>-imagebinned</b> <b>(-im)</b> OR <b>-ImagesAreBinned</b>   <i>Floating</i> <i>point</i>
+              The current binning of the images, so that the distortion field
+              can be applied correctly.  This entry is required unless the
+              program can determine the binning unambiguously from the image
+              size.
+
+       <b>-fields</b> <b>(-fie)</b> OR <b>-UseFields</b>   <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              A list of the distortion fields to apply for each section (num-
+              bered from 0 unless -fromone is entered).  Ranges are allowed.
+              The default is for the field numbers to match the input section
+              numbers, unless there is only one field in the file.  To have a
+              single field applied to all of the sections, just enter a single
+              number.  This option was added when the only way to warp images
+              was with distortion field files but it is not needed with cur-
+              rent warping files.  (Successive entries accumulate)
+
+       <b>-subarea</b> <b>(-su)</b> OR <b>-SubareaOffsetsXandY</b>   <i>Multiple</i> <i>floats</i>
+              X and Y offsets between the center of a distortion field and the
+              center of each section.  A subarea from the upper right of the
+              full image on which the field was based will have a positive
+              offset in X and Y.  If images are being binned, the entry should
+              be in unbinned pixels.  Enter one X,Y pair to use a single off-
+              set for all sections.  (Successive entries accumulate)
+
+       <b>-gradient</b> <b>(-g)</b> OR <b>-GradientFile</b>     <i>File</i> <i>name</i>
+              File with magnification gradients to be applied for each image.
+              This should be a file listing the tilt angle, the percent magni-
+              fication change per micron of Z height, and the degrees of rota-
+              tion per micron of Z height for each image, such as is produced
+              by Extractmaggrad.  The mag gradient correction is applied
+              before a distortion field correction and before any transforma-
+              tions.
+
+       <b>-origin</b> <b>(-or)</b> OR <b>-AdjustOrigin</b>
+              Adjust the origin values in the image file header for changes in
+              image size or the centering of a subarea.  With this adjustment,
+              a model built on the input stack should be correctly located
+              when loaded onto the output stack in <a href="https://bio3d.colorado.edu/imod/doc/man/3dmod.html">3dmod</a>.  Model points
+              will be correctly located in Z provided that a contiguous set of
+              sections is output.  They will be correct in X and Y provided
+              that the only operations on the data are a change in size of the
+              output, binning with -bin, scaling with -expand, or -shrink, and
+              shifting with -offset.
+
+       <b>-linear</b> <b>(-l)</b> OR <b>-LinearInterpolation</b>
+              Use linear instead of cubic interpolation to transform images.
+              Linear interpolation is more suitable when images are very
+              noisy, but cubic interpolation will preserve fine detail better
+              when noise is not an issue.  Images are transformed when the
+              -xform, -expand, -rotate, -distort, or -gradient option is
+              entered.
+
+       <b>-nearest</b> <b>(-nea)</b> OR <b>-NearestNeighbor</b>
+              Use nearest neighbor interpolation instead of cubic interpola-
+              tion to transform images.  This method simply picks the nearest
+              existing pixel value instead of interpolating between surround-
+              ing values, so it can be used when pixels have discrete or mean-
+              ingful values that need to be preserved.  This option and -lin-
+              ear are mutually exclusive.   Images are transformed when the
+              -xform, -expand, -rotate, -distort, or -gradient option is
+              entered.
+
+   <b>OUTPUT</b> <b>CONTROL</b> <b>OPTIONS</b>
+         These options control the size, form, or density scaling of the out-
+       put.
+
+       <b>-size</b> <b>(-si)</b> OR <b>-SizeToOutputInXandY</b>      <i>Two</i> <i>integers</i>
+              The dimensions of the output image in X and Y.  The default size
+              is the same as that of the first input file, except in two situ-
+              ations where the input sizes are transposed for the output: when
+              <b>-rotate</b> is entered with an angle within 40 degrees of plus or
+              minus 90, or when non-warping transforms are entered that all
+              contain a rotation closer to plus or minus 90 degrees than to 0.
+
+       <b>-mode</b> <b>(-mo)</b> OR <b>-ModeToOutput</b>   <i>Integer</i>
+              The storage mode of the output file; 0 for byte, 1 for 16-bit
+              signed integer, 6 for 16-bit unsigned integer, 2 for 32-bit
+              floating point, 12 for 16-bit floating point, or 101 for 4-bit
+              data.  The default is the mode of the first input file, with two
+              exceptions.  1) For a 4-bit input file, the default is to output
+              as bytes. If you create a file in mode 101, the standard header
+              listing will show the "Map mode" as 0, but there will be a line
+              above that indicating that the mode is truly 101.  2) The
+              default mode of floating point output for MRC files is governed
+              by the value of environment variable IMOD_WRITE_FLOATS_16BIT.
+              Without this set non-zero, mode 2 is output by default for any
+              floating point input. Mode 12 is allowed only if the output for-
+              mat is MRC.  The range for mode 12 is -65504 to 65504; values
+              are stored with 11-bit precision down to 6.1e-5 and 10-bit pre-
+              cision down to 6.0e-8.
+
+       <b>-bytes</b> <b>(-by)</b> OR <b>-BytesSignedInOutput</b>     <i>Integer</i>
+              This entry controls how bytes are stored in the output file and
+              overrides both the default for this version of IMOD and the set-
+              ting of the environment variable WRITE_MODE0_SIGNED.  Enter 0
+              for unsigned numbers or 1 for signed numbers.  Unsigned output
+              is needed to work with versions of IMOD before IMOD 4.2.23;
+              signed output may be needed for compatibility with external
+              software that has followed recent documentation of the MRC for-
+              mat.  Regardless of the representation in the file, bytes are
+              read into IMOD programs as unsigned with a range of 0 to 255.
+
+       <b>-strip</b> <b>(-st)</b> OR <b>-StripExtraHeader</b>
+              Do not transfer extra header information in input file(s) to
+              output file(s).  The default is to transfer this information
+              whenever possible.
+
+       <b>-float</b> <b>(-fl)</b> OR <b>-FloatDensities</b>     <i>Integer</i>
+              Adjust densities of sections individually.  Enter 1 for each
+              section to fill the data range, 2 to scale sections to common
+              mean and standard deviation, 3 to shift sections to a common
+              mean without scaling, or 4 to shift sections to a common mean
+              then rescale the resulting minimum and maximum densities to the
+              Min and Max values specified with the <b>-scale</b> option (which must
+              be entered in this case).  When floating to mean and SD, the
+              program will express the minimum and maximum densities for each
+              image as the number of SDs from the mean and analyze these min-
+              ima and maxima for extreme outliers.  Images with extreme ranges
+              will be truncated to preserve the dynamic range for the rest of
+              the images.  If no truncation is warranted from this analysis,
+              the output when transforming images while floating to bytes may
+              have a variable SD to keep the data after transformation within
+              the byte range.  If this is problematic, float to an integer
+              mode output and then restack into bytes with the default or a
+              specified constant scaling.
+
+       <b>-meansd</b> <b>(-mea)</b> OR <b>-MeanAndStandardDeviation</b>   <i>Two</i> <i>floats</i>
+              Scale all images to the given mean and standard deviation.  This
+              option implies <b>-float</b> 2 and is incompatible with all other scal-
+              ing options.  There is no check that the scaling is sensible for
+              the data mode, so be sure to change data modes to prevent exces-
+              sive truncation or loss of resolution.  For example, change from
+              unsigned bytes to integers if setting the mean to 0 or the SD to
+              a large number (&gt; 50); change from bytes or integers to floating
+              point if setting the SD to a small number (&lt; 10).
+
+       <b>-contrast</b> <b>(-con)</b> OR <b>-ContrastBlackWhite</b>       <i>Two</i> <i>integers</i>
+              Rescale densities to match the contrast seen in <a href="https://bio3d.colorado.edu/imod/doc/man/3dmod.html">3dmod</a> with
+              the given black and white values.  This works properly only when
+              the output file will be bytes.  If the data were loaded into
+              3dmod with intensity scaling, add the <b>-map</b> option with the
+              intensity range given to 3dmod.  If you already have a byte file
+              and want to reverse the contrast, you can do so with "contrast
+              0,255 -map 255,0".
+
+       <b>-scale</b> <b>(-sc)</b> OR <b>-ScaleMinAndMax</b>     <i>Two</i> <i>floats</i>
+              Without the -float option, this option will rescale the densi-
+              ties of all sections by the same factors so that the original
+              minimum and maximum density will be mapped to the Min and Max
+              values that are entered.  The Max can be less than or greater
+              than the Min.  With "-float 4", the minimum and maximum result-
+              ing from the initial shifting of densities will be mapped to the
+              entered values.  If you want to reverse the contrast of the
+              file, use <a href="https://bio3d.colorado.edu/imod/doc/man/header.html">Header</a> to determine the existing minimum and maxi-
+              mum of the file and then use "-scale Max,Min".
+
+       <b>-map</b> <b>(-ma)</b> OR <b>-MapFromRange</b>    <i>Two</i> <i>floats</i>
+              Scale from the given range of densities rather than the current
+              min and max when using <b>-contrast</b> or <b>-scale</b> without "-float 4".
+              The second number can be either less than or greater than the
+              first.  Combined with <b>-scale</b>, this option allows an arbitrary
+              mapping of two density values to two other values.  Combined
+              with <b>-contrast</b> and "-mode 0", the option has the same effect as
+              using <a href="https://bio3d.colorado.edu/imod/doc/man/mrcbyte.html">mrcbyte</a> with its <b>-s</b> and <b>-c</b> options.
+
+       <b>-multadd</b> <b>(-mu)</b> OR <b>-MultiplyAndAdd</b>   <i>Two</i> <i>floats</i>
+              Rescale the densities of all sections by multiplying by the
+              first entered value then adding the second value.  This option
+              must be entered either once only, or once per input file.  (Suc-
+              cessive entries accumulate)
+
+       <b>-fixrange</b> <b>(-fix)</b> OR <b>-FixRangeIfNeeded</b>    <i>Two</i> <i>floats</i>
+              This option controls the conditional scaling and shifting of
+              data described in detail in the section below on <i>Density</i> <i>Scal-</i>
+              <i>ing</i>.  Such operations will occur only for integer image data
+              that are being transformed in some way, and only if the data
+              distribution fits some criteria.  The first value entered is the
+              number of standard deviations from the mean within which data
+              should be protected from truncation after image transformations;
+              it must be at least 2.  The second value is a scaling factor
+              that will be applied when the SD is below a criterion value (10
+              by default); the default scaling is 1.  This option cannot be
+              used with any other scaling specifications.
+
+       <b>-rfparam</b> <b>(-rf)</b> OR <b>-RangeFixingParams</b>     <i>Two</i> <i>floats</i>
+              This option sets two parameters relevant to the <b>-fixrange</b>
+              option: the criterion SD value below which data should be scaled
+              (default 10), and the factor by which the range of the data
+              might expand on each end upon interpolation or shifting by phase
+              shifts in Fourier space (i.e, the default of 1.2 allows for an
+              increase in total range of 1.4).
+
+       <b>-fill</b> OR <b>-FillValue</b>       <i>Floating</i> <i>point</i>
+              Value to fill areas of the output image that have no image data.
+              The filling is done before intensity scaling, so the value in
+              the filled areas will be modified by any scaling that is done.
+              As of IMOD 4.12.7, the default is to fill with the mean at the
+              edge of the input image if it can be loaded entirely into memory
+              at once, otherwise to use the image mean.
+
+       <b>-taper</b> <b>(-ta)</b> OR <b>-TaperAtFill</b>   <i>Two</i> <i>integers</i>
+              To taper an output image at a border between real image and a
+              filled area, just as is done with <a href="https://bio3d.colorado.edu/imod/doc/man/mrctaper.html">Mrctaper</a>, enter this option
+              with two values: 1) the distance over which to taper or 1 for a
+              default distance, and 2) a 0 for tapering outside or 1 for
+              tapering inside the border.  The default distance is 0.5% of the
+              mean of the X and Y sizes of the output image, but at least 16
+              pixels and no more than 127.  The program will exit with an
+              error if there is not enough memory to hold the entire output
+              image.
+
+   <b>OTHER</b> <b>OPTIONS</b>
+         These include options for testing and memory control, and generic PIP
+       options
+
+       <b>-memory</b> <b>(-mem)</b> OR <b>-MemoryLimit</b>      <i>Integer</i>
+              Use this entry to specify the amount of memory used by the pro-
+              gram for its main array, in megabytes.  The use of memory and
+              the default limits for memory allocation are described above in
+              the section "Memory Usage and Size Limitations."  Limiting the
+              memory can keep it from using more memory than available but may
+              result in it operating on the images in chunks.  Entering a
+              value larger than its default limit will allow it to use more
+              memory and avoid writing to a scratch file.  The main array is
+              used to hold both the input image (in whole or in part) and a
+              transformed image (in whole or in part).
+
+       <b>-test</b> <b>(-te)</b> OR <b>-TestLimits</b>     <i>Two</i> <i>integers</i>
+              To test the code for reading in and binning images in chunks,
+              enter limits for the total size of the working array, and for
+              the size of the array used for binning.  The sizes are the num-
+              ber of 4-byte elements.
+
+       <b>-megasec</b> <b>(-meg)</b> OR <b>-MaxMegaSections</b>      <i>Integer</i>
+              Maximum number of sections that will be processed, divided by
+              1,000,000.  The default is 1, which means that the program will
+              set up arrays for a million section numbers.  If you get the
+              error message "ERROR: PARSELIST - TOO MANY LIST VALUES FOR
+              ARRAY" and are trying to process more than a million sections,
+              enter this option with a higher value.
+
+       <b>-quiet</b> <b>(-q)</b> OR <b>-QuietOutput</b>
+              Suppress image file opening and min/max/mean output
+
+       <b>-print</b> <b>(-pr)</b> OR <b>-PrintXYSizeAndExit</b>
+              Determine output file size in X and Y, print it, and exit
+
+       <b>-verbose</b> <b>(-ve)</b> OR <b>-VerboseOutput</b>    <i>Integer</i>
+              1 for diagnostic output
+
+       <b>-param</b> <b>(-pa)</b> OR <b>-ParameterFile</b>      <i>Parameter</i> <i>file</i>
+              Read parameter entries as keyword-value pairs from a parameter
+              file.
+
+       <b>-help</b> <b>(-h)</b> OR <b>-usage</b>
+              Print help output
+
+       <b>-StandardInput</b>
+              Read parameter entries from standard input.
+
+<b>INTERACTIVE</b> <b>INPUT</b>
+       If no command line arguments are entered, inputs are prompted interac-
+       tively.  The input is as follows; lines starting with IF are entered
+       only if a particular option is selected.
+
+       Number of input files, or -1 to enter list of files from a file
+
+       IF you enter a number &gt;0, then for each input file, enter two lines:
+          File name
+          list of section numbers to take from that file.  The first
+            section is numbered 0 and ranges may be entered (e.g. 0-4,5,7-9)
+
+       OTHERWISE, IF you enter -1, then enter the name of the file with list
+            of files and sections.  The format of this file should be
+          Number of input files
+          File name
+          list of section numbers (numbered from 0), ranges allowed
+          next file and list of sections, etc.
+
+       Number of output files, or -1 to enter list of files from a file
+
+       IF you enter 1, next enter the name of the single output file.
+
+       OR IF you enter a number &gt;1, then for each output file, enter two
+            lines:
+          File name
+          Number of sections to put in that file
+
+       OR IF you enter -1, then enter the name of the file with the list of
+            files and numbers of sections.  The format of this file is:
+          Number of output files
+          File name
+          number of sections to place in that file
+          next file and number of sections, etc.
+
+       The X and Y dimensions of the output file, or / to take the same
+            dimensions as the first input file
+
+       The data mode of the output file, or / to take the same mode as the
+            first input file.  Mode can be 0 for bytes, 1 for 16-bit integers,
+            2 for 32-bit real numbers, or 9 to 15 for 9 to 15 bit values.
+
+       0 for no offsets, or 1 to apply X and Y offsets separately to each
+            section, or -1 to apply the same X and Y offset to all sections
+
+       IF offsets are selected, next specify the X and Y center offsets of
+          each of the sections (they need not be on separate lines), or the
+          single offset to apply to all sections.
+          Hint: offsets of 50,50 will take the center of the output image
+          from the upper right quadrant of the input image.
+
+       0 for no transforms, or 1 to transform images using cubic
+          interpolation, or 2 to transform using bilinear interpolation
+
+       IF transforming is selected, next specify the file for transforms, and
+          on a separate line, a list of lines to use in the file (numbered
+          from 0).  Ranges are allowed here, but all must be on one line.  To
+          have a single transform applied to all of the sections, just enter a
+          single number.
+
+       0 for no floating of densities, 1 to float densities so that each
+           section occupies the same RANGE of densities (the optimum range for
+           the particular data mode), 2 to float so that all sections have the
+           same MEAN and STANDARD DEVIATION of density (which requires the
+           input sections to be read twice), -1 to specify a single scaling
+           that will be applied equally to all sections, -2 to scale all
+           sections by the same amount, determined by black and white contrast
+           settings, in order to convert to bytes with stretched contrast, 3
+           to SHIFT sections to the same mean value without rescaling, or 4 to
+           SHIFT sections to the same mean then rescale all sections by the
+           same specified scaling.
+
+       IF single rescaling is selected with "-1", next specify the density
+          values to which the minimum and maximum in the data file should be
+          mapped, or just enter "/" to have them mapped to the full-scale
+          range for the data mode, or enter "1,1" to override any scaling of
+          data that would otherwise occur because of a change of mode.  This
+          scaling method can be used to invert densities by entering, e.g.,
+          255,0.
+
+       IF scaling by black and white contrast settings is selected with -2,
+          next enter the black and white settings (see <a href="https://bio3d.colorado.edu/imod/doc/man/mrcbyte.html">mrcbyte</a>).
+
+       OR, IF shifting and rescaling was selected with "4", next specify the
+          density values to which the new, shifted minimum and maximum values
+          should be mapped, or just enter "/" to have them mapped to the full-
+          scale range for the data mode.
+
+<b>Additional</b> <b>Notes</b>
+       <i>Pixel</i> <i>size</i>.  The program will adjust the pixel spacing in the header of
+       the output file if binning and/or the expansion or shrinkage options
+       are used.  Models built on the input file in 3dmod should display cor-
+       rectly on a file scaled by these three options.  However, the image
+       origin is not adjusted for images that are a subset of the input image
+       unless the -origin option is entered as well.  Without this option, it
+       would be necessary to shift a model manually in 3dmod to display it on
+       a subset.
+
+       <i>Density</i> <i>Scaling</i>  When there is a change of modes, data are rescaled
+       optimally in most cases. If floating or other scaling is not specified,
+       the scaling is by an amount that would map the range for the input data
+       mode into the range for the output data mode (e.g., going from mode 0
+       to mode 1, it would scale data up by a factor of 128).  Generally, all
+       sections will be rescaled by the same amount, thus preserving relative
+       differences between sections.  However, if either the input or the out-
+       put mode is 2 (real), this kind of rescaling will not occur.  Data will
+       also be scaled down by default if being stored in 4-bit mode (101), but
+       not scaled up when going from 4 bits to bytes.  In general, if your
+       input mode is real and you are outputting to bytes or integers, you
+       need to specify some kind of floating, shifting, or scaling in order to
+       get usable values.  These same kinds of automatic scalings upon change
+       of mode will occur with shifting to a common mean (option 3), but here
+       the program is more careful to apply the same scaling to all sections.
+       To disable the scaling upon change of mode, use the option "-mult 1,0,"
+       or the "-1" floating option with interactive input.
+
+       At the end, the program will report how many pixels have been truncated
+       at the low or high limits of the output range.  If this happens after
+       shifting with a specified output range, try again with a slightly
+       smaller range.
+
+       When the image is being transformed, automatic scaling or shifting of
+       integer values can be selected with the <b>-fixrange</b> option to avoid trun-
+       cation of values or loss of intensity resolution.  Truncation can occur
+       when densities are at the bottom of the range for the data mode,
+       because transformations (especially with phase shifting in Fourier
+       space) can produce values outside the original range.  Loss of resolu-
+       tion can occur if input values with few gray levels (such as from elec-
+       tron counting cameras) are interpolated but then rounded to the same
+       few gray levels.  When given the <b>-fixrange</b> option, the program will
+       decide whether the data need to have their range shifted, their values
+       scaled, or both to avoid these effects.  The decision is controlled by
+       the two values entered with that option.  The first is the number of
+       standard deviations from the mean within which data should be protected
+       from truncation.  (If the actual minimum or maximum of the data are
+       within this range, they will be used for the decision instead of the
+       mean minus or plus the given number of SDs.)  When the program decides
+       that a change is needed and can be done without saturating the high end
+       of the data, it will either shift signed data (mode 1) that starts at
+       -32768 up by 32768, or change the mode of unsigned data (mode 6) to
+       signed (mode 1).  A value around 5 should be adequate.  The second
+       value is a scaling factor, which can be 1 to have no scaling.  Data
+       will be scaled by this factor if its SD is below a criterion value (10
+       by default, copntrolled by the <b>-rfparam</b> option), and if that does not
+       produce truncation on the high end.  Scaling in the range of 10-20
+       should be adequate to preserve resolution in unscaled electron counting
+       data.
+
+       <i>Warping</i> <i>Transformations</i>.  The transformation file entered with -xform
+       can contain warping transformations as well as simple linear trans-
+       forms.  The transforms can consist of either displacements at a set of
+       control points, as output directly by <a href="https://bio3d.colorado.edu/imod/doc/man/midas.html">Midas</a>, or displacements on a
+       regular grid, as produced by <a href="https://bio3d.colorado.edu/imod/doc/man/xftoxg.html">Xftoxg</a>.  Such warping files contain
+       information about the size of the images that were aligned and their
+       pixel size.  The transforms will be adjusted for a difference between
+       that pixel size and the pixel size of the image file being transformed.
+       They will also be extrapolated as necessary to cover an image area
+       larger than that specified in the warping file; however, the program
+       assumes that the input images are centered on the images with which the
+       warping file was prepared.  The warping will be incorrect if this is
+       not the case.
+
+       Warping cannot be used with distortion corrections.  If this is neces-
+       sary, consider using <a href="https://bio3d.colorado.edu/imod/doc/man/blendmont.html">Blendmont</a>, which can combine such operations.
+       The -expand and -rotate options also cannot be used with warping trans-
+       formations because such transformation would occur after the warping
+       while the linear transform included in a warping file occurs before the
+       warping.  If these operations are necessary, you can avoid transforming
+       the images twice by preparing a one-line text file with
+          factor  0.  0.  factor  0.  0.
+       for expansion by the factor, or with
+          cos(angle)  -sin(angle)  sin(angle)  cos(angle)  0.  0.
+       for rotation by the angle.  Then use <a href="https://bio3d.colorado.edu/imod/doc/man/xfproduct.html">Xfproduct</a> to multiply the warp-
+       ing transforms by the single linear transform, and transform the images
+       with the product.
+
+       <i>Complex</i> <i>and</i> <i>Color</i> <i>Data</i>.  Complex data (Fourier transforms) can be
+       stacked but not otherwise manipulated.  Don't try to change the size or
+       center of the FFT's.
+
+       Newstack can read in color data (MRC data mode 16, TIFF RGB or colormap
+       files) as floats, but it cannot preserve the color channels and output
+       color data again.  If the input data are mode 16 and you want to com-
+       bine the channels, you must specify a different output mode.  If you
+       want to preserve the color, there is a script, <a href="https://bio3d.colorado.edu/imod/doc/man/colornewst.html">Colornewst</a>, that will
+       split the color channels into three byte-mode files with "clip
+       splitrgb", use Newstack to perform identical operations on each of the
+       three files, and recombine the data into a color file with "clip join-
+       rgb".
+
+       <i>Memory</i> <i>Usage</i> <i>and</i> <i>Size</i> <i>Limitations</i>. By default, the amount of memory
+       that the program will try to use depends on the operations being done
+       and on the amount of memory in the system.  When data are being trans-
+       formed in real space, it will seek to hold the entire input image and
+       the transformed image in memory, at 4 bytes per pixel.  For other oper-
+       ations, including shifting and reduction in Fourier space, the same
+       memory may be used for input and output, although there are some cases
+       where it would need separate input and output memory.  The memory to be
+       allocated is limited to the minimum of 3/4 of system memory, system
+       memory minus 1 GB, and 15 GB when there is up to 30 GB of system mem-
+       ory, or to half of system memory when there is more than 30 GB.  For
+       large images, it can work with less memory than the ideal amount by
+       reading, operating on, and writing strips of the image if necessary.
+       The ability to work on the image in strips is limited when images are
+       rotated by large angles (30-90 degrees); in such cases the program will
+       need at least enough memory to hold the whole input images.  If there
+       is image scaling that requires seeing the entire image to be output
+       before knowing how to scale it (i.e., with the <b>-float</b> option), the pro-
+       gram may even write these strips to a scratch file then reread them for
+       final scaling into the output file. On a 32-bit system, if the memory
+       allocation fails, it will try to work with just under 2 GB of memory.
+       Memory allocation will probably not fail on a 64-bit system.  In either
+       case, system performance will suffer if the program allocates more than
+       the amount of memory actually available, and it may be necessary for
+       you to limit the memory as appropriate with the <b>-memory</b> option.  Con-
+       versely, when you have a lot of memory for handling large images, you
+       may be able to use that option to allow the program to use more memory
+       and avoid writing to a scratch file.  The sign that a scratch file is
+       being used is a line of output starting with "SCRATCH image file on
+       unit   3 :".
+
+       The program can manipulate and transform images bigger than 4 gigapix-
+       els, but distortion correction is currently limited to 2 gigapixel
+       images.
+
+       <i>Format</i> <i>of</i> <i>Linear</i> <i>Transformations</i>.  Each linear transformation in a
+       transform file is specified by a line with six numbers:
+         A11 A12 A21 A22 DX DY
+       where the coordinate (X, Y) is transformed to (X', Y') by:
+         X' = A11 * (X - Xci) + A12 * (Y - Yci) + DX + Xco
+         Y' = A21 * (X - Xci) + A22 * (Y - Yci) + DY + Yco
+       where (Xci, Yci) and (Xco, Yco) are the center coordinates of the input
+       and output images, respectively.
+
+<b>HISTORY</b>
+       DNM (mast) for VAX    8/88
+       5/4/89 changed to float to same mean and sd rather than mean and min.
+       12/19/89 added full control of density scaling; fixed bug in
+       interpolation that was generating half-pixel error half the time.
+       4/19/90 added line-by-line prompts for file and section entry and
+       added time/date stamp
+       1/23/91: fixed so that it can correctly pad images and extract
+       subsets of images with either center-shifting or transforms
+       6/11/91: fixed bug if trying to output scaled real values les than 0
+       Feb 94 : Ported to SGI by Paul Furcinitti.
+       Jul 94 : PSF (Furcinitti) Fixed bug when writing byte files.
+       11/16/94: DNM added shifting to mean, rationalized scaling somewhat
+       9/24/01: changed to read and write in chunks if images are big
+       12/24/03: converted to PIP input, added undistorting and binning
+       June 2011: Added support for warping
+
+<b>SEE</b> <b>ALSO</b>
+       <a href="https://bio3d.colorado.edu/imod/doc/man/mrcbyte.html">mrcbyte</a>, <a href="https://bio3d.colorado.edu/imod/doc/man/tif2mrc.html">tif2mrc</a>, <a href="https://bio3d.colorado.edu/imod/doc/man/clip.html">clip</a>
+
+<b>BUGS</b>
+       Email bug reports to mast at colorado dot edu.
+
+
+
+IMOD                                 5.2.0                         newstack(1)
+</pre>
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;limited&quot;,&quot;isActive&quot;:false,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

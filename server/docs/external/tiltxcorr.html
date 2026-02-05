@@ -1,0 +1,691 @@
+
+<!-- saved from url=(0054)https://bio3d.colorado.edu/imod/doc/man/tiltxcorr.html -->
+<html data-lt-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>tiltxcorr</title><style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><style>.resizable-component[data-v-761d614a]{position:absolute}.resizable-component>.resizable-r[data-v-761d614a]{cursor:e-resize;height:100%;top:0;width:6px;z-index:90}.resizable-component>.resizable-r[data-v-761d614a],.resizable-component>.resizable-rb[data-v-761d614a]{display:block;position:absolute;right:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rb[data-v-761d614a]{bottom:-6px;cursor:se-resize;height:12px;width:12px;z-index:91}.resizable-component>.resizable-b[data-v-761d614a]{cursor:s-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-b[data-v-761d614a],.resizable-component>.resizable-lb[data-v-761d614a]{bottom:-6px;display:block;height:12px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-lb[data-v-761d614a]{cursor:sw-resize;left:-6px;width:12px;z-index:91}.resizable-component>.resizable-l[data-v-761d614a]{cursor:w-resize;height:100%;top:0;z-index:90}.resizable-component>.resizable-l[data-v-761d614a],.resizable-component>.resizable-lt[data-v-761d614a]{display:block;left:-6px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none;width:12px}.resizable-component>.resizable-lt[data-v-761d614a]{cursor:nw-resize;height:12px;top:-6px;z-index:91}.resizable-component>.resizable-t[data-v-761d614a]{cursor:n-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-rt[data-v-761d614a],.resizable-component>.resizable-t[data-v-761d614a]{display:block;height:12px;position:absolute;top:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rt[data-v-761d614a]{cursor:ne-resize;right:-6px;width:12px;z-index:91}</style><style>.it-language-selector{--it-lang-selector-bg:#c7ccd1;--it-lang-selector-btn-rad:15px;--it-lang-selector-cnt-rad:16px;border-radius:999rem;display:flex;font-size:14px;height:32px;min-width:200px;position:relative}.it-language-selector>main{margin-left:4px}.it-language-selector>.it-btn,.it-language-selector>section .it-btn{height:32px}.it-language-selector>section{flex-grow:1;padding:0 1px;position:relative;width:50%}.it-language-selector>section .it-btn{font-size:13px;margin:0!important;width:100%}.it-language-selector>section .it-btn:last-child{border-radius:var(--it-lang-selector-btn-rad)}.it-language-selector>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-selector>section>div[role=dialog]{background:var(--it-lang-selector-bg);display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-selector>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-selector[data-direction=down] .it-btn{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}.it-language-selector[data-direction=down]>section>div[role=dialog]{border-radius:0 0 var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad);top:100%}.it-language-selector[data-direction=down]>section>div[role=dialog]>.it-btn:last-child,.it-language-selector[data-direction=up] .it-btn{border-radius:0 0 var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad)}.it-language-selector[data-direction=up]>section>div[role=dialog]{border-radius:var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad) 0 0;bottom:100%}.it-language-selector[data-direction=up]>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}</style><style>.it-language-settings{--it-lang-settings-bg:#c7ccd1;--it-lang-settings-btn-rad:15px;--it-lang-settings-cnt-rad:16px;border-radius:999rem;display:flex;font-size:13px;height:32px;position:relative}.it-language-settings>main{margin-left:4px}.it-language-settings span.it-btn{pointer-events:none}.it-language-settings>.it-btn,.it-language-settings>section .it-btn{height:32px}.it-language-settings>section{flex-grow:1;margin-left:4px;margin-top:2px;padding:0 1px;position:relative}.it-language-settings>section[aria-current=false]{border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0}.it-language-settings>section:has(label){background-color:var(--it-lang-settings-bg)}.it-language-settings>section>label{background:var(--it-lang-settings-bg);border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);color:inherit;font-size:8px;font-weight:600;left:0;letter-spacing:.01em;line-height:1.2;margin:0;padding:3px 5px 2px;position:absolute;text-align:center;text-transform:uppercase;top:100%;width:100%}.it-language-settings>section>label+.it-btn{padding:8px 24px 8px 12px}.it-language-settings>section .it-btn{border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);box-shadow:none;font-size:13px;margin:0!important;width:100%}.it-language-settings>section .it-btn:last-child{border-radius:var(--it-lang-settings-btn-rad)}.it-language-settings>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-settings>section>div[role=dialog]{background:var(--it-lang-settings-bg);border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0;bottom:100%;display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-settings>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-settings>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad) 0 0}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}:root{--it-editor-width:clamp(28rem,30vw,36rem);--it-editor-height:clamp(14rem,35vh,24rem);--it-editor-padding-top:calc(0.5rem + var(--it-top-toolbar-height));--it-editor-padding-bottom:calc(0.5rem + var(--it-bottom-toolbar-height)*0.5);--it-editor-padding-left:clamp(24px,3%,100px);--it-editor-padding-right:var(--it-editor-padding-left);--it-editor-msg-bottom-padding:10px;--it-editor-color-bg:var(--it-color-white);--it-editor-color-bg-semi-transparent:hsla(0,0%,100%,.9);--it-editor-color-scrollbar-bg:#ddd;--it-editor-added-bg:rgba(92,185,69,.1);--it-editor-added:#5cb945;--it-editor-added-selection:rgba(92,185,69,.5);--it-editor-removed:#cc3434}.it-editor,.it-editor-wrapper{display:flex}.it-editor{background-color:var(--it-editor-color-bg);border:2px solid var(--it-color-primary);border-radius:var(--it-radius);box-shadow:var(--it-shadow-lg);color:var(--it-color-text);flex-direction:column;font-size:var(--it-font-size-base);height:100%;margin-left:auto;margin-top:auto;outline:none;position:relative;transition:width .15s,height .15s,border-color .25s;width:100%}.it-editor * ::-moz-selection{background-color:var(--it-selection-color)}.it-editor * ::selection{background-color:var(--it-selection-color)}[dir=rtl] .it-editor{margin-left:0;margin-right:auto}.it-editor .it-reqs{display:flex;flex-wrap:wrap;font-size:12px;justify-content:space-between;justify-content:flex-end;margin-right:8px;text-align:right}[dir=rtl] .it-editor .it-reqs{margin-left:8px;margin-right:0}.it-editor .it-reqs>a{margin-left:5px}[dir=rtl] .it-editor .it-reqs>a{margin-left:0;margin-right:5px}.it-editor.it-editor-loading{height:var(--it-editor-height,calc(90px + var(--it-editor-msg-bottom-padding)));width:320px}.it-editor.it-editor-error{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:320px}.it-editor.it-editor-error.it-editor-error-lg{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:350px}.it-editor .it-limit-notice{font-size:13px;padding:0}.it-editor .it-limit-notice h3{font-size:15px;font-weight:500}.it-editor .it-limit-notice>div{margin-top:12px}.it-editor .it-limit-notice svg{height:auto;margin-bottom:12px;max-width:75px}.it-editor ::-webkit-scrollbar{height:var(--it-scrollbar-width);width:var(--it-scrollbar-width);z-index:99999999}.it-editor ::-webkit-scrollbar-track,.it-editor :hover::-webkit-scrollbar-track{background:var(--it-editor-color-scrollbar-bg)}.it-editor ::-webkit-scrollbar-thumb{background:var(--it-color-primary)}.it-editor ::-webkit-scrollbar-thumb:active,.it-editor ::-webkit-scrollbar-thumb:hover{background:var(--it-color-primary-darker);cursor:-webkit-grab;cursor:grab}.it-editor .noTextDiff span mark{display:none!important}.it-editor .noTextDiff span.api-removed{display:none}.it-editor .noTextDiff span.api-added{background-color:transparent;color:inherit}.it-editor *{font-family:var(--it-font-primary)!important}.it-editor pre{border:0;box-sizing:border-box;flex:1;font-family:inherit!important;font-size:16px;line-height:1.7;margin:0;max-height:100%;outline:none;overflow-x:hidden;overflow-y:scroll;padding:var(--it-editor-padding-top) var(--it-editor-padding-right) var(--it-editor-padding-bottom) var(--it-editor-padding-left);white-space:pre-wrap;width:100%}.it-editor pre span.original>mark{display:none}.it-editor pre span.api-added,.it-editor pre span.api-removed{position:relative}.it-editor pre span.api-added>*,.it-editor pre span.api-removed>*{display:inline-block;position:relative}.it-editor pre span.api-added>*>mark,.it-editor pre span.api-removed>*>mark{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;bottom:100%;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;left:50%;line-height:1.5;margin:0;padding:0;position:absolute;transform:translate(-50%);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .reject-icon{align-items:center;background:var(--it-editor-color-bg);border-radius:4px;display:inline-flex;padding:4px 8px;position:relative}.it-editor pre span.api-added>*>mark .accept-icon.hover,.it-editor pre span.api-added>*>mark .accept-icon:hover,.it-editor pre span.api-added>*>mark .reject-icon.hover,.it-editor pre span.api-added>*>mark .reject-icon:hover,.it-editor pre span.api-removed>*>mark .accept-icon.hover,.it-editor pre span.api-removed>*>mark .accept-icon:hover,.it-editor pre span.api-removed>*>mark .reject-icon.hover,.it-editor pre span.api-removed>*>mark .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor pre span.api-added>*>mark .accept-icon svg,.it-editor pre span.api-added>*>mark .reject-icon svg,.it-editor pre span.api-removed>*>mark .accept-icon svg,.it-editor pre span.api-removed>*>mark .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor pre span.api-added>*>mark .accept-icon svg use,.it-editor pre span.api-added>*>mark .reject-icon svg use,.it-editor pre span.api-removed>*>mark .accept-icon svg use,.it-editor pre span.api-removed>*>mark .reject-icon svg use{fill:var(--it-color-primary)}.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor pre span.api-added>*>mark>i,.it-editor pre span.api-removed>*>mark>i{font-size:16px;margin-left:3px}.it-editor pre span.api-added>*>mark:after,.it-editor pre span.api-removed>*>mark:after{border:4px solid transparent;border-top:4px solid var(--it-color-contrast-medium);content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-editor pre span.api-added.active,.it-editor pre span.api-removed.active{background-color:var(--it-color-bg-change-highlight)}.it-editor pre span.api-added{background-color:var(--it-editor-added-bg);border-bottom:2px solid var(--it-editor-added);position:relative}.it-editor pre span.api-added::-moz-selection,.it-editor pre span.api-added ::-moz-selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-added::selection,.it-editor pre span.api-added ::selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-removed{position:relative;text-decoration:line-through}.it-editor pre span.api-removed:before{content:"";pointer-events:none}.it-editor pre span.api-removed.selected>span{background-color:var(--it-selection-color)}.it-editor pre span.api-removed:not(.it-es)+span:not(.it-ss){margin-left:4px}.it-editor pre span.api-removed>span:after{color:var(--it-editor-removed);content:attr(data-removedtext);pointer-events:none;text-decoration:line-through}.it-editor pre span.api-added:not(.it-es)+span.api-removed:not(.it-noss),.it-editor pre span.original:not(.it-es)+span.api-removed:not(.it-noss){margin-left:4px}.it-editor .it-editor-top-toolbar{background-image:linear-gradient(to bottom,var(--it-editor-color-bg) 50%,transparent 100%);border-top-left-radius:var(--it-radius);border-top-right-radius:var(--it-radius);height:var(--it-top-toolbar-height);padding:10px 16px 5px;top:0;z-index:99}.it-editor .it-editor-bottom-toolbar{bottom:0;height:var(--it-bottom-toolbar-height);padding:10px 16px;transform:translateY(50%)}.it-editor .it-editor-bottom-toolbar,.it-editor .it-editor-bottom-toolbar:before{border-bottom-left-radius:var(--it-radius);border-bottom-right-radius:var(--it-radius)}.it-editor .it-editor-bottom-toolbar:before{background-image:linear-gradient(to top,var(--it-editor-color-bg) 15%,transparent 100%);content:"";height:80%;left:0;position:absolute;top:10%;transform:translateY(-50%);width:100%}.it-editor .it-editor-error-msg,.it-editor .it-editor-loader{align-items:center;display:flex;font-size:14px;height:100%;justify-content:center;padding:1.2rem;pointer-events:none;position:relative;text-align:center;width:100%;z-index:100}.it-editor .it-editor-error-msg>svg,.it-editor .it-editor-loader>svg{margin-right:10px}[dir=rtl] .it-editor .it-editor-error-msg>svg,[dir=rtl] .it-editor .it-editor-loader>svg{margin-left:10px;margin-right:0}.it-editor .it-editor-error-msg{padding:1.2rem 1.2rem .6rem}.it-editor .it-editor-error-msg:last-child{padding-bottom:calc(1.2rem + var(--it-editor-msg-bottom-padding))}.it-pointer-events-all{pointer-events:all!important}.it-editor-toolbar{display:flex;justify-content:space-between;left:0;position:absolute;right:var(--it-scrollbar-width);z-index:100}[dir=rtl] .it-editor-toolbar{left:var(--it-scrollbar-width);right:0}.it-editor-close-warning{align-items:center;background-color:var(--it-editor-color-bg-semi-transparent);border-radius:var(--it-radius);display:flex;justify-content:center;overflow:hidden;text-align:center;z-index:100}.it-editor-close-warning,.it-editor-drag{height:100%;left:0;position:absolute;top:0;width:100%}.it-editor-accept-reject-tooltip{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;line-height:1.5;margin:0;opacity:0;padding:0;position:absolute;transition:opacity .2s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor-accept-reject-tooltip .accept-icon,.it-editor-accept-reject-tooltip .reject-icon{align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:var(--it-editor-color-bg);border-radius:5px;border-width:0;cursor:pointer;display:inline-flex;padding:4px 8px;position:relative}.it-editor-accept-reject-tooltip .accept-icon.hover,.it-editor-accept-reject-tooltip .accept-icon:hover,.it-editor-accept-reject-tooltip .reject-icon.hover,.it-editor-accept-reject-tooltip .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon svg,.it-editor-accept-reject-tooltip .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor-accept-reject-tooltip .accept-icon svg use,.it-editor-accept-reject-tooltip .reject-icon svg use{fill:var(--it-color-primary)}.it-editor-accept-reject-tooltip .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor-accept-reject-tooltip .reject-icon:hover{border-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor-accept-reject-tooltip>i{font-size:16px;margin-left:3px}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}.it-editor.it-editor-onboarding{--it-editor-onboarding-list-bullet-size:20px;bottom:48px;font-size:14px;font-weight:500;height:auto;padding:20px;position:absolute;right:32px;width:315px}.it-editor.it-editor-onboarding .it-editor-bottom-toolbar:before{display:none}.it-editor.it-editor-onboarding>main>p{margin-bottom:10px;margin-top:20px;text-align:center}.it-editor.it-editor-onboarding>main>p>span{border:1px solid #ccc;border-radius:6px;font-weight:700;margin:0 2px;padding:3px 5px}.it-editor.it-editor-onboarding header{border-bottom:1px solid #ddd;display:flex;margin-bottom:12px;padding-bottom:12px}.it-editor.it-editor-onboarding header h3{font-size:1.15em;margin:0}.it-editor.it-editor-onboarding header p{margin:3px 0 0}.it-editor.it-editor-onboarding header div:first-child{min-width:calc(var(--it-editor-onboarding-list-bullet-size)*1.5)}.it-editor.it-editor-onboarding header div:first-child svg{height:24px;width:24px}.it-editor-onboarding-list{counter-reset:item;font-size:.95em;margin-left:0;padding-left:0}.it-editor-onboarding-list li{align-items:center;display:flex;margin-bottom:8px}.it-editor-onboarding-list li:before{align-items:center;background-color:#4b5058;border-radius:999rem;color:#f4f4f6;content:counter(item);counter-increment:item;display:inline-flex;font-size:.9em;font-weight:600;height:var(--it-editor-onboarding-list-bullet-size);justify-content:center;margin-right:calc(var(--it-editor-onboarding-list-bullet-size)*.5);min-width:var(--it-editor-onboarding-list-bullet-size)}</style><style>@import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap);</style><style>#it-editor{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;bottom:2rem;left:1rem;pointer-events:none;position:fixed;right:1rem;top:1rem;z-index:9999999}#it-editor>div{height:100%;pointer-events:none;width:100%}#it-editor>div>*{pointer-events:all}#it-editor *{box-sizing:border-box}#it-editor h1,#it-editor h2,#it-editor h3,#it-editor h4{font-weight:500}#it-editor .it-pointer-events-none{pointer-events:none}.fadeup-enter-active,.fadeup-leave-active{transform:translateY(0);transition:opacity .1s ease,transform .1s}.fadeup-enter-from,.fadeup-leave-to{opacity:0;transform:translateY(1rem)}.fade-enter-active,.fade-leave-active{transition:opacity .1s}.fade-enter-from,.fade-leave-to{opacity:0}</style></head><body data-new-gr-c-s-check-loaded="14.1271.0" data-gr-ext-installed=""><a name="TOP"></a><pre>tiltxcorr(1)                General Commands Manual               tiltxcorr(1)
+
+
+
+<b>NAME</b>
+       tiltxcorr - to align a tilt series by cross-correlation
+
+<b>SYNOPSIS</b>
+       tiltxcorr  [options]  input_file  output_file
+
+<b>DESCRIPTION</b>
+       Tiltxcorr uses cross-correlation to find an initial translational
+       alignment between successive images of a tilt series.  For a given pair
+       of images, it stretches the image with the larger tilt angle perpendic-
+       ular to the tilt axis, by an amount equal to the ratio of the cosines
+       of the two tilt angles (cosine stretch).  The stretched image is corre-
+       lated with the other image, and the position of the peak of the corre-
+       lation indicates the relative shift between the images.  There are
+       options to use only a subset of the image, to pad the image with a bor-
+       der before correlating, and to taper the image intensities down to the
+       average level over some boundary region.  The latter feature is partic-
+       ularly important for getting reliable correlation peaks.  The program
+       also has an option to correlate each image with the sum of already-
+       aligned images at lower tilts, a method developed by Christian Renken.
+       In addition, the program can be used to track the centers of multiple
+       subareas through the tilt series and produce an IMOD model that can be
+       used for fiducial alignment.  The program will reduce the size of
+       images larger than 1250 pixels in one dimension by binning them down,
+       i.e. by averaging the values in square sets of adjacent pixels (2x3, or
+       3x3, etc), although reduction with antialias filtering can be specified
+       instead.  Images are binned by the smallest factor needed to make them
+       1250 or smaller up to a binning of 4, but there is option to set the
+       binning directly.
+
+       The program is also useful for cross-correlation alignment of untilted
+       images such as serial sections and subframes recorded when acquiring an
+       image from a direct electron detection camera.
+
+       Some notes about some of the options:
+
+       FILTERING: Some high pass filtering, using a small value of Sigma1 such
+       as 0.03, may be needed to keep the program from being misled by very
+       large scale features in the images.  If the images are noisy, some low
+       pass filtering with Sigma2 and Radius2 is appropriate (e.g. 0.05 for
+       Sigma2, 0.25 for Radius2).  If the images are binned, these values
+       specify frequencies in the binned image, so a higher cutoff (less fil-
+       tering) might be appropriate.  The filter functions produced by these
+       options can be visualized with the program <a href="https://bio3d.colorado.edu/imod/doc/man/filterplot.html">Filterplot</a>; see that man
+       page for a full description of their effects.
+
+       SUBAREAS: Trimming some area off the edges of the images may be helpful
+       if those areas are particularly out of focus or contain material with
+       no useful features in it.  The area to be used for correlation can be
+       offset from the center of the image by specifying starting and ending
+       coordinates of the region to correlate instead of the amount to trim
+       off.  The coordinates should be chosen from the zero-tilt image; the
+       program will shift the specified box closer to the center of the image
+       at higher tilts so that it will contain approximately the same fea-
+       tures.  By default, the transformations will be adjusted to move the
+       tilt axis back to the center of the whole image, but there is an option
+       to leave the axis at the center of the correlated area instead.  Note
+       that global rather than image-to-image transforms are output in this
+       case; see below for details.
+
+       PADDING: Padding is customarily done to reduce the contribution to the
+       correlation from wrapped around features, which occurs when correlation
+       is done with Fourier transforms.  Extensive padding does not help with
+       typical biological specimens but may be needed for specimens with peri-
+       odic structures, in which case one should pad each edge by half the
+       image size.
+
+       TAPERING: In contrast, tapering the images down to a mean intensity at
+       their edges is very important.  Tapering over as few as 20 pixels may
+       be adequate, but fewer artifacts will appear in the correlation with
+       longer tapers (say, 50 to 100 pixels).
+
+       CENTRAL PEAK EXCLUSION: The exclusion of a central peak may be helpful
+       when there is fixed noise in the images due to inadequate gain normal-
+       ization of CCD camera images.  Because one image is stretched, this
+       spurious peak can actually occur anywhere in an elongated region per-
+       pendicular to the tilt axis.  As of IMOD 4.6.31, this option has become
+       much more reliable and effective, since a peak will be excluded only if
+       certain conditions are met.  First, the program tests whether the peak
+       center is within 0.3 pixels of the center line of the elongated region,
+       whether this peak is narrower than the highest peak outside the exclu-
+       sion region in at least one direction, and whether that highest eligi-
+       ble peak is sufficiently stronger than the next-highest one.  If these
+       tests are passed, the program computes a correlation between unbinned,
+       unstretched images with no high-frequency filtering and measures the
+       width of first and second peaks.  If the first peak is narrow enough,
+       and sufficiently narrower than the second peak, then the highest eligi-
+       ble peak position (in the original correlation) is used.
+
+       CUMULATIVE CORRELATION: Tiltxcorr has an option to use a cumulative
+       correlation method developed by Christian Renken at the National Center
+       for the Visualization of Biological Complexity in Albany, N.Y.  With
+       this option, the program will take the image at zero tilt as the first
+       reference, and correlate it with the image at the next most negative
+       tilt.  It will then add the aligned image to the first reference to
+       make the reference for the next tilt.  At each tilt, the reference will
+       be the sum of images that have already been aligned.  When the most
+       negative tilt angle is reached, the procedure is repeated from the
+       zero-tilt view to more positove tilt angles.  (If you specify a range
+       of views to correlate that does not pass through zero tilt, then this
+       procedure will start at the lowest tilt in the specified range.)  There
+       are two options that can be used with this procedure.  By default,
+       aligned images are not cosine-stretched before being added into the
+       cumulative reference; but the "absstretch" option will add images that
+       have been stretched by the inverse of the cosine of the tilt angle into
+       the reference.  The "nostretch" option will disable the cosine stretch-
+       ing that is used before correlating an image with the reference.
+
+       180-DEGREE TILT SERIES: If the object being viewed is compact rather
+       than slab-like and it is tilted close to 90 degrees, then the cosine
+       stretching between views is not appropriate.  Use the "nostretch"
+       option in this case.  With this option, the program will also not
+       attempt to adjust the shifts between images to keep the tilt axis in
+       the center, a procedure which fails close to 90 degrees.
+
+       TRACKING PATCHES: In a completely different mode of operation, the pro-
+       gram can track the center positions of multiple subareas (patches)
+       through the tilt series and produce an IMOD model.  There is no feature
+       detection involved here, so the alignment of patches from two succes-
+       sive views is averaged over all the image features in the patch.  Patch
+       tracking is invoked by entering the -size option to specify the size of
+       the patches.  The positions of the patches are specified by entering
+       the number of patches in X and Y, or by providing a model with scat-
+       tered points indicating the positions of the patch centers.  In the
+       latter case, the points may be on any view, but their positions will be
+       transferred by cosine stretching to the view nearest to zero tilt, and
+       the tracking will start at that view.  Note that patches smaller than
+       1250 pixels will be correlated without binning by default, whereas the
+       whole image will typically be binned for correlation.  As a result, the
+       patch correlations may be noisier and may require either more high-fre-
+       quency filtering or explicit binning.  If views are skipped, there will
+       be no model points on those views and positions will be tracked between
+       the views before and after a skipped view.  If the transforms used for
+       preliminary alignment of the input stack are supplied, then the program
+       will be able to detect when patches contain blank image area.  It will
+       either skip a patch when it has too much blank area (more that 30%), or
+       it will taper the image data down to the edge of the blank area to min-
+       imize correlation artifacts.  When a patch is skipped on a view, the
+       tracking will be resumed on the next view where the patch has usable
+       image data, unless more than 5 views have been skipped.
+
+       FINDING WARPING TRANSFORMATIONS: In a variation on patch tracking, the
+       program can output the local patch displacements as a set of warping
+       transformations that align each section to the previous one.  This fea-
+       ture is not for tilt series but for other serial images that need to be
+       aligned with warping.  With tilt series patch tracking, the tracking
+       area moves through the views to follow a piece of image, whereas when
+       finding warp transformations, the tracking area is in the same position
+       on every section, either on a regular grid or as defined by a seed
+       model.  The format of warping transformations is described in the docu-
+       mentation for library libiwarp.
+
+       BOUNDARY CONTOURS: Boundary contours may be used to constrain the
+       region being correlated for alignment or the locations tracked by cor-
+       relation.  When used with tilt series, contours may be drawn on any
+       view but they will be stretched by 1/cosine of the tilt angle to deter-
+       mine their position on the zero-tilt view.  When correlating whole
+       images to obtain transforms, the boundary contours are used in two
+       ways.  First, the minimum rectangular area containing the contours at
+       zero tilt is determined; this area is limited by the -border, -xminmax
+       and -yminmax options to define the area that will be used for correla-
+       tion.  Second, on each view, the contours are contracted from their
+       positions at zero tilt by the cosine of the tilt angle, and the area
+       outside the contours is masked out by setting it to the image mean.
+       The masked image is correlated with an unmasked image at the previous
+       tilt.  Multiple contours may be drawn, and they may intersect.  If
+       there is only one contour, the image intensity inside the unmasked
+       region is tapered down to the mean at the edge over the course of 16
+       pixels, equivalent to running <a href="https://bio3d.colorado.edu/imod/doc/man/mrctaper.html">Mrctaper</a> on the image.  This tapering
+       may help prevent artifacts due to sharp edges, but it is not done if
+       there is more than one contour.  If tapering and the inclusion of sepa-
+       rated areas are both important, use a single contour with a narrow con-
+       nector between them, but take care that the contour does not cross
+       itself.
+
+       Boundary contours are used differently when correlating to track the
+       centers of patches.  For a tilt series, the program determines the
+       fraction of each patch that is within any of the contours (where all
+       contours are projected onto the zero tilt view), and then eliminates
+       patches whose fractions are less than 0.75.  There is no masking of the
+       image regions that fall outside the boundaries in this case.  When
+       finding warping transformations, the boundary contour used at a partic-
+       ular section is taken from the nearest section with a boundary contour.
+       Thus, it is useful to draw boundary contours at multiple sections in
+       the stack, whenever the region suitable for tracking changes.  The
+       patches are evaluated for inclusion separately on every section, using
+       the contours appropriate for that section.
+
+<b>OPTIONS</b>
+       Tiltxcorr uses the PIP package for input (see the manual page for
+       <a href="https://bio3d.colorado.edu/imod/doc/man/pip.html">pip</a>) and can still take sequential input interactively, to maintain
+       compatibility with old command files.  The following options can be
+       specified either as command line arguments (with the -) or one per line
+       in a command file or parameter file (without the -).  Options can be
+       abbreviated to unique letters; the currently valid abbreviations for
+       short names are shown in parentheses.
+
+       <b>-input</b> <b>(-inp)</b> OR <b>-InputFile</b>    <i>File</i> <i>name</i>
+              Input file with images to correlate.  If this option is not
+              entered, the first non-option argument will be used for this
+              input file.
+
+       <b>-piece</b> <b>(-pi)</b> OR <b>-PieceListFile</b>      <i>File</i> <i>name</i>
+              Piece list file for reordering the Z values in the stack
+
+       <b>-output</b> <b>(-ou)</b> OR <b>-OutputFile</b>   <i>File</i> <i>name</i>
+              Output file for transformations or for patch tracking model.  If
+              this option is not entered, the second non-option argument will
+              be used for this input file.
+
+       <b>-rotation</b> <b>(-ro)</b> OR <b>-RotationAngle</b>   <i>Floating</i> <i>point</i>
+              Angle of rotation of the tilt axis in the images; specifically,
+              the angle from the vertical to the tilt axis (counterclockwise
+              positive).
+
+       <b>-first</b> <b>(-f)</b> OR <b>-FirstTiltAngle</b>      <i>Floating</i> <i>point</i>
+              Tilt angle of first view, in degrees.  Use this option together
+              with TiltIncrement.
+
+       <b>-increment</b> <b>(-inc)</b> OR <b>-TiltIncrement</b>      <i>Floating</i> <i>point</i>
+              Increment between tilt angles, in degrees.  Use this option
+              together with FirstTiltAngle.
+
+       <b>-tiltfile</b> <b>(-ti)</b> OR <b>-TiltFile</b>   <i>File</i> <i>name</i>
+              Use this option if tilt angles are in a file, one per line.
+
+       <b>-angles</b> <b>(-ang)</b> OR <b>-TiltAngles</b>       <i>Multiple</i> <i>floats</i>
+              Use this option to enter the tilt angles for each view individu-
+              ally, in degrees.  (Successive entries accumulate)
+
+       <b>-offset</b> <b>(-of)</b> OR <b>-AngleOffset</b>       <i>Floating</i> <i>point</i>
+              Amount to add to all entered tilt angles.  If the specimen is
+              significantly tilted at zero tilt, then the amount of cosine
+              stretching become inaccurate at high tilt.  Sharper correlations
+              can be obtained by adding this angle offset, which is the same
+              as the offset needed in <a href="https://bio3d.colorado.edu/imod/doc/man/tiltalign.html">Tiltalign</a> or <a href="https://bio3d.colorado.edu/imod/doc/man/tilt.html">Tilt</a> to make the
+              specimen flat in the reconstruction.
+
+       <b>-reverse</b> <b>(-rev)</b> OR <b>-ReverseOrder</b>
+              Reverse order of processing when all views have same tilt angle.
+              Specifically, this will cause the program to start with the last
+              view at minimum tilt instead of the first one.
+
+       <b>-radius1</b> OR <b>-FilterRadius1</b>     <i>Floating</i> <i>point</i>
+              Low spatial frequencies in the cross-correlation will be attenu-
+              ated by a Gaussian curve that is 1 at this cutoff radius and
+              falls off below this radius with a standard deviation specified
+              by FilterSigma2.  Spatial frequency units range from 0 to 0.5.
+              Use FilterSigma1 instead of this entry for more predictable
+              attenuation of low frequencies.
+
+       <b>-radius2</b> OR <b>-FilterRadius2</b>     <i>Floating</i> <i>point</i>
+              High spatial frequencies in the cross-correlation will be atten-
+              uated by a Gaussian curve that is 1 at this cutoff radius and
+              falls off above this radius with a standard deviation specified
+              by FilterSigma2.
+
+       <b>-sigma1</b> OR <b>-FilterSigma1</b>       <i>Floating</i> <i>point</i>
+              Sigma value to filter low frequencies in the correlations with a
+              curve that is an inverted Gaussian.  This filter is 0 at 0 fre-
+              quency and decays up to 1 with the given sigma value.  However,
+              if a negative value of radius1 is entered, this filter will be
+              zero from 0 to |radius1| then decay up to 1.
+
+       <b>-sigma2</b> OR <b>-FilterSigma2</b>       <i>Floating</i> <i>point</i>
+              Sigma value for the Gaussian rolloff below and above the cutoff
+              frequencies specified by FilterRadius1 and FilterRadius2
+
+       <b>-exclude</b> <b>(-e)</b> OR <b>-ExcludeCentralPeak</b>
+              Exclude a central correlation peak caused by fixed pattern noise
+              in the images.  In tilted images, these peaks can occur anywhere
+              within an extended, narrow strip perpendicular to the tilt axis.
+              A peak in this region will now be excluded only if conditions
+              are met both by this peak and by the highest peak outside this
+              region, as described above.
+
+       <b>-central</b> <b>(-ce)</b> OR <b>-CentralPeakExclusionCriteria</b>    <i>Three</i> <i>floats</i>
+              This option specifies three of the criteria applied when decid-
+              ing whether to exclude a peak at (0, 0): the minimum ratio of
+              the second to the third peak strength (default 3); the absolute
+              width of the central peak in the unbinned, unstretched correla-
+              tion (default 1.5); and the minimum ratio of the second to the
+              first peak width (default 1.6).
+
+       <b>-shift</b> <b>(-sh)</b> OR <b>-ShiftLimitsXandY</b>   <i>Two</i> <i>integers</i>
+              Limits on distance in X and Y to search for correlation peak, in
+              pixels before binning is applied internally.  This option can be
+              used to prevent a spurious correlation peak outside these limits
+              from giving a bad alignment.  As of IMOD 4.6.31, the peak must
+              be located within an ellipse whose axes are defined by the lim-
+              its in X and Y.  If the program does not find an actual peak,
+              i.e. a pixel higher than all its neighbors, within these limits,
+              then it will give a zero shift. If cumulative correlations are
+              being used, the program will seek a peak within this distance of
+              the peak for the previous view and assign that view's shift
+              instead of zero if no peak is found.
+
+       <b>-rect</b> <b>(-rec)</b> OR <b>-RectangularLimits</b>
+              With this option, the -shift option works as it did before IMOD
+              4.6.31, requiring a peak to be within the rectangle defined by
+              the limits in X and Y.
+
+       <b>-ccc</b> <b>(-cc)</b> OR <b>-CorrelationCoefficient</b>
+              Compute a normalized cross-correlation coefficient at the 10
+              highest correlation peaks and pick the peak with the highest
+              coefficient.  This computation requires 5 Fourier transforms
+              instead of 3, because filtered images must be used for computing
+              the correlation coefficient.
+
+       <b>-border</b> <b>(-bor)</b> OR <b>-BordersInXandY</b>   <i>Two</i> <i>integers</i>
+              Number of pixels to trim off each edge in X and in Y (the
+              default is to use the whole image).
+
+       <b>-xminmax</b> <b>(-x)</b> OR <b>-XMinAndMax</b>   <i>Two</i> <i>integers</i>
+              Starting and ending X coordinates of a region to correlate,
+              based on the position of the region at zero tilt.  This entry
+              will override an X border value entered with BordersInXandY.
+
+       <b>-yminmax</b> <b>(-y)</b> OR <b>-YMinAndMax</b>   <i>Two</i> <i>integers</i>
+              Starting and ending Y coordinates of a region to correlate.
+              This entry will override a Y border value entered with Border-
+              sInXandY.
+
+       <b>-boundary</b> <b>(-bou)</b> OR <b>-BoundaryModel</b>       <i>File</i> <i>name</i>
+              Model file with boundary contours around areas to correlate.
+              When correlating whole images to obtain transforms, the area
+              outside the contours is masked out; when tracking patches, only
+              patches inside the contours will be tracked (see above for
+              details).
+
+       <b>-objbound</b> <b>(-objb)</b> OR <b>-BoundaryObject</b>     <i>Integer</i>
+              The number of the object to use from the model with boundary
+              contours.  The default is to use all the contours in closed-con-
+              tour objects, but with this option only the given object will be
+              used.
+
+       <b>-binning</b> <b>(-bi)</b> OR <b>-BinningToApply</b>   <i>Integer</i>
+              Binning or other reduction to apply to the trimmed, padded
+              images.  Ordinary binning is used unless the -antialias option
+              is given.  By default, a reduction will be selected that makes
+              the maximum dimension of the trimmed, padded image be no more
+              than 1250 pixels, up to a reduction of 4.  Reduction will be
+              increased above 4 only to keep the reduced image within a size
+              of about 4K, up to a reduction of 16.  This default behavior
+              might result in more reduction than desired, and the reduction
+              might change when the amount of trimming is changed.  This
+              option allows direct control of the reduction instead and also
+              allows a reduction up to 32.
+
+       <b>-antialias</b> <b>(-ant)</b> OR <b>-AntialiasFilter</b>    <i>Integer</i>
+              Type of antialiasing filter to use for image reduction instead
+              of binning.  Antialiasing becomes important when the images con-
+              tain a strong noise component at the high frequencies being
+              eliminated by the image reduction.  Ordinary binning reduces
+              aliasing, but not as much as these filters do.  As in New-
+              stack(1), the available types here are:
+                  2: Blackman - fast but not as good at antialiasing as slower
+                                filters
+                  3: Triangle - fast but smooths more than Blackman
+                  4: Mitchell - good at antialiasing, smooths a bit
+                  5: Lanczos 2 lobes - good at antialiasing, less smoothing
+                                than Mitchell
+                  6: Lanczos 3 lobes - slower, even less smoothing but more
+                                risk of ringing
+
+       <b>-leaveaxis</b> <b>(-lea)</b> OR <b>-LeaveTiltAxisShifted</b>
+              Leave the tilt axis in the center of the region that was corre-
+              lated; the default is to shift it back to the center of the
+              whole image.  With this option, the program will output global
+              transforms ready to use in <a href="https://bio3d.colorado.edu/imod/doc/man/newstack.html">Newstack</a>, rather than the trans-
+              forms relating one view to the next that would need to be con-
+              verted to global transforms with <a href="https://bio3d.colorado.edu/imod/doc/man/xftoxg.html">Xftoxg</a>.  The reason for this
+              difference is that the transforms must contain a net shift away
+              from the center of the image, which would be lost in <a href="https://bio3d.colorado.edu/imod/doc/man/xftoxg.html">Xftoxg</a>.
+
+       <b>-pad</b> OR <b>-PadsInXandY</b>      <i>Two</i> <i>integers</i>
+              Number of pixels to pad images on each side in X and in Y,
+              before binning.  With no padding, shifts greater than 50% of the
+              image size will not be treated correctly.  Each 1% of padding
+              allows proper treatment of shifts more than 50% by an additional
+              2% of image size.  The default is 5% of images dimensions for
+              patch tracking or finding warping, or 10% for regular correla-
+              tions, allowing shifts up to 70% of the image size to be deter-
+              mined.
+
+       <b>-taper</b> <b>(-ta)</b> OR <b>-TapersInXandY</b>      <i>Two</i> <i>integers</i>
+              Number of pixels to taper images in X and in Y.  The default is
+              10% of the image dimensions.
+
+       <b>-views</b> <b>(-vi)</b> OR <b>-StartingEndingViews</b>     <i>Two</i> <i>integers</i>
+              Starting and ending view numbers, numbered from 1, for doing a
+              subset of views.
+
+       <b>-skip</b> <b>(-sk)</b> OR <b>-SkipViews</b>      <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of views to skip, while maintaining alignment across
+              skipped views.  The program will not find the transform for
+              aligning a listed view to the previous one.  When a view is
+              skipped, the following view will be aligned to the last
+              unskipped view and a unit transform will be output for the
+              skipped view.  With patch tracking, no model points will be
+              placed on the skipped views.  Comma-separated ranges of views
+              (numbered from 1) can be entered.  The default is to use all of
+              the views.
+
+       <b>-break</b> <b>(-br)</b> OR <b>-BreakAtViews</b>       <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of views to break alignment at.  This option is like
+              "-skip" in that no transform is found for aligning a listed view
+              to the previous one and a unit transform is written for the
+              listed view.  However, the following view will be aligned to the
+              listed view, and nothing will be aligned to the previous view.
+              This breaks the chain of alignment through the series of views.
+              This option cannot be used with tilt series patch tracking, but
+              can be used when finding warping.
+
+       <b>-cumulative</b> <b>(-cu)</b> OR <b>-CumulativeCorrelation</b>
+              Use this option to add up previously aligned pictures to get the
+              reference for the next alignment.  Alignments will start at low
+              tilt and work up to high tilt.
+
+       <b>-absstretch</b> <b>(-ab)</b> OR <b>-AbsoluteCosineStretch</b>
+              Stretch each image added into the cumulative sum by 1 over the
+              cosine of its tilt angle.
+
+       <b>-nostretch</b> <b>(-no)</b> OR <b>-NoCosineStretch</b>
+              Do not do any cosine stretching for correlations or for accumu-
+              lating into the reference (this option overrides Absolute-
+              CosineStretch).
+
+       <b>-iterate</b> <b>(-it)</b> OR <b>-IterateCorrelations</b>   <i>Integer</i>
+              Number of iterations of the correlation.  After finding the
+              pixel with the peak correlation, the program achieves subpixel
+              accuracy by fitting a parabola to the correlation values in X or
+              Y and interpolating from the parabola.  If the correlation is
+              iterated, this subpixel shift is applied to the cosine-stretched
+              image before the correlation, which tends to shift the peak to
+              being exactly on a pixel.  As a result, the shift has slightly
+              higher subpixel accuracy than when it is derived by parabolic
+              interpolation.  The program will terminate the iterations if the
+              remaining fractional shift is less than 0.02 pixel or if a lower
+              correlation value is obtained than on the previous iteration.
+              In the latter case it reverts to the shift that gave the highest
+              correlation.  Two or three iterations are generally sufficient.
+              Iteration is not programmed efficiently, so computation time
+              will be proportional to the number of iterations.
+
+       <b>-search</b> <b>(-sea)</b> OR <b>-SearchMagChanges</b>
+              Search for the magnification factor that gives the highest cor-
+              relation coefficient at one or more views.  This factor will be
+              incorporated into the transformation for the respective view.
+              If a maximum value of the correlation coefficient is not found
+              within the allowed range (specified with the -mag option), a
+              magnification of 1 is used.  This option cannot be used together
+              with rotation scan, cumulative correlation, patch tracking, or
+              when finding warping.
+
+       <b>-changes</b> <b>(-ch)</b> OR <b>-ViewsWithMagChanges</b>   <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of views at which to search for magnification changes.
+              Ranges are allowed.  The default is to do all views.
+
+       <b>-mag</b> <b>(-m)</b> OR <b>-MagnificationLimits</b>   <i>Two</i> <i>floats</i>
+              Lower and upper limits for size change when searching for magni-
+              fication factors.  The default is 0.9,1.1.
+
+       <b>-scan</b> <b>(-sc)</b> OR <b>-ScanRotationMaxAndStep</b>   <i>Two</i> <i>floats</i>
+              Either the maximum angle and angular step size at which to apply
+              rotation in order to estimate the best rotation; or a single
+              rotation angle to apply and a 0 step size.  With a positive step
+              size to estimate rotation, the program does a coarse scan just
+              at the given interval from the negative to positive maximum
+              angle, then estimates the best rotation by interpolation.  This
+              is unlike the magnification search, which reduces its step size
+              to refine the estimate.  The final correlation is done at the
+              interpolated angle.  With a step size of 0, the angle given as
+              the maximum (which can be negative) is applied before correlat-
+              ing.  The resulting transformation incorporates the rotation in
+              either case.  This option cannot be used together with magnifi-
+              cation search, cumulative correlation, patch tracking, or when
+              finding warping.
+
+       <b>-reference</b> <b>(-ref)</b> OR <b>-ReferenceFile</b>      <i>File</i> <i>name</i>
+              Input file containing an image to use as a reference.  Each view
+              from the main input image file will be aligned with this refer-
+              ence image, which will be assumed to be at zero tilt.  The out-
+              put file will contain a linear transform for every view in the
+              input file; if a subset of views is specified with <b>-views</b> or
+              some views are skipped, unaligned views will be given a unit
+              transform.  This option cannot be used with cumulative correla-
+              tions, patch tracking, or when finding warping.
+
+       <b>-rview</b> <b>(-rv)</b> OR <b>-ReferenceView</b>      <i>Integer</i>
+              View number of image to use in reference file, numbered from 1.
+
+       <b>-second</b> <b>(-sec)</b> OR <b>-SecondPeakBoxSize</b>     <i>Two</i> <i>integers</i>
+              Report on the second peak position if it is within a box of the
+              given length and width before binning, centered on the first
+              peak and with its width along the tilt axis and its length per-
+              pendicular to the tilt axis.
+
+       <b>-size</b> <b>(-siz)</b> OR <b>-SizeOfPatchesXandY</b>      <i>Two</i> <i>integers</i>
+              Size in X and Y of patches to track by correlation.  This option
+              will cause the program to track a set of patches of the given
+              size from the starting view to the high tilt view in each direc-
+              tion, and to output the positions of the patch centers in an
+              IMOD model.  By default, patches will overlap in each direction
+              by the default value for the -overlap option (see below).  You
+              can change the overlap with the -overlap option, specify the
+              number of patches directly with the -number option, or enter a
+              model of points to track with the -seed option, but you can
+              enter only one of these options.  Patch tracking cannot be used
+              with cumulative correlation.
+
+       <b>-number</b> <b>(-nu)</b> OR <b>-NumberOfPatchesXandY</b>   <i>Two</i> <i>integers</i>
+              Number of patches in X and Y to track by correlation.  The given
+              number of patches will be regularly spaced apart and fill the X
+              and Y ranges of the trimmed image area.
+
+       <b>-overlap</b> <b>(-ov)</b> OR <b>-OverlapOfPatchesXandY</b>      <i>Two</i> <i>integers</i>
+              Fractional overlap in X and Y between patches that are tracked
+              by correlation.  These overlaps are used to determine the number
+              of patches when -number is not entered.  The default, 0.33,
+              0.33, which will make patches that overlap by one-third in each
+              direction.  A value of 0 will result in no overlap, and values
+              less than 0 will result in space between the patches.
+
+       <b>-seed</b> <b>(-see)</b> OR <b>-SeedModel</b>     <i>File</i> <i>name</i>
+              Input model file with center points to track by correlation.
+              Only points whose patches fit entirely within the trimmed image
+              area at zero degrees will be tracked.  See above for details.
+
+       <b>-objseed</b> <b>(-objs)</b> OR <b>-SeedObject</b>     <i>Integer</i>
+              Number of the object from the seed model with the points for
+              tracking patches.  The default is to use all objects containing
+              scattered points; with this option only the given object will be
+              used.
+
+       <b>-length</b> <b>(-len)</b> OR <b>-LengthAndOverlap</b>      <i>Two</i> <i>integers</i>
+              When tracking patches by correlation, the default is to produce
+              one contour per patch passing through the whole set of views.
+              With this option, the contour will be broken into pieces of the
+              given length, and overlapping by at least the given amount.  If
+              the centers of the tracked areas wander enough to give a bad fit
+              when the resulting model is used in <a href="https://bio3d.colorado.edu/imod/doc/man/tiltalign.html">Tiltalign</a>, then breaking
+              the contours into overlapping pieces might improve the fit.
+              Some overlap is needed to use the model in Tiltalign (1).
+
+       <b>-prexf</b> <b>(-pr)</b> OR <b>-PrealignmentTransformFile</b>    <i>File</i> <i>name</i>
+              File with transformations applied to align the images being used
+              for patch tracking.  With the shift information in these trans-
+              forms, each patch is evaluated for whether it contains blank
+              image area because of the shifting.  Patches that are more than
+              30% blank will not be tracked further, and patches with some
+              blank area less than this amount will be tapered down to the
+              edge of the blank area.
+
+       <b>-imagebinned</b> <b>(-im)</b> OR <b>-ImagesAreBinned</b>   <i>Integer</i>
+              The current binning of the images relative to the unaligned
+              stack.  This entry is needed to scale the transforms supplied
+              with the -prexf option if the binning is not 1.
+
+       <b>-unali</b> <b>(-un)</b> OR <b>-UnalignedSizeXandY</b>      <i>Two</i> <i>integers</i>
+              The full size of the unaligned stack that was transformed to
+              create the images being aligned with patch tracking.  This entry
+              is needed if an output size was specified when creating the
+              stack being aligned and if transforms are supplied with the
+              -prexf option.
+
+       <b>-warp</b> <b>(-w)</b> OR <b>-FindWarpTransforms</b>   <i>Integer</i>
+              Use patch correlations to find and save warping transformations
+              between successive images.  The output file will be a file with
+              warp transforms, not a model.  Enter 1 for transforms with the
+              linear component separated out, and -1 to not separate the lin-
+              ear component.  Tilt angles cannot be entered with this option,
+              nor can the -reverse option.  Unlike with tilt series patch
+              tracking, you can break the alignment at views as well as skip
+              views.  Limits in X and Y and a boundary model can be used to
+              constrain patch locations, but there must be at least 3 patches
+              in the area defined by all the boundary contours.
+
+       <b>-pair</b> <b>(-pai)</b> OR <b>-RawAndAlignedPair</b>       <i>Two</i> <i>integers</i>
+              After transforms relating each section to the previous have been
+              obtained, this option can be used to find a warping alignment
+              between a pair of sections, where the first is an unaligned
+              image and the second is a section transformed into linear align-
+              ment with it.  The option specifies the view number (numbered
+              from 1, as usual) of the second view of the pair and the total
+              number of sections.  If this option is entered, the file of sec-
+              tion-to-section transforms must be entered with the -prexf
+              option.  The input images must not be binned or resized from the
+              ones on which those transforms are based.  This option is used
+              by <a href="https://bio3d.colorado.edu/imod/doc/man/xfalign.html">Xfalign</a>.
+
+       <b>-append</b> <b>(-ap)</b> OR <b>-AppendToWarpFile</b>
+              When doing a raw and aligned pair, this option can be used to
+              add the warp transform from the pair to an existing file.  The
+              output file must be a valid warp transform file.
+
+       <b>-test</b> <b>(-te)</b> OR <b>-TestOutput</b>     <i>File</i> <i>name</i>
+              Specify a filename with this option to have two padded, tapered
+              images and the cross-correlation saved for every pair of images
+              that are correlated.
+
+       <b>-verbose</b> <b>(-ve)</b> OR <b>-VerboseOutput</b>
+              Output diagnostic information
+
+       <b>-param</b> <b>(-par)</b> OR <b>-ParameterFile</b>     <i>Parameter</i> <i>file</i>
+              Read parameter entries as keyword-value pairs from a parameter
+              file.
+
+       <b>-help</b> <b>(-h)</b> OR <b>-usage</b>
+              Print help output
+
+       <b>-StandardInput</b>
+              Read parameter entries from standard input.
+
+<b>INTERACTIVE</b> <b>INPUT</b>
+       If there are no command-line arguments, Tiltxcorr takes sequential
+       input the old way, with the following entries:
+
+       Image input file
+
+       Piece list file for reordering the Z values in the stack, or Return if
+       none
+
+       Output file for F transforms
+
+       -1 to enter individual tilt angle for each view, 1 to specify a start-
+       ing and increment tilt, or 0 to read tilt angles from a file
+
+       IF you entered 1, next enter the starting and incremental tilt angles
+       IF you entered -1, enter the tilt angle of each view.
+       IF you entered 0, enter name of file with tilt angles
+
+       Angle of rotation of the tilt axis in the images; specifically, the
+       angle from the vertical to the tilt axis (counterclockwise positive).
+
+       Filter parameters to filter the correlation, or / for no filter (Enter
+       values of Sigma1, Sigma2, Radius1, Radius2 just as for ENHANCE.)
+
+       1 to exclude a central correlation peak due to fixed pattern noise in
+       the images, or 0 not to
+
+       Number of pixels to trim off each side in the X and Y dimensions, or /
+       to use the whole image area
+
+       Borders (in pixels) with which to pad images in the X and Y dimensions,
+       or / for the default, which is 5% of the image dimensions up to 20 pix-
+       els
+
+       Distances in pixels over which to taper image intensities down to the
+       mean at the edges, in the X and Y dimensions.  Enter / for the default,
+       which is 10% of the image dimensions up to 100 pixels
+
+       Starting and ending view #'s (first is 1), or / for all views
+
+<b>HISTORY</b>
+       Written by David Mastronarde 10/6/98
+
+<b>BUGS</b>
+       Email bug reports to mast at colorado dot edu.
+
+
+
+IMOD                                 5.2.0                        tiltxcorr(1)
+</pre>
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;limited&quot;,&quot;isActive&quot;:false,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

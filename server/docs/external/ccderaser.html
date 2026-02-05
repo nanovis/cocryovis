@@ -1,0 +1,427 @@
+
+<!-- saved from url=(0054)https://bio3d.colorado.edu/imod/doc/man/ccderaser.html -->
+<html data-lt-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>ccderaser</title><style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><style>.resizable-component[data-v-761d614a]{position:absolute}.resizable-component>.resizable-r[data-v-761d614a]{cursor:e-resize;height:100%;top:0;width:6px;z-index:90}.resizable-component>.resizable-r[data-v-761d614a],.resizable-component>.resizable-rb[data-v-761d614a]{display:block;position:absolute;right:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rb[data-v-761d614a]{bottom:-6px;cursor:se-resize;height:12px;width:12px;z-index:91}.resizable-component>.resizable-b[data-v-761d614a]{cursor:s-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-b[data-v-761d614a],.resizable-component>.resizable-lb[data-v-761d614a]{bottom:-6px;display:block;height:12px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-lb[data-v-761d614a]{cursor:sw-resize;left:-6px;width:12px;z-index:91}.resizable-component>.resizable-l[data-v-761d614a]{cursor:w-resize;height:100%;top:0;z-index:90}.resizable-component>.resizable-l[data-v-761d614a],.resizable-component>.resizable-lt[data-v-761d614a]{display:block;left:-6px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none;width:12px}.resizable-component>.resizable-lt[data-v-761d614a]{cursor:nw-resize;height:12px;top:-6px;z-index:91}.resizable-component>.resizable-t[data-v-761d614a]{cursor:n-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-rt[data-v-761d614a],.resizable-component>.resizable-t[data-v-761d614a]{display:block;height:12px;position:absolute;top:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rt[data-v-761d614a]{cursor:ne-resize;right:-6px;width:12px;z-index:91}</style><style>.it-language-selector{--it-lang-selector-bg:#c7ccd1;--it-lang-selector-btn-rad:15px;--it-lang-selector-cnt-rad:16px;border-radius:999rem;display:flex;font-size:14px;height:32px;min-width:200px;position:relative}.it-language-selector>main{margin-left:4px}.it-language-selector>.it-btn,.it-language-selector>section .it-btn{height:32px}.it-language-selector>section{flex-grow:1;padding:0 1px;position:relative;width:50%}.it-language-selector>section .it-btn{font-size:13px;margin:0!important;width:100%}.it-language-selector>section .it-btn:last-child{border-radius:var(--it-lang-selector-btn-rad)}.it-language-selector>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-selector>section>div[role=dialog]{background:var(--it-lang-selector-bg);display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-selector>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-selector[data-direction=down] .it-btn{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}.it-language-selector[data-direction=down]>section>div[role=dialog]{border-radius:0 0 var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad);top:100%}.it-language-selector[data-direction=down]>section>div[role=dialog]>.it-btn:last-child,.it-language-selector[data-direction=up] .it-btn{border-radius:0 0 var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad)}.it-language-selector[data-direction=up]>section>div[role=dialog]{border-radius:var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad) 0 0;bottom:100%}.it-language-selector[data-direction=up]>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}</style><style>.it-language-settings{--it-lang-settings-bg:#c7ccd1;--it-lang-settings-btn-rad:15px;--it-lang-settings-cnt-rad:16px;border-radius:999rem;display:flex;font-size:13px;height:32px;position:relative}.it-language-settings>main{margin-left:4px}.it-language-settings span.it-btn{pointer-events:none}.it-language-settings>.it-btn,.it-language-settings>section .it-btn{height:32px}.it-language-settings>section{flex-grow:1;margin-left:4px;margin-top:2px;padding:0 1px;position:relative}.it-language-settings>section[aria-current=false]{border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0}.it-language-settings>section:has(label){background-color:var(--it-lang-settings-bg)}.it-language-settings>section>label{background:var(--it-lang-settings-bg);border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);color:inherit;font-size:8px;font-weight:600;left:0;letter-spacing:.01em;line-height:1.2;margin:0;padding:3px 5px 2px;position:absolute;text-align:center;text-transform:uppercase;top:100%;width:100%}.it-language-settings>section>label+.it-btn{padding:8px 24px 8px 12px}.it-language-settings>section .it-btn{border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);box-shadow:none;font-size:13px;margin:0!important;width:100%}.it-language-settings>section .it-btn:last-child{border-radius:var(--it-lang-settings-btn-rad)}.it-language-settings>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-settings>section>div[role=dialog]{background:var(--it-lang-settings-bg);border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0;bottom:100%;display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-settings>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-settings>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad) 0 0}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}:root{--it-editor-width:clamp(28rem,30vw,36rem);--it-editor-height:clamp(14rem,35vh,24rem);--it-editor-padding-top:calc(0.5rem + var(--it-top-toolbar-height));--it-editor-padding-bottom:calc(0.5rem + var(--it-bottom-toolbar-height)*0.5);--it-editor-padding-left:clamp(24px,3%,100px);--it-editor-padding-right:var(--it-editor-padding-left);--it-editor-msg-bottom-padding:10px;--it-editor-color-bg:var(--it-color-white);--it-editor-color-bg-semi-transparent:hsla(0,0%,100%,.9);--it-editor-color-scrollbar-bg:#ddd;--it-editor-added-bg:rgba(92,185,69,.1);--it-editor-added:#5cb945;--it-editor-added-selection:rgba(92,185,69,.5);--it-editor-removed:#cc3434}.it-editor,.it-editor-wrapper{display:flex}.it-editor{background-color:var(--it-editor-color-bg);border:2px solid var(--it-color-primary);border-radius:var(--it-radius);box-shadow:var(--it-shadow-lg);color:var(--it-color-text);flex-direction:column;font-size:var(--it-font-size-base);height:100%;margin-left:auto;margin-top:auto;outline:none;position:relative;transition:width .15s,height .15s,border-color .25s;width:100%}.it-editor * ::-moz-selection{background-color:var(--it-selection-color)}.it-editor * ::selection{background-color:var(--it-selection-color)}[dir=rtl] .it-editor{margin-left:0;margin-right:auto}.it-editor .it-reqs{display:flex;flex-wrap:wrap;font-size:12px;justify-content:space-between;justify-content:flex-end;margin-right:8px;text-align:right}[dir=rtl] .it-editor .it-reqs{margin-left:8px;margin-right:0}.it-editor .it-reqs>a{margin-left:5px}[dir=rtl] .it-editor .it-reqs>a{margin-left:0;margin-right:5px}.it-editor.it-editor-loading{height:var(--it-editor-height,calc(90px + var(--it-editor-msg-bottom-padding)));width:320px}.it-editor.it-editor-error{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:320px}.it-editor.it-editor-error.it-editor-error-lg{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:350px}.it-editor .it-limit-notice{font-size:13px;padding:0}.it-editor .it-limit-notice h3{font-size:15px;font-weight:500}.it-editor .it-limit-notice>div{margin-top:12px}.it-editor .it-limit-notice svg{height:auto;margin-bottom:12px;max-width:75px}.it-editor ::-webkit-scrollbar{height:var(--it-scrollbar-width);width:var(--it-scrollbar-width);z-index:99999999}.it-editor ::-webkit-scrollbar-track,.it-editor :hover::-webkit-scrollbar-track{background:var(--it-editor-color-scrollbar-bg)}.it-editor ::-webkit-scrollbar-thumb{background:var(--it-color-primary)}.it-editor ::-webkit-scrollbar-thumb:active,.it-editor ::-webkit-scrollbar-thumb:hover{background:var(--it-color-primary-darker);cursor:-webkit-grab;cursor:grab}.it-editor .noTextDiff span mark{display:none!important}.it-editor .noTextDiff span.api-removed{display:none}.it-editor .noTextDiff span.api-added{background-color:transparent;color:inherit}.it-editor *{font-family:var(--it-font-primary)!important}.it-editor pre{border:0;box-sizing:border-box;flex:1;font-family:inherit!important;font-size:16px;line-height:1.7;margin:0;max-height:100%;outline:none;overflow-x:hidden;overflow-y:scroll;padding:var(--it-editor-padding-top) var(--it-editor-padding-right) var(--it-editor-padding-bottom) var(--it-editor-padding-left);white-space:pre-wrap;width:100%}.it-editor pre span.original>mark{display:none}.it-editor pre span.api-added,.it-editor pre span.api-removed{position:relative}.it-editor pre span.api-added>*,.it-editor pre span.api-removed>*{display:inline-block;position:relative}.it-editor pre span.api-added>*>mark,.it-editor pre span.api-removed>*>mark{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;bottom:100%;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;left:50%;line-height:1.5;margin:0;padding:0;position:absolute;transform:translate(-50%);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .reject-icon{align-items:center;background:var(--it-editor-color-bg);border-radius:4px;display:inline-flex;padding:4px 8px;position:relative}.it-editor pre span.api-added>*>mark .accept-icon.hover,.it-editor pre span.api-added>*>mark .accept-icon:hover,.it-editor pre span.api-added>*>mark .reject-icon.hover,.it-editor pre span.api-added>*>mark .reject-icon:hover,.it-editor pre span.api-removed>*>mark .accept-icon.hover,.it-editor pre span.api-removed>*>mark .accept-icon:hover,.it-editor pre span.api-removed>*>mark .reject-icon.hover,.it-editor pre span.api-removed>*>mark .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor pre span.api-added>*>mark .accept-icon svg,.it-editor pre span.api-added>*>mark .reject-icon svg,.it-editor pre span.api-removed>*>mark .accept-icon svg,.it-editor pre span.api-removed>*>mark .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor pre span.api-added>*>mark .accept-icon svg use,.it-editor pre span.api-added>*>mark .reject-icon svg use,.it-editor pre span.api-removed>*>mark .accept-icon svg use,.it-editor pre span.api-removed>*>mark .reject-icon svg use{fill:var(--it-color-primary)}.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor pre span.api-added>*>mark>i,.it-editor pre span.api-removed>*>mark>i{font-size:16px;margin-left:3px}.it-editor pre span.api-added>*>mark:after,.it-editor pre span.api-removed>*>mark:after{border:4px solid transparent;border-top:4px solid var(--it-color-contrast-medium);content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-editor pre span.api-added.active,.it-editor pre span.api-removed.active{background-color:var(--it-color-bg-change-highlight)}.it-editor pre span.api-added{background-color:var(--it-editor-added-bg);border-bottom:2px solid var(--it-editor-added);position:relative}.it-editor pre span.api-added::-moz-selection,.it-editor pre span.api-added ::-moz-selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-added::selection,.it-editor pre span.api-added ::selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-removed{position:relative;text-decoration:line-through}.it-editor pre span.api-removed:before{content:"";pointer-events:none}.it-editor pre span.api-removed.selected>span{background-color:var(--it-selection-color)}.it-editor pre span.api-removed:not(.it-es)+span:not(.it-ss){margin-left:4px}.it-editor pre span.api-removed>span:after{color:var(--it-editor-removed);content:attr(data-removedtext);pointer-events:none;text-decoration:line-through}.it-editor pre span.api-added:not(.it-es)+span.api-removed:not(.it-noss),.it-editor pre span.original:not(.it-es)+span.api-removed:not(.it-noss){margin-left:4px}.it-editor .it-editor-top-toolbar{background-image:linear-gradient(to bottom,var(--it-editor-color-bg) 50%,transparent 100%);border-top-left-radius:var(--it-radius);border-top-right-radius:var(--it-radius);height:var(--it-top-toolbar-height);padding:10px 16px 5px;top:0;z-index:99}.it-editor .it-editor-bottom-toolbar{bottom:0;height:var(--it-bottom-toolbar-height);padding:10px 16px;transform:translateY(50%)}.it-editor .it-editor-bottom-toolbar,.it-editor .it-editor-bottom-toolbar:before{border-bottom-left-radius:var(--it-radius);border-bottom-right-radius:var(--it-radius)}.it-editor .it-editor-bottom-toolbar:before{background-image:linear-gradient(to top,var(--it-editor-color-bg) 15%,transparent 100%);content:"";height:80%;left:0;position:absolute;top:10%;transform:translateY(-50%);width:100%}.it-editor .it-editor-error-msg,.it-editor .it-editor-loader{align-items:center;display:flex;font-size:14px;height:100%;justify-content:center;padding:1.2rem;pointer-events:none;position:relative;text-align:center;width:100%;z-index:100}.it-editor .it-editor-error-msg>svg,.it-editor .it-editor-loader>svg{margin-right:10px}[dir=rtl] .it-editor .it-editor-error-msg>svg,[dir=rtl] .it-editor .it-editor-loader>svg{margin-left:10px;margin-right:0}.it-editor .it-editor-error-msg{padding:1.2rem 1.2rem .6rem}.it-editor .it-editor-error-msg:last-child{padding-bottom:calc(1.2rem + var(--it-editor-msg-bottom-padding))}.it-pointer-events-all{pointer-events:all!important}.it-editor-toolbar{display:flex;justify-content:space-between;left:0;position:absolute;right:var(--it-scrollbar-width);z-index:100}[dir=rtl] .it-editor-toolbar{left:var(--it-scrollbar-width);right:0}.it-editor-close-warning{align-items:center;background-color:var(--it-editor-color-bg-semi-transparent);border-radius:var(--it-radius);display:flex;justify-content:center;overflow:hidden;text-align:center;z-index:100}.it-editor-close-warning,.it-editor-drag{height:100%;left:0;position:absolute;top:0;width:100%}.it-editor-accept-reject-tooltip{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;line-height:1.5;margin:0;opacity:0;padding:0;position:absolute;transition:opacity .2s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor-accept-reject-tooltip .accept-icon,.it-editor-accept-reject-tooltip .reject-icon{align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:var(--it-editor-color-bg);border-radius:5px;border-width:0;cursor:pointer;display:inline-flex;padding:4px 8px;position:relative}.it-editor-accept-reject-tooltip .accept-icon.hover,.it-editor-accept-reject-tooltip .accept-icon:hover,.it-editor-accept-reject-tooltip .reject-icon.hover,.it-editor-accept-reject-tooltip .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon svg,.it-editor-accept-reject-tooltip .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor-accept-reject-tooltip .accept-icon svg use,.it-editor-accept-reject-tooltip .reject-icon svg use{fill:var(--it-color-primary)}.it-editor-accept-reject-tooltip .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor-accept-reject-tooltip .reject-icon:hover{border-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor-accept-reject-tooltip>i{font-size:16px;margin-left:3px}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}.it-editor.it-editor-onboarding{--it-editor-onboarding-list-bullet-size:20px;bottom:48px;font-size:14px;font-weight:500;height:auto;padding:20px;position:absolute;right:32px;width:315px}.it-editor.it-editor-onboarding .it-editor-bottom-toolbar:before{display:none}.it-editor.it-editor-onboarding>main>p{margin-bottom:10px;margin-top:20px;text-align:center}.it-editor.it-editor-onboarding>main>p>span{border:1px solid #ccc;border-radius:6px;font-weight:700;margin:0 2px;padding:3px 5px}.it-editor.it-editor-onboarding header{border-bottom:1px solid #ddd;display:flex;margin-bottom:12px;padding-bottom:12px}.it-editor.it-editor-onboarding header h3{font-size:1.15em;margin:0}.it-editor.it-editor-onboarding header p{margin:3px 0 0}.it-editor.it-editor-onboarding header div:first-child{min-width:calc(var(--it-editor-onboarding-list-bullet-size)*1.5)}.it-editor.it-editor-onboarding header div:first-child svg{height:24px;width:24px}.it-editor-onboarding-list{counter-reset:item;font-size:.95em;margin-left:0;padding-left:0}.it-editor-onboarding-list li{align-items:center;display:flex;margin-bottom:8px}.it-editor-onboarding-list li:before{align-items:center;background-color:#4b5058;border-radius:999rem;color:#f4f4f6;content:counter(item);counter-increment:item;display:inline-flex;font-size:.9em;font-weight:600;height:var(--it-editor-onboarding-list-bullet-size);justify-content:center;margin-right:calc(var(--it-editor-onboarding-list-bullet-size)*.5);min-width:var(--it-editor-onboarding-list-bullet-size)}</style><style>@import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap);</style><style>#it-editor{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;bottom:2rem;left:1rem;pointer-events:none;position:fixed;right:1rem;top:1rem;z-index:9999999}#it-editor>div{height:100%;pointer-events:none;width:100%}#it-editor>div>*{pointer-events:all}#it-editor *{box-sizing:border-box}#it-editor h1,#it-editor h2,#it-editor h3,#it-editor h4{font-weight:500}#it-editor .it-pointer-events-none{pointer-events:none}.fadeup-enter-active,.fadeup-leave-active{transform:translateY(0);transition:opacity .1s ease,transform .1s}.fadeup-enter-from,.fadeup-leave-to{opacity:0;transform:translateY(1rem)}.fade-enter-active,.fade-leave-active{transition:opacity .1s}.fade-enter-from,.fade-leave-to{opacity:0}</style></head><body data-new-gr-c-s-check-loaded="14.1271.0" data-gr-ext-installed=""><a name="TOP"></a><pre>ccderaser(1)                General Commands Manual               ccderaser(1)
+
+
+
+<b>NAME</b>
+       ccderaser - erase X-rays, defects and fiducial markers from images
+
+<b>SYNOPSIS</b>
+       ccderaser  [options]  input_file  [output_file]
+
+<b>DESCRIPTION</b>
+       This program replaces deviant pixels with interpolated values from sur-
+       rounding pixels.  It is designed to correct defects in electron micro-
+       scope images from CCD cameras.  It can use two algorithms to automati-
+       cally remove peaks in intensity caused by X-rays.  It can also take an
+       IMOD model file with specifications of regions to be replaced; in this
+       mode it can be used to erase gold fiducial markers.  With a model, the
+       program can replace a group of adjacent pixels with interpolated val-
+       ues, or all of the pixels along a line.  It can do this on only a spe-
+       cific image, or on all of the sections in the file. The program can
+       operate in trial mode, without making an output file, and it can output
+       a model file with points at the pixels to be replaced.
+
+   <b>Automatic</b> <b>X-Ray</b> <b>Removal</b>
+       The automatic removal of X-rays works by dividing the area of each
+       image into patches for scanning.  The mean and standard deviation (SD)
+       of the pixels in a patch are computed.  The patch is then scanned for
+       pixels that deviate from the mean by more than a criterion number of
+       SDs (the scan criterion, a relatively low number to keep from missing
+       peaks).  When such a pixel is found, the program searches neighboring
+       pixels to find a peak in intensity.  It then computes the mean and SD
+       of pixels in an annulus around the peak and makes sure that the peak
+       deviates from this local mean by more than a criterion number of SDs
+       (the peak criterion).  Neighboring pixels inside the inner radius of
+       the annulus are added to the list of pixels to be replaced if they
+       deviate by a lower criterion (the grow criterion).  The patch of pixels
+       is then replaced by fitting a polynomial to adjacent pixels and inter-
+       polating from the polynomial.  If the peak does not deviate suffi-
+       ciently from this local mean, but is stronger than the mean of the scan
+       area by the scan criterion plus 1, then the mean and SD is again com-
+       puted in a larger annulus.  If the peak deviates from this mean by a
+       number of SDs bigger than another criterion for extra-large peaks, a
+       patch of pixels is found, but it is replaced only if enough pixels dif-
+       fer from adjacent ones by large enough amounts (see the -big option
+       below).  The reason for these two stages is that the inner radius for
+       the first stage must be set safely smaller than the radius of gold
+       beads to avoid erasing part of the beads, whereas the second stage can
+       work with larger areas because it has more stringent criteria that
+       reject gold beads.
+
+       After the peaks are found in a scanning patch, the program next finds
+       the difference between each pixel and the mean of the eight adjacent
+       pixels.  The mean and SD of this difference is computed, then pixels
+       are sought that deviate from the mean by yet another criterion, the
+       difference criterion.  When such a pixel is found, neighboring pixels
+       are examined and added to the patch of pixels to replace if their dif-
+       ference exceeds the grow criterion.  If the number of pixels in the
+       patch does not exceed a specified maximum, replacement proceeds as
+       above; otherwise the patch is ignored.
+
+       Two methods are used because the first method is probably more reliable
+       for dealing with strong peaks that extend over several pixels, while
+       the second method is definitely better for finding small X-rays.
+
+       After all the patches have been scanned for a section, the program then
+       searches for single pixels with large interpixel differences at the
+       edges of the image, over the width set by the <b>-border</b> option.  A dif-
+       ference between a pixel and the mean of whatever adjacent pixels exist
+       is computed and its deviation from the overall mean interpixel differ-
+       ence is divided by the maximum SD of interpixel differences over all of
+       the scans.  When this value exceeds the difference criterion and the
+       interpixel difference is greater than that of its neighbors, the pixel
+       is replaced with the mean.  This procedure is iterated up to 4 times to
+       catch adjacent extreme pixels.
+
+       Tuning the removal of X-rays would primarily involve adjusting two of
+       the criteria.  The peak and difference criteria would be adjusted down
+       or up to increase or decrease the number of deviant pixels that are
+       found.  The grow criterion could also be adjusted down or up depending
+       on whether too few or too many pixels are included in a patch that is
+       replaced, but this step is not usually done in practice.  If there are
+       strong, large artifacts that are not being removed, the big difference
+       criterion for extra-large peaks should be lowered first, then if neces-
+       sary, the maximum radius and criterion strength for extra-large peaks
+       can be adjusted.
+
+   <b>Manual</b> <b>Removal</b> <b>of</b> <b>Defects</b> <b>and</b> <b>Markers</b>
+       For manual removal of defects, prepare an IMOD model file to specify
+       the points to be replaced.  There can be four kinds of objects:
+
+       1)  Pixel objects, in which there is a point inside of every pixel to
+       be replaced, and each contour corresponds to a separate patch of
+       points.
+
+       2) Boundary objects, in which each contour encloses a separate patch of
+       pixels to be replaced.
+
+       3) Line objects, in which each contour defines a horizontal or vertical
+       line of points to be replaced.
+
+       4) Circle objects, used to replace pixels in a circle around each
+       point.
+
+       Pixel, boundary, and line objects can be applied either on the section
+       where they are drawn, or on all sections.  For example, one might have
+       two different pixel objects, one for patches to be replaced on a single
+       section and one for patches to be replaced on all sections.  Note that
+       if you are working with a montage, "all sections" means "all pieces".
+       If you are modeling on images displayed as a montage with no overlap
+       between the pieces, you only need to draw a patch on one of the pieces
+       to have it erased on all the pieces at each view.
+
+       TO set up a pixel object, make the object type be scattered points, and
+       turn on drawing of circles, but leave the sphere radius at zero.  To
+       specify a patch of points, start a new contour and place a point inside
+       of EVERY pixel in the patch.  Each separate patch should be in a sepa-
+       rate contour.  If the correction is to be made on only a single sec-
+       tion, all of the points must lie on that section; but the points for a
+       patch to be corrected on all sections can be on more than one section,
+       because sometimes they are more discernable on particular sections.
+
+       A boundary object should be the default, closed contour type.  Draw a
+       contour around each patch of pixels to be erased.  A pixel will be
+       included in the erasure if its center is inside or on the boundary
+       line.  Contours can be arbitrarily large, and there is tapering of
+       intensities inside contours that are bigger than 1000 pixels.
+
+       A line object should be closed or open contour type.  To specify a line
+       of points, make a contour with two points, at the start and end of the
+       line to be replaced.  Lines must be horizontal or vertical.  Each pixel
+       will be replaced by the average of the two pixels on either side of the
+       line.  Put each line in a different contour.  Ajdacent lines will be
+       detected and erased together.
+
+       To set up a circle object, make the object type be scattered points,
+       set the sphere radius to an appropriate value, and check the option to
+       display spheres only on their center section.  If necessary, you can
+       give some of the points sizes that are different from the default by
+       opening a dialog with Edit-Point-Size.  A pixel will be replaced if its
+       center lies inside or on the circle.  For small radii, the fact that
+       the default sphere radius is constrained to an integer may be a prob-
+       lem; if so, use the -better option to enter a floating point default
+       radius for Ccderaser to use.  For using circle objects to remove gold
+       markers, -merge should also be used so that adjacent markers are
+       removed together, and -exclude will help keep dark pixels just outside
+       the circle from making the filled in region too dark.
+
+<b>OPTIONS</b>
+       Ccderaser uses the PIP package for input (see the manual page for
+       <a href="https://bio3d.colorado.edu/imod/doc/man/pip.html">pip</a>) and can take input interactively only for specifying manual
+       replacement with a model file, to maintain compatibility with old com-
+       mand files.  The following options can be specified either as command
+       line arguments (with the -) or one per line in a command file or param-
+       eter file (without the -).  Options can be abbreviated to unique let-
+       ters; the currently valid abbreviations for short names are shown in
+       parentheses.
+
+       <b>-input</b> <b>(-in)</b> OR <b>-InputFile</b>     <i>File</i> <i>name</i>
+              Input image file.  This may also be entered after all arguments
+              on the command line.
+
+       <b>-output</b> <b>(-outp)</b> OR <b>-OutputFile</b>      <i>File</i> <i>name</i>
+              Output image file.  This may also be entered after an input file
+              name on the command line.  If no output file is specified and
+              the program is not run in trial mode, pixels will be replaced in
+              the input file.  USE REPLACEMENT OPTION WITH CAUTION.
+
+       <b>-halffloat</b> <b>(-ha)</b> OR <b>-HalfFloatModeOutput</b>      <i>Integer</i>
+              Enter 2 to set the mode for output files to half-floats (16-bit
+              floats) unconditionally, or 1 to do so only when the input file
+              is floating point.
+
+       <b>-piece</b> <b>(-pi)</b> OR <b>-PieceListFile</b>      <i>File</i> <i>name</i>
+              File with piece coordinates for a montaged image file.  With
+              this entry, the program will assume that an input model was
+              drawn on a display of the montage with overlaps adjusted to be
+              either 0,0 or the amount indicated by the -overlaps option.  The
+              output model file with points found will also be formatted to
+              fit on such a display.
+
+       <b>-overlaps</b> <b>(-ov)</b> OR <b>-OverlapsForModel</b>     <i>Two</i> <i>integers</i>
+              Overlaps in X and Y at which a montaged image is being viewed
+              both when producing an input model and viewing the output model
+              of pixels being replaced.  The same values should be used as are
+              provided to the -o option of 3dmod.  The default is 0,0, which
+              represents no overlap between images.
+
+       <b>-find</b> <b>(-f)</b> OR <b>-FindPeaks</b>
+              Find and erase peaks a criterion # of SDs above or below back-
+              ground.  This option must be included for automatic removal of
+              X-rays.
+
+       <b>-peak</b> <b>(-pe)</b> OR <b>-PeakCriterion</b>       <i>Floating</i> <i>point</i>
+              Criterion # of SDs above local mean for erasing peak based on
+              intensity (the default is 10 SDs).
+
+       <b>-diff</b> <b>(-d)</b> OR <b>-DiffCriterion</b>   <i>Floating</i> <i>point</i>
+              Criterion # of SDs above mean pixel-to-pixel difference for
+              erasing a peak based on differences (the default is 10 SDs)
+
+       <b>-grow</b> <b>(-gr)</b> OR <b>-GrowCriterion</b>       <i>Floating</i> <i>point</i>
+              Criterion # of SDs above mean for adding points to peak (the
+              default is 4 SDs).
+
+       <b>-scan</b> <b>(-sc)</b> OR <b>-ScanCriterion</b>       <i>Floating</i> <i>point</i>
+              Criterion # of SDs of mean of scan area for picking peaks in
+              initial scan (the default is 3 SDs).
+
+       <b>-radius</b> <b>(-r)</b> OR <b>-MaximumRadius</b>      <i>Floating</i> <i>point</i>
+              Maximum radius of peak area to erase (the default is 2.1 pix-
+              els).
+
+       <b>-giant</b> <b>(-gi)</b> OR <b>-GiantCriterion</b>     <i>Floating</i> <i>point</i>
+              Criterion # of SDs above local mean for erasing extra-large peak
+              based on intensity (the default is 12 SDs).  Enter 0 to disable
+              this second stage of peak removal.
+
+       <b>-large</b> <b>(-la)</b> OR <b>-ExtraLargeRadius</b>   <i>Floating</i> <i>point</i>
+              Maximum radius of extra-large peak area to erase (the default is
+              8 pixels).
+
+       <b>-big</b> <b>(-bi)</b> OR <b>-BigDiffCriterion</b>     <i>Floating</i> <i>point</i>
+              An extra-large peak will be erased only if the value for the
+              maximum difference between adjacent pixels, averaged over the
+              most extreme one-fourth of the pixels in the patch, exceeds this
+              criterion, evaluated as the number of SDs above the mean abso-
+              lute difference between adjacent pixels in the scan area.  The
+              default is 19.  This high a value is needed to prevent gold era-
+              sure on low-noise data sets with small gold particles, and a
+              lower value may be needed to make extra-large peak removal use-
+              ful.
+
+       <b>-maxdiff</b> <b>(-ma)</b> OR <b>-MaxPixelsInDiffPatch</b>       <i>Integer</i>
+              Maximum number of pixels in a patch that exceeds the difference
+              criterion.  If the number of pixels that satisfy the criteria
+              exceed this limit, none of the pixels in the patch will be
+              replaced.  The default is 2.
+
+       <b>-outer</b> <b>(-oute)</b> OR <b>-OuterRadius</b>      <i>Floating</i> <i>point</i>
+              Outer radius of annulus around a peak in which to calculate
+              local mean and SD (the default is 4.1 pixels).  This option and
+              -width are mutually exclusive.
+
+       <b>-width</b> <b>(-w)</b> OR <b>-AnnulusWidth</b>   <i>Floating</i> <i>point</i>
+              Difference between outer and inner radius of the annulus around
+              a peak in which to calculate local mean and SD (the default is
+              2.0 pixels).  This option and -radius are mutually exclusive.
+
+       <b>-xyscan</b> <b>(-x)</b> OR <b>-XYScanSize</b>    <i>Integer</i>
+              Size of regions to compute mean and SD in for initial scans (the
+              default is 100 pixels).
+
+       <b>-edge</b> <b>(-ed)</b> OR <b>-EdgeExclusionWidth</b>       <i>Integer</i>
+              Width of area to exclude on all edges of image in pixels
+              (default 0).
+
+       <b>-iterations</b> <b>(-it)</b> OR <b>-SearchIterations</b>   <i>Integer</i>
+              Number of times to iterate search for peaks.  For a given sec-
+              tion, the iterations will be terminated after an iteration with
+              no changes.  Moreover, the program will keep track of which scan
+              regions have changes on each iteration and stop redoing regions
+              that have had no changes. The default is 3.
+
+       <b>-points</b> <b>(-po)</b> OR <b>-PointModel</b>   <i>File</i> <i>name</i>
+              Output model file with points replaced in peak search.  Each
+              patch of points will be in a separate contour.  Patches are
+              sorted into separate objects based on how much the peak exceeds
+              a criterion.
+
+       <b>-model</b> <b>(-mo)</b> OR <b>-ModelFile</b>     <i>File</i> <i>name</i>
+              Input model file specifying points or lines to be erased.
+
+       <b>-lines</b> <b>(-li)</b> OR <b>-LineObjects</b>   <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of objects that define lines to be replaced.  Ranges can be
+              entered, and / to specify all objects.
+
+       <b>-boundary</b> <b>(-bou)</b> OR <b>-BoundaryObjects</b>     <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of objects that contain boundary contours around pixels to
+              be replaced.  Ranges can be entered, and / to specify all
+              objects.  Boundary contours can be arbitrarily large.  When a
+              contour encloses more than 1000 pixels, a different procedure is
+              use to erase the points, and intensities are tapered down over 8
+              pixels on the inside of the patch from the value of the nearest
+              pixel just outside the patch to the mean of the surrounding pix-
+              els.
+
+       <b>-allsec</b> <b>(-a)</b> OR <b>-AllSectionObjects</b>       <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of objects with points to be replaced on all sections.
+              Ranges can be entered, and / to specify all objects.
+
+       <b>-circle</b> <b>(-c)</b> OR <b>-CircleObjects</b>      <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of objects that contain scattered points for replacing pix-
+              els within a circle around each point.  The sphere radius, which
+              can be an individual value for each point, is used to indicate
+              the size of circle to replace.  Ranges can be entered, and / to
+              specify all objects.
+
+       <b>-better</b> <b>(-be)</b> OR <b>-BetterRadius</b>      <i>Multiple</i> <i>floats</i>
+              For circle objects, this entry specifies a radius to use for
+              points without an individual point size instead of the object's
+              default sphere radius.  This entry is floating point and can be
+              used to overcome the limitations of having an integer default
+              sphere radius.  If there are multiple circle objects, enter one
+              value to apply to all objects or a value for each object.
+
+       <b>-expand</b> <b>(-exp)</b> OR <b>-ExpandCircleIterations</b>     <i>Integer</i>
+              Number of iterations of a procedure that expands the area erased
+              around the points of a circle object.  This procedure analyzes
+              the intensity of pixels adjacent to the patch being erased and
+              adds pixels in the appropriate tail of the intensity distribu-
+              tion to the patch.  Iterating simply repeats the procedure.  If
+              edges of gold particles are left because points are not very
+              well centered, try this option instead of just increasing the
+              radius, as it will tend to erase just the remaining points on
+              the edge instead of a whole ring of points.
+
+       <b>-merge</b> <b>(-me)</b> OR <b>-MergePatches</b>
+              Merge patches in the model if they touch each other, as long as
+              the resulting patch is still within the maximum radius.  Patches
+              from objects with points to be replaced on all sections are
+              ignored.  This option should be used if an output model from
+              automatic peak finding is modified and used as an input model.
+
+       <b>-skip</b> <b>(-sk)</b> OR <b>-SkipTurnedOffPoints</b>
+              Skip points in the model with contour values below threshold if
+              they are not visible in 3dmod, namely if "Turn off below thresh-
+              old" is set in the Bead Fixer, or "Turn off Low" is set in the
+              Values panel of the Model View Object Edit dialog.
+
+       <b>-border</b> <b>(-bor)</b> OR <b>-BorderSize</b>       <i>Integer</i>
+              Size of border around points in patch, which contains the points
+              which will be fit to (the default is 2 pixels)
+
+       <b>-order</b> <b>(-or)</b> OR <b>-PolynomialOrder</b>    <i>Integer</i>
+              Order of polynomial to fit to border points.  The default is 2,
+              which includes terms in x, y, x**2, y**2 and x*y.  The order can
+              be between -1 and 3, where 0 will simply replace the pixels with
+              the mean of the border points instead of fitting to them, and -1
+              will fill the area with noise matching the standard deviation in
+              surrounding pixels.
+
+       <b>-exclude</b> <b>(-exc)</b> OR <b>-ExcludeAdjacent</b>
+              Exclude points adjacent to patch points from the fit; in other
+              words, compute the polynomial fit to points that do not touch
+              the ones being replaced.
+
+       <b>-trial</b> <b>(-t)</b> OR <b>-TrialMode</b>
+              Analyze for replacement points without writing output image
+              file.
+
+       <b>-verbose</b> <b>(-v)</b> OR <b>-Verbose</b>
+              Print details on patches being replaced
+
+       <b>-PID</b> <b>(-PI)</b> OR <b>-ProcessID</b>
+              Output process ID
+
+       <b>-param</b> <b>(-pa)</b> OR <b>-ParameterFile</b>      <i>Parameter</i> <i>file</i>
+              Read parameter entries as keyword-value pairs from a parameter
+              file.
+
+       <b>-help</b> <b>(-he)</b> OR <b>-usage</b>
+              Print help output
+
+       <b>-StandardInput</b>
+              Read parameter entries from standard input.
+
+<b>INTERACTIVE</b> <b>INPUT</b>
+       If the program is started with no command line arguments, it reverts to
+       interactive input with the following entries:
+
+       Input image file
+
+       Output image file, or &lt;Return&gt; to place modified sections back into the
+       input file.  USE REPLACEMENT OPTION WITH CAUTION
+
+       Model file
+
+       A list of objects which specify points or lines to be replaced on all
+       sections, or / if all objects do so, or Return if none do.  Ranges may
+       be entered.
+
+       A list of objects which specify lines to be replaced, or / if all
+       objects do so, or Return if none do.  Ranges may be entered.
+
+       Size of the border around the points in a patch, which contains the
+       points which will be fit to (/ for default of 2 pixels)
+
+       Order of polynomial (/ for default of 2, which includes terms in x, y,
+       x**2, y**2 and x*y)
+
+       0 to exclude or 1 to include points adjacent to the points being
+       replaced in the polynomial fit (/ for default of 1)
+
+<b>HISTORY</b>
+       Written by David Mastronarde  11/10/98
+       Automatic X-ray removal and pioneer use of PIP input, 6/9/03
+
+<b>BUGS</b>
+       Email bug reports to mast at colorado dot edu.
+
+
+
+IMOD                                 5.2.0                        ccderaser(1)
+</pre>
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;limited&quot;,&quot;isActive&quot;:false,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

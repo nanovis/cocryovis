@@ -1,0 +1,1159 @@
+
+<!-- saved from url=(0054)https://bio3d.colorado.edu/imod/doc/man/tiltalign.html -->
+<html data-lt-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>tiltalign</title><style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><style>.resizable-component[data-v-761d614a]{position:absolute}.resizable-component>.resizable-r[data-v-761d614a]{cursor:e-resize;height:100%;top:0;width:6px;z-index:90}.resizable-component>.resizable-r[data-v-761d614a],.resizable-component>.resizable-rb[data-v-761d614a]{display:block;position:absolute;right:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rb[data-v-761d614a]{bottom:-6px;cursor:se-resize;height:12px;width:12px;z-index:91}.resizable-component>.resizable-b[data-v-761d614a]{cursor:s-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-b[data-v-761d614a],.resizable-component>.resizable-lb[data-v-761d614a]{bottom:-6px;display:block;height:12px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-lb[data-v-761d614a]{cursor:sw-resize;left:-6px;width:12px;z-index:91}.resizable-component>.resizable-l[data-v-761d614a]{cursor:w-resize;height:100%;top:0;z-index:90}.resizable-component>.resizable-l[data-v-761d614a],.resizable-component>.resizable-lt[data-v-761d614a]{display:block;left:-6px;position:absolute;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none;width:12px}.resizable-component>.resizable-lt[data-v-761d614a]{cursor:nw-resize;height:12px;top:-6px;z-index:91}.resizable-component>.resizable-t[data-v-761d614a]{cursor:n-resize;left:0;width:100%;z-index:90}.resizable-component>.resizable-rt[data-v-761d614a],.resizable-component>.resizable-t[data-v-761d614a]{display:block;height:12px;position:absolute;top:-6px;touch-action:none;-ms-user-select:none;user-select:none;-moz-user-select:none;-webkit-user-select:none}.resizable-component>.resizable-rt[data-v-761d614a]{cursor:ne-resize;right:-6px;width:12px;z-index:91}</style><style>.it-language-selector{--it-lang-selector-bg:#c7ccd1;--it-lang-selector-btn-rad:15px;--it-lang-selector-cnt-rad:16px;border-radius:999rem;display:flex;font-size:14px;height:32px;min-width:200px;position:relative}.it-language-selector>main{margin-left:4px}.it-language-selector>.it-btn,.it-language-selector>section .it-btn{height:32px}.it-language-selector>section{flex-grow:1;padding:0 1px;position:relative;width:50%}.it-language-selector>section .it-btn{font-size:13px;margin:0!important;width:100%}.it-language-selector>section .it-btn:last-child{border-radius:var(--it-lang-selector-btn-rad)}.it-language-selector>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-selector>section>div[role=dialog]{background:var(--it-lang-selector-bg);display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-selector>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-selector[data-direction=down] .it-btn{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}.it-language-selector[data-direction=down]>section>div[role=dialog]{border-radius:0 0 var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad);top:100%}.it-language-selector[data-direction=down]>section>div[role=dialog]>.it-btn:last-child,.it-language-selector[data-direction=up] .it-btn{border-radius:0 0 var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad)}.it-language-selector[data-direction=up]>section>div[role=dialog]{border-radius:var(--it-lang-selector-cnt-rad) var(--it-lang-selector-cnt-rad) 0 0;bottom:100%}.it-language-selector[data-direction=up]>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-selector-btn-rad) var(--it-lang-selector-btn-rad) 0 0}</style><style>.it-language-settings{--it-lang-settings-bg:#c7ccd1;--it-lang-settings-btn-rad:15px;--it-lang-settings-cnt-rad:16px;border-radius:999rem;display:flex;font-size:13px;height:32px;position:relative}.it-language-settings>main{margin-left:4px}.it-language-settings span.it-btn{pointer-events:none}.it-language-settings>.it-btn,.it-language-settings>section .it-btn{height:32px}.it-language-settings>section{flex-grow:1;margin-left:4px;margin-top:2px;padding:0 1px;position:relative}.it-language-settings>section[aria-current=false]{border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0}.it-language-settings>section:has(label){background-color:var(--it-lang-settings-bg)}.it-language-settings>section>label{background:var(--it-lang-settings-bg);border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);color:inherit;font-size:8px;font-weight:600;left:0;letter-spacing:.01em;line-height:1.2;margin:0;padding:3px 5px 2px;position:absolute;text-align:center;text-transform:uppercase;top:100%;width:100%}.it-language-settings>section>label+.it-btn{padding:8px 24px 8px 12px}.it-language-settings>section .it-btn{border-radius:0 0 var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad);box-shadow:none;font-size:13px;margin:0!important;width:100%}.it-language-settings>section .it-btn:last-child{border-radius:var(--it-lang-settings-btn-rad)}.it-language-settings>section .it-btn>svg:last-child:not(:only-child){--it-btn-icon-size:16px;position:absolute;right:5px;top:50%;transform:translateY(-50%)}.it-language-settings>section>div[role=dialog]{background:var(--it-lang-settings-bg);border-radius:var(--it-lang-settings-cnt-rad) var(--it-lang-settings-cnt-rad) 0 0;bottom:100%;display:flex;flex-direction:column;left:0;padding:1px 1px 0;position:absolute;width:100%;z-index:1000}.it-language-settings>section>div[role=dialog]>.it-btn{border-radius:0}.it-language-settings>section>div[role=dialog]>.it-btn:first-child{border-radius:var(--it-lang-settings-btn-rad) var(--it-lang-settings-btn-rad) 0 0}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}:root{--it-editor-width:clamp(28rem,30vw,36rem);--it-editor-height:clamp(14rem,35vh,24rem);--it-editor-padding-top:calc(0.5rem + var(--it-top-toolbar-height));--it-editor-padding-bottom:calc(0.5rem + var(--it-bottom-toolbar-height)*0.5);--it-editor-padding-left:clamp(24px,3%,100px);--it-editor-padding-right:var(--it-editor-padding-left);--it-editor-msg-bottom-padding:10px;--it-editor-color-bg:var(--it-color-white);--it-editor-color-bg-semi-transparent:hsla(0,0%,100%,.9);--it-editor-color-scrollbar-bg:#ddd;--it-editor-added-bg:rgba(92,185,69,.1);--it-editor-added:#5cb945;--it-editor-added-selection:rgba(92,185,69,.5);--it-editor-removed:#cc3434}.it-editor,.it-editor-wrapper{display:flex}.it-editor{background-color:var(--it-editor-color-bg);border:2px solid var(--it-color-primary);border-radius:var(--it-radius);box-shadow:var(--it-shadow-lg);color:var(--it-color-text);flex-direction:column;font-size:var(--it-font-size-base);height:100%;margin-left:auto;margin-top:auto;outline:none;position:relative;transition:width .15s,height .15s,border-color .25s;width:100%}.it-editor * ::-moz-selection{background-color:var(--it-selection-color)}.it-editor * ::selection{background-color:var(--it-selection-color)}[dir=rtl] .it-editor{margin-left:0;margin-right:auto}.it-editor .it-reqs{display:flex;flex-wrap:wrap;font-size:12px;justify-content:space-between;justify-content:flex-end;margin-right:8px;text-align:right}[dir=rtl] .it-editor .it-reqs{margin-left:8px;margin-right:0}.it-editor .it-reqs>a{margin-left:5px}[dir=rtl] .it-editor .it-reqs>a{margin-left:0;margin-right:5px}.it-editor.it-editor-loading{height:var(--it-editor-height,calc(90px + var(--it-editor-msg-bottom-padding)));width:320px}.it-editor.it-editor-error{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:320px}.it-editor.it-editor-error.it-editor-error-lg{height:-webkit-fit-content;height:-moz-fit-content;height:fit-content;width:350px}.it-editor .it-limit-notice{font-size:13px;padding:0}.it-editor .it-limit-notice h3{font-size:15px;font-weight:500}.it-editor .it-limit-notice>div{margin-top:12px}.it-editor .it-limit-notice svg{height:auto;margin-bottom:12px;max-width:75px}.it-editor ::-webkit-scrollbar{height:var(--it-scrollbar-width);width:var(--it-scrollbar-width);z-index:99999999}.it-editor ::-webkit-scrollbar-track,.it-editor :hover::-webkit-scrollbar-track{background:var(--it-editor-color-scrollbar-bg)}.it-editor ::-webkit-scrollbar-thumb{background:var(--it-color-primary)}.it-editor ::-webkit-scrollbar-thumb:active,.it-editor ::-webkit-scrollbar-thumb:hover{background:var(--it-color-primary-darker);cursor:-webkit-grab;cursor:grab}.it-editor .noTextDiff span mark{display:none!important}.it-editor .noTextDiff span.api-removed{display:none}.it-editor .noTextDiff span.api-added{background-color:transparent;color:inherit}.it-editor *{font-family:var(--it-font-primary)!important}.it-editor pre{border:0;box-sizing:border-box;flex:1;font-family:inherit!important;font-size:16px;line-height:1.7;margin:0;max-height:100%;outline:none;overflow-x:hidden;overflow-y:scroll;padding:var(--it-editor-padding-top) var(--it-editor-padding-right) var(--it-editor-padding-bottom) var(--it-editor-padding-left);white-space:pre-wrap;width:100%}.it-editor pre span.original>mark{display:none}.it-editor pre span.api-added,.it-editor pre span.api-removed{position:relative}.it-editor pre span.api-added>*,.it-editor pre span.api-removed>*{display:inline-block;position:relative}.it-editor pre span.api-added>*>mark,.it-editor pre span.api-removed>*>mark{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;bottom:100%;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;left:50%;line-height:1.5;margin:0;padding:0;position:absolute;transform:translate(-50%);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .reject-icon{align-items:center;background:var(--it-editor-color-bg);border-radius:4px;display:inline-flex;padding:4px 8px;position:relative}.it-editor pre span.api-added>*>mark .accept-icon.hover,.it-editor pre span.api-added>*>mark .accept-icon:hover,.it-editor pre span.api-added>*>mark .reject-icon.hover,.it-editor pre span.api-added>*>mark .reject-icon:hover,.it-editor pre span.api-removed>*>mark .accept-icon.hover,.it-editor pre span.api-removed>*>mark .accept-icon:hover,.it-editor pre span.api-removed>*>mark .reject-icon.hover,.it-editor pre span.api-removed>*>mark .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor pre span.api-added>*>mark .accept-icon svg,.it-editor pre span.api-added>*>mark .reject-icon svg,.it-editor pre span.api-removed>*>mark .accept-icon svg,.it-editor pre span.api-removed>*>mark .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor pre span.api-added>*>mark .accept-icon svg use,.it-editor pre span.api-added>*>mark .reject-icon svg use,.it-editor pre span.api-removed>*>mark .accept-icon svg use,.it-editor pre span.api-removed>*>mark .reject-icon svg use{fill:var(--it-color-primary)}.it-editor pre span.api-added>*>mark .reject-icon,.it-editor pre span.api-removed>*>mark .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor pre span.api-added>*>mark .accept-icon,.it-editor pre span.api-removed>*>mark .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor pre span.api-added>*>mark>i,.it-editor pre span.api-removed>*>mark>i{font-size:16px;margin-left:3px}.it-editor pre span.api-added>*>mark:after,.it-editor pre span.api-removed>*>mark:after{border:4px solid transparent;border-top:4px solid var(--it-color-contrast-medium);content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-editor pre span.api-added.active,.it-editor pre span.api-removed.active{background-color:var(--it-color-bg-change-highlight)}.it-editor pre span.api-added{background-color:var(--it-editor-added-bg);border-bottom:2px solid var(--it-editor-added);position:relative}.it-editor pre span.api-added::-moz-selection,.it-editor pre span.api-added ::-moz-selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-added::selection,.it-editor pre span.api-added ::selection{background-color:var(--it-editor-added-selection)}.it-editor pre span.api-removed{position:relative;text-decoration:line-through}.it-editor pre span.api-removed:before{content:"";pointer-events:none}.it-editor pre span.api-removed.selected>span{background-color:var(--it-selection-color)}.it-editor pre span.api-removed:not(.it-es)+span:not(.it-ss){margin-left:4px}.it-editor pre span.api-removed>span:after{color:var(--it-editor-removed);content:attr(data-removedtext);pointer-events:none;text-decoration:line-through}.it-editor pre span.api-added:not(.it-es)+span.api-removed:not(.it-noss),.it-editor pre span.original:not(.it-es)+span.api-removed:not(.it-noss){margin-left:4px}.it-editor .it-editor-top-toolbar{background-image:linear-gradient(to bottom,var(--it-editor-color-bg) 50%,transparent 100%);border-top-left-radius:var(--it-radius);border-top-right-radius:var(--it-radius);height:var(--it-top-toolbar-height);padding:10px 16px 5px;top:0;z-index:99}.it-editor .it-editor-bottom-toolbar{bottom:0;height:var(--it-bottom-toolbar-height);padding:10px 16px;transform:translateY(50%)}.it-editor .it-editor-bottom-toolbar,.it-editor .it-editor-bottom-toolbar:before{border-bottom-left-radius:var(--it-radius);border-bottom-right-radius:var(--it-radius)}.it-editor .it-editor-bottom-toolbar:before{background-image:linear-gradient(to top,var(--it-editor-color-bg) 15%,transparent 100%);content:"";height:80%;left:0;position:absolute;top:10%;transform:translateY(-50%);width:100%}.it-editor .it-editor-error-msg,.it-editor .it-editor-loader{align-items:center;display:flex;font-size:14px;height:100%;justify-content:center;padding:1.2rem;pointer-events:none;position:relative;text-align:center;width:100%;z-index:100}.it-editor .it-editor-error-msg>svg,.it-editor .it-editor-loader>svg{margin-right:10px}[dir=rtl] .it-editor .it-editor-error-msg>svg,[dir=rtl] .it-editor .it-editor-loader>svg{margin-left:10px;margin-right:0}.it-editor .it-editor-error-msg{padding:1.2rem 1.2rem .6rem}.it-editor .it-editor-error-msg:last-child{padding-bottom:calc(1.2rem + var(--it-editor-msg-bottom-padding))}.it-pointer-events-all{pointer-events:all!important}.it-editor-toolbar{display:flex;justify-content:space-between;left:0;position:absolute;right:var(--it-scrollbar-width);z-index:100}[dir=rtl] .it-editor-toolbar{left:var(--it-scrollbar-width);right:0}.it-editor-close-warning{align-items:center;background-color:var(--it-editor-color-bg-semi-transparent);border-radius:var(--it-radius);display:flex;justify-content:center;overflow:hidden;text-align:center;z-index:100}.it-editor-close-warning,.it-editor-drag{height:100%;left:0;position:absolute;top:0;width:100%}.it-editor-accept-reject-tooltip{align-items:center;border:2px solid var(--it-color-contrast-low);border-radius:5px;box-shadow:var(--it-shadow-md);cursor:pointer;display:flex;line-height:1.5;margin:0;opacity:0;padding:0;position:absolute;transition:opacity .2s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;white-space:nowrap;z-index:9999}.it-editor-accept-reject-tooltip .accept-icon,.it-editor-accept-reject-tooltip .reject-icon{align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:var(--it-editor-color-bg);border-radius:5px;border-width:0;cursor:pointer;display:inline-flex;padding:4px 8px;position:relative}.it-editor-accept-reject-tooltip .accept-icon.hover,.it-editor-accept-reject-tooltip .accept-icon:hover,.it-editor-accept-reject-tooltip .reject-icon.hover,.it-editor-accept-reject-tooltip .reject-icon:hover{background-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon svg,.it-editor-accept-reject-tooltip .reject-icon svg{height:22px;max-width:none;pointer-events:none;width:22px}.it-editor-accept-reject-tooltip .accept-icon svg use,.it-editor-accept-reject-tooltip .reject-icon svg use{fill:var(--it-color-primary)}.it-editor-accept-reject-tooltip .reject-icon{border-bottom-left-radius:0;border-left:1px solid var(--it-color-contrast-lower);border-top-left-radius:0}.it-editor-accept-reject-tooltip .reject-icon:hover{border-color:var(--it-color-contrast-lower)}.it-editor-accept-reject-tooltip .accept-icon{border-bottom-right-radius:0;border-top-right-radius:0}.it-editor-accept-reject-tooltip>i{font-size:16px;margin-left:3px}</style><style>:root{--it-color-primary:#3d81d1;--it-color-primary-darker:#316bae;--it-color-white:#fff;--it-color-gray-200:#eff2f7;--it-color-gray-800:#3c4858;--it-color-green:#5cb945;--it-color-red:#e2757a;--it-color-text:#2e3238;--it-color-contrast-lower:var(--it-color-gray-200);--it-color-contrast-low:#bec1c5;--it-color-contrast-medium:var(--it-color-gray-800);--it-selection-color:#accef7;--it-color-bg-change-highlight:#3d81d126;--it-radius:.3em;--it-radius-md:var(--it-radius,0.25em);--it-font-primary:"Inter",sans-serif;--it-font-size-base:15px;--it-top-toolbar-height:44px;--it-bottom-toolbar-height:50px;--it-space-unit:17px;--it-space-xxxxs:calc(var(--it-space-unit)*0.125);--it-space-xxxs:calc(var(--it-space-unit)*0.25);--it-space-xxs:calc(var(--it-space-unit)*0.375);--it-space-xs:calc(var(--it-space-unit)*0.5);--it-space-sm:calc(var(--it-space-unit)*0.75);--it-space-md:calc(var(--it-space-unit)*1.25);--it-space-lg:calc(var(--it-space-unit)*2);--it-space-xl:calc(var(--it-space-unit)*3.25);--it-space-xxl:calc(var(--it-space-unit)*5.25);--it-space-xxxl:calc(var(--it-space-unit)*8.5);--it-space-xxxxl:calc(var(--it-space-unit)*13.75);--it-scrollbar-width:6px;--it-shadow-xs:0 0.1px 0.3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12);--it-shadow-sm:0 0.3px 0.4px rgba(0,0,0,.025),0 0.9px 1.5px rgba(0,0,0,.05),0 3.5px 6px rgba(0,0,0,.1);--it-shadow-md:0 0.9px 1.5px rgba(0,0,0,.03),0 3.1px 5.5px rgba(0,0,0,.08),0 14px 25px rgba(0,0,0,.12);--it-shadow-lg:0 1.2px 1.9px -1px rgba(0,0,0,.014),0 3.3px 5.3px -1px rgba(0,0,0,.038),0 8.5px 12.7px -1px rgba(0,0,0,.085),0 30px 42px -1px rgba(0,0,0,.15);--it-shadow-xl:0 1.5px 2.1px -6px rgba(0,0,0,.012),0 3.6px 5.2px -6px rgba(0,0,0,.035),0 7.3px 10.6px -6px rgba(0,0,0,.07),0 16.2px 21.9px -6px rgba(0,0,0,.117),0 46px 60px -6px rgba(0,0,0,.2)}.it-btn,a.it-btn{--it-btn-padding-x:var(--it-space-sm);--it-btn-padding-y:var(--it-space-xxs);--it-btn-radius:999em;--it-btn-icon-size:18px;--it-btn-color:#fff;-webkit-font-smoothing:antialiased;align-items:center;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:var(--it-color-primary);background-image:none;border:0;border:2px solid var(--it-color-primary);border-radius:0;border-radius:var(--it-btn-radius);box-shadow:none;color:#fff;cursor:pointer;display:inline-flex;font-size:14px;font-weight:400;font-weight:500;height:auto;justify-content:center;line-height:normal;margin:0;padding:var(--it-btn-padding-y) var(--it-btn-padding-x);position:relative;text-align:center;text-decoration:none;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .1s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;vertical-align:middle;white-space:nowrap;width:auto}.it-btn:disabled,a.it-btn:disabled{opacity:.6;pointer-events:none}.it-btn.it-btn-outline,a.it-btn.it-btn-outline{background-color:transparent;color:var(--it-color-primary)}.it-btn:active,a.it-btn:active{transform:scale(.95)}.it-btn.hover,.it-btn.it-btn-outline.hover,.it-btn.it-btn-outline:active,.it-btn.it-btn-outline:hover,.it-btn:active,.it-btn:hover,a.it-btn.hover,a.it-btn.it-btn-outline.hover,a.it-btn.it-btn-outline:active,a.it-btn.it-btn-outline:hover,a.it-btn:active,a.it-btn:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:#fff;text-decoration:none}.it-btn>mark,a.it-btn>mark{align-items:center;background:#273444!important;border-radius:2px;bottom:100%;color:var(--it-btn-color);cursor:pointer;font-size:13px;font-style:normal;font-weight:400;left:50%;line-height:1.5;margin:0;padding:3px 8px;pointer-events:none;position:absolute;transform:translate(-50%);transition:visibility 0s;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;visibility:hidden;z-index:9999}.it-btn>mark:after,a.it-btn>mark:after{border:4px solid rgba(136,183,213,0);border-top-color:#273444;content:"";height:0;left:50%;margin-left:-4px;pointer-events:none;position:absolute;top:100%;width:0}.it-btn.hover>mark,.it-btn:active>mark,.it-btn:hover>mark,a.it-btn.hover>mark,a.it-btn:active>mark,a.it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn.it-btn-wide,a.it-btn.it-btn-wide{padding-left:calc(var(--it-btn-padding-x)*2);padding-right:calc(var(--it-btn-padding-x)*2)}.it-btn-group .it-btn{background-color:#fff;border-color:rgba(0,0,0,.12);border-width:1px;box-shadow:var(--it-shadow-sm);color:var(--it-color-contrast-medium);font-size:16px;height:36px;padding:8px}.it-btn-group .it-btn.it-btn-sm{font-size:13px;height:30px;padding:6px 10px}.it-btn-group .it-btn.it-btn-primary{background-color:var(--it-color-primary);border-color:var(--it-color-primary);color:var(--it-color-white);font-weight:500;padding:8px 16px}.it-btn-group .it-btn.it-btn-primary.hover,.it-btn-group .it-btn.it-btn-primary:active,.it-btn-group .it-btn.it-btn-primary:hover{background-color:var(--it-color-primary-darker);border-color:var(--it-color-primary-darker);color:var(--it-color-white)}.it-btn-group .it-btn:not(:first-child){margin-left:5px}[dir=rtl] .it-btn-group .it-btn:not(:first-child){margin-left:0;margin-right:5px}.it-btn-group .it-btn.hover,.it-btn-group .it-btn:active,.it-btn-group .it-btn:hover{background-color:#dee3ef;color:#2e72c2}.it-btn-group .it-btn.hover>svg use,.it-btn-group .it-btn:active>svg use,.it-btn-group .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline{align-items:center;display:inline-flex;position:relative;vertical-align:middle}.it-btn-group-inline .it-btn{background-color:rgba(229,233,242,0);border-color:rgba(229,233,242,.5);border-width:0;display:inline-flex;padding:6px}.it-btn-group-inline .it-btn.hover,.it-btn-group-inline .it-btn:active,.it-btn-group-inline .it-btn:hover{background-color:rgba(222,227,239,.5);border-color:rgba(222,227,239,.5)}.it-btn-group-inline .it-btn.hover>mark,.it-btn-group-inline .it-btn:active>mark,.it-btn-group-inline .it-btn:hover>mark{transition-delay:1s;visibility:visible}.it-btn-group-inline .it-btn.hover>svg use,.it-btn-group-inline .it-btn:active>svg use,.it-btn-group-inline .it-btn:hover>svg use{fill:#2e72c2}.it-btn-group-inline .it-btn:not(:first-child){margin-left:2px}[dir=rtl] .it-btn-group-inline .it-btn:not(:first-child){margin-left:0;margin-right:2px}.it-btn-group-inline .it-btn>svg,.it-btn-group .it-btn>svg{height:var(--it-btn-icon-size);max-width:none;width:var(--it-btn-icon-size)}.it-btn-group-inline .it-btn>svg:first-child+span,.it-btn-group .it-btn>svg:first-child+span{margin-left:4px}[dir=rtl] .it-btn-group-inline .it-btn>svg:first-child+span,[dir=rtl] .it-btn-group .it-btn>svg:first-child+span{margin-left:0;margin-right:4px}.it-btn-group-inline .it-btn>svg use,.it-btn-group .it-btn>svg use{fill:var(--it-color-contrast-medium)}.it-margin-bottom-base{margin-bottom:var(--it-space-unit)}.it-margin-bottom-sm{margin-bottom:var(--it-space-sm)}.it-margin-bottom-lg,.it-margin-bottom-md{margin-bottom:var(--it-space-md)}.it-margin-top-base{margin-top:var(--it-space-unit)}.it-margin-top-sm{margin-top:var(--it-space-sm)}.it-margin-top-lg,.it-margin-top-md{margin-top:var(--it-space-md)}.it-text-link{color:var(--it-color-primary);cursor:pointer;font-weight:600;text-decoration:none;transition:color .2s}.it-text-link:active,.it-text-link:hover{color:var(--it-color-primary-darker)}.it-editor.it-editor-onboarding{--it-editor-onboarding-list-bullet-size:20px;bottom:48px;font-size:14px;font-weight:500;height:auto;padding:20px;position:absolute;right:32px;width:315px}.it-editor.it-editor-onboarding .it-editor-bottom-toolbar:before{display:none}.it-editor.it-editor-onboarding>main>p{margin-bottom:10px;margin-top:20px;text-align:center}.it-editor.it-editor-onboarding>main>p>span{border:1px solid #ccc;border-radius:6px;font-weight:700;margin:0 2px;padding:3px 5px}.it-editor.it-editor-onboarding header{border-bottom:1px solid #ddd;display:flex;margin-bottom:12px;padding-bottom:12px}.it-editor.it-editor-onboarding header h3{font-size:1.15em;margin:0}.it-editor.it-editor-onboarding header p{margin:3px 0 0}.it-editor.it-editor-onboarding header div:first-child{min-width:calc(var(--it-editor-onboarding-list-bullet-size)*1.5)}.it-editor.it-editor-onboarding header div:first-child svg{height:24px;width:24px}.it-editor-onboarding-list{counter-reset:item;font-size:.95em;margin-left:0;padding-left:0}.it-editor-onboarding-list li{align-items:center;display:flex;margin-bottom:8px}.it-editor-onboarding-list li:before{align-items:center;background-color:#4b5058;border-radius:999rem;color:#f4f4f6;content:counter(item);counter-increment:item;display:inline-flex;font-size:.9em;font-weight:600;height:var(--it-editor-onboarding-list-bullet-size);justify-content:center;margin-right:calc(var(--it-editor-onboarding-list-bullet-size)*.5);min-width:var(--it-editor-onboarding-list-bullet-size)}</style><style>@import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap);</style><style>#it-editor{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;bottom:2rem;left:1rem;pointer-events:none;position:fixed;right:1rem;top:1rem;z-index:9999999}#it-editor>div{height:100%;pointer-events:none;width:100%}#it-editor>div>*{pointer-events:all}#it-editor *{box-sizing:border-box}#it-editor h1,#it-editor h2,#it-editor h3,#it-editor h4{font-weight:500}#it-editor .it-pointer-events-none{pointer-events:none}.fadeup-enter-active,.fadeup-leave-active{transform:translateY(0);transition:opacity .1s ease,transform .1s}.fadeup-enter-from,.fadeup-leave-to{opacity:0;transform:translateY(1rem)}.fade-enter-active,.fade-leave-active{transition:opacity .1s}.fade-enter-from,.fade-leave-to{opacity:0}</style></head><body data-new-gr-c-s-check-loaded="14.1271.0" data-gr-ext-installed=""><a name="TOP"></a><pre>tiltalign(1)                General Commands Manual               tiltalign(1)
+
+
+
+<b>NAME</b>
+       tiltalign - Solve for alignment of tilted views using fiducials
+
+<b>SYNOPSIS</b>
+       tiltalign
+
+<b>DESCRIPTION</b>
+       This program will solve for the displacements, rotations, tilts, and
+       magnification differences relating a set of tilted views of an object.
+       It uses a set of fiducial points that have been identified in a series
+       of views. These input data are read from a model in which each fiducial
+       point is a separate contour.
+
+       This program has several notable features:
+
+       1) Any given fiducial point need not be present in every view. Thus,
+       one can track each fiducial point only through the set of views in
+       which it can be reliably identified, and one can even skip views in the
+       middle of that set.
+
+       2) The program can solve for distortion (stretching) in the plane of
+       the section.  It does so with two additional variables: "dmag", an
+       increment to the magnification along the X axis; and "skew", the dif-
+       ference in rotation between the X and Y axis.  If there is stretch in
+       the plane of the sections, then in general the aligned images will
+       backproject correctly only at one plane in Z.  This solution thus
+       includes a set of adjustment factors that can be passed to the Tilt
+       program to correct for this effect.
+
+       3) It is possible to constrain several views to have the same unknown
+       value of rotation, tilt angle, magnification, compression, or distor-
+       tion.  This can reduce the number of unknowns and can give more accu-
+       rate overall solutions.
+
+       4) If the fiducial points are supposed to lie in one or two planes,
+       then after the minimization procedure is complete, the program can ana-
+       lyze the solved point positions and determine the slope of this plane.
+       It uses this slope to estimate how to adjust tilt angles so as to make
+       the planes be horizontal in a reconstruction.
+
+       5) The program can solve for a series of local alignments using subsets
+       of the fiducial points.  This can be useful when aligning a large area
+       which does not behave uniformly during the tilt series.  The local
+       alignments can then be used to obtain a single large reconstruction
+       whose resolution is as good as would be attained in a smaller volume.
+
+       6) The program can use a robust fitting method to give different
+       weights to different modeled points based on their individual fitting
+       errors.  Points with the most extreme errors are eliminated from the
+       fit, and ones with high but less extreme errors are down-weighted.
+       This fitting provides a substitute for fixing many modeled point posi-
+       tions based on their errors.
+
+       7) The program includes an option for cross-validation, which measures
+       how well a solution can predict the positions of points that are left
+       out of the fitting.  The method is useful for optimizing the selection
+       of parameters to be fit and avoiding overfitting with too many parame-
+       ters.
+
+   <b>Mapping</b> <b>of</b> <b>Variables</b>
+       The constraining of different views to have related values of some
+       unknown variable is called "mapping"; it works differently for tilt
+       than for other variables.  For variables other than tilt, if two or
+       more views are mapped to the same variable, then all of those views
+       will have the same value.  For tilt angle, if two views are mapped to
+       the same tilt variable, then the DIFFERENCE between their tilt angles
+       is constrained to be a constant equal to the difference between their
+       initial tilt angles.  So, if they have the same initial tilt angle,
+       they will always have the same tilt; and if their initial tilt angles
+       differ by 10, their tilt angles will always differ by 10.
+
+       Mapping can be set up relatively easily with "automapping".  When you
+       select automapping, the program will map views in a group of adjacent
+       views to the same variable, and it will determine a set of groups of a
+       specified size.  You control the mapping by specifying the default size
+       of the groups.  In addition, if some views need to be grouped differ-
+       ently, you can specify one or more ranges of views to have different
+       sized groups.
+
+       With automapping, the program can also set up variables that change
+       linearly from one group to the next, rather than being constrained to
+       the same value for all views in a group.  In other words, the values
+       for all of the views in a group will be a linear combination of the
+       same two actual variables (typically the first one in the group and the
+       first one in the next group).  This feature usually gives a solution
+       with less error.  The distinction between actual variables and combina-
+       tions can be seen in the "Variable mappings" table.  Actual variables
+       would appear as, e.g., "tilt 15" and "tilt 25", while combinations of
+       the two appear as "t 15+ 20".  There are also linear combinations
+       between a variable and a fixed value, which appear in the table as "t
+       70+fix".  Currently, the linear mapping is available only with automap-
+       ping, not with manually specified mappings.
+
+       With automapping, the size of the groups will be adjusted dynamically
+       for two variables, tilt angle and x-axis stretch, so that groups become
+       smaller at higher tilt angles.  This is done because it is easier to
+       solve accurately for tilt angle at higher tilt, and because the solu-
+       tion for x-axis stretch tends to change rapidly at high tilts.  The
+       group size that you specify for these variables will be the average
+       size of the whole range of tilts.  If this dynamic automapping gives
+       problems with tilt angle, use mapping in blocks rather than linear map-
+       ping to have stricter control over the mapping process.  The dynamic
+       automapping is used for both kinds of mapping of x-axis stretch because
+       the mapping in blocks is the preferred method for grouping this vari-
+       able.  (Linear mapping does not always work properly.)
+
+       The size of groups when automapping will also be adjusted to provide
+       more grouping when some views have only one or two points.  Specifi-
+       cally, views with fewer than 3 points will not be counted toward the
+       total number of views to be included in a group.  This feature is most
+       important with the local alignments described next, where there may be
+       relatively few points in a local area.
+
+   <b>Local</b> <b>Alignments</b>
+       The program can embark on local alignments after obtaining the standard
+       global solution with all of the fiducials.  The program divides the
+       image area, or the area occupied by fiducials, into a regular array of
+       overlapping subareas.  Fiducials whose X and Y coordinates fall within
+       a subarea are included in the computations for that subarea.  A subarea
+       is expanded about its center, if necessary, to include a certain mini-
+       mum number of fiducials.  The program then seeks a solution for the
+       subset of fiducials that is, for all variables, "incremental" to the
+       global solution; that is, it solves for variables that are added to the
+       parameters from the global solution.  This method allows a dramatic
+       reduction in the number of variables to be solved for, mostly because
+       rotation and magnification can be mapped to a much smaller number of
+       variables than in the global solution.  The usual need for each view to
+       have its own rotation and magnification variable is already accommo-
+       dated in the global solution.
+
+       One option in the local alignment is whether to solve for the X-Y-Z
+       coordinates of the subset of fiducials, or to fix them at their values
+       from the global solution.  Solving for the coordinates may give a more
+       accurate solution but it does require more fiducials to get a reliable
+       result.  Fixing the coordinates reduces the number of variables to be
+       solved for and allows a reliable solution with only a relatively few
+       fiducials; it also avoids distortions in the resulting reconstruction
+       that could be difficult to account for when trying to combine recon-
+       structions from tilts around two axes.
+
+   <b>Robust</b> <b>Fitting</b>
+       The goal in robust fitting is to reduce the effect of incorrectly
+       placed model points on the fitted solution by giving less weight to
+       points which appear to be outliers.  Because it is not possible to be
+       certain about which points are indeed incorrect, each point is given a
+       weight that depends on how large its error is relative to that of other
+       points.  When the option to use robust fitting is selected, the program
+       first obtains a global alignment solution, or one for a local area,
+       which gives a residual error value for each projection point.  The
+       residual values are analyzed to derive a weight between 0 and 1 for
+       each one, and the fitting routine is call again to refine the solution
+       with these weights.  This solution provides new residuals, and this
+       process is repeated until the weights do not change significantly or
+       until the fitting routine only runs for one iteration several times in
+       a row.  At the end, the program prints out the final F value from the
+       fit, which is the square root of the mean squared weighted errors, and
+       it also prints a weighted mean residual value immediately after the
+       ordinary mean.  It also prints a line showing the number of weights
+       that were set to 0, less than 0.1, less than 0.2, and less than 0.5.
+       The latter number is usually about 5% of the total points.  The numbers
+       of down-weighted points can be increased or decreased by entering the
+       KFactorScaling with a value less than or greater than 1, respectively.
+
+       The weights are derived by the following method.  The median residual
+       is first obtained for each view from the errors of the unweighted fit,
+       and these values are smoothed to obtain a curve for the dependence of
+       median residual on view number.  The projection points are divided into
+       groups of about 100 by forming groups of adjacent views, and, for the
+       global solution, by sorting the points into concentric rings based on
+       distance from the center.  These two measures are used to reduce the
+       influence of systematic variations in residual error with tilt angle
+       and with distance from the center on the detection of incorrectly posi-
+       tioned points.  For a group of points, each point's residual is divided
+       by the smoothed median residual for that point's views.  The median of
+       the values is found, as well as the normalized median absolute devia-
+       tion from the median (the MADN).  For each point with residual greater
+       than the median, the value
+         x = (residual - median) / (K * MADN)
+       is computed, where K is the K factor (4.685 by default), and the weight
+       is
+         (1 - x**2)**2
+       for x &lt; 1, or 0 for x &gt; 1.
+
+   <b>The</b> <b>Alignment</b> <b>Model</b>
+       The program implements the following model for the imaging of the spec-
+       imen in each individual view:
+       1) The specimen itself changes by
+         a) an isotropic size change (magnification variable);
+         b) additional thinning in the Z dimension (compression variable); and
+         c) linear stretch along one axis in the specimen plane, implemented by
+            variables representing stretch along the X axis and skew between
+            the X and Y axes;
+       2) The specimen is tilted slightly around the X axis (X tilt variable)
+       3) The specimen is tilted around the X axis by the negative of the beam
+          tilt, if any (one variable for all views)
+       4) The specimen is tilted around the Y axis (tilt variable)
+       5) The specimen is tilted back around the X axis by the beam tilt, if any
+       6) The projected image rotates in the plane of the camera (rotation
+          variable)
+       7) The projected image may stretch along an axis midway between the
+          original X and Y axes (one variable for all views)
+       8) The image shifts on the camera
+
+       Only a subset of this complete model can be solved for in any given
+       case.  In particular, thinning cannot be solved for together with tilt
+       angle and stretch along the X axis; it is very difficult to solve for X
+       axis tilt together with rotation angle; and it is almost impossible to
+       solve for beam tilt together with rotation and skew.
+
+       The complete model is summarized in:
+       Mastronarde, D. N. 2008.  Correction for non-perpendicularity of beam
+       and tilt axis in tomographic reconstructions with the IMOD package. J.
+       Microsc.  230: 212-217.
+       The version of the model prior to the addition of beam tilt is
+       described in more detail in:
+       Mastronarde, D. N.  2007.  Fiducial marker and hybrid alignment methods
+       for single- and double-axis tomography.  In: Electron Tomography, Ed.
+       J. Frank, 2nd edition, pp 163-185. Springer, New York.
+
+   <b>Cross-validation</b>
+       For cross-validation, the program does many fits, each with a subset of
+       points left out, and predicts the position of each of the left-out
+       points from the solution obtained without them.  The errors in these
+       predictions are averaged and reported as the "leave-out error".  This
+       error is a valid indicator of whether solving for additional parameters
+       truly improves the solution.  In contrast, the mean residual error of a
+       fit will always go down when parameters are added, and there is no good
+       indication of whether the solution is indeed better or is just overfit-
+       ting to accommodate random errors.  The program <a href="https://bio3d.colorado.edu/imod/doc/man/restrictalign.html">Restrictalign</a> can
+       test systematically for whether more restricted parameters will improve
+       the leave-out error.
+
+       The default parameters will leave out segments of 5 points on adjacent
+       views, and evaluate prediction errors on the 3 middle points of each
+       segment.  About 10% of points are left out on each fit, and enough fits
+       are done with different sets of points to accumulate an error value
+       accurate enough to compare between parameter selections.  The padding
+       by one point is intended to reduce the influence on the solution of a
+       possible dependency between adjacent points.  This strategy is used to
+       avoid several problems with leaving out whole contours, the most impor-
+       tant two being: 1) When there are fewer than 10 fiducials, more than
+       10% of points have to be left out, which could destabilize the solu-
+       tion.  2) When there are fewer than 20 fiducials, only one will be left
+       out of each fit and there will be only as many unique runs as the num-
+       ber of fiducials, limiting the accuracy of the result.
+
+       The disadvantage of cross-validation is that it does require multiple
+       fits, so the computational time could be 20-50 times higher than for a
+       single fit.  This is particularly problematic if robust fitting is used
+       as well, and one strategy (used by <a href="https://bio3d.colorado.edu/imod/doc/man/restrictalign.html">Restrictalign</a>) is to turn off
+       robust fitting during the validations unless it is beneficial enough.
+
+       When cross-validation is used with robust fitting, the output of leave-
+       out errors is more complex.  It has this form:
+       Global non-robust leave-out error (10888 pts): 0.3111 nm  weighted 0.2720 nm
+       Global     robust leave-out error (10888 pts): 0.3026 nm  weighted 0.2638 nm
+               Benefit from robust fitting: unweighted 0.0084   weighted 0.0082 nm
+       On the first line, the first value (0.3111) is the error of the left-
+       out points in the unweighted solution before robust fitting.  Results
+       from robust solution are on the second line: first the mean error with
+       no weights applied, then the error after applying the weights from the
+       full robust solution that included all the points.  The first value
+       includes all the points that have been downweighted or eliminated in
+       the robust solution with all points and is thus the result of two coun-
+       tervailing factors: the errors of those points should have increased
+       while the error of the remaining points decreased.  The second value
+       from robust fitting appropriately discounts the outlying points.  It
+       can be compared with the second value on the first line, in which the
+       errors of points left out of the non-robust solution have been multi-
+       plied by the same weights used for the weighted errors from the robust
+       solution.  Since potentially outlying points have been discounted in
+       the identical way in the two weighted values, their difference (the
+       second value on the "Benefit" line) is the best measure of how much
+       benefit robust fitting gave.  A negative value indicates that the
+       robust solution is actually worse.
+
+<b>OPTIONS</b>
+       Tiltalign uses the PIP package for input (see the manual page for
+       <a href="https://bio3d.colorado.edu/imod/doc/man/pip.html">pip</a>) and can no longer take sequential input interactively.  The
+       following options can be specified either as command line arguments
+       (with the -) or one per line in a command file or parameter file (with-
+       out the -).  Options can be abbreviated to unique letters; the cur-
+       rently valid abbreviations for short names are shown in parentheses.
+
+       In all entries of view numbers, the views are numbered from 1.
+
+   <b>INPUT</b> <b>AND</b> <b>OUTPUT</b> <b>FILE</b> <b>OPTIONS</b>
+         These options give information about input and output files.
+
+       <b>-ModelFile</b>      <i>File</i> <i>name</i>
+              Input fiducial model file
+
+       <b>-ImageFile</b>      <i>File</i> <i>name</i>
+              Image file that fiducial model was built on, used to obtain
+              information for scaling the model.  If this entry is omitted,
+              the program will use values entered with ImageSizeXandY, ImageO-
+              riginXandY, and ImagePixelSizeXandY, or values from the model
+              itself if those options are omitted.  In general, the informa-
+              tion from the model header should be sufficient and none of
+              these entries should be needed.
+
+       <b>-ImageSizeXandY</b>      <i>Two</i> <i>integers</i>
+              Dimensions of image file (optional)
+
+       <b>-ImageOriginXandY</b>    <i>Two</i> <i>floats</i>
+              X and Y origin values from image file header (optional)
+
+       <b>-ImagePixelSizeXandY</b>      <i>Two</i> <i>floats</i>
+              X and Y Pixel spacing from image file header, in Angstroms
+              (optional)
+
+       <b>-UnbinnedPixelSize</b>   <i>Floating</i> <i>point</i>
+              Pixel size of unbinned data in nanometers
+
+       <b>-ImagesAreBinned</b>     <i>Integer</i>
+              The current binning of the images relative to the original data.
+              This factor is used to scale the values entered with AxisZShift
+              and AxisXShift from unbinned to binned coordinates.  The default
+              is 1.
+
+       <b>-OutputModelFile</b>     <i>File</i> <i>name</i>
+              File in which to place 3-D model of the fiducials based on their
+              solved positions
+
+       <b>-OutputResidualFile</b>       <i>File</i> <i>name</i>
+              Output file for a list of the residuals at all projection
+              points, which can be converted to a model with Patch2imod.
+              These residuals are in pixels.
+
+       <b>-OutputModelAndResidual</b>   <i>File</i> <i>name</i>
+              Root name for output of both a 3-D model and residuals; the
+              files will have extensions .3dmod and .resid, respectively.
+
+       <b>-OutputFilledInModel</b>      <i>File</i> <i>name</i>
+              Output file for fiducial model with missing points filled in on
+              the views included in the solution.  This model can be used for
+              erasing fiducial markers.  A missing point is first computed
+              from the projection position of the solved 3-D position of the
+              fiducial. Then, a line is fit to the residuals of points on the
+              6 nearest views and an estimated residual is subtracted from the
+              projection position, in order to incorporate a consistent dis-
+              parity between the fiducial positions and the solution.  Projec-
+              tion positions from a global solution are replaced by ones from
+              local solutions, if any, and ones from multiple local areas are
+              averaged.  This option is ignored for a model from patch track-
+              ing.
+
+       <b>-OutputTopBotResiduals</b>    <i>File</i> <i>name</i>
+              Root name for output of residuals for fiducials on the top and
+              bottom surfaces into separate files, with extensions .topres and
+              .botres.
+
+       <b>-OutputFidXYZFile</b>    <i>File</i> <i>name</i>
+              File for text output of the solved X-Y-Z coordinates
+
+       <b>-FixedXYZInputFile</b>   <i>File</i> <i>name</i>
+              File with fixed X-Y-Z coordinates to use in local alignments.
+              The values will be used when initializing the coordinates for
+              the search in each local area, but they will have little effect
+              unless <b>-FixXYZCoordinates</b> is entered.  Each line of this file
+              should start with the three coordinates; numbers after that are
+              ignored.  There must be the same number of lines in the file as
+              the number of fiducials.
+
+       <b>-OutputTiltFile</b>      <i>File</i> <i>name</i>
+              Output file for the solved tilt angles after adjustment for beam
+              tilt, if any
+
+       <b>-OutputUnadjustedTiltFile</b>      <i>File</i> <i>name</i>
+              Output file for the solved tilt angles before adjustment for
+              beam tilt, if any
+
+       <b>-OutputXAxisTiltFile</b>      <i>File</i> <i>name</i>
+              Output file for tilts around the X axis.
+
+       <b>-OutputTransformFile</b>      <i>File</i> <i>name</i>
+              Output file for 2-D transformations needed to align images
+
+       <b>-OutputZFactorFile</b>   <i>File</i> <i>name</i>
+              Output file for factors to adjust X and Y as function of Z in
+              backprojection.  When there is specimen stretch along an axis, a
+              2-D transformation of the projections cannot fully correct for
+              this effect, and these factors are needed to adjust the backpro-
+              jection position for different Z heights in the reconstructed
+              slice.
+
+   <b>ANGLE</b> <b>AND</b> <b>VIEW</b> <b>RELATED</b> <b>OPTIONS</b>
+         These options provide information about tilt angles and the views to
+       be included in the analysis.
+
+       <b>-IncludeStartEndInc</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers, and increment between views,
+              to include in analysis.  This option, IncludeList, and
+              ExcludeList are mutually exclusive.  The default is to include
+              all views that have points in the model.
+
+       <b>-IncludeList</b>    <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of views to include in the analysis (ranges allowed)
+
+       <b>-ExcludeList</b>    <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of views to exclude from the analysis (ranges allowed)
+
+       <b>-RotationAngle</b>       <i>Floating</i> <i>point</i>
+              Initial angle of rotation in the plane of projection.   This is
+              the rotation (CCW positive) from the Y-axis (the tilt axis after
+              the views are aligned) to the suspected tilt axis in the
+              unaligned views.
+
+       <b>-SeparateGroup</b>       <i>List</i> <i>of</i> <i>integer</i> <i>ranges</i>
+              List of views that should be grouped separately in automapping.
+              Multiple entries can be used to specify more than one set of
+              separate views.  (Successive entries accumulate)
+
+       <b>-NoSeparateTiltGroups</b>     <i>Integer</i>
+              Allow tilt angles to be grouped across separate view groups in
+              order to prevent large jumps in the solved tilt angles.  Enter 1
+              to allow this grouping with a patch tracking model, or 2 to
+              allow it for any fiducial model.
+
+       <b>-first</b> <b>(-f)</b> OR <b>-FirstTiltAngle</b>      <i>Floating</i> <i>point</i>
+              Tilt angle of first view, in degrees.  Use this option together
+              with TiltIncrement.
+
+       <b>-increment</b> <b>(-i)</b> OR <b>-TiltIncrement</b>   <i>Floating</i> <i>point</i>
+              Increment between tilt angles, in degrees.  Use this option
+              together with FirstTiltAngle.
+
+       <b>-tiltfile</b> <b>(-t)</b> OR <b>-TiltFile</b>    <i>File</i> <i>name</i>
+              Use this option if tilt angles are in a file, one per line.
+
+       <b>-angles</b> <b>(-a)</b> OR <b>-TiltAngles</b>    <i>Multiple</i> <i>floats</i>
+              Use this option to enter the tilt angles for each view individu-
+              ally, in degrees.  (Successive entries accumulate)
+
+       <b>-AngleOffset</b>    <i>Floating</i> <i>point</i>
+              Amount to add to all entered tilt angles.
+
+   <b>GLOBAL</b> <b>VARIABLE</b> <b>SELECTION</b> <b>OPTIONS</b>
+         These options specify the variables to be included in the global fit
+       to all of the points and information about them, such as group sizes.
+
+       <b>-ProjectionStretch</b>
+              Solve for a parameter representing a skew between the microscope
+              X and Y axes that occurs during projection of all images.  This
+              is equivalent to a stretch along a 45-degree line between the
+              axes.  A component of stretch parallel to the axes cannot be
+              distinguished from a stretch of the 3D fiducial coordinates par-
+              allel to the axes, so as of IMOD 3.10.7 only this skew component
+              is solved for.  The initial rotation angle of the tilt axis is
+              used to determine the approximate axis along which this stretch
+              would occur after the final image rotation.
+
+       <b>-BeamTiltOption</b>      <i>Integer</i>
+              Type of solution for non-perpendicularity between tilt axis and
+              beam axis, referred to as beam tilt:
+                0 for beam tilt fixed at the initial value,
+                1 to include beam tilt as a variable in the minimization
+                  procedure,
+                2 to perform the minimization at a series of fixed beam tilt
+                  values and search for the value that gives the smallest
+                  error.
+              Because some variables can covary with the beam tilt to give
+              nearly equivalent solutions, the second option for finding the
+              beam tilt gives more reliable results.  Some combinations of
+              variable simply cannot be solved for, in particular the stretch
+              variables and rotation together with beam tilt; either omit the
+              stretch variables or solve for a single rotation angle.  Note
+              that only the component of the beam tilt around the X axis is
+              solved for; the component around the Y axis is indistinguishable
+              from a change in tilt angle.  When the beam tilt is non-zero,
+              either as a result of a search or because a fixed value was
+              entered, its effect is expressed as a varying tilt around the X
+              axis and a modification of the tilt angles and in-plane image
+              rotations.  Thus, a file of X-tilt angles should be output when
+              beam tilt is included in the solution.
+
+       <b>-FixedOrInitialBeamTilt</b>   <i>Floating</i> <i>point</i>
+              The entry provides either an initial value for the beam tilt,
+              when it is being solved for, or a fixed value when it is not.
+
+       <b>-RotOption</b>      <i>Integer</i>
+              Type of rotation solution:
+                0 for all rotations fixed at the initial angle,
+                1 for each view having an independent rotation,
+                2 to enter general mapping of rotation variables,
+                3 or 4 for automapping of rotation variables (3 for linearly
+                  changing values or 4 for values all the same within a
+                  group), or
+               -1 to solve for a single rotation variable.
+
+       <b>-RotDefaultGrouping</b>       <i>Integer</i>
+              Default group size when automapping rotation variables
+
+       <b>-RotNondefaultGroup</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose rotation variables should be grouped differently
+              from the default.  Multiple entries can be used to specify more
+              than one set of views with nondefault grouping.  (Successive
+              entries accumulate)
+
+       <b>-RotationFixedView</b>   <i>Integer</i>
+              Number of view whose rotation should be fixed at the initial
+              rotation angle.  This entry is relevant with any of the positive
+              RotOption entries.
+
+       <b>-TiltOption</b>     <i>Integer</i>
+              Type of tilt angle solution:
+                0 to fix all tilt angles at their initial values,
+                1 to solve for all tilt angles except for a specified view,
+                2 to solve for all tilt angles except for the view at minimum
+                  tilt,
+                3 to solve for all tilt angles except for a specified view and
+                  the view at minimum tilt,
+                4 to specify a mapping of tilt angle variables,
+                5 or 6 to automap groups of tilt angles (5 for linearly
+                  changing values or 6 for values all the same within a
+                  group), or
+                7 or 8 to automap and fix two tilt angles (7 for linearly
+                  changing values or 8 for values all the same within a group)
+
+       <b>-TiltFixedView</b>       <i>Integer</i>
+              Number of view at which to fix the tilt angle (required with
+              TiltOption 1, 3, 7, or 8)
+
+       <b>-TiltSecondFixedView</b>      <i>Integer</i>
+              Number of second view at which to fix the tilt angle (required
+              with TiltOption 7 or 8)
+
+       <b>-TiltDefaultGrouping</b>      <i>Integer</i>
+              Average default group size when automapping tilt variables
+
+       <b>-TiltNondefaultGroup</b>      <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose tilt variables should be grouped differently from
+              the default.  (Successive entries accumulate)
+
+       <b>-MagReferenceView</b>    <i>Integer</i>
+              Number of reference view whose magnification will be fixed at
+              1.0.  The default is the view at minimum tilt.
+
+       <b>-MagOption</b>      <i>Integer</i>
+              Type of magnification solution:
+                0 to fix all magnifications at 1.0,
+                1 to vary all magnifications independently,
+                2 to specify a mapping of magnification variables, or
+                3 or 4 for automapping of variables (3 for linearly changing
+                  values or 4 for values all the same within a group).
+
+       <b>-MagDefaultGrouping</b>       <i>Integer</i>
+              Default group size when automapping magnification variables
+
+       <b>-MagNondefaultGroup</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose magnification variables should be grouped differ-
+              ently from the default.  (Successive entries accumulate)
+
+       <b>-CompReferenceView</b>   <i>Integer</i>
+              Number of the view to fix at compression 1.0 (something other
+              than a view whose tilt angle is fixed at zero.)  Required if
+              CompOption not 0.
+
+       <b>-CompOption</b>     <i>Integer</i>
+              Type of compression solution:
+                0 to fix all compressions at 1.0,
+                1 to vary all compressions independently,
+                2 to specify a mapping of compression variables, or
+                3 or 4 for automapping of variables (3 for linearly changing
+                  values or 4 for values all the same within a group).
+
+       <b>-CompDefaultGrouping</b>      <i>Integer</i>
+              Default group size when automapping compression variables
+
+       <b>-CompNondefaultGroup</b>      <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose compression variables should be grouped differently
+              from the default.  (Successive entries accumulate)
+
+       <b>-XStretchOption</b>      <i>Integer</i>
+              Type of X-stretch solution:
+                0 to fix all X stretches at 0,
+                1 to vary all X stretches independently,
+                2 to specify a mapping of X-stretch variables, or
+                3 or 4 for automapping of variables (3 for values all the
+                  same within a group or 4 for linearly changing values).
+
+       <b>-XStretchDefaultGrouping</b>       <i>Integer</i>
+              Default average group size when automapping X stretch variables.
+
+       <b>-XStretchNondefaultGroup</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose X stretch variables should be grouped differently
+              from the default.  (Successive entries accumulate)
+
+       <b>-SkewOption</b>     <i>Integer</i>
+              Type of skew solution:
+                0 to fix all skew angles at 0.0,
+                1 to vary all skew angles independently,
+                2 to specify a mapping of skew variables, or
+                3 or 4 for automapping of variables (3 for linearly changing
+                  values or 4 for values all the same within a group).
+
+       <b>-SkewDefaultGrouping</b>      <i>Integer</i>
+              Default group size when automapping skew variables
+
+       <b>-SkewNondefaultGroup</b>      <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose skew variables should be grouped differently from
+              the default.  (Successive entries accumulate)
+
+       <b>-XTiltOption</b>    <i>Integer</i>
+              Type of X-axis tilt solution:
+                0 to fix all X tilts at 0.,
+                1 to vary all X-tilts independently,
+                2 to specify a mapping of X-tilt variables, or
+                3 or 4 for automapping of variables (3 for linearly changing
+                  values or 4 for values all the same within a group).
+
+       <b>-XTiltDefaultGrouping</b>     <i>Integer</i>
+              Default group size when automapping X-axis tilt variables
+
+       <b>-XTiltNondefaultGroup</b>     <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose X-axis tilt variables should be grouped differently
+              from the default.  (Successive entries accumulate)
+
+   <b>MINIMIZATION</b> <b>AND</b> <b>OUTPUT</b> <b>OPTIONS</b>
+         These options control the minimization procedure and the outputs of
+       the program.
+
+       <b>-ResidualReportCriterion</b>       <i>Floating</i> <i>point</i>
+              Criterion number of standard deviations above mean residual
+              error that should be reported. This can be based on either the
+              overall mean and S.d.  of the residual errors, or on a mean and
+              S.d.  computed from points in nearby views.  Enter a positive
+              value for a report based on overall mean, or a negative value
+              for a report based on the mean residual in the same and nearby
+              views.
+
+       <b>-SurfacesToAnalyze</b>   <i>Integer</i>
+              0 to omit surface analysis, or 1 or 2 to fit points to one or
+              two surfaces and derive a surface angles and recommended tilt
+              angle offset.  This entry has no effect on the global alignment
+              solution.
+
+       <b>-MetroFactor</b>    <i>Floating</i> <i>point</i>
+              This entry determines how large a step the variable metric mini-
+              mization procedure (METRO) tries to take.  The default is 0.25,
+              which typically works even for large data sets.  When METRO
+              fails for various reasons, the program will retry with several
+              other nearby values of the factor.
+
+       <b>-MaximumCycles</b>       <i>Integer</i>
+              Limit on number of cycles for minimization procedure (default
+              1000).
+
+       <b>-AxisZShift</b>     <i>Floating</i> <i>point</i>
+              Amount to shift the tilt axis in Z, relative to the centroid in
+              Z of the fiducial points or relative to the original Z axis
+              location if ShiftZFromOriginal is entered. It is also possible
+              to enter 1000 to shift the tilt axis to the midpoint of the
+              range of Z values.  Enter this value in unbinned pixels.
+
+       <b>-ShiftZFromOriginal</b>
+              Apply Z shift relative to original tilt axis location.  If
+              images were initially aligned by cross-correlation, this option
+              will keep specimen material near the center of the reconstruc-
+              tion even if fiducials are on one surface.
+
+       <b>-AxisXShift</b>     <i>Floating</i> <i>point</i>
+              Amount to shift the tilt axis in X away from the center of the
+              image.  Enter this value in unbinned pixels.
+
+   <b>ROBUST</b> <b>FITTING</b> <b>AND</b> <b>CROSS-VALIDATION</b> <b>OPTIONS</b>
+         These options control robust fitting to downweight outlying points
+       and cross-validation by leaving out sets of points.
+
+       <b>-RobustFitting</b>
+              Use a robust fitting method that gives less weight to points
+              with residuals higher than the median residual, and no weight to
+              the most extreme points.
+
+       <b>-WeightWholeTracks</b>
+              When doing robust fitting with a model from patch tracking,
+              assign the same weight to all the points in each contour.  Con-
+              tours with mean residuals higher than the median will thus be
+              given less weight, and ones with the most extreme residuals will
+              be given weights of 0.02.
+
+       <b>-KFactorScaling</b>      <i>Floating</i> <i>point</i>
+              Amount to scale the K factor that controls how many points are
+              down-weighted in the robust fitting.  The default scaling of 1
+              gives a K factor of 4.685, the factor commonly used for the
+              Tukey bisquare weighting.  A smaller factor will down-weight and
+              eliminate more points.
+
+       <b>-WarnOnRobustFailure</b>
+              Give just a warning instead of exiting with an error if the
+              robust fitting fails and only a global alignment is being done.
+              If local alignments are being done, a failure in either the
+              global alignment or a local area will always result in just a
+              warning.  In all cases, the non-robust alignment is restored
+              after a failure.
+
+       <b>-MinWeightGroupSizes</b>      <i>Two</i> <i>integers</i>
+              Minimum sizes of the groups of points used for computing
+              weights, in global and local alignment runs.  In order to apply
+              the robust method to points that are relatively similar to each
+              other, deviations from a median residual are computed within
+              subsets of points that are located on adjacent views; and if
+              there are enough points, the points in a global alignment run
+              are also sorted into rings based on distance from the center.
+              These entries set the minimum sizes of these groups.  If the
+              total number of points available for fitting falls below the
+              minimum, the robust fitting is not done and a warning or error
+              is issued.  The defaults are 100 and 65 when adjusting weights
+              for individual points.  When assigning weights to whole contours
+              with data from patch tracking, a similar approach is used to
+              divide the contours into groups that are analyzed together.
+              Here, the defaults are 30 and 20.
+
+       <b>-CrossValidate</b>       <i>Integer</i>
+              Do cross-validation by leaving out sets of points in multiple
+              runs.  In each run, the positions of points left out are pre-
+              dicted from the solution and a "leave-out" error is computed.
+              This error is averaged over enough runs with different points
+              left to give an estimate of leave-out error that is accurate
+              enough for comparing the merit of different variable selections.
+              Enter 1 to do this procedure for both global and local align-
+              ments, or 2 to do it only for local aligments.  The details of
+              cross-validation are governed by the following options, which
+              all have reasonable defaults.
+
+       <b>-FractionToLeaveOut</b>       <i>Two</i> <i>floats</i>
+              Fraction of points to leave out of each cross-validation run.
+              An entered value will be limited to be between 0.01 and 0.2.
+              The default is 0.1 for 10 or more fiducials, or 0.1 times the
+              number of fiducials for fewer than 10 fiducials, down to 0.04.
+
+       <b>-LeaveOutPredictAndPad</b>    <i>Two</i> <i>integers</i>
+              Number of points on contiguous views to leave out as a group and
+              from which to use predicted positions to measure the leave-out
+              error; and number of additional points on each side of this
+              group to leave out as padding.  More padding will require more
+              runs to reach a given accuracy level.  If the first value is 0,
+              whole contours (fiducials) will be left out in each run and the
+              second value does not matter.  The default is 3,1.  ^ Completely
+              unrelated to the function of this option, entering a negative
+              value for the second number will cause the model to be treated
+              as if it were from patch tracking.  This is useful when analyz-
+              ing a true fiducial model whose contours have been broken into
+              pieces by <a href="https://bio3d.colorado.edu/imod/doc/man/imodchopconts.html">Imodchopconts</a>.  It allows the program to identify
+              which contours have come from the same point, which is important
+              for determining the actual number of fiducials present in a
+              local area. (The absolute value of this second number will be
+              used for the padding entry.)
+
+       <b>-CVCoverageTargetOrFactor</b>
+              This entry determines how many cross-validation runs will be
+              done with different sets of points left out and thus how accu-
+              rate the estimated error will be.  The value can be either a
+              target number of points to get leave-out errors from, or a fac-
+              tor whose product with the number of fiducials would be the
+              desired number of points to get errors from.  If whole contours
+              are being left out, the total number left out may be limited.
+              Specifically, if the number of fiducials times the fraction of
+              points to leave out rounds down to 1 or less, then only one con-
+              tour would be left out at once, and the number of runs would be
+              limited to the number of fiducials.  When more than one contour
+              is left out per run, there is no redundancy with a coverage
+              above 1 because different combinations of fiducials will be
+              used.  The default is 12000 points.
+
+       <b>-CVMinAndMaxCoverageFactor</b>
+              Minimum and maximum values for the actual coverage factor, or
+              average number of times each point is left out.  When the cover-
+              age falls below the minimum and the number of points that would
+              be used with the minimum coverage is more than twice the target
+              number set by <b>-CVCoverageTargetOrFactor</b>, the coverage is reduced
+              below the minimum and the number of points to be used is
+              increased above twice the target by the same factor. This fea-
+              ture reduces the excess computations that can happen with local
+              alignments.  The default is 0.3 and 5.
+
+       <b>-RandomSeed</b>     <i>Integer</i>
+              A value for the seed of the random number generator used in
+              cross-validation, or 0 for a seed computed from the current
+              time.  Using a fixed seed value for multiple runs is important
+              when looking at the effects of changing alignment parameters
+              because it minimizes variability between runs due to different
+              sets of points being chosen.  The default is to used a fixed
+              seed.
+
+       <b>-TestSetIntervalOrFrac</b>    <i>Floating</i> <i>point</i>
+              When running cross-validation by leaving out points or contours
+              on multiple runs, a fraction of fiducials can be reserved as a
+              test set as well.  Solutions will be obtained using just the
+              remaining points, including the multiple solutions with some of
+              those points left out.  The errors for the test set will be
+              reported both for the full solution with the remaining points
+              and for the cross-validation runs.  This option is useful for
+              validating the cross-validation itself but not for tuning param-
+              eters in actual data sets without a large excess in the number
+              of fiducials.
+
+   <b>LOCAL</b> <b>ALIGNMENT</b> <b>OPTIONS</b>
+         These options control local alignments.
+
+       <b>-LocalAlignments</b>
+              Do alignments with subsets of points in local areas.  When this
+              option is selected, the appropriate Local...Option values must
+              be entered to control what variables are solved for; the default
+              is 0 for all of the local option values.
+
+       <b>-OutputLocalFile</b>     <i>File</i> <i>name</i>
+              Output file for transformations for local alignments
+
+       <b>-TargetPatchSizeXandY</b>     <i>Two</i> <i>integers</i>
+              Target for the size of local patches in X and Y in which to
+              obtain a solution from the fiducials located in that patch.  The
+              number of patches will be set so that patches smaller or up to
+              5% larger than this size and overlapping by a fixed amount will
+              fill the range occupied by fiducials (not the image area).  The
+              patches on the edges should not have to expand as much as when
+              the patch centers are set up to fill the image area.  If this
+              option is entered, NumberOfLocalPatchesXandY must not be
+              entered, and MinSizeOrOverlapXandY must specify an overlap
+              instead of a size.
+
+       <b>-NumberOfLocalPatchesXandY</b>     <i>Two</i> <i>integers</i>
+              Number of local patches in X and in Y in which to obtain a solu-
+              tion from the fiducials located in that patch.  For command
+              files created by IMOD 5.0.1 or later, these values would apply
+              if the X and Y fiducial coordinates cover the full range in X
+              and in Y, and proportionally fewer patches will be used if the
+              fiducial range is smaller.  Similarly to when TargetPatch-
+              SizeXandY is entered, patches will fill just the range occupied
+              by fiducials, and MinSizeOrOverlapXandY must specify an overlap
+              instead of a size.  For older command files (specifically, for
+              ones not having the CreatedDayStamp option with a value of at
+              least 1658), overlapping patches will be set up that fill the
+              image area; ones outside the range of fiducials, if any, will
+              have to expand considerably to contain the required number of
+              points.
+
+       <b>-MinSizeOrOverlapXandY</b>    <i>Two</i> <i>floats</i>
+              Either the minimum fractional overlap between patches (values &lt;
+              1) or the minimum size of each patch in X and Y (enter values &gt;
+              1).  The latter is allowed only for command files created before
+              IMOD 5.0.1 and only when NumberOfLocalPatchesXandY is entered.
+              The default is an overlap of 0.5.
+
+       <b>-MinFidsTotalAndEachSurface</b>    <i>Two</i> <i>integers</i>
+              Minimum total number of fiducials, and minimum number present on
+              each surface if two surfaces were assumed in the analysis of
+              surfaces.  A patch will be expanded about its center until it
+              contains enough points to meet both of these criteria.
+
+       <b>-FixXYZCoordinates</b>
+              Fix the X-Y-Z coordinates of the fiducials at their values from
+              the global solution; the default is to solve for them indepen-
+              dently in each local area.  For more on the implications of this
+              option, see the note above in the section on local alignments.
+
+       <b>-LocalOutputOptions</b>       <i>Three</i> <i>integers</i>
+              These three entries control the output of results for each local
+              alignment:
+                1 to output the values of the parameters for each view or 0
+                  not to;
+                1 to output the X-Y-Z coordinates of fiducials or 0 not to;
+                  and
+                1 to output points with high residuals, or 0 not to
+
+   <b>LOCAL</b> <b>VARIABLE</b> <b>SELECTION</b> <b>OPTIONS</b>
+         These options specify the variables to be included in the local
+       alignment fits and information about them, such as group sizes.
+
+       <b>-LocalRotOption</b>      <i>Integer</i>
+              Type of local rotation solution:
+                0 for local rotations fixed,
+                1 for each view having an independent rotation,
+                2 to enter general mapping of variables,
+                3 or 4 for automapping of rotation variables (3 for linearly
+                  changing values or 4 for values all the same within a
+                  group), or
+               -1 to solve for a single rotation variable.
+
+       <b>-LocalRotDefaultGrouping</b>       <i>Integer</i>
+              Default group size when automapping local rotation variables.
+
+       <b>-LocalRotNondefaultGroup</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose local rotation variables should be grouped differ-
+              ently from the default.  (Successive entries accumulate)
+
+       <b>-LocalTiltOption</b>     <i>Integer</i>
+              Type of local tilt angle solution; values 0-8 have same meaning
+              as for global solution.
+
+       <b>-LocalTiltFixedView</b>       <i>Integer</i>
+              Number of view at which to fix the tilt angle in the local solu-
+              tion (required with LocalTiltOption 1, 3, 7, or 8)
+
+       <b>-LocalTiltSecondFixedView</b>      <i>Integer</i>
+              Number of second view at which to fix the tilt angle in the
+              local solution (required with LocalTiltOption 7 or 8)
+
+       <b>-LocalTiltDefaultGrouping</b>      <i>Integer</i>
+              Average default group size when automapping local tilt variables
+
+       <b>-LocalTiltNondefaultGroup</b>      <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose local tilt variables should be grouped differently
+              from the default.  (Successive entries accumulate)
+
+       <b>-LocalMagReferenceView</b>    <i>Integer</i>
+              Number of reference view whose local magnification will be fixed
+              at 1.0.  The default is the view at minimum tilt.
+
+       <b>-LocalMagOption</b>      <i>Integer</i>
+              Type of local magnification solution; values 0-3 have same mean-
+              ing as for global solution.
+
+       <b>-LocalMagDefaultGrouping</b>       <i>Integer</i>
+              Default group size when automapping local magnification vari-
+              ables
+
+       <b>-LocalMagNondefaultGroup</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose local magnification variables should be grouped dif-
+              ferently from the default.  (Successive entries accumulate)
+
+       <b>-LocalXStretchOption</b>      <i>Integer</i>
+              Type of local X-stretch solution; values 0-3 have same meaning
+              as for global solution.
+
+       <b>-LocalXStretchDefaultGrouping</b>       <i>Integer</i>
+              Default average group size when automapping local X stretch
+              variables
+
+       <b>-LocalXStretchNondefaultGroup</b>       <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose local X stretch variables should be grouped differ-
+              ently from the default.  (Successive entries accumulate)
+
+       <b>-LocalSkewOption</b>     <i>Integer</i>
+              Type of local skew solution; values 0-3 have same meaning as for
+              global solution.
+
+       <b>-LocalSkewDefaultGrouping</b>      <i>Integer</i>
+              Default group size when automapping local skew variables
+
+       <b>-LocalSkewNondefaultGroup</b>      <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose local skew variables should be grouped differently
+              from the default.  (Successive entries accumulate)
+
+       <b>-LocalXTiltOption</b>    <i>Integer</i>
+              Type of local X-axis tilt solution; values 0-3 have same meaning
+              as for global solution.
+
+       <b>-LocalXTiltDefaultGrouping</b>     <i>Integer</i>
+              Default group size when automapping local X-axis tilt variables
+
+       <b>-LocalXTiltNondefaultGroup</b>     <i>Three</i> <i>integers</i>
+              Starting and ending view numbers and group size for a set of
+              views whose local X-axis tilt variables should be grouped dif-
+              ferently from the default.  (Successive entries accumulate)
+
+   <b>MAPPING</b> <b>OPTIONS</b>
+         These are obsolete options for ultimate control of variable mapping.
+
+       <b>-RotMapping</b>     <i>Multiple</i> <i>integers</i>
+              If RotOption is 2, this option must be used to enter a rotation
+              variable number for each view.  These variable numbers can be
+              completely arbitrary, e.g. 1,1,1,3,3,3,5,5,5.  The numbers are
+              used to define block grouping.  (Successive entries accumulate)
+
+       <b>-LocalRotMapping</b>     <i>Multiple</i> <i>integers</i>
+              If LocalRotOption is 2, this option must be used to enter a
+              local rotation variable number for each view.  (Successive
+              entries accumulate)
+
+       <b>-TiltMapping</b>    <i>Multiple</i> <i>integers</i>
+              If TiltOption is 2, this option must be used to enter a tilt
+              variable number for each view.  (Successive entries accumulate)
+
+       <b>-LocalTiltMapping</b>    <i>Multiple</i> <i>integers</i>
+              If LocalTiltOption is 4, this option must be used to enter a
+              local tilt variable number for each view.  (Successive entries
+              accumulate)
+
+       <b>-MagMapping</b>     <i>Multiple</i> <i>integers</i>
+              If MagOption is 2, this option must be used to enter a magnifi-
+              cation variable number for each view.  (Successive entries accu-
+              mulate)
+
+       <b>-LocalMagMapping</b>     <i>Multiple</i> <i>integers</i>
+              If LocalMagOption is 2, this option must be used to enter a
+              local magnification variable number for each view.  (Successive
+              entries accumulate)
+
+       <b>-CompMapping</b>    <i>Multiple</i> <i>integers</i>
+              If CompOption is 2, this option must be used to enter a compres-
+              sion variable number for each view.  (Successive entries accumu-
+              late)
+
+       <b>-XStretchMapping</b>     <i>Multiple</i> <i>integers</i>
+              If XStretchOption is 2, this option must be used to enter an X
+              stretch variable number for each view.  (Successive entries
+              accumulate)
+
+       <b>-LocalXStretchMapping</b>     <i>Multiple</i> <i>integers</i>
+              If LocalXStretchOption is 2, this option must be used to enter a
+              local X stretch variable number for each view.  (Successive
+              entries accumulate)
+
+       <b>-SkewMapping</b>    <i>Multiple</i> <i>integers</i>
+              If SkewOption is 2, this option must be used to enter a skew
+              variable number for each view.  (Successive entries accumulate)
+
+       <b>-LocalSkewMapping</b>    <i>Multiple</i> <i>integers</i>
+              If LocalSkewOption is 2, this option must be used to enter a
+              local skew variable number for each view.  (Successive entries
+              accumulate)
+
+       <b>-XTiltMapping</b>   <i>Multiple</i> <i>integers</i>
+              If XTiltOption is 2, this option must be used to enter an X-axis
+              tilt variable number for each view.  (Successive entries accumu-
+              late)
+
+       <b>-LocalXTiltMapping</b>   <i>Multiple</i> <i>integers</i>
+              If LocalXTiltOption is 2, this option must be used to enter a
+              local X-axis tilt variable number for each view.  (Successive
+              entries accumulate)
+
+   <b>OTHER</b> <b>OPTIONS</b>
+       <b>-CreatedDayStamp</b>     <i>Integer</i>
+              A value indicating when the command file was created, so that
+              the program can determine whether to use old or new behavior for
+              some options.  <a href="https://bio3d.colorado.edu/imod/doc/man/copytomocoms.html">Copytomocoms</a> sets this with the number of days
+              since January 1, 2020.
+
+       <b>-param</b> <b>(-p)</b> OR <b>-ParameterFile</b>       <i>Parameter</i> <i>file</i>
+              Read parameter entries as keyword-value pairs from a parameter
+              file.
+
+       <b>-help</b> <b>(-h)</b> OR <b>-usage</b>
+              Print help output
+
+       <b>-StandardInput</b>
+              Read parameter entries from standard input.
+
+       Note: when compression is solved for, the program prints both the abso-
+       lute and the incremental compression for each view.  When no compres-
+       sion is solved for, the program prints instead two additional columns:
+       "deltilt" is the difference between the solved and original tilt
+       angles, and "mean resid" is the mean residual error for each view.
+
+<b>FILES</b>
+       Files generated by Tiltalign for use by other programs have the follow-
+       ing formats:
+
+       The file with alignment transforms (option OutputTransformFile) con-
+       tains one line per view, each with a linear transformation specified by
+       six numbers:
+         A11 A12 A21 A22 DX DY
+       where the coordinate (X, Y) is transformed to (X', Y') by:
+         X' = A11 * X + A12 * Y + DX
+         Y' = A21 * X + A22 * Y + DY
+
+       The file with solved tilt angles (option OutputTiltFile) has the angle
+       in degrees for each view, one per line.
+
+       The file with X-axis tilt angles (option OutputXAxisTiltFile) has the
+       angle in degrees for each view, one per line.
+
+       The file with Z factors (option OutputZFactorFile) has two numbers on
+       one line for each view, the displacement in X and the displacement in Y
+       per pixels of deviation in Z from the midplane.
+
+       The file with all residuals (option OutputResidualFile) starts with a
+       line with the number of residuals to follow, then has five values per
+       line for each residual:
+         X  Y  Z  X_residual Y_residual
+       It can be converted to a model by running <a href="https://bio3d.colorado.edu/imod/doc/man/patch2imod.html">Patch2imod</a> with no special
+       options.
+
+       The file with solved X-Y-Z coordinates (option OutputFidXYZFile) has
+       one line per 3D point:
+         fiducial_# X Y Z object_# contour_#
+       The first line has, after these values, the pixel size and the size of
+       the image file that the alignment was run with:
+         Pix:    pixel_in_Angstroms   Dim:   X_size Y_Size
+
+       The file of local alignments (option OutputLocalFile) has a header line
+       with:
+         #_X #_Y X_start Y_start dX dY if_Xtilts  pixel_Angstroms if_Zfactors
+       where #_X and #_Y are number of patches in X and Y, X/Y_start are the
+       centers of the first patches in X and Y, dX and Y are the spacing
+       between patches in X and Y, if_Xtilts is 1 if there are X-axis tilts,
+       pixel_Angstroms is the pixel size of the image file, and if_Zfactors is
+       1 if there are Z factors.
+       Following the header is a block of data for each local area, where
+       areas progress in X then in Y.  The data are all expressed as incre-
+       ments to the global alignment information.  The elements in each block
+       are:
+         Tilt angles, one per view, many per line
+         X-axis tilt angles if they are included, one per view, many per line
+         Z factors if they are included, a pair of X and Y factors for each
+            view, several pairs per line
+         Refinement transformations for each view in the same format as above,
+            one per line
+
+<b>HISTORY</b>
+       Written by David Mastronarde, March 1989, based on programs ALIGN and
+       ALIGNXYZ (Mike Lawrence, 1982) obtained from R.A. Crowther at the MRC
+       5/19/89 added model output, changed format of output table
+       6/21/89 added mean residual output to find_surfaces, changed to
+       get recommendation on maximum FIXED tilt angle
+       4/9/93 allow full mapping of compression variables
+       10/30/95 added distortion, automapping, point &amp; angle output.
+       10/17/98 added linear combinations to automapping
+       2/12/98 added local alignments; changed find_surfaces to find and
+       recommend an X-axis tilt.
+
+<b>BUGS</b>
+       Email bug reports to mast at colorado dot edu.
+
+
+
+IMOD                                 5.2.0                        tiltalign(1)
+</pre>
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;limited&quot;,&quot;isActive&quot;:false,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

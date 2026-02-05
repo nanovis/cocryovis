@@ -1,0 +1,58 @@
+-InMrc         : 
+  1. Input MRC file that contains single image or a stack of
+     frames. In the latter case, CTF will be estimated for 
+     each fraome.
+
+-OutMrc        
+  1. Output MRC file that contains the averaged
+     amplitude spectrum.
+  2. If the input is a stack of frames, the output will be
+     a stack of spectra, one for each frame.
+
+-OutCtf        
+  1. Output text file containing the estimated ctf parameters
+     one line per tilt image.
+
+-AngFile       
+  1. Input text file that contains a single column for tilt
+     angles. The order must match the images in the input
+     MRC file.
+  2. Optional. When not given, the output CTF file will not
+     have columns for tilt angle.
+
+-TiltRange     
+  1. Min and max tilt angles of the tilt series if it is
+     collected with a fixed tilt step.
+
+-kV            
+  1. High tension in keV.
+
+-Cs            
+  1. Spherical aberration Cs in mm
+
+-AmpContrast   
+  1. Amplitude contrast, default 0.07.
+
+-PixSize       
+  1. Pixel size in A.
+
+-ExtPhase      
+  1. Extra phase shift and search range in degree.
+
+-LogSpect      
+  1. Calculate logrithmic spectrum. It is not enabled      by default.
+
+-InSuffix      
+  1. Image or tilt series with their file names ended with the
+     specified suffix will be loaded for CTF estimation.
+  2. In this case, -InMrc and -InSuffix are jointly used to
+     to screen files for CTF estimation.
+
+-Serial        
+  1. Enale serial CTS estimation where there are multiple files
+     to be processed.
+  2. -Serial 1 enables serial processing.
+
+-Gpu
+  GPU ID. Default 0.
+  # Not in --help for whatever reason
