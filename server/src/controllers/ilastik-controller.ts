@@ -2,19 +2,15 @@
 
 import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import validateSchema from "../tools/validate-schema.mjs";
+import { Request, Response } from "express";
+import type IlastikHandler from "../tools/ilastik-handler";
 
-/**
- * @import Ilastik from "../tools/ilastik-handler.mjs"
- * @typedef { import("express").Request } Request
- * @typedef { import("express").Response } Response
- */
 export default class IlastikController {
-  /**
-   * @param {Ilastik} ilastik
-   * @param {Request} req
-   * @param {Response} res
-   */
-  static async queuePseudoLabelsGeneration(ilastik, req, res) {
+  static async queuePseudoLabelsGeneration(
+    ilastik: IlastikHandler,
+    req: Request,
+    res: Response
+  ) {
     const { params } = validateSchema(req, { paramsSchema: idVolume });
 
     await ilastik.queueLabelGeneration(

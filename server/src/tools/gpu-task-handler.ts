@@ -1,6 +1,6 @@
 import path from "path";
 import fileSystem from "fs";
-import TaskQueue from "./task-queue.mjs";
+import TaskQueue from "./task-queue";
 import Utils from "./utils.mjs";
 import fsPromises from "node:fs/promises";
 import Checkpoint from "../models/checkpoint.mjs";
@@ -19,16 +19,6 @@ import appConfig from "./config.mjs";
 import type { AppConfig } from "../types/types";
 import type z from "zod";
 import { type trainingOptions } from "@cocryovis/schemas/nano-oetzi-path-schema";
-import type {
-  Volume as VolumeDB,
-  RawVolumeData as RawVolumeDataDB,
-  Result as ResultDB,
-  Checkpoint as CheckpointDB,
-} from "@prisma/client";
-import type {
-  PseudoVolumeDataWithFileDB,
-  RawVolumeDataWithFileDB,
-} from "../models/volume-data.mjs";
 import type fileUpload from "express-fileupload";
 import type {
   IMODOptions,

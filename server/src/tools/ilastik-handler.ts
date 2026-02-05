@@ -1,11 +1,9 @@
-// @ts-check
-
 import fileSystem from "fs";
 import path from "path";
 import fsPromises from "node:fs/promises";
 import { H5ToLabels, labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 import Utils from "./utils.mjs";
-import TaskQueue from "./task-queue.mjs";
+import TaskQueue from "./task-queue";
 import Volume from "../models/volume.mjs";
 import appConfig from "./config.mjs";
 import LogFile from "./log-manager.mjs";
@@ -16,42 +14,39 @@ import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
-
-/**
- * @import z from "zod"
- * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
- * @typedef { import("@prisma/client").Volume } VolumeDB
- * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
- * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
- * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
- */
+import type { AppConfig } from "../types/types";
+import type z from "zod";
+import type {
+  volumeSettings,
+  volumeSizeSchema,
+} from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 export default class IlastikHandler {
   static rawDataset = "/raw_data";
   static labelsDataset = "/labels";
   static pseudoLabelsDataset = "/pseudo_labels";
 
-  /** @type {TaskQueue} */ #taskQueue;
+  private config: AppConfig;
+  private ilastikTempDirectory: string;
+  private taskQueue: TaskQueue;
 
-  constructor(config) {
+  constructor(config: AppConfig) {
     this.config = config;
-    this.#taskQueue = new TaskQueue();
+    this.taskQueue = new TaskQueue();
     this.ilastikTempDirectory = path.join(this.config.tempPath, "ilastik");
     Object.preventExtensions(this);
   }
 
   isInferenceRunning() {
-    return this.#taskQueue.hasPendingTask;
+    return this.taskQueue.hasPendingTask;
   }
 
-  /**
-   * @param {number} volumeId
-   * @param {number} userId
-   * @param {string?} outputPath
-   * @returns {Promise<void>}
-   */
-  async queueLabelGeneration(volumeId, userId, outputPath = null) {
-    if (this.#taskQueue.size >= this.config.ilastikQueueSize) {
+  async queueLabelGeneration(
+    volumeId: number,
+    userId: number,
+    outputPath: string | null = null
+  ): Promise<void> {
+    if (this.taskQueue.size >= this.config.ilastikQueueSize) {
       throw new ApiError(
         400,
         "Failed Attempt to queue label generation: Too many tasks in queue."
@@ -60,7 +55,7 @@ export default class IlastikHandler {
 
     const volume = await Volume.getByIdWithFileDeep(volumeId);
 
-    IlastikHandler.#checkVolumeProperties(volume);
+    IlastikHandler.checkVolumeProperties(volume);
 
     if (!outputPath) {
       outputPath = Utils.createTemporaryFolder(this.ilastikTempDirectory);
@@ -84,8 +79,8 @@ export default class IlastikHandler {
           enqueuedTime: new Date(),
         });
 
-        return await this.#taskQueue.enqueue(() =>
-          this.#generateLabels(volumeId, userId, outputPath, taskHistory.id)
+        return await this.taskQueue.enqueue(() =>
+          this.generateLabels(volumeId, userId, outputPath, taskHistory.id)
         );
       } catch {
         console.error(
@@ -95,19 +90,12 @@ export default class IlastikHandler {
     });
   }
 
-  /**
-   * @param {string} rawDataPath
-   * @param {string} modelPath
-   * @param {string} labelsOutputPath
-   * @param {LogFile} logFile
-   * @returns {Promise<string>}
-   */
-  async #runIlastikInference(
-    rawDataPath,
-    modelPath,
-    labelsOutputPath,
-    logFile
-  ) {
+  async runIlastikInference(
+    rawDataPath: string,
+    modelPath: string,
+    labelsOutputPath: string,
+    logFile: LogFile
+  ): Promise<string> {
     await logFile.writeLog("\n\nIlastik inference started\n");
 
     const rawDataFullPath =
@@ -140,19 +128,12 @@ export default class IlastikHandler {
     return resultsFilePath;
   }
 
-  /**
-   * @param {string} rawDataPath
-   * @param {string} sparseLabelPath
-   * @param {string} outputPath
-   * @param {LogFile} logFile
-   * @returns {Promise<string>}
-   */
-  async #createIlastikProject(
-    rawDataPath,
-    sparseLabelPath,
-    outputPath,
-    logFile
-  ) {
+  private async createIlastikProject(
+    rawDataPath: string,
+    sparseLabelPath: string,
+    outputPath: string,
+    logFile: LogFile
+  ): Promise<string> {
     await logFile.writeLog("\n\nCreating Ilastik project\n");
 
     const modelOutputFullPath = path.join(
@@ -184,14 +165,12 @@ export default class IlastikHandler {
     return modelOutputFullPath;
   }
 
-  /**
-   * @param {number} volumeId
-   * @param {number} userId
-   * @param {string} outputPath
-   * @param {number} taskHistoryId
-   * @returns {Promise<PseudoLabelVolumeDataDB[]>}
-   */
-  async #generateLabels(volumeId, userId, outputPath, taskHistoryId) {
+  private async generateLabels(
+    volumeId: number,
+    userId: number,
+    outputPath: string,
+    taskHistoryId: number
+  ): Promise<PseudoLabeledVolumeData[]> {
     const logFile = await LogFile.createLogFile("label-generation");
 
     try {
@@ -205,7 +184,7 @@ export default class IlastikHandler {
 
       await logFile.writeLog("Stating label generation process\n\n");
 
-      IlastikHandler.#checkVolumeProperties(volume);
+      IlastikHandler.checkVolumeProperties(volume);
 
       const settings = RawVolumeData.toSettingSchema(volume.rawData);
 
@@ -219,7 +198,7 @@ export default class IlastikHandler {
       const labelsH5Path = path.join(outputPath, labelsH5FileName);
 
       await logFile.writeLog("Converting raw data to HDF5 format...\n");
-      await this.#convertDataToH5(
+      await this.convertDataToH5(
         volume.rawData,
         volume.sparseVolumes,
         settings,
@@ -229,14 +208,14 @@ export default class IlastikHandler {
       );
       await logFile.writeLog("Data conversion to HDF5 complete.");
 
-      const modelFullPath = await this.#createIlastikProject(
+      const modelFullPath = await this.createIlastikProject(
         rawH5Path,
         labelsH5Path,
         outputPath,
         logFile
       );
 
-      const resultPath = await this.#runIlastikInference(
+      const resultPath = await this.runIlastikInference(
         rawH5Path,
         modelFullPath,
         outputPath,
@@ -299,21 +278,13 @@ export default class IlastikHandler {
     }
   }
 
-  /**
-   * @param {import("../models/volume-data.mjs").RawVolumeDataWithFileDB} rawData
-   * @param {import("../models/volume-data.mjs").SparseVolumeDataWithFileDB[]} sparseLabelsStack
-   * @param {z.infer<typeof volumeSettings>} settings
-   * @param {string} rawOutputPath
-   * @param {string} labelsOutputPath
-   * @param {LogFile} logFile
-   */
-  async #convertDataToH5(
-    rawData,
-    sparseLabelsStack,
-    settings,
-    rawOutputPath,
-    labelsOutputPath,
-    logFile = null
+  private async convertDataToH5(
+    rawData: RawVolumeDataWithFileDB,
+    sparseLabelsStack: SparseVolumeDataWithFileDB[],
+    settings: z.infer<typeof volumeSettings>,
+    rawOutputPath: string,
+    labelsOutputPath: string,
+    logFile: LogFile | null = null
   ) {
     if (fileSystem.existsSync(rawOutputPath)) {
       await fsPromises.rm(rawOutputPath, {
@@ -345,12 +316,10 @@ export default class IlastikHandler {
     );
   }
 
-  /**
-   * @typedef {{x: number, y: number, z:number}} Dimensions
-   * @param {Dimensions} dim1
-   * @param {Dimensions} dim2
-   */
-  static #checkDimensions(dim1, dim2) {
+  private static checkDimensions(
+    dim1: z.infer<typeof volumeSizeSchema>,
+    dim2: z.infer<typeof volumeSizeSchema>
+  ) {
     if (!Utils.checkDimensions(dim1, dim2)) {
       throw new ApiError(
         400,
@@ -359,10 +328,7 @@ export default class IlastikHandler {
     }
   }
 
-  /**
-   * @param {VolumeDB & {rawData: import("../models/volume-data.mjs").RawVolumeDataWithFileDB, sparseVolumes: import("../models/volume-data.mjs").SparseVolumeDataWithFileDB[], pseudoVolumes: import("../models/volume-data.mjs").PseudoVolumeDataWithFileDB[]}} volume
-   */
-  static #checkVolumeProperties(volume) {
+  private static checkVolumeProperties(volume: FullVolumeWithFileDB) {
     if (volume.sparseVolumes.length < 2) {
       throw new ApiError(
         400,
@@ -421,7 +387,7 @@ export default class IlastikHandler {
           "Pseudo Labels Generation error: Missing data dimensions data."
         );
       }
-      IlastikHandler.#checkDimensions(dimensions, settings.size);
+      IlastikHandler.checkDimensions(dimensions, settings.size);
     }
   }
 }

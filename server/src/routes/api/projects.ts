@@ -1,7 +1,7 @@
 // @ts-check
 
 import express from 'express';
-import IlastikHandler from '../../tools/ilastik-handler.mjs';
+import IlastikHandler from '../../tools/ilastik-handler';
 import GPUTaskHandler from '../../tools/gpu-task-handler';
 import { restrictAdminAccess, restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadResultAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
@@ -11,7 +11,7 @@ import VolumeDataController from '../../controllers/volume-data-controller.mjs';
 import ModelController from '../../controllers/model-controller.mjs';
 import CheckpointController from '../../controllers/checkpoint-controller.mjs';
 import ResultController from '../../controllers/result-controller.mjs';
-import IlastikController from '../../controllers/ilastik-controller.mjs';
+import IlastikController from '../../controllers/ilastik-controller';
 import NanoOetziController from '../../controllers/nano-oetzi-controller';
 import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'

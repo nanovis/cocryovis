@@ -1,4 +1,5 @@
 src/routes/api/projects.ts
+src/types/prisma.d.ts
 data/
 database/
 demo/
