@@ -9,11 +9,11 @@ interface Task<T = unknown> {
 }
 
 export default class TaskQueue {
-  #queue: Task[] = [];
+  private queue: Task[] = [];
   private pendingProcess = false;
 
   get size(): number {
-    return this.#queue.length;
+    return this.queue.length;
   }
 
   get hasPendingTask(): boolean {
@@ -22,7 +22,7 @@ export default class TaskQueue {
 
   enqueue<T>(action: TaskAction<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.#queue.push({ action, resolve, reject });
+      this.queue.push({ action, resolve, reject });
 
       this.dequeue().catch((error: unknown) => {
         const errorMessage = Utils.formatError(error);
@@ -35,7 +35,7 @@ export default class TaskQueue {
     if (this.pendingProcess) return false;
 
     // Keep task in queue until it's fully processed
-    const task = this.#queue[0];
+    const task = this.queue[0];
     if (!task) return false;
 
     this.pendingProcess = true;
@@ -47,7 +47,7 @@ export default class TaskQueue {
       task.reject(error);
     } finally {
       this.pendingProcess = false;
-      this.#queue.shift();
+      this.queue.shift();
       void this.dequeue();
     }
 
@@ -55,6 +55,6 @@ export default class TaskQueue {
   }
 
   clear(): void {
-    this.#queue.length = 0;
+    this.queue.length = 0;
   }
 }

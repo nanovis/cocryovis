@@ -22,9 +22,9 @@ import type {
 } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 export default class IlastikHandler {
-  static rawDataset = "/raw_data";
-  static labelsDataset = "/labels";
-  static pseudoLabelsDataset = "/pseudo_labels";
+  static readonly rawDataset = "/raw_data";
+  static readonly labelsDataset = "/labels";
+  static readonly pseudoLabelsDataset = "/pseudo_labels";
 
   private config: AppConfig;
   private ilastikTempDirectory: string;

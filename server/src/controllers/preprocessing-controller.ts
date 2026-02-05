@@ -1,5 +1,3 @@
-// @ts-check
-
 import type { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
 import { ApiError } from "../tools/error-handler.mjs";
 import type GPUTaskHandler from "../tools/gpu-task-handler";

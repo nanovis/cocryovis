@@ -1,5 +1,3 @@
-// @ts-check
-
 import express from 'express';
 import IlastikHandler from '../../tools/ilastik-handler';
 import GPUTaskHandler from '../../tools/gpu-task-handler';

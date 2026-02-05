@@ -1,5 +1,3 @@
-// @ts-check
-
 import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 import { Request, Response } from "express";
