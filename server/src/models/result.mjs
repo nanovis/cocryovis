@@ -16,8 +16,16 @@ import Utils from "../tools/utils.mjs";
 import VolumeData from "./volume-data.mjs";
 import { Prisma } from "@prisma/client";
 
+//  * @typedef {object} Config
+//    * @property {string} name
+//    * @property {string} rawFileName
+//    * @property {string} settingsFileName
+//    * @property {number} index
+//    * @property {boolean?} rawVolumeChannel
+
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
+ * @typedef { { name: string, rawFileName: string, settingsFileName: string, index: number, rawVolumeChannel?: boolean } } ResultConfig
  */
 
 export default class Result extends DatabaseModel {
@@ -109,13 +117,7 @@ export default class Result extends DatabaseModel {
    * @param {number} creatorId
    * @param {number} checkpointId
    * @param {number} volumeId
-   * @typedef {object} Config
-   * @property {string} name
-   * @property {string} rawFileName
-   * @property {string} settingsFileName
-   * @property {number} index
-   * @property {boolean?} rawVolumeChannel
-   * @param {Config[]} config
+   * @param {ResultConfig[]} config
    * @param {string} folderPath
    * @param {string?} logFile
    * @param {Prisma.TransactionClient | undefined} [client]

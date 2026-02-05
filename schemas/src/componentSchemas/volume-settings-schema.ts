@@ -1,12 +1,14 @@
 import z from "zod";
 
+export const volumeSizeSchema = z.object({
+  x: z.int().positive(),
+  y: z.int().positive(),
+  z: z.int().positive(),
+});
+
 export const volumeSettings = z.object({
   file: z.string(),
-  size: z.object({
-    x: z.int().positive(),
-    y: z.int().positive(),
-    z: z.int().positive(),
-  }),
+  size: volumeSizeSchema,
   ratio: z.object({
     x: z.number().positive(),
     y: z.number().positive(),

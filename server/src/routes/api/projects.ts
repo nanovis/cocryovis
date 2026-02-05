@@ -1,8 +1,8 @@
 // @ts-check
 
-import express, { Router } from 'express';
+import express from 'express';
 import IlastikHandler from '../../tools/ilastik-handler.mjs';
-import GPUTaskHandler from '../../tools/gpu-task-handler.mjs';
+import GPUTaskHandler from '../../tools/gpu-task-handler';
 import { restrictAdminAccess, restrictApi, restrictReadCheckpointAccess, restrictReadModelAccess, restrictReadProjectAccess, restrictReadResultAccess, restrictReadVolumeAccess, restrictReadVolumeDataAccess } from '../../middleware/restrict.mjs';
 import appConfig from "../../tools/config.mjs";
 import ProjectController from '../../controllers/project-controller.mjs';
@@ -12,10 +12,10 @@ import ModelController from '../../controllers/model-controller.mjs';
 import CheckpointController from '../../controllers/checkpoint-controller.mjs';
 import ResultController from '../../controllers/result-controller.mjs';
 import IlastikController from '../../controllers/ilastik-controller.mjs';
-import NanoOetziController from '../../controllers/nano-oetzi-controller.mjs';
+import NanoOetziController from '../../controllers/nano-oetzi-controller';
 import UserController from '../../controllers/user-controller.mjs';
 import toAsyncRouter from 'async-express-decorator'
-import PreProcessingController from '../../controllers/preprocessing-controller.mjs';
+import PreProcessingController from '../../controllers/preprocessing-controller';
 import DemoController from '../../controllers/demo-controller.mjs';
 import CryoETController from '../../controllers/cryo-et-controller.mjs';
 
@@ -25,7 +25,6 @@ const ilastikHandler = new IlastikHandler(config);
 const gpuTaskHandler = new GPUTaskHandler(config);
 
 // toAsyncRouter removes the need to call next() on async errors.
-/** @type {Router} */
 export const projectsApi = toAsyncRouter(express.Router());
 
 ///////////////////////
@@ -125,10 +124,10 @@ projectsApi.delete(`/volume/:idVolume`, restrictApi, VolumeController.deleteVolu
 const readVolumeDataPrefix = "/volumeData/:type/:idVolumeData";
 
 // Get Raw Data
-projectsApi.get(`${readVolumeDataPrefix}`, restrictReadVolumeDataAccess, VolumeDataController.getById);
+projectsApi.get(readVolumeDataPrefix, restrictReadVolumeDataAccess, VolumeDataController.getById);
 
 // Update Raw Data
-projectsApi.put(`${readVolumeDataPrefix}`, restrictApi, VolumeDataController.update);
+projectsApi.put(readVolumeDataPrefix, restrictApi, VolumeDataController.update);
 
 // Get Raw Data Files
 projectsApi.get(`${readVolumeDataPrefix}/data`, restrictReadVolumeDataAccess, VolumeDataController.getData);

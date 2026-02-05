@@ -45,6 +45,7 @@ export interface AppConfig {
       command: string;
       cleanTemporaryFiles: boolean;
     };
+    cleanTemporaryFiles?: boolean;
   };
   Proximal_CryoET: {
     path: string;

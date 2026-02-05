@@ -23,7 +23,7 @@ export default class UserController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async register(req, res) {
+  static register = async (req, res) => {
     const { body } = validateSchema(req, { bodySchema: registerSchema });
 
     const user = await User.create(
@@ -40,13 +40,13 @@ export default class UserController {
     await UserController.#saveSession(req);
 
     res.status(201).json(userData);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async login(req, res) {
+  static login = async (req, res) => {
     const { body } = validateSchema(req, { bodySchema: loginSchemaReq });
 
     try {
@@ -63,7 +63,7 @@ export default class UserController {
     } catch {
       throw new ApiError(401, "Authentication Failed");
     }
-  }
+  };
 
   static async #regenerateSession(req) {
     return new Promise((resolve, reject) => {
@@ -87,18 +87,18 @@ export default class UserController {
    * @param {Request} req
    * @param {Response} res
    */
-  static logout(req, res) {
+  static logout = (req, res) => {
     req.session.destroy(function () {
       res.clearCookie(appConfig.cookieName);
       res.sendStatus(204);
     });
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getLoggedUserData(req, res) {
+  static getLoggedUserData = async (req, res) => {
     try {
       if (req.session != null) {
         res.json(req.session.user);
@@ -108,23 +108,23 @@ export default class UserController {
     } catch {
       res.sendStatus(401);
     }
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getAllUsers(req, res) {
+  static getAllUsers = async (req, res) => {
     const users = await User.getAllUsers();
 
     res.json(users);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getStatus(req, res) {
+  static getStatus = async (req, res) => {
     const { query } = validateSchema(req, {
       querySchema: statusQuery,
     });
@@ -141,13 +141,13 @@ export default class UserController {
       cpuTaskQueue: cpuTaskQueue,
       gpuTaskQueue: gpuTaskQueue,
     });
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async updateUser(req, res) {
+  static updateUser = async (req, res) => {
     const { body } = validateSchema(req, { bodySchema: updateUserSchema });
 
     const id = req.session.user.id;
@@ -158,23 +158,23 @@ export default class UserController {
     req.session.user = userData;
     await UserController.#saveSession(req);
     res.json(userData);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async deleteUser(req, res) {
+  static deleteUser = async (req, res) => {
     await User.del(req.session.user.id);
 
     res.sendStatus(204);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async adminDeleteUser(req, res) {
+  static adminDeleteUser = async (req, res) => {
     const { body } = validateSchema(req, { bodySchema: idUserSchema });
     if (req.session.user.id === body.id) {
       throw new ApiError(
@@ -192,5 +192,5 @@ export default class UserController {
     await User.del(body.id);
 
     res.sendStatus(204);
-  }
+  };
 }

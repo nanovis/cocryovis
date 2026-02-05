@@ -5,20 +5,15 @@ import {
   trainingReq,
 } from "@cocryovis/schemas/nano-oetzi-path-schema";
 import validateSchema from "../tools/validate-schema.mjs";
-import GPUTaskHandler from "../tools/gpu-task-handler.mjs";
-
-/**
- * @typedef { import("express").Request } Request
- * @typedef { import("express").Response } Response
- */
+import type GPUTaskHandler from "../tools/gpu-task-handler.ts";
+import { type Request, type Response } from "express";
 
 export default class NanoOetziController {
-  /**
-   * @param {GPUTaskHandler} gpuTaskHandler
-   * @param {Request} req
-   * @param {Response} res
-   */
-  static async queueInference(gpuTaskHandler, req, res) {
+  static queueInference = async (
+    gpuTaskHandler: GPUTaskHandler,
+    req: Request,
+    res: Response
+  ) => {
     const { body } = validateSchema(req, { bodySchema: inferenceIds });
 
     const checkpointId = body.checkpointId;
@@ -31,14 +26,13 @@ export default class NanoOetziController {
     );
 
     res.sendStatus(204);
-  }
+  };
 
-  /**
-   * @param {GPUTaskHandler} gpuTaskHandler
-   * @param {Request} req
-   * @param {Response} res
-   */
-  static async queueTraining(gpuTaskHandler, req, res) {
+  static queueTraining = async (
+    gpuTaskHandler: GPUTaskHandler,
+    req: Request,
+    res: Response
+  ) => {
     const { body } = validateSchema(req, { bodySchema: trainingReq });
 
     await gpuTaskHandler.queueTraining(
@@ -51,5 +45,5 @@ export default class NanoOetziController {
     );
 
     res.sendStatus(204);
-  }
+  };
 }

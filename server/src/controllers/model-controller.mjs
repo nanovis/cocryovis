@@ -19,7 +19,7 @@ export default class ModelController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getModel(req, res) {
+  static getModel = async (req, res) => {
     const { params, query } = validateSchema(req, {
       paramsSchema: idModel,
       querySchema: getModelQuerySchema,
@@ -28,13 +28,13 @@ export default class ModelController {
     const model = await Model.getById(params.idModel, query);
 
     res.status(200).json(model);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getModelsFromProject(req, res) {
+  static getModelsFromProject = async (req, res) => {
     const { params, query } = validateSchema(req, {
       paramsSchema: idProject,
       querySchema: getModelQuerySchema,
@@ -43,13 +43,13 @@ export default class ModelController {
     const models = await Model.getModelsFromProject(params.idProject, query);
 
     res.status(200).json(models);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createModel(req, res) {
+  static createModel = async (req, res) => {
     const { params, body } = validateSchema(req, {
       paramsSchema: idProject,
       bodySchema: createModelSchema,
@@ -63,13 +63,13 @@ export default class ModelController {
     );
 
     res.status(201).json(model);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async cloneModel(req, res) {
+  static cloneModel = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idModelAndidProject,
     });
@@ -81,13 +81,13 @@ export default class ModelController {
     );
 
     res.status(201).json(model);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async deleteModel(req, res) {
+  static deleteModel = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idModel,
     });
@@ -95,5 +95,5 @@ export default class ModelController {
     await Model.del(params.idModel);
 
     res.sendStatus(204);
-  }
+  };
 }

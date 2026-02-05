@@ -1,49 +1,68 @@
-// @ts-check
-
 import path from "path";
 import fileSystem from "fs";
 import TaskQueue from "./task-queue.mjs";
 import Utils from "./utils.mjs";
 import fsPromises from "node:fs/promises";
 import Checkpoint from "../models/checkpoint.mjs";
-import Result from "../models/result.mjs";
+import Result, { type ResultConfig } from "../models/result.mjs";
 import LogFile from "./log-manager.mjs";
 import Volume from "../models/volume.mjs";
 import Model from "../models/model.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
-import { WriteMultiLock } from "./write-lock-manager.mjs";
+import { WriteMultiLock, type WriteLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
-import fileUpload from "express-fileupload";
 import { PendingLocalFile } from "./file-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "./config.mjs";
+import type { AppConfig } from "../types/types";
+import type z from "zod";
+import { type trainingOptions } from "@cocryovis/schemas/nano-oetzi-path-schema";
+import type {
+  Volume as VolumeDB,
+  RawVolumeData as RawVolumeDataDB,
+  Result as ResultDB,
+  Checkpoint as CheckpointDB,
+} from "@prisma/client";
+import type {
+  PseudoVolumeDataWithFileDB,
+  RawVolumeDataWithFileDB,
+} from "../models/volume-data.mjs";
+import type fileUpload from "express-fileupload";
+import type {
+  IMODOptions,
+  CTFOptions,
+  tiltSeriesOptions,
+  motionCorrectionOptions,
+} from "@cocryovis/schemas/cryoEt-path-schema";
+import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
-/**
- * @import z from "zod"
- * @import { trainingOptions } from "@cocryovis/schemas/nano-oetzi-path-schema";
- * @import { IMODOptions, CTFOptions, tiltSeriesOptions, motionCorrectionOptions } from "@cocryovis/schemas/cryoEt-path-schema"
- * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
- * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
- * @typedef { import("@prisma/client").Volume } VolumeDB
- * @typedef { import("@prisma/client").Result } ResultDB
- * @typedef { import("@prisma/client").Checkpoint } CheckpointDB
- * @typedef { VolumeDB & {rawData: import("../models/volume-data.mjs").RawVolumeDataWithFileDB, pseudoVolumes: import("../models/volume-data.mjs").PseudoVolumeDataWithFileDB[]} } DeepVolume
- */
+interface DeepVolume extends VolumeDB {
+  rawData: RawVolumeDataWithFileDB;
+  pseudoVolumes: PseudoVolumeDataWithFileDB[];
+}
+
+interface VolumeConfigData {
+  name: string;
+  rawDataPath: string;
+  labels: string[];
+}
 
 export default class GPUTaskHandler {
-  /** @type {TaskQueue} */ #taskQueue;
+  private taskQueue: TaskQueue;
+  private config: AppConfig;
+  private gpuTaskTempDirectory: string;
 
-  constructor(config) {
+  constructor(config: AppConfig) {
     this.config = config;
-    this.#taskQueue = new TaskQueue();
+    this.taskQueue = new TaskQueue();
     this.gpuTaskTempDirectory = path.join(this.config.tempPath, "gpuTasks");
     Object.preventExtensions(this);
   }
 
   isInferenceRunning() {
-    return this.#taskQueue.hasPendingTask;
+    return this.taskQueue.hasPendingTask;
   }
 
   createTemporaryOutputPath() {
@@ -58,15 +77,13 @@ export default class GPUTaskHandler {
     return tempFolderPath;
   }
 
-  /**
-   * @param {number} checkpointId
-   * @param {number} volumeId
-   * @param {number} userId
-   * @param {string?} outputPath
-   * @returns {Promise<void>}
-   */
-  async queueInference(checkpointId, volumeId, userId, outputPath = null) {
-    if (this.#taskQueue.size >= this.config.gpuQueueSize) {
+  async queueInference(
+    checkpointId: number,
+    volumeId: number,
+    userId: number,
+    outputPath: string | null = null
+  ) {
+    if (this.taskQueue.size >= this.config.gpuQueueSize) {
       throw new ApiError(
         400,
         "Failed Attempt to start inference: Too many tasks in queue."
@@ -100,7 +117,7 @@ export default class GPUTaskHandler {
           enqueuedTime: new Date(),
         });
 
-        return await this.#taskQueue.enqueue(() =>
+        return await this.taskQueue.enqueue(() =>
           this.#runInference(
             checkpointId,
             volumeId,
@@ -110,28 +127,22 @@ export default class GPUTaskHandler {
           )
         );
       } catch {
-        console.error(`Inference task by User with id ${userId} failed.`);
+        console.error(
+          `Inference task by User with id ${userId.toString()} failed.`
+        );
       }
     });
   }
 
-  /**
-   * @param {number} checkpointId
-   * @param {number} volumeId
-   * @param {number} userId
-   * @param {string} outputPath
-   * @param {number} taskHistoryId
-   * @returns {Promise<ResultDB>}
-   */
   async #runInference(
-    checkpointId,
-    volumeId,
-    userId,
-    outputPath,
-    taskHistoryId
-  ) {
+    checkpointId: number,
+    volumeId: number,
+    userId: number,
+    outputPath: string,
+    taskHistoryId: number
+  ): Promise<ResultDB> {
     const logFile = await LogFile.createLogFile("inference");
-    let tempSettingsPath = null;
+    let tempSettingsPath: string | null = null;
 
     try {
       await TaskHistory.update(taskHistoryId, {
@@ -157,7 +168,7 @@ export default class GPUTaskHandler {
         "utf8"
       );
 
-      fsPromises.mkdir(outputPath, { recursive: true });
+      await fsPromises.mkdir(outputPath, { recursive: true });
 
       await logFile.writeLog("Nano-Oetzi inference started\n");
 
@@ -169,7 +180,7 @@ export default class GPUTaskHandler {
       }
 
       const checkpointAbsolutePath = path.resolve(checkpoint.filePath);
-      let params = [
+      const params = [
         "./" + this.config.nanoOetzi.inference.command,
         inferenceDataAbsolutePath,
         outputAbsolutePath,
@@ -186,8 +197,8 @@ export default class GPUTaskHandler {
         path.resolve(
           path.join(this.config.nanoOetzi.path, this.config.nanoOetzi.scripts)
         ),
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
+        async (value) => logFile.writeLog(value),
+        async (value) => logFile.writeLog(value)
       );
 
       await logFile.writeLog(
@@ -203,7 +214,7 @@ export default class GPUTaskHandler {
         userId,
         checkpointId,
         volumeId,
-        JSON.parse(outputFile.toString()),
+        JSON.parse(outputFile) as ResultConfig[],
         outputPath,
         logFile.fileName
       );
@@ -225,16 +236,19 @@ export default class GPUTaskHandler {
       });
 
       return result;
-    } catch (error) {
-      await logFile.writeLog(`--------------\n${error}`);
-      console.error(`NanoOetzi inference error: ${error}`);
+    } catch (error: unknown) {
+      const message = Utils.formatError(error);
+
+      await logFile.writeLog(`--------------\n${message}`);
+      console.error(`NanoOetzi inference error: ${message}`);
       try {
         await fsPromises.rm(outputPath, {
           recursive: true,
           force: true,
         });
       } catch (error) {
-        console.error(`Filed to remove nano oetzi inference cache: ${error}`);
+        const message = Utils.formatError(error);
+        console.error(`Filed to remove nano oetzi inference cache: ${message}`);
       }
       await TaskHistory.update(taskHistoryId, {
         taskStatus: TaskHistory.status.failed,
@@ -256,25 +270,15 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @param {number} modelId
-   * @param {number} userId
-   * @param {number[]} trainingVolumesIds
-   * @param {number[]} validationVolumesIds
-   * @param {number[]} testingVolumesIds
-   * @param {z.infer<trainingOptions>} params
-   * @param {string?} outputPath
-   * @returns {Promise<void>}
-   */
   async queueTraining(
-    modelId,
-    userId,
-    trainingVolumesIds,
-    validationVolumesIds,
-    testingVolumesIds,
-    params,
-    outputPath = null
-  ) {
+    modelId: number,
+    userId: number,
+    trainingVolumesIds: number[],
+    validationVolumesIds: number[],
+    testingVolumesIds: number[],
+    params: z.infer<typeof trainingOptions>,
+    outputPath: string | null = null
+  ): Promise<void> {
     if (!trainingVolumesIds || trainingVolumesIds.length == 0) {
       throw new ApiError(
         400,
@@ -293,7 +297,7 @@ export default class GPUTaskHandler {
         "Failed Attempt to start training: Missing test data."
       );
     }
-    if (this.#taskQueue.size >= this.config.gpuQueueSize) {
+    if (this.taskQueue.size >= this.config.gpuQueueSize) {
       throw new ApiError(
         400,
         "Failed Attempt to start training: Too many tasks in queue."
@@ -345,7 +349,7 @@ export default class GPUTaskHandler {
       Checkpoint.modelName,
     ]);
 
-    const volumeLocks = [];
+    const volumeLocks: WriteLock[] = [];
     trainingVolumesIds.forEach((v) => {
       volumeLocks.push(
         Volume.lockManager.generateLockInstance(v, [
@@ -385,7 +389,7 @@ export default class GPUTaskHandler {
           enqueuedTime: new Date(),
         });
 
-        return await this.#taskQueue.enqueue(() =>
+        return await this.taskQueue.enqueue(() =>
           this.#runTraining(
             modelId,
             userId,
@@ -398,16 +402,14 @@ export default class GPUTaskHandler {
           )
         );
       } catch {
-        console.error(`Training task by User with id ${userId} failed.`);
+        console.error(
+          `Training task by User with id ${userId.toString()} failed.`
+        );
       }
     });
   }
 
-  /**
-   * @param {z.infer<trainingOptions>} params
-   * @returns {void}
-   */
-  #checkTrainingInput(params) {
+  #checkTrainingInput(params: z.infer<typeof trainingOptions>) {
     if (params.minEpochs < 1) {
       throw new ApiError(
         400,
@@ -455,27 +457,16 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @param {number} modelId
-   * @param {number} userId
-   * @param {number[]} trainingVolumesIds
-   * @param {number[]} validationVolumesIds
-   * @param {number[]} testingVolumesIds
-   * @param {z.infer<trainingOptions>} params
-   * @param {string} outputPath
-   * @param {number} taskHistoryId
-   * @returns {Promise<CheckpointDB>}
-   */
   async #runTraining(
-    modelId,
-    userId,
-    trainingVolumesIds,
-    validationVolumesIds,
-    testingVolumesIds,
-    params,
-    outputPath,
-    taskHistoryId
-  ) {
+    modelId: number,
+    userId: number,
+    trainingVolumesIds: number[],
+    validationVolumesIds: number[],
+    testingVolumesIds: number[],
+    params: z.infer<typeof trainingOptions>,
+    outputPath: string | null,
+    taskHistoryId: number
+  ): Promise<CheckpointDB> {
     const logFile = await LogFile.createLogFile("training");
     const workFolder = path.join(outputPath, "training-data");
 
@@ -539,19 +530,19 @@ export default class GPUTaskHandler {
       ];
 
       if (params.minEpochs !== undefined) {
-        scriptParams.push("--min_epochs", params.minEpochs);
+        scriptParams.push("--min_epochs", params.minEpochs.toString());
       }
       if (params.maxEpochs !== undefined) {
-        scriptParams.push("--max_epochs", params.maxEpochs);
+        scriptParams.push("--max_epochs", params.maxEpochs.toString());
       }
       if (params.findLearningRate) {
         scriptParams.push("--find_lr");
       }
       if (params.learningRate !== undefined) {
-        scriptParams.push("--learning_rate", params.learningRate);
+        scriptParams.push("--learning_rate", params.learningRate.toString());
       }
       if (params.batchSize !== undefined) {
-        scriptParams.push("--batch_size", params.batchSize);
+        scriptParams.push("--batch_size", params.batchSize.toString());
       }
       if (params.loss !== undefined) {
         scriptParams.push("--loss", params.loss.toLowerCase());
@@ -560,7 +551,10 @@ export default class GPUTaskHandler {
         scriptParams.push("--opt", params.optimizer.toLowerCase());
       }
       if (params.accumulateGradients !== undefined) {
-        scriptParams.push("--accumulate-grads", params.accumulateGradients);
+        scriptParams.push(
+          "--accumulate-grads",
+          params.accumulateGradients.toString()
+        );
       }
 
       if (params.checkpointId !== undefined) {
@@ -595,7 +589,9 @@ export default class GPUTaskHandler {
         "result.json"
       );
       const trainingResults = await fsPromises.readFile(trainingResultsPath);
-      const trainingResultsJSON = JSON.parse(trainingResults.toString());
+      const trainingResultsJSON = JSON.parse(trainingResults.toString()) as {
+        best_model_path: string;
+      };
 
       const bestModelPath = trainingResultsJSON.best_model_path;
       const newBestModelPath = path.join(
@@ -605,7 +601,7 @@ export default class GPUTaskHandler {
 
       await fsPromises.rename(bestModelPath, newBestModelPath);
 
-      const labelIds = [];
+      const labelIds: number[] = [];
       for (const trainingVolume of trainingVolumes) {
         for (const pseudoVolume of trainingVolume.pseudoVolumes) {
           labelIds.push(pseudoVolume.id);
@@ -644,16 +640,18 @@ export default class GPUTaskHandler {
 
       return checkpoint;
     } catch (error) {
-      await logFile.writeLog(`ERROR: \n${error}`);
-      console.error(`Nano Oetzi training error: ${error}`);
+      const message = Utils.formatError(error);
+      await logFile.writeLog(`ERROR: \n${message}`);
+      console.error(`Nano Oetzi training error: ${message}`);
       try {
         await fsPromises.rm(workFolder, {
           recursive: true,
           force: true,
         });
       } catch (error) {
+        const message = Utils.formatError(error);
         console.error(
-          `Failed to remove temporary files after a failed Nano-Oetzi training:\n${error.message}`
+          `Failed to remove temporary files after a failed Nano-Oetzi training:\n${message}`
         );
       }
       await TaskHistory.update(taskHistoryId, {
@@ -669,8 +667,9 @@ export default class GPUTaskHandler {
             force: true,
           });
         } catch (error) {
+          const message = Utils.formatError(error);
           console.error(
-            `Failed to remove temporary files after a failed Nano-Oetzi training:\n${error.message}`
+            `Failed to remove temporary files after a failed Nano-Oetzi training:\n${message}`
           );
         }
       }
@@ -685,36 +684,43 @@ export default class GPUTaskHandler {
    * @returns {Promise<string>}
    */
   async #writeTrainingConfigFile(
-    trainingReferences,
-    validationReferences,
-    testReferences,
-    outputPath
-  ) {
-    const properties = {
-      dimensions: null,
-      channels: null,
-    };
-    const configData = {
+    trainingReferences: DeepVolume[],
+    validationReferences: DeepVolume[],
+    testReferences: DeepVolume[],
+    outputPath: string
+  ): Promise<string> {
+    const configData: {
+      train: VolumeConfigData[];
+      valid: VolumeConfigData[];
+      test: VolumeConfigData[];
+      properties: {
+        dimensions: z.infer<typeof volumeSizeSchema> | null;
+        channels: number | null;
+      };
+    } = {
       train: [],
       valid: [],
       test: [],
-      properties: properties,
+      properties: {
+        dimensions: null,
+        channels: null,
+      },
     };
 
-    await this.#prepareTrainingConfigSet(
+    this.#prepareTrainingConfigSet(
       trainingReferences,
       configData.train,
-      properties
+      configData.properties
     );
-    await this.#prepareTrainingConfigSet(
+    this.#prepareTrainingConfigSet(
       validationReferences,
       configData.valid,
-      properties
+      configData.properties
     );
-    await this.#prepareTrainingConfigSet(
+    this.#prepareTrainingConfigSet(
       testReferences,
       configData.test,
-      properties
+      configData.properties
     );
 
     const configFilePath = path.join(outputPath, "trainingConfig.json");
@@ -726,12 +732,14 @@ export default class GPUTaskHandler {
     return configFilePath;
   }
 
-  /**
-   * @param {DeepVolume[]} references
-   * @param {Array} configDataArray
-   * @param {{dimensions: object?, channels: number?}} properties
-   */
-  async #prepareTrainingConfigSet(references, configDataArray, properties) {
+  #prepareTrainingConfigSet(
+    references: DeepVolume[],
+    configDataArray: VolumeConfigData[],
+    properties: {
+      dimensions: z.infer<typeof volumeSizeSchema> | null;
+      channels: number | null;
+    }
+  ) {
     for (const reference of references) {
       if (!reference.rawData) {
         throw new ApiError(
@@ -753,10 +761,7 @@ export default class GPUTaskHandler {
       }
 
       const volumeSettings = RawVolumeData.toSettingSchema(reference.rawData);
-      if (
-        Object.hasOwn(volumeSettings, "usedBits") &&
-        volumeSettings["usedBits"] != 8
-      ) {
+      if (volumeSettings.usedBits != 8) {
         throw new ApiError(
           400,
           "NanoOetzi inference error: One or more raw volume data inputs have an unsopported data format."
@@ -764,10 +769,10 @@ export default class GPUTaskHandler {
       }
 
       if (properties.dimensions == null) {
-        properties.dimensions = volumeSettings["size"];
+        properties.dimensions = volumeSettings.size;
       } else {
         GPUTaskHandler.#checkDimensions(
-          volumeSettings["size"],
+          volumeSettings.size,
           properties.dimensions
         );
       }
@@ -781,7 +786,11 @@ export default class GPUTaskHandler {
           );
         }
       }
-      const volumeInput = {
+      const volumeInput: {
+        name: string;
+        rawDataPath: string;
+        labels: string[];
+      } = {
         name: reference.name,
         rawDataPath: reference.rawData.dataFile.rawFilePath,
         labels: [],
@@ -797,17 +806,14 @@ export default class GPUTaskHandler {
         const pseudoVolumeSettings =
           RawVolumeData.toSettingSchema(pseudoVolume);
 
-        if (
-          Object.hasOwn(pseudoVolumeSettings, "usedBits") &&
-          pseudoVolumeSettings["usedBits"] != 8
-        ) {
+        if (pseudoVolumeSettings.usedBits != 8) {
           throw new ApiError(
             400,
             "NanoOetzi inference error: One or more pseudo labeled volumes have an unsopported data format."
           );
         }
         GPUTaskHandler.#checkDimensions(
-          pseudoVolumeSettings["size"],
+          pseudoVolumeSettings.size,
           properties.dimensions
         );
         volumeInput.labels.push(pseudoVolume.dataFile.rawFilePath);
@@ -817,12 +823,10 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @typedef {{x: number, y: number, z:number}} Dimensions
-   * @param {Dimensions} dim1
-   * @param {Dimensions} dim2
-   */
-  static #checkDimensions(dim1, dim2) {
+  static #checkDimensions(
+    dim1: z.infer<typeof volumeSizeSchema>,
+    dim2: z.infer<typeof volumeSizeSchema>
+  ) {
     if (!Utils.checkDimensions(dim1, dim2)) {
       throw new ApiError(
         400,
@@ -831,11 +835,10 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @param {import("../models/volume-data.mjs").RawVolumeDataWithFileDB} rawVolumeData
-   * @param {CheckpointDB} checkpoint
-   */
-  static #checkInferenceInput(rawVolumeData, checkpoint) {
+  static #checkInferenceInput(
+    rawVolumeData: RawVolumeDataWithFileDB,
+    checkpoint: CheckpointDB
+  ) {
     if (!rawVolumeData) {
       throw new ApiError(
         400,
@@ -857,20 +860,13 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @param {fileUpload.UploadedFile} tiltSeriesFile
-   * @param {z.infer<tiltSeriesOptions>} options
-   * @param {number} volumeId
-   * @param {number} userId
-   * @returns {Promise<void>}
-   */
   async queueTiltSeriesReconstruction(
-    tiltSeriesFile,
-    options,
-    volumeId,
-    userId
-  ) {
-    if (this.#taskQueue.size >= this.config.gpuQueueSize) {
+    tiltSeriesFile: fileUpload.UploadedFile,
+    options: z.infer<typeof tiltSeriesOptions>,
+    volumeId: number,
+    userId: number
+  ): Promise<void> {
+    if (this.taskQueue.size >= this.config.gpuQueueSize) {
       throw new ApiError(
         400,
         "Failed Attempt to start tilt series reconstruction: Too many tasks in queue."
@@ -897,7 +893,7 @@ export default class GPUTaskHandler {
           enqueuedTime: new Date(),
         });
 
-        return await this.#taskQueue.enqueue(() =>
+        return await this.taskQueue.enqueue(() =>
           this.#runTiltSeriesReconstruction(
             tiltSeriesFile,
             options,
@@ -908,40 +904,17 @@ export default class GPUTaskHandler {
           )
         );
       } catch {
-        console.error(`Reconstruction task by User with id ${userId} failed.`);
+        console.error(
+          `Reconstruction task by User with id ${userId.toString()} failed.`
+        );
       }
     });
   }
-
-  /**
-   * @param {fileUpload.UploadedFile} tiltSeriesFile
-   * @param {z.infer<tiltSeriesOptions>} options
-   * @param {number} volumeId
-   * @returns {Promise<void>}
-   */
-  async #validateReconstructionInput(tiltSeriesFile, options, volumeId) {
-    if (!tiltSeriesFile) {
-      throw new ApiError(
-        400,
-        "Failed Attempt to start tilt series reconstruction: Missing tilt series file."
-      );
-    }
-    if (
-      !options ||
-      !options.reconstruction ||
-      !options.reconstruction.volume_depth
-    ) {
-      throw new ApiError(
-        400,
-        "Failed Attempt to start tilt series reconstruction: Missing volume depth."
-      );
-    }
-    if (!volumeId) {
-      throw new ApiError(
-        400,
-        "Failed Attempt to start tilt series reconstruction: Missing volume id."
-      );
-    }
+  async #validateReconstructionInput(
+    _tiltSeriesFile: fileUpload.UploadedFile,
+    _options: z.infer<typeof tiltSeriesOptions>,
+    volumeId: number
+  ): Promise<void> {
     const volume = await Volume.getById(volumeId);
     if (!volume) {
       throw new ApiError(
@@ -951,23 +924,14 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @param {fileUpload.UploadedFile} tiltSeriesFile
-   * @param {z.infer<tiltSeriesOptions>} options
-   * @param {number} volumeId
-   * @param {number} userId
-   * @param {string} outputPath
-   * @param {number} taskHistoryId
-   * @returns {Promise<RawVolumeDataDB>}
-   */
   async #runTiltSeriesReconstruction(
-    tiltSeriesFile,
-    options,
-    volumeId,
-    userId,
-    outputPath,
-    taskHistoryId
-  ) {
+    tiltSeriesFile: fileUpload.UploadedFile,
+    options: z.infer<typeof tiltSeriesOptions>,
+    volumeId: number,
+    userId: number,
+    outputPath: string,
+    taskHistoryId: number
+  ): Promise<RawVolumeDataDB> {
     const logFile = await LogFile.createLogFile("reconstruction");
 
     try {
@@ -983,7 +947,7 @@ export default class GPUTaskHandler {
         volumeId
       );
 
-      fsPromises.mkdir(outputPath, { recursive: true });
+      await fsPromises.mkdir(outputPath, { recursive: true });
 
       let inputFileAbsolutePath = path.resolve(tiltSeriesFile.tempFilePath);
 
@@ -1081,8 +1045,9 @@ export default class GPUTaskHandler {
 
       return rawData;
     } catch (error) {
-      await logFile.writeLog(`ERROR: \n${error}`);
-      console.error(`Tilt series reconstruction error: ${error}`);
+      const errorMessage = Utils.formatError(error);
+      await logFile.writeLog(`ERROR: \n${errorMessage}`);
+      console.error(`Tilt series reconstruction error: ${errorMessage}`);
       await TaskHistory.update(taskHistoryId, {
         taskStatus: TaskHistory.status.failed,
         endTime: new Date(),
@@ -1095,7 +1060,10 @@ export default class GPUTaskHandler {
           force: true,
         });
       } catch (error) {
-        console.error(`Filed to remove nano oetzi inference cache: ${error}`);
+        const errorMessage = Utils.formatError(error);
+        console.error(
+          `Filed to remove nano oetzi inference cache: ${errorMessage}`
+        );
       }
       try {
         await fsPromises.rm(tiltSeriesFile.tempFilePath, {
@@ -1109,14 +1077,12 @@ export default class GPUTaskHandler {
     }
   }
 
-  /**
-   * @param {string} inputPath
-   * @param {string} outputFolder
-   * @param {z.infer<IMODOptions>} options
-   * @param {LogFile} logFile
-   * @returns {Promise<string>}
-   */
-  async #runIMODTiltSeriesAlignment(inputPath, outputFolder, options, logFile) {
+  async #runIMODTiltSeriesAlignment(
+    inputPath: string,
+    outputFolder: string,
+    options: z.infer<typeof IMODOptions>,
+    logFile: LogFile
+  ): Promise<string> {
     if (!fileSystem.existsSync(inputPath)) {
       throw new ApiError(
         400,
@@ -1124,10 +1090,12 @@ export default class GPUTaskHandler {
       );
     }
 
-    logFile.writeLog("--------------STARTING IMOD TILT SERIESALIGNMENT\n");
+    await logFile.writeLog(
+      "--------------STARTING IMOD TILT SERIESALIGNMENT\n"
+    );
 
     // 1. Run CCDERASER
-    logFile.writeLog("CCDERASER------\n");
+    await logFile.writeLog("CCDERASER------\n");
     const baseName = Utils.stripExtension(inputPath);
     const inputAbsolutePath = path.resolve(inputPath);
     const ccderaserOutputPath = path.resolve(
@@ -1173,10 +1141,10 @@ export default class GPUTaskHandler {
       (value) => logFile.writeLog(value),
       (value) => logFile.writeLog(value)
     );
-    logFile.writeLog(`CCDERASER finished.\n`);
+    await logFile.writeLog(`CCDERASER finished.\n`);
 
     // 2. Extract tilt angles
-    logFile.writeLog("EXTRACTTILTS------\n");
+    await logFile.writeLog("EXTRACTTILTS------\n");
 
     const extracttiltsOutputPath = path.resolve(
       path.join(outputFolder, baseName + "_tilts.tlt")
@@ -1190,7 +1158,7 @@ export default class GPUTaskHandler {
     );
 
     // 3. Patch tracking with tiltxcorr
-    logFile.writeLog("TILTXCORR------\n");
+    await logFile.writeLog("TILTXCORR------\n");
     const fidModelOutputPath = path.resolve(
       path.join(outputFolder, baseName + "_patchtrack.fid")
     );
@@ -1233,7 +1201,7 @@ export default class GPUTaskHandler {
 
     // 4. Solve alignment with tiltalign
 
-    logFile.writeLog("TILTALIGN------\n");
+    await logFile.writeLog("TILTALIGN------\n");
 
     const transformPath = path.resolve(
       path.join(outputFolder, baseName + "_patchtrack.fid")
@@ -1264,7 +1232,7 @@ export default class GPUTaskHandler {
       [139]
     );
 
-    logFile.writeLog("NEWSTACK------\n");
+    await logFile.writeLog("NEWSTACK------\n");
 
     const trimmedPath = path.resolve(
       path.join(outputFolder, baseName + "_trimmed.mrc")
@@ -1301,20 +1269,20 @@ export default class GPUTaskHandler {
       (value) => logFile.writeLog(value)
     );
 
-    logFile.writeLog("--------------IMOD TILT SERIES ALIGNMENT FINISHED\n");
+    await logFile.writeLog(
+      "--------------IMOD TILT SERIES ALIGNMENT FINISHED\n"
+    );
 
     return alignedPath;
   }
 
-  /**
-   * @param {string} inputPath
-   * @param {string} outputFolder
-   * @param {z.infer<CTFOptions>} options
-   * @param {LogFile} logFile
-   * @returns {Promise<string>}
-   */
-  async #runGCTFFind(inputPath, outputFolder, options, logFile) {
-    logFile.writeLog("--------------STARTING CTF ESTIMATION\n");
+  async #runGCTFFind(
+    inputPath: string,
+    outputFolder: string,
+    options: z.infer<typeof CTFOptions>,
+    logFile: LogFile
+  ): Promise<string> {
+    await logFile.writeLog("--------------STARTING CTF ESTIMATION\n");
     if (!fileSystem.existsSync(inputPath)) {
       throw new ApiError(400, `Input file ${inputPath} does not exist.`);
     }
@@ -1371,19 +1339,17 @@ export default class GPUTaskHandler {
       (value) => logFile.writeLog(value)
     );
 
-    logFile.writeLog("--------------CTF ESTIMATION FINISHED\n");
+    await logFile.writeLog("--------------CTF ESTIMATION FINISHED\n");
     return outputPath;
   }
 
-  /**
-   * @param {string} inputPath
-   * @param {string} outputFolder
-   * @param {z.infer<motionCorrectionOptions>} options
-   * @param {LogFile} logFile
-   * @returns {Promise<string>}
-   */
-  async #runMotionCor3(inputPath, outputFolder, options, logFile) {
-    logFile.writeLog("--------------STARTING MOTION CORRECTION\n");
+  async #runMotionCor3(
+    inputPath: string,
+    outputFolder: string,
+    options: z.infer<typeof motionCorrectionOptions>,
+    logFile: LogFile
+  ): Promise<string> {
+    await logFile.writeLog("--------------STARTING MOTION CORRECTION\n");
     if (!fileSystem.existsSync(inputPath)) {
       throw new ApiError(400, `Input file ${inputPath} does not exist.`);
     }
@@ -1447,7 +1413,7 @@ export default class GPUTaskHandler {
       (value) => logFile.writeLog(value)
     );
 
-    logFile.writeLog("--------------MOTION CORRECTION FINISHED\n");
+    await logFile.writeLog("--------------MOTION CORRECTION FINISHED\n");
     return outputPath;
   }
 }

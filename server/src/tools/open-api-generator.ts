@@ -1,4 +1,3 @@
-// @ts-check
 import fs from "fs";
 import YAML from "yaml";
 import { createDocument } from "zod-openapi";
@@ -49,6 +48,7 @@ const document = createDocument(
   },
   { reused: "inline" }
 );
+
 export function writeOpenApi() {
   const yaml = YAML.stringify(document);
   fs.writeFileSync("openapi.yaml", yaml);

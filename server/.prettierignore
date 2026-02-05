@@ -1,4 +1,4 @@
-src/routes/api/projects.mjs
+src/routes/api/projects.ts
 data/
 database/
 demo/

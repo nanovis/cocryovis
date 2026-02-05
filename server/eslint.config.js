@@ -67,6 +67,7 @@ export default defineConfig([
       "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/no-extraneous-class": "off",
     },
   },
   globalIgnores([
@@ -85,6 +86,8 @@ export default defineConfig([
     "*.yaml",
     "*.yml",
     "*.md",
+    "eslint.config.js",
+    "tsup.config.ts",
 
     "!package.json",
     "!tsconfig*.json",

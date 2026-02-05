@@ -4,7 +4,7 @@ import express from "express";
 import path from "path";
 import fileSystem from "fs";
 import session, { type SessionOptions } from "express-session";
-import { projectsApi } from "./routes/api/projects.mjs";
+import { projectsApi } from "./routes/api/projects";
 import bodyParser from "body-parser";
 import cors from "cors";
 import fileUpload from "express-fileupload";
@@ -22,7 +22,7 @@ import { checkCookieAge } from "./middleware/restrict.mjs";
 import { type OptionValues, program } from "commander";
 import swaggerUi, { type JsonObject } from "swagger-ui-express";
 import YAML from "yaml";
-import { writeOpenApi } from "./tools/open-api-generator.mjs";
+import { writeOpenApi } from "./tools/open-api-generator";
 import { delay } from "./middleware/delay.mjs";
 
 interface Args extends OptionValues {

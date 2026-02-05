@@ -405,8 +405,8 @@ export default class Utils {
    * @param {string} command - The command to run (e.g., "python").
    * @param {string[]} args - Arguments to pass (e.g., ["script.py", "arg1", "arg2"]).
    * @param {string} cwd - Optional working directory. Defaults to current directory.
-   * @param {(value: string) => void?} stdoutCallback - Callback for stdout.
-   * @param {(value: string) => void?} stderrCallback - Callback for stderr.
+   * @param {(value: string) => void | Promise<void> | null} [stdoutCallback] - Callback for stdout.
+   * @param {(value: string) => void | Promise<void> | null} [stderrCallback] - Callback for stderr.
    * @param {number[]} allowSoftFailCodes
    * @returns {Promise<number>}
    */
@@ -500,19 +500,20 @@ export default class Utils {
 
   /**
    * @param {string | number} value
+   * @returns {boolean}
    */
-  static isFloat(value) {
+  static isFloat = (value) => {
     const num = Number(value);
     return !Number.isNaN(num);
-  }
+  };
 
   /**
    * @param {string | number} value
    */
-  static isInteger(value) {
+  static isInteger = (value) => {
     const num = Number(value);
     return Number.isInteger(num);
-  }
+  };
 
   /**
    * @template T
@@ -541,5 +542,16 @@ export default class Utils {
         `Parameter ${parameterName} is required and must be a valid value.`
       );
     }
+  }
+
+  /**
+   * @param {unknown} error
+   * @returns {string}
+   */
+  static formatError(error) {
+    if (error instanceof Error) {
+      return error.stack ?? error.message;
+    }
+    return typeof error === "string" ? error : JSON.stringify(error, null, 2);
   }
 }

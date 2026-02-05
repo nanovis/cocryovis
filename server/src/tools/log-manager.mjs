@@ -44,6 +44,7 @@ export default class LogFile {
 
   /**
    * @param {string} data
+   * @returns {Promise<void>}
    */
   async writeLog(data) {
     try {

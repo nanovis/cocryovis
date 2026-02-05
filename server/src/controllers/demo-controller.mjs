@@ -14,7 +14,7 @@ export default class DemoController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getDemo(req, res) {
+  static getDemo = async (req, res) => {
     const demoProjectIndex = appConfig.demoProjectIndex;
     if (!demoProjectIndex) {
       throw new ApiError(
@@ -25,5 +25,5 @@ export default class DemoController {
     const project = await Project.getByIdDeep(demoProjectIndex);
 
     res.json(project);
-  }
+  };
 }

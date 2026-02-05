@@ -22,7 +22,7 @@ export default class VolumeController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getVolume(req, res) {
+  static getVolume = async (req, res) => {
     const { query, params } = validateSchema(req, {
       querySchema: volumeQuerySchema,
       paramsSchema: idVolume,
@@ -30,13 +30,13 @@ export default class VolumeController {
     const volume = await Volume.getById(params.idVolume, query);
 
     res.status(200).json(volume);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  // static async getVolumesFromProject(req, res) {
+  // static getVolumesFromProject = async (req, res) => {
   //     const options = VolumeController.#parseOptionQuery(req);
   //     const volumes = await Volume.getVolumesFromProject(
   //         Number(req.params.idProject),
@@ -50,19 +50,19 @@ export default class VolumeController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getVolumesFromProjectDeep(req, res) {
+  static getVolumesFromProjectDeep = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idProject });
 
     const volumes = await Volume.getVolumesFromProjectDeep(params.idProject);
 
     res.status(200).json(volumes);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createVolume(req, res) {
+  static createVolume = async (req, res) => {
     const { body, params } = validateSchema(req, {
       bodySchema: createVolumeReq,
       paramsSchema: idProject,
@@ -76,13 +76,13 @@ export default class VolumeController {
     );
 
     res.status(201).json(volume);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  // static async cloneVolume(req, res) {
+  // static cloneVolume = async (req, res) => {
   //     const volume = await Volume.clone(
   //         Number(req.params.idVolume),
   //         req.session.user.id,
@@ -95,7 +95,7 @@ export default class VolumeController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async deleteVolume(req, res) {
+  static deleteVolume = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolume,
     });
@@ -103,13 +103,13 @@ export default class VolumeController {
     await Volume.del(params.idVolume);
 
     res.sendStatus(204);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async update(req, res) {
+  static update = async (req, res) => {
     const { params, body } = validateSchema(req, {
       paramsSchema: idVolume,
       bodySchema: volumeUpdateSchema,
@@ -117,5 +117,5 @@ export default class VolumeController {
 
     const volume = await Volume.update(params.idVolume, body);
     res.status(201).json(volume);
-  }
+  };
 }

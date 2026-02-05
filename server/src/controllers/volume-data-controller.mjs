@@ -36,7 +36,7 @@ export default class VolumeDataController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getById(req, res) {
+  static getById = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -46,13 +46,13 @@ export default class VolumeDataController {
     ).getById(params.idVolumeData);
 
     res.json(volumeData);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async update(req, res) {
+  static update = async (req, res) => {
     const { params, body } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
       bodySchema: volumeDataUpdate,
@@ -62,13 +62,13 @@ export default class VolumeDataController {
       VolumeDataType.mapName(params.type)
     ).update(params.idVolumeData, body);
     res.status(200).json(volumeData);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getData(req, res) {
+  static getData = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -94,13 +94,13 @@ export default class VolumeDataController {
       console.error("File streaming error:", err);
       throw new ApiError(500, "Error reading file.");
     });
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getVolumeVisualizationFiles(req, res) {
+  static getVolumeVisualizationFiles = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -130,13 +130,13 @@ export default class VolumeDataController {
     );
 
     archive.finalize();
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createFromFiles(req, res) {
+  static createFromFiles = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeAndType,
       // bodySchema: volumeSettings,
@@ -169,13 +169,13 @@ export default class VolumeDataController {
     );
 
     res.status(201).json(volumeData);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createFromMrcFile(req, res) {
+  static createFromMrcFile = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeAndType,
     });
@@ -207,13 +207,13 @@ export default class VolumeDataController {
     );
 
     res.status(201).json(volumeData);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createFromUrl(req, res) {
+  static createFromUrl = async (req, res) => {
     const { params, body } = validateSchema(req, {
       paramsSchema: idVolumeAndType,
       bodySchema: fromUrlSchema,
@@ -258,13 +258,13 @@ export default class VolumeDataController {
 
       throw error;
     }
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async downloadFullVolumeData(req, res) {
+  static downloadFullVolumeData = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -278,13 +278,13 @@ export default class VolumeDataController {
     data.archive.pipe(res);
 
     data.archive.finalize();
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async downloadRawFile(req, res) {
+  static downloadRawFile = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -298,13 +298,13 @@ export default class VolumeDataController {
     data.archive.pipe(res);
 
     data.archive.finalize();
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async downloadSettingsFile(req, res) {
+  static downloadSettingsFile = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -318,13 +318,13 @@ export default class VolumeDataController {
     data.archive.pipe(res);
 
     data.archive.finalize();
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async downloadMrcFile(req, res) {
+  static downloadMrcFile = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -347,13 +347,13 @@ export default class VolumeDataController {
     data.archive.pipe(res);
 
     data.archive.finalize();
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async delete(req, res) {
+  static delete = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeDataAndType,
     });
@@ -363,13 +363,13 @@ export default class VolumeDataController {
     );
 
     res.sendStatus(204);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async updateAnnotations(req, res) {
+  static updateAnnotations = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idVolumeVolumeDataTypeParams,
       // bodySchema: updateAnnotationsSchema,
@@ -404,5 +404,5 @@ export default class VolumeDataController {
     );
 
     res.json(sparseLabel);
-  }
+  };
 }

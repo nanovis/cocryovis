@@ -26,7 +26,9 @@ export default class TaskQueue {
   }
 
   /**
-   * @param {Function} action
+   * @template T
+   * @param {() => Promise<T>} action
+   * @returns {Promise<T>}
    */
   enqueue(action) {
     return new Promise((resolve, reject) => {

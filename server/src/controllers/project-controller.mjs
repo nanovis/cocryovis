@@ -17,29 +17,29 @@ export default class ProjectController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getAllUserProjects(req, res) {
+  static getAllUserProjects = async (req, res) => {
     const options = ProjectController.#parseOptionQuery(req);
     const projects = await Project.getUserProjects(
       req.session.user.id,
       options
     );
     res.json(projects);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getAllUserProjectsDeep(req, res) {
+  static getAllUserProjectsDeep = async (req, res) => {
     const projects = await Project.getUserProjectsDeep(req.session.user.id);
     res.json(projects);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getProject(req, res) {
+  static getProject = async (req, res) => {
     const options = ProjectController.#parseOptionQuery(req);
     const project = await Project.getById(
       Number(req.params.idProject),
@@ -47,20 +47,20 @@ export default class ProjectController {
     );
 
     res.json(project);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getProjectDeep(req, res) {
+  static getProjectDeep = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idProject });
 
     const userId = req.session?.user?.id;
     const project = await Project.getByIdDeep(Number(params.idProject), userId);
 
     res.json(project);
-  }
+  };
 
   /**
    * @param {Request} req
@@ -103,7 +103,7 @@ export default class ProjectController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getAccessInfo(req, res) {
+  static getAccessInfo = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idProject,
     });
@@ -111,13 +111,13 @@ export default class ProjectController {
     const accessInfo = await Project.getAccessInfo(params.idProject);
 
     res.json(accessInfo);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async setAccess(req, res) {
+  static setAccess = async (req, res) => {
     const { body, params } = validateSchema(req, {
       bodySchema: setAccessSchemaReq,
       paramsSchema: idProject,
@@ -126,13 +126,13 @@ export default class ProjectController {
     const accessInfo = await Project.setAccess(params.idProject, body);
 
     res.json(accessInfo);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createProject(req, res) {
+  static createProject = async (req, res) => {
     const { body } = validateSchema(req, {
       bodySchema: projectCreateSchemaReq,
     });
@@ -144,7 +144,7 @@ export default class ProjectController {
     );
 
     res.status(201).json(project);
-  }
+  };
 
   // /**
   //  * @param {Request} req
@@ -163,11 +163,11 @@ export default class ProjectController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async deleteProject(req, res) {
+  static deleteProject = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idProject });
 
     await Project.del(params.idProject);
 
     res.sendStatus(204);
-  }
+  };
 }

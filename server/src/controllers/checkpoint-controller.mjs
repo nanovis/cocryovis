@@ -20,29 +20,29 @@ export default class CheckpointController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getCheckpoint(req, res) {
+  static getCheckpoint = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
 
     const checkpoint = await Checkpoint.getById(params.idCheckpoint);
     res.json(checkpoint);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getCheckpointsFromModel(req, res) {
+  static getCheckpointsFromModel = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idModel });
 
     const checkpoints = await Checkpoint.getFromModel(params.idModel);
     res.json(checkpoints);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async uploadCheckpoints(req, res) {
+  static uploadCheckpoints = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idModel });
 
     if (!req.files || !req.files.files) {
@@ -56,13 +56,13 @@ export default class CheckpointController {
     );
 
     res.status(201).json(checkpoints);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async downloadCheckpoint(req, res) {
+  static downloadCheckpoint = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
 
     const checkpoint = await Checkpoint.getById(params.idCheckpoint);
@@ -73,13 +73,13 @@ export default class CheckpointController {
     res.set("Content-Type", "application/zip");
     res.set("Content-Disposition", "attachment; filename=" + data.name);
     res.send(data.zipBuffer);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async deleteCheckpoint(req, res) {
+  static deleteCheckpoint = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idCheckpoint,
     });
@@ -87,13 +87,13 @@ export default class CheckpointController {
     await Checkpoint.del(params.idCheckpoint);
 
     res.sendStatus(204);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async checkpointToText(req, res) {
+  static checkpointToText = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idCheckpoint });
 
     const checkpoint = await Checkpoint.getById(params.idCheckpoint);
@@ -105,13 +105,13 @@ export default class CheckpointController {
     const checkpointTxt = await Utils.ckptToText(checkpoint.filePath);
 
     res.send(checkpointTxt);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async checkpointFileToText(req, res) {
+  static checkpointFileToText = async (req, res) => {
     if (!req.files || !req.files.checkpoint) {
       throw new ApiError(400, "No files uploaded.");
     }
@@ -129,5 +129,5 @@ export default class CheckpointController {
     const checkpointTxt = await Utils.ckptToText(checkpointFile.tempFilePath);
 
     res.send(checkpointTxt);
-  }
+  };
 }

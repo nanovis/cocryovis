@@ -23,32 +23,32 @@ export default class ResultController {
    * @param {Request} req
    * @param {Response} res
    */
-  static async getById(req, res) {
+  static getById = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idResult });
 
     const result = await Result.getById(params.idResult);
 
     res.json(result);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getDetails(req, res) {
+  static getDetails = async (req, res) => {
     const result = await Result.getByIdDeep(Number(req.params.idResult), {
       checkpoint: true,
       files: true,
     });
 
     res.json(result);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getFromVolume(req, res) {
+  static getFromVolume = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idVolume });
 
     const result = await Result.getFromVolume(params.idVolume, {
@@ -56,13 +56,13 @@ export default class ResultController {
     });
 
     res.json(result);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async delete(req, res) {
+  static delete = async (req, res) => {
     const { params } = validateSchema(req, {
       paramsSchema: idResult,
     });
@@ -70,13 +70,13 @@ export default class ResultController {
     await Result.del(params.idResult);
 
     res.sendStatus(204);
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async getResultData(req, res) {
+  static getResultData = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idResult });
 
     const result = await Result.getByIdDeep(params.idResult, {
@@ -121,13 +121,13 @@ export default class ResultController {
     );
 
     archive.finalize();
-  }
+  };
 
   /**
    * @param {Request} req
    * @param {Response} res
    */
-  static async createFromFiles(req, res) {
+  static createFromFiles = async (req, res) => {
     const { params } = validateSchema(req, { paramsSchema: idVolume });
 
     if (!req.files || !req.files.files) {
@@ -150,5 +150,5 @@ export default class ResultController {
     );
 
     res.json(result);
-  }
+  };
 }
