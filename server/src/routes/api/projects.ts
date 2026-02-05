@@ -16,11 +16,15 @@ import toAsyncRouter from 'async-express-decorator'
 import PreProcessingController from '../../controllers/preprocessing-controller';
 import DemoController from '../../controllers/demo-controller.mjs';
 import CryoETController from '../../controllers/cryo-et-controller.mjs';
+import NanoOetziHandler from '../../tools/nano-oetzi-handler';
+import ReconstructionHandler from '../../tools/reconstruction-handler';
 
 // Config
 const config = appConfig;
 const ilastikHandler = new IlastikHandler(config);
 const gpuTaskHandler = new GPUTaskHandler(config);
+const nanoOetziHandler = new NanoOetziHandler(gpuTaskHandler, config);
+const reconstructionHandler = new ReconstructionHandler(gpuTaskHandler, config);
 
 // toAsyncRouter removes the need to call next() on async errors.
 export const projectsApi = toAsyncRouter(express.Router());
@@ -82,17 +86,17 @@ projectsApi.post(`/volume/:idVolume/queue-pseudo-label-generation`, restrictApi,
 
 // Inference
 projectsApi.post(`/queue-inference`, restrictApi,
-    async (req, res) => NanoOetziController.queueInference(gpuTaskHandler, req, res));
+    async (req, res) => NanoOetziController.queueInference(nanoOetziHandler, req, res));
 
 // Run training
 projectsApi.post(`/queue-training`, restrictApi,
-    async (req, res) => NanoOetziController.queueTraining(gpuTaskHandler, req, res));
+    async (req, res) => NanoOetziController.queueTraining(nanoOetziHandler, req, res));
 
 
 /////// CRYO-ET
 
 projectsApi.post(`/tilt-series-reconstruction`, restrictApi,
-    async (req, res) => PreProcessingController.queueTiltSeriesReconstruction(gpuTaskHandler, req, res));
+    async (req, res) => PreProcessingController.queueTiltSeriesReconstruction(reconstructionHandler, req, res));
 
     
 /////// VOLUMES

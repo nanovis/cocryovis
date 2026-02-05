@@ -2,13 +2,13 @@ import { readFileSync } from "fs";
 
 class Config {
   /**
-   * @type {import("../types/types").AppConfig}
+   * @type {AppConfig}
    */
   config;
 
   constructor() {
     /**
-     * @type {import("../types/types").AppConfig}
+     * @type {AppConfig}
      */
     this.config = JSON.parse(readFileSync("./config.json", "utf8"));
   }

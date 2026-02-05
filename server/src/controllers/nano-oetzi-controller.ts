@@ -3,12 +3,12 @@ import {
   trainingReq,
 } from "@cocryovis/schemas/nano-oetzi-path-schema";
 import validateSchema from "../tools/validate-schema.mjs";
-import type GPUTaskHandler from "../tools/gpu-task-handler.ts";
 import { type Request, type Response } from "express";
+import type NanoOetziHandler from "../tools/nano-oetzi-handler.js";
 
 export default class NanoOetziController {
   static queueInference = async (
-    gpuTaskHandler: GPUTaskHandler,
+    nanoOetziHandler: NanoOetziHandler,
     req: Request,
     res: Response
   ) => {
@@ -17,7 +17,7 @@ export default class NanoOetziController {
     const checkpointId = body.checkpointId;
     const volumeId = body.volumeId;
 
-    await gpuTaskHandler.queueInference(
+    await nanoOetziHandler.queueInference(
       checkpointId,
       volumeId,
       Number(req.session.user.id)
@@ -27,13 +27,13 @@ export default class NanoOetziController {
   };
 
   static queueTraining = async (
-    gpuTaskHandler: GPUTaskHandler,
+    nanoOetziHandler: NanoOetziHandler,
     req: Request,
     res: Response
   ) => {
     const { body } = validateSchema(req, { bodySchema: trainingReq });
 
-    await gpuTaskHandler.queueTraining(
+    await nanoOetziHandler.queueTraining(
       body.modelId,
       Number(req.session.user.id),
       body.trainingVolumes,

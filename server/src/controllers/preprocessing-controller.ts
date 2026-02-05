@@ -1,12 +1,12 @@
 import type { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
 import { ApiError } from "../tools/error-handler.mjs";
-import type GPUTaskHandler from "../tools/gpu-task-handler";
 import { type Request, type Response } from "express";
 import type z from "zod";
+import type ReconstructionHandler from "../tools/reconstruction-handler";
 
 export default class PreProcessingController {
   static async queueTiltSeriesReconstruction(
-    gpuTaskHandler: GPUTaskHandler,
+    reconstructionHandler: ReconstructionHandler,
     req: Request,
     res: Response
   ) {
@@ -34,7 +34,7 @@ export default class PreProcessingController {
       volumeId: number;
     };
 
-    await gpuTaskHandler.queueTiltSeriesReconstruction(
+    await reconstructionHandler.queueTiltSeriesReconstruction(
       req.files.tiltSeries,
       data.options,
       data.volumeId,

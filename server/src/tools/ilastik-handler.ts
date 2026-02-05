@@ -14,7 +14,6 @@ import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
-import type { AppConfig } from "../types/types";
 import type z from "zod";
 import type {
   volumeSettings,
