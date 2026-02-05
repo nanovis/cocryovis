@@ -1,9 +1,15 @@
 import { readFileSync } from "fs";
 
 class Config {
+  /**
+   * @type {import("../types/types").AppConfig}
+   */
   config;
 
   constructor() {
+    /**
+     * @type {import("../types/types").AppConfig}
+     */
     this.config = JSON.parse(readFileSync("./config.json", "utf8"));
   }
 

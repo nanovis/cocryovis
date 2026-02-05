@@ -3,7 +3,7 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import fileSystem from "fs";
-import session from "express-session";
+import session, { type SessionOptions } from "express-session";
 import { projectsApi } from "./routes/api/projects.mjs";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -14,16 +14,23 @@ import helmet from "helmet";
 import appConfig from "./tools/config.mjs";
 import { logErrors, clientErrorHandler } from "./tools/error-handler.mjs";
 import WebSocketManager from "./tools/websocket-manager.mjs";
-import http from "http";
-import https from "https";
+import http, { type RequestListener, type Server as HTTPServer } from "http";
+import https, { type Server as HTTPSServer } from "https";
 import TaskHistory from "./models/task-history.mjs";
 import { responseSanitizer } from "./middleware/sanitizer.mjs";
 import { checkCookieAge } from "./middleware/restrict.mjs";
-import { program } from "commander";
-import swaggerUi from "swagger-ui-express";
+import { type OptionValues, program } from "commander";
+import swaggerUi, { type JsonObject } from "swagger-ui-express";
 import YAML from "yaml";
 import { writeOpenApi } from "./tools/open-api-generator.mjs";
 import { delay } from "./middleware/delay.mjs";
+
+interface Args extends OptionValues {
+  host?: string;
+  https?: boolean;
+  port?: number;
+  demoProject?: number;
+}
 
 const SqliteStore = sqlite3SessionStore(session);
 
@@ -36,7 +43,7 @@ const startServer = async () => {
 
   program.parse(process.argv);
 
-  const options = program.opts();
+  const options = program.opts<Args>();
 
   const host = options.host ?? process.env.HOST ?? "localhost";
   const useHttps = options.https ?? process.env.HTTPS === "true";
@@ -44,7 +51,8 @@ const startServer = async () => {
   const port =
     options.port || Number(process.env.PORT) || (useHttps ? 443 : 8080);
 
-  const demoProjectIndex = options.demoProject || appConfig.demoProjectIndex;
+  const demoProjectIndex = options.demoProject ?? appConfig.demoProjectIndex;
+
   appConfig.demoProjectIndex = demoProjectIndex;
 
   const seassionsPath = process.env.SESSIONS_PATH || "./database/sessions.db";
@@ -104,7 +112,7 @@ const startServer = async () => {
   const sessionsDB = new Database(seassionsPath);
   sessionsDB.pragma("journal_mode = WAL");
 
-  const sess = {
+  const sess: SessionOptions = {
     name: appConfig.cookieName,
     store: new SqliteStore({
       client: sessionsDB,
@@ -125,7 +133,6 @@ const startServer = async () => {
     },
   };
 
-  // @ts-ignore
   const sessionParser = session(sess);
 
   if (app.get("env") === "production") {
@@ -152,7 +159,9 @@ const startServer = async () => {
   console.log("Writing OpenAPI");
   writeOpenApi();
   const file = fileSystem.readFileSync("./openapi.yaml", "utf8");
-  const swaggerDocument = YAML.parse(file, { maxAliasCount: -1 });
+  const swaggerDocument = YAML.parse(file, {
+    maxAliasCount: -1,
+  }) as JsonObject;
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   app.use(sessionParser);
@@ -177,27 +186,31 @@ const startServer = async () => {
 
   app.use("/logs", express.static("logs", { index: false }));
 
-  let server = null;
+  let server: HTTPServer | HTTPSServer | null = null;
 
   if (useHttps) {
     console.log("Initializing https server");
 
-    let keyContent = null;
+    let keyContent: string | null = null;
     if (process.env.SSL_KEY_CONTENT) {
       keyContent = Buffer.from(process.env.SSL_KEY_CONTENT, "base64").toString(
         "utf8"
       );
     } else if (process.env.SSL_KEY_PATH) {
-      keyContent = fileSystem.readFileSync(process.env.SSL_KEY_PATH);
+      keyContent = fileSystem
+        .readFileSync(process.env.SSL_KEY_PATH)
+        .toString("utf-8");
     }
 
-    let certContent = null;
+    let certContent: string | null = null;
     if (process.env.SSL_CRT_CONTENT) {
       certContent = Buffer.from(process.env.SSL_CRT_CONTENT, "base64").toString(
         "utf8"
       );
     } else if (process.env.SSL_CRT_PATH) {
-      certContent = fileSystem.readFileSync(process.env.SSL_CRT_PATH);
+      certContent = fileSystem
+        .readFileSync(process.env.SSL_CRT_PATH)
+        .toString("utf-8");
     }
 
     if (!keyContent || !certContent) {
@@ -210,11 +223,11 @@ const startServer = async () => {
         key: keyContent,
         cert: certContent,
       },
-      app
+      app as RequestListener
     );
   } else {
     console.log("Initializing http server");
-    server = http.createServer(app);
+    server = http.createServer(app as RequestListener);
   }
   // Websockets
   WebSocketManager.initializeWebSocketInstance(server, sessionParser);
@@ -239,8 +252,11 @@ const startServer = async () => {
   }
 
   server.listen(port, host, () => {
-    console.log("listening on " + host + ":" + port);
+    console.log(`listening on ${host}:${port.toString()}`);
   });
 };
 
-startServer();
+startServer().catch((error: unknown) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});

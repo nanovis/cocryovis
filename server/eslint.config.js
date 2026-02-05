@@ -4,14 +4,13 @@ import js from "@eslint/js";
 import globals from "globals";
 import { defineConfig, globalIgnores } from "eslint/config";
 import jsdoc from "eslint-plugin-jsdoc";
-// import tseslint from "typescript-eslint";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  jsdoc.configs["flat/recommended-error"],
   {
     files: ["**/*.{js,mjs,cjs}"],
     plugins: { js, jsdoc },
-    extends: ["js/recommended"],
+    extends: ["js/recommended", jsdoc.configs["flat/recommended-error"]],
     languageOptions: {
       globals: globals.node,
       parserOptions: {
@@ -45,30 +44,31 @@ export default defineConfig([
       "jsdoc/reject-any-type": 0,
     },
   },
-  // {
-  //   files: ["**/*.{ts,tsx}"],
-  //   extends: [
-  //     js.configs.recommended,
-  //     ...tseslint.configs.strictTypeChecked,
-  //     ...tseslint.configs.stylisticTypeChecked,
-  //   ],
-  //   languageOptions: {
-  //     globals: globals.node,
-  //     parserOptions: {
-  //       tsconfigRootDir: import.meta.dirname,
-  //       projectService: true,
-  //     },
-  //   },
-  //   rules: {
-  //     "no-unused-vars": [
-  //       "error",
-  //       { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
-  //     ],
-  //     "@typescript-eslint/no-unnecessary-boolean-literal-compare": "off",
-  //     "@typescript-eslint/no-unnecessary-condition": "off",
-  //     "@typescript-eslint/prefer-nullish-coalescing": "off",
-  //   },
-  // },
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+        projectService: true,
+      },
+    },
+    rules: {
+      "no-unused-vars": [
+        "error",
+        { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-unnecessary-boolean-literal-compare": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/consistent-type-imports": "error",
+    },
+  },
   globalIgnores([
     "client/*",
     "data/*",

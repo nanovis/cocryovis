@@ -9,6 +9,8 @@
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+
     "paths": {
       "@cocryovis/schemas/*": ["../schemas/src/*.ts"]
     }
