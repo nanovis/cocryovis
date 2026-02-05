@@ -32,15 +32,15 @@ export async function rawToH5(
 ) {
   // prettier-ignore
   const params = [
-        path.join("./python-scripts", "raw-to-h5.py"),
-        "-r", rawVolumePath,
-        "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
-        "-b", usedBits.toString(),
-        "-sg", isSigned.toString(),
-        "-le", littleEndian.toString(),
-        "-s", datasetName,
-        "-o", outputPath
-    ]
+    path.join("./python-scripts", "raw-to-h5.py"),
+    "-r", rawVolumePath,
+    "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
+    "-b", usedBits.toString(),
+    "-sg", isSigned.toString(),
+    "-le", littleEndian.toString(),
+    "-s", datasetName,
+    "-o", outputPath
+  ]
 
   await Utils.runScript(
     appConfig.ilastik.python,
@@ -69,13 +69,13 @@ export async function labelsToH5(
 ) {
   // prettier-ignore
   const params = [
-        path.join("./python-scripts", "labels-to-h5.py"),
-        "-l", ...labelPaths,
-        "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
-        "-s", datasetName,
-        "-o", outputPath,
-        "-log", "True"
-    ];
+    path.join("./python-scripts", "labels-to-h5.py"),
+    "-l", ...labelPaths,
+    "-d", `${dimensions.x}x${dimensions.y}x${dimensions.z}`,
+    "-s", datasetName,
+    "-o", outputPath,
+    "-log", "True"
+  ];
 
   await Utils.runScript(
     appConfig.ilastik.python,
@@ -102,11 +102,11 @@ export async function H5ToLabels(
 ) {
   // prettier-ignore
   const params = [
-        path.join("./python-scripts", "h5-to-labels.py"),
-        "-l", labelPath,
-        "-s", datasetName,
-        "-o", outputPath
-    ];
+    path.join("./python-scripts", "h5-to-labels.py"),
+    "-l", labelPath,
+    "-s", datasetName,
+    "-o", outputPath
+  ];
 
   await Utils.runScript(
     appConfig.ilastik.python,

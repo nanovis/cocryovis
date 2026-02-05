@@ -1092,12 +1092,12 @@ export default class GPUTaskHandler {
       path.join(outputFolder, baseName + "_ccderaser.mrc")
     );
 
-    //prettier-ignore
+    // prettier-ignore
     const ccderaserParams = [
-            "-input", inputAbsolutePath,
-            "-output", ccderaserOutputPath,
-            "-find",
-        ]
+      "-input", inputAbsolutePath,
+      "-output", ccderaserOutputPath,
+      "-find",
+    ];
 
     Utils.checkAndAddParameter(
       options.peak,
@@ -1155,10 +1155,10 @@ export default class GPUTaskHandler {
 
     // prettier-ignore
     const tiltxcorrParams = [
-            ccderaserOutputPath,
-            fidModelOutputPath,
-            "-tiltfile", extracttiltsOutputPath,
-        ];
+      ccderaserOutputPath,
+      fidModelOutputPath,
+      "-tiltfile", extracttiltsOutputPath,
+    ];
 
     Utils.checkAndAddParameter(
       options.numOfPatches,
@@ -1197,13 +1197,13 @@ export default class GPUTaskHandler {
       path.join(outputFolder, baseName + "_patchtrack.fid")
     );
 
-    //prettier-ignore
+    // prettier-ignore
     const tiltAlignParams = [
-            "-ModelFile", fidModelOutputPath,
-            "-ImageFile", ccderaserOutputPath,
-            "-TiltFile", extracttiltsOutputPath,
-            "-OutputTransformFile", transformPath,
-        ]
+      "-ModelFile", fidModelOutputPath,
+      "-ImageFile", ccderaserOutputPath,
+      "-TiltFile", extracttiltsOutputPath,
+      "-OutputTransformFile", transformPath,
+    ];
 
     Utils.checkAndAddParameter(
       options.rotationAngle,
@@ -1232,10 +1232,10 @@ export default class GPUTaskHandler {
       "newstack",
       // prettier-ignore
       [
-                "-secs", "1-56",
-                "-input", ccderaserOutputPath,
-                "-output", trimmedPath
-            ],
+        "-secs", "1-56",
+        "-input", ccderaserOutputPath,
+        "-output", trimmedPath
+      ],
       null,
       (value) => logFile.writeLog(value),
       (value) => logFile.writeLog(value)
@@ -1250,10 +1250,10 @@ export default class GPUTaskHandler {
       "newstack",
       // prettier-ignore
       [
-                "-input", trimmedPath,
-                "-output", alignedPath,
-                "-xform", transformPath,
-            ],
+        "-input", trimmedPath,
+        "-output", alignedPath,
+        "-xform", transformPath,
+      ],
       null,
       (value) => logFile.writeLog(value),
       (value) => logFile.writeLog(value)
@@ -1283,12 +1283,12 @@ export default class GPUTaskHandler {
       path.join(outputFolder, baseName + "_ctf.mrc")
     );
 
-    //prettier-ignore
+    // prettier-ignore
     const params = [
-           "-InMrc", inputAbsolutePath,
-            "-OutMrc", outputPath,
-            "-Gpu", "0",
-        ]
+      "-InMrc", inputAbsolutePath,
+      "-OutMrc", outputPath,
+      "-Gpu", "0",
+    ];
 
     Utils.checkAndAddParameter(
       options.highTension,
@@ -1352,10 +1352,10 @@ export default class GPUTaskHandler {
 
     // prettier-ignore
     const params = [
-            "-InMrc", inputAbsolutePath,
-            "-OutMrc", outputPath,
-            "-Gpu", "0",
-        ];
+      "-InMrc", inputAbsolutePath,
+      "-OutMrc", outputPath,
+      "-Gpu", "0",
+    ];
 
     if (options.patchSize !== undefined && Utils.isInteger(options.patchSize)) {
       params.push(
