@@ -66,8 +66,9 @@ export default class NanoOetziHandler {
     ]);
 
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
+      let taskHistory: TaskHistoryDB | null = null;
       try {
-        const taskHistory = await TaskHistory.create({
+        taskHistory = await TaskHistory.create({
           userId: userId,
           volumeId: volumeId,
           checkpointId: checkpointId,
@@ -86,6 +87,17 @@ export default class NanoOetziHandler {
           )
         );
       } catch {
+        if (taskHistory) {
+          try {
+            await TaskHistory.update(taskHistory.id, {
+              taskStatus: TaskHistory.status.failed,
+              endTime: new Date(),
+            });
+          } catch (error) {
+            const message = Utils.formatError(error);
+            console.error(message);
+          }
+        }
         console.error(
           `Inference task by User with id ${userId.toString()} failed.`
         );

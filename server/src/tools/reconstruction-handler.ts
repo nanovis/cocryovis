@@ -52,8 +52,9 @@ export default class ReconstructionHandler {
     ]);
 
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
+      let taskHistory: TaskHistoryDB | null = null;
       try {
-        const taskHistory = await TaskHistory.create({
+        taskHistory = await TaskHistory.create({
           userId: userId,
           volumeId: volumeId,
           taskType: TaskHistory.type.Reconstruction,
@@ -71,7 +72,18 @@ export default class ReconstructionHandler {
             taskHistory.id
           )
         );
-      } catch {
+      } catch (error) {
+        if (taskHistory) {
+          try {
+            await TaskHistory.update(taskHistory.id, {
+              taskStatus: TaskHistory.status.failed,
+              endTime: new Date(),
+            });
+          } catch (error) {
+            const message = Utils.formatError(error);
+            console.error(message);
+          }
+        }
         console.error(
           `Reconstruction task by User with id ${userId.toString()} failed.`
         );

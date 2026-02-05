@@ -7,6 +7,7 @@ declare type CheckpointDB = import("@prisma/client").Checkpoint;
 declare type RawVolumeDataFileDB = import("@prisma/client").RawVolumeDataFile;
 declare type SparseVolumeDataFileDB = import("@prisma/client").SparseVolumeDataFile;
 declare type PseudoVolumeDataFileDB = import("@prisma/client").PseudoVolumeDataFile;
+declare type TaskHistoryDB = import("@prisma/client").TaskHistory;
 
 declare type RawVolumeDataWithFileDB = RawVolumeDataDB & {dataFile: RawVolumeDataFileDB }
 declare type SparseVolumeDataWithFileDB = SparseLabelVolumeDataDB & {dataFile: SparseVolumeDataFileDB }
