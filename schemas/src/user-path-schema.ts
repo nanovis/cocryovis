@@ -1,10 +1,8 @@
 import { z } from "zod";
 import { defaultError, generateErrors } from "./error-path-schema";
-import { volumeSchema } from "./componentSchemas/volume-schema";
-import { modelSchema } from "./componentSchemas/model-schema";
-import { checkpointSchema } from "./componentSchemas/checkpoint-schema";
 import { stringToInt } from "./componentSchemas/string-to-int";
 import type { ZodOpenApiPathsObject } from "zod-openapi";
+import { statusSchema } from "./componentSchemas/status-schema";
 
 const usernameSchema = z.string().min(1, { message: "Username is required." });
 const nameSchema = z.string().min(1, { message: "Name is required." });
@@ -32,34 +30,6 @@ export const registerSchema = z.object({
 export const loginSchemaReq = z.object({
   username: z.string(),
   password: z.string(),
-});
-
-export const taskHistorySchema = z.object({
-  enqueuedTime: z.date(),
-  startTime: z.date().nullable(),
-  endTime: z.date().nullable(),
-  id: z.int(),
-  taskType: z.int(),
-  taskStatus: z.int(),
-  userId: z.int(),
-  logFile: z.string().nullable(),
-  volumeId: z.int().nullable(),
-  modelId: z.int().nullable(),
-  checkpointId: z.int().nullable(),
-  volume: volumeSchema.nullable(),
-  model: modelSchema.nullable(),
-  checkpoint: checkpointSchema.nullable(),
-});
-
-export const statusTaskHistory = z.object({
-  values: z.array(taskHistorySchema),
-  lenght: z.number(),
-});
-
-export const statusSchema = z.object({
-  taskHistory: statusTaskHistory,
-  cpuTaskQueue: z.array(taskHistorySchema),
-  gpuTaskQueue: z.array(taskHistorySchema),
 });
 
 export const updateUserSchema = z.object({

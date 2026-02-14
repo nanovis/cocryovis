@@ -458,6 +458,7 @@ export default class Utils {
       });
     });
   }
+
   /**
    * Runs a Python script with arguments and optional output callbacks.
    * @param {string} script - The Python script to run.
@@ -482,6 +483,38 @@ export default class Utils {
       stdoutCallback,
       stderrCallback
     );
+  }
+
+  /**
+   * Runs a Python script with arguments and optional output callbacks.
+   * @param {string} script - The Python script to run.
+   * @param {string[]} args - Arguments to pass to the script.
+   * @param {string} pythonPath - Optional path to the Python executable.
+   * @returns {Promise<string>}
+   */
+  static async runPythonScriptWithOutput(
+    script,
+    args,
+    pythonPath = appConfig.python
+  ) {
+    let errOutput = "";
+    let output = "";
+
+    try {
+      await Utils.runPythonScript(
+        script,
+        args,
+        (value) => (output += value),
+        (value) => (errOutput += value),
+        pythonPath
+      );
+
+      return output;
+    } catch {
+      throw new Error(
+        "Failed to run python script: " + script + "\n" + errOutput
+      );
+    }
   }
 
   /**

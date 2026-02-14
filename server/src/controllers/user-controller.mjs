@@ -14,6 +14,7 @@ import {
 } from "@cocryovis/schemas/user-path-schema";
 
 /**
+ * @import GPUTaskHandler from "../tools/gpu-task-handler"
  * @typedef { import("express").Request } Request
  * @typedef { import("express").Response } Response
  */
@@ -121,10 +122,11 @@ export default class UserController {
   };
 
   /**
+   * @param {GPUTaskHandler} gpuTaskHandler
    * @param {Request} req
    * @param {Response} res
    */
-  static getStatus = async (req, res) => {
+  static getStatus = async (gpuTaskHandler, req, res) => {
     const { query } = validateSchema(req, {
       querySchema: statusQuery,
     });
@@ -135,12 +137,25 @@ export default class UserController {
     );
     const cpuTaskQueue = await TaskHistory.getCPUTaskQueue();
     const gpuTaskQueue = await TaskHistory.getGPUTaskQueue();
+    const gpuStatus = gpuTaskHandler.getGPUStatus();
 
     res.json({
       taskHistory: taskHistory,
+      gpuStatus: gpuStatus,
       cpuTaskQueue: cpuTaskQueue,
       gpuTaskQueue: gpuTaskQueue,
     });
+  };
+
+  /**
+   * @param {GPUTaskHandler} gpuTaskHandler
+   * @param {Request} req
+   * @param {Response} res
+   */
+  static getGPUStatus = async (gpuTaskHandler, req, res) => {
+    const gpuStatus = gpuTaskHandler.getGPUStatus();
+
+    res.json(gpuStatus);
   };
 
   /**

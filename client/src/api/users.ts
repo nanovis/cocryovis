@@ -1,10 +1,13 @@
 import type {
+  gpuStatusSchema,
+  statusSchema,
+} from "#schemas/componentSchemas/status-schema";
+import type {
   idUserSchema,
   loginSchemaReq,
   publicUser,
   registerSchema,
   statusQuery,
-  statusSchema,
   updateUserSchema,
   usersArray,
 } from "#schemas/user-path-schema";
@@ -69,6 +72,15 @@ export async function getStatus(pageNumber: number, pageSize: number) {
     { query }
   );
   const contents: z.infer<typeof statusSchema> = await response.json();
+  return contents;
+}
+
+export async function getGpuStatus() {
+  const response = await Utils.sendApiRequest("gpuStatus", {
+    method: "GET",
+    credentials: "include",
+  });
+  const contents: z.infer<typeof gpuStatusSchema> = await response.json();
   return contents;
 }
 

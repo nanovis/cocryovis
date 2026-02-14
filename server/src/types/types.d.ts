@@ -7,6 +7,10 @@ declare module "express-session" {
 }
 
 declare global {
+  interface GPUData {
+    device_id: number;
+    device_name: string;
+  }
   interface AppConfig {
     idleSessionExpirationMin: number;
     tempPath: string;

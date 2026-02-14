@@ -1,8 +1,11 @@
 import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { flow, isAlive, types } from "mobx-state-tree";
 import type z from "zod";
-import type { statusSchema } from "#schemas/user-path-schema";
-import { getStatus } from "@/api/users";
+import { getGpuStatus, getStatus } from "@/api/users";
+import type {
+  gpuStatusSchema,
+  statusSchema,
+} from "#schemas/componentSchemas/status-schema";
 
 export interface TaskHistoryItem {
   taskStatus: {
@@ -149,6 +152,8 @@ export const Status = types
     taskHistory: types.map(TaskHistory),
     cpuTaskQueue: types.array(TaskQueueElement),
     gpuTaskQueue: types.array(TaskQueueElement),
+    freeGpus: types.optional(types.integer, 0),
+    totalGpus: types.optional(types.integer, 0),
   })
   .volatile(() => ({
     activeRequests: 0,
@@ -265,11 +270,26 @@ export const Status = types
         self.setTaskHistory(contents.taskHistory.values);
         self.setCPUTaskQueue(contents.cpuTaskQueue);
         self.setGPUTaskQueue(contents.gpuTaskQueue);
+        self.freeGpus = contents.gpuStatus.freeGpus;
+        self.totalGpus = contents.gpuStatus.totalGpus;
         self.taskHistoryLenght = contents.taskHistory.lenght;
       } catch (error) {
         console.error("Error:", error);
       } finally {
         self.activeRequests -= 1;
+      }
+    }),
+    fetchGpuStatus: flow(function* () {
+      try {
+        console.log("Fetching GPU status...");
+        const contents: z.infer<typeof gpuStatusSchema> = yield getGpuStatus();
+        if (!isAlive(self)) {
+          return;
+        }
+        self.freeGpus = contents.freeGpus;
+        self.totalGpus = contents.totalGpus;
+      } catch (error) {
+        console.error("Error:", error);
       }
     }),
   }))

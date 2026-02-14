@@ -6,7 +6,8 @@ Nano-Ötzi is included as a submodule, while you can install the required versio
 
 The packages are listed in ```requirements.txt``` file.
 
-The Nano-Ötzi requires CUDA Toolkit. It was tested with 11.3, 11.6 and 11.7. One needs to use appropriate PyTorch as well.
+Several modules require CUDA Toolkit. The project was tested on 12.4.
+Proximal CryoET requires CMake 3.24 to build.
 
 ## Setup
 Make sure submodules are installed by running ```git pull --recurse-submodules```

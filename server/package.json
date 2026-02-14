@@ -13,6 +13,7 @@
     "prisma:db": "npx prisma studio",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "dev:env": "conda run --no-capture-output -p ./.venv tsx src/index.ts",
     "build": "tsc",
     "format": "prettier --write .",
     "lint": "npx eslint .",

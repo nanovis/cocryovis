@@ -77,12 +77,21 @@ export default class NanoOetziHandler {
           enqueuedTime: new Date(),
         });
 
+        const gpuId = this.gpuTaskHandler.requestGPU();
+        if (gpuId === null) {
+          throw new ApiError(
+            400,
+            "Failed Attempt to start inference: No GPU available to run the task."
+          );
+        }
+
         return await this.gpuTaskHandler.queueGPUTask(() =>
           this.runInference(
             checkpointId,
             volumeId,
             userId,
             outputPath,
+            gpuId,
             taskHistory.id
           )
         );
@@ -110,6 +119,7 @@ export default class NanoOetziHandler {
     volumeId: number,
     userId: number,
     outputPath: string,
+    gpuId: number,
     taskHistoryId: number
   ): Promise<ResultDB> {
     const logFile = await LogFile.createLogFile("inference");
@@ -155,8 +165,8 @@ export default class NanoOetziHandler {
         "./" + this.config.nanoOetzi.inference.command,
         inferenceDataAbsolutePath,
         outputAbsolutePath,
-        "-m",
-        checkpointAbsolutePath,
+        "-m", checkpointAbsolutePath,
+        "--gpu", gpuId.toString(),
       ];
       if (this.config.nanoOetzi.inference.cleanTemporaryFiles) {
         params.push("-c", "True");
@@ -227,6 +237,7 @@ export default class NanoOetziHandler {
       });
       throw error;
     } finally {
+      this.gpuTaskHandler.releaseGPU(gpuId);
       if (tempSettingsPath != null) {
         try {
           await fs.promises.rm(tempSettingsPath, {

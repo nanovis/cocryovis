@@ -105,6 +105,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     } catch (error) {
       toastContainer.error(Utils.getErrorMessage(error));
       console.error("startInference Error:", error);
+    } finally {
+      setInferenceInProgress(false);
     }
   };
 
@@ -230,6 +232,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     } catch (error) {
       toastContainer.error(Utils.getErrorMessage(error));
       console.error("Local Inference Error:", error);
+    } finally {
+      setInferenceInProgress(false);
     }
   };
 

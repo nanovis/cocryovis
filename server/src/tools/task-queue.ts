@@ -1,44 +1,46 @@
-import Utils from "./utils.mjs";
+export type TaskAction<T> = () => Promise<T>;
 
-type TaskAction<T> = () => Promise<T>;
-
-interface Task<T = unknown> {
+export interface Task<T = unknown> {
   action: TaskAction<T>;
   resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: unknown) => void;
 }
-
 export default class TaskQueue {
   private queue: Task[] = [];
-  private pendingProcess = false;
+  private activeCount = 0;
+  private maxConcurrency: number;
+
+  constructor(maxConcurrency = 1) {
+    this.maxConcurrency = maxConcurrency;
+  }
 
   get size(): number {
     return this.queue.length;
   }
 
   get hasPendingTask(): boolean {
-    return this.pendingProcess;
+    return this.activeCount > 0;
+  }
+
+  setMaxConcurrency(maxConcurrency: number): void {
+    this.maxConcurrency = maxConcurrency;
+    void this.dequeue();
   }
 
   enqueue<T>(action: TaskAction<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       this.queue.push({ action, resolve, reject });
-
-      this.dequeue().catch((error: unknown) => {
-        const errorMessage = Utils.formatError(error);
-        console.error("Error processing task queue:", errorMessage);
-      });
+      void this.dequeue();
     });
   }
 
-  private async dequeue(): Promise<boolean> {
-    if (this.pendingProcess) return false;
+  private async dequeue(): Promise<void> {
+    if (this.activeCount >= this.maxConcurrency) return;
 
-    // Keep task in queue until it's fully processed
-    const task = this.queue[0];
-    if (!task) return false;
+    const task = this.queue.shift();
+    if (!task) return;
 
-    this.pendingProcess = true;
+    this.activeCount++;
 
     try {
       const payload = await task.action();
@@ -46,12 +48,9 @@ export default class TaskQueue {
     } catch (error) {
       task.reject(error);
     } finally {
-      this.pendingProcess = false;
-      this.queue.shift();
+      this.activeCount--;
       void this.dequeue();
     }
-
-    return true;
   }
 
   clear(): void {

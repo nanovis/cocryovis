@@ -62,6 +62,14 @@ export default class ReconstructionHandler {
           enqueuedTime: new Date(),
         });
 
+        const gpuId = this.gpuTaskHandler.requestGPU();
+        if (gpuId === null) {
+          throw new ApiError(
+            400,
+            "Failed Attempt to start tilt series reconstruction: No available GPU."
+          );
+        }
+
         return await this.gpuTaskHandler.queueGPUTask(() =>
           this.runTiltSeriesReconstruction(
             tiltSeriesFile,
@@ -69,6 +77,7 @@ export default class ReconstructionHandler {
             volumeId,
             userId,
             outputPath,
+            gpuId,
             taskHistory.id
           )
         );
@@ -111,6 +120,7 @@ export default class ReconstructionHandler {
     volumeId: number,
     userId: number,
     outputPath: string,
+    gpuId: number,
     taskHistoryId: number
   ): Promise<RawVolumeDataDB> {
     const logFile = await LogFile.createLogFile("reconstruction");
@@ -142,6 +152,7 @@ export default class ReconstructionHandler {
           inputFileAbsolutePath,
           outputPath,
           options.motionCorrection,
+          gpuId,
           logFile
         );
       }
@@ -151,6 +162,7 @@ export default class ReconstructionHandler {
           inputFileAbsolutePath,
           outputPath,
           options.ctf,
+          gpuId,
           logFile
         );
       }
@@ -162,12 +174,12 @@ export default class ReconstructionHandler {
       const outputAbsolutePath = path.resolve(
         path.join(outputPath, inputFileName)
       );
-
+      
+      // prettier-ignore
       const params = [
-        "filename",
-        inputFileAbsolutePath,
-        "result_filename",
-        outputAbsolutePath,
+        "filename", inputFileAbsolutePath,
+        "result_filename", outputAbsolutePath,
+        "gpu", gpuId.toString(),
       ];
 
       if (options.reconstruction) {
@@ -231,6 +243,7 @@ export default class ReconstructionHandler {
       });
       throw error;
     } finally {
+      this.gpuTaskHandler.releaseGPU(gpuId);
       try {
         await fs.promises.rm(outputPath, {
           recursive: true,
@@ -457,6 +470,7 @@ export default class ReconstructionHandler {
     inputPath: string,
     outputFolder: string,
     options: z.infer<typeof CTFOptions>,
+    gpuId: number,
     logFile: LogFile
   ): Promise<string> {
     await logFile.writeLog("--------------STARTING CTF ESTIMATION\n");
@@ -474,7 +488,7 @@ export default class ReconstructionHandler {
     const params = [
       "-InMrc", inputAbsolutePath,
       "-OutMrc", outputPath,
-      "-Gpu", "0",
+      "-Gpu", gpuId.toString(),
     ];
 
     Utils.checkAndAddParameter(
@@ -524,6 +538,7 @@ export default class ReconstructionHandler {
     inputPath: string,
     outputFolder: string,
     options: z.infer<typeof motionCorrectionOptions>,
+    gpuId: number,
     logFile: LogFile
   ): Promise<string> {
     await logFile.writeLog("--------------STARTING MOTION CORRECTION\n");
@@ -541,7 +556,7 @@ export default class ReconstructionHandler {
     const params = [
       "-InMrc", inputAbsolutePath,
       "-OutMrc", outputPath,
-      "-Gpu", "0",
+      "-Gpu", gpuId.toString(),
     ];
 
     if (options.patchSize !== undefined && Utils.isInteger(options.patchSize)) {

@@ -1,5 +1,11 @@
 //Status.js
-import { makeStyles, TabList, Tab, Spinner } from "@fluentui/react-components";
+import {
+  makeStyles,
+  TabList,
+  Tab,
+  Spinner,
+  Text,
+} from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
   bundleIcon,
@@ -16,6 +22,8 @@ import TaskQueueTable from "./elements/TaskQueueTable";
 import Paganation from "../../shared/Pagination";
 import { getErrorMessage } from "@/utils/helpers";
 import ToastContainer from "../../../utils/toastContainer";
+import { usePolling } from "@/hooks/usePooling";
+import GpuIcon from "@/assets/icons/gpu-icon.svg?react";
 
 const useStyles = makeStyles({
   contents: {
@@ -61,12 +69,30 @@ interface Props {
   close: () => void;
 }
 
+function getGpuStatusColor(freeGpus: number, totalGpus: number) {
+  if (freeGpus === 0) {
+    return "var(--colorNeutralForeground3)";
+  } else if (freeGpus === totalGpus) {
+    return "var(--colorBrandForeground1)";
+  } else {
+    return "var(--colorPaletteYellowBorder2)";
+  }
+}
+
 const Status = observer(({ open, close }: Props) => {
   const { user } = useMst();
   const classes = useStyles();
   const globalClasses = globalStyles();
 
-  const status = user.status;
+  const gpuColor = user.status
+    ? getGpuStatusColor(user.status.freeGpus, user.status.totalGpus)
+    : "var(--colorNeutralForeground3)";
+
+  usePolling(
+    () => user.status?.fetchGpuStatus(),
+    user.status !== undefined && open ? 5000 : null,
+    { immediate: true }
+  );
 
   const HistoryIcon = bundleIcon(HistoryFilled, HistoryRegular);
 
@@ -74,7 +100,7 @@ const Status = observer(({ open, close }: Props) => {
 
   async function setPageNumber(pageNumber: number) {
     try {
-      await status?.setPageNumber(pageNumber);
+      await user.status?.setPageNumber(pageNumber);
     } catch (error) {
       const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
@@ -97,45 +123,91 @@ const Status = observer(({ open, close }: Props) => {
           </div>
         </div>
         <div className={classes.body}>
-          <TabList
-            selectedValue={selectedIndex}
-            onTabSelect={(_event, data) => setSelectedIndex(Number(data.value))}
-          >
-            <Tab id="User Tasks" icon={<HistoryIcon />} value={0}>
-              User Tasks
-            </Tab>
-            <Tab id="CPU Queue" icon={<HourglassHalfRegular />} value={1}>
-              CPU Queue
-            </Tab>
-            <Tab id="GPU Queue" icon={<HourglassHalfRegular />} value={2}>
-              GPU Queue
-            </Tab>
-          </TabList>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <TabList
+              selectedValue={selectedIndex}
+              onTabSelect={(_event, data) =>
+                setSelectedIndex(Number(data.value))
+              }
+            >
+              <Tab id="User Tasks" icon={<HistoryIcon />} value={0}>
+                User Tasks
+              </Tab>
+              <Tab id="CPU Queue" icon={<HourglassHalfRegular />} value={1}>
+                CPU Queue
+              </Tab>
+              <Tab id="GPU Queue" icon={<HourglassHalfRegular />} value={2}>
+                GPU Queue
+              </Tab>
+            </TabList>
+            {user.status && (
+              <div
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  height: 45,
+                }}
+              >
+                <GpuIcon
+                  fill="currentcolor"
+                  style={{
+                    color: gpuColor,
+                    marginRight: "12px",
+                  }}
+                  width={40}
+                />
+                <div style={{ display: "flex" }}>
+                  <Text
+                    size={800}
+                    style={{
+                      color: gpuColor,
+                      marginRight: "8px",
+                      lineHeight: "100%",
+                      textAlign: "center",
+                    }}
+                  >
+                    {user.status.freeGpus}/{user.status.totalGpus}
+                  </Text>
+                  <Text
+                    size={400}
+                    style={{
+                      color: gpuColor,
+                      width: 50,
+                      lineHeight: "100%",
+                    }}
+                  >
+                    <b>GPUs</b> Free
+                  </Text>
+                </div>
+              </div>
+            )}
+          </div>
           <div>
             {selectedIndex === 0 && (
               <>
                 <div className={classes.table}>
                   <UserHistoryTable
-                    taskHistoryItems={status?.taskHistoryItems() ?? []}
+                    taskHistoryItems={user.status?.taskHistoryItems() ?? []}
                   />
-                  {status?.taskHistory.size === 0 &&
-                    status.activeRequests > 0 && (
+                  {user.status?.taskHistory.size === 0 &&
+                    user.status.activeRequests > 0 && (
                       <div className={classes.tableLoader}>
                         <Spinner appearance="primary" size="huge" />
                       </div>
                     )}
                 </div>
-                {status && status.taskHistory.size !== 0 && (
+                {user.status && user.status.taskHistory.size !== 0 && (
                   <Paganation
-                    pageSkip={status.pageSkip}
-                    pageSize={status.pageSize}
-                    pageNumber={status.pageNumber}
-                    maxPageNumber={status.maxPageNumber}
-                    ListLenght={status.taskHistoryLenght}
+                    pageSkip={user.status.pageSkip}
+                    pageSize={user.status.pageSize}
+                    pageNumber={user.status.pageNumber}
+                    maxPageNumber={user.status.maxPageNumber}
+                    ListLenght={user.status.taskHistoryLenght}
                     setPageNumberFunction={(pageNumber) =>
                       setPageNumber(pageNumber)
                     }
-                    showSpinner={status.activeRequests > 0}
+                    showSpinner={user.status.activeRequests > 0}
                   ></Paganation>
                 )}
               </>
@@ -143,10 +215,10 @@ const Status = observer(({ open, close }: Props) => {
             {selectedIndex === 1 && (
               <div className={classes.table}>
                 <TaskQueueTable
-                  taskQueueItems={status?.cpuTaskQueueItems() ?? []}
+                  taskQueueItems={user.status?.cpuTaskQueueItems() ?? []}
                 />
-                {status?.cpuTaskQueue.length === 0 &&
-                  status.activeRequests > 0 && (
+                {user.status?.cpuTaskQueue.length === 0 &&
+                  user.status.activeRequests > 0 && (
                     <div className={classes.tableLoader}>
                       <Spinner appearance="primary" size="huge" />
                     </div>
@@ -156,10 +228,10 @@ const Status = observer(({ open, close }: Props) => {
             {selectedIndex === 2 && (
               <div className={classes.table}>
                 <TaskQueueTable
-                  taskQueueItems={status?.gpuTaskQueueItems() ?? []}
+                  taskQueueItems={user.status?.gpuTaskQueueItems() ?? []}
                 />
-                {status?.gpuTaskQueue.length === 0 &&
-                  status.activeRequests > 0 && (
+                {user.status?.gpuTaskQueue.length === 0 &&
+                  user.status.activeRequests > 0 && (
                     <div className={classes.tableLoader}>
                       <Spinner appearance="primary" size="huge" />
                     </div>
