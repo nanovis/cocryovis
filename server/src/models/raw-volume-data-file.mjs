@@ -1,19 +1,19 @@
 // @ts-check
 
-import DatabaseModel, { withTransaction } from "./database-model.mjs";
+import { withTransaction } from "./database-model.mjs";
 import prismaManager from "../tools/prisma-manager.mjs";
 import { MissingResourceError } from "../tools/error-handler.mjs";
 import fs from "fs";
 import appConfig from "../tools/config.mjs";
-import VolumeData from "./volume-data.mjs";
 import path from "path";
 import { Prisma } from "@prisma/client";
+import VolumeDataFile from "./volume-data-file.mjs";
 
 /**
  * @typedef { import("@prisma/client").RawVolumeDataFile }RawVolumeDataFileDB
  */
 
-export default class RawVolumeDataFile extends DatabaseModel {
+export default class RawVolumeDataFile extends VolumeDataFile {
   static modelName = "rawVolumeDataFile";
 
   static get db() {
@@ -52,7 +52,7 @@ export default class RawVolumeDataFile extends DatabaseModel {
   static async createVolumeDataFolder(id) {
     const folderPath = path.join(
       appConfig.dataPath,
-      VolumeData.volumeDataFolder,
+      this.volumeDataFolder,
       this.folderPath,
       id.toString()
     );

@@ -7,7 +7,6 @@ import DatabaseModel, { withTransaction } from "./database-model.mjs";
 import appConfig from "../tools/config.mjs";
 import Utils from "../tools/utils.mjs";
 import { PendingUpload } from "../tools/file-handler.mjs";
-import Volume from "./volume.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import archiver from "archiver";
 import { Prisma } from "@prisma/client";
@@ -30,11 +29,12 @@ import { Prisma } from "@prisma/client";
  * @typedef { import("@prisma/client").Volume } VolumeDB
  */
 
+export const volumeDataFolder = "volume-data";
+
 /**
  * @augments {DatabaseModel}
  */
 export default class VolumeData extends DatabaseModel {
-  static volumeDataFolder = "volume-data";
   static rawFileExtensions = [".raw"];
   static settingFileExtensions = [".json"];
   static acceptedFileExtensions = this.rawFileExtensions.concat(
@@ -152,6 +152,9 @@ export default class VolumeData extends DatabaseModel {
     skipLock = false,
     client
   ) {
+    // Temporary fix to avoid circular dependency.
+    const { default: Volume } = await import("./volume.mjs");
+
     return await Volume.withWriteLock(
       volumeId,
       [this.modelName],
