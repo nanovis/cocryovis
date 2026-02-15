@@ -22,7 +22,7 @@ import ReconstructionHandler from '../../tools/reconstruction-handler';
 // Config
 const config = appConfig;
 const ilastikHandler = new IlastikHandler(config);
-const gpuTaskHandler = new GPUTaskHandler(config);
+const gpuTaskHandler = await GPUTaskHandler.create(config);
 const nanoOetziHandler = new NanoOetziHandler(gpuTaskHandler, config);
 const reconstructionHandler = new ReconstructionHandler(gpuTaskHandler, config);
 

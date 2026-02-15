@@ -16,6 +16,7 @@ import type z from "zod";
 import Model from "../models/model.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import { GPUTask } from "./gpu-task-handler";
 
 interface DeepVolume extends VolumeDB {
   rawData: RawVolumeDataWithFileDB;
@@ -26,6 +27,84 @@ interface VolumeConfigData {
   name: string;
   rawDataPath: string;
   labels: string[];
+}
+
+class InferenceTask extends GPUTask<ResultDB> {
+  protected logName = "inference";
+
+  constructor(
+    userId: number,
+    private handler: NanoOetziHandler,
+    private checkpointId: number,
+    private volumeId: number,
+    private outputPath: string | null,
+    gpuManager: GPUTaskHandler
+  ) {
+    super(userId, gpuManager);
+  }
+
+  override taskHistoryData() {
+    return {
+      volumeId: this.volumeId,
+      checkpointId: this.checkpointId,
+      taskType: TaskHistory.type.Inference,
+    };
+  }
+
+  override async execute(): Promise<ResultDB> {
+    if (this.gpuId === null) {
+      throw new ApiError(500, "Inference task error: GPU not acquired.");
+    }
+    return await this.handler.runInference(
+      this.checkpointId,
+      this.volumeId,
+      this.userId,
+      this.outputPath,
+      this.gpuId,
+      this.logFile
+    );
+  }
+}
+
+class TrainingTask extends GPUTask<CheckpointDB> {
+  protected logName = "training";
+
+  constructor(
+    userId: number,
+    private handler: NanoOetziHandler,
+    private modelId: number,
+    private trainingVolumesIds: number[],
+    private validationVolumesIds: number[],
+    private testingVolumesIds: number[],
+    private params: z.infer<typeof trainingOptions>,
+    private outputPath: string | null,
+    gpuManager: GPUTaskHandler
+  ) {
+    super(userId, gpuManager);
+  }
+
+  override taskHistoryData() {
+    return {
+      modelId: this.modelId,
+      taskType: TaskHistory.type.Training,
+    };
+  }
+
+  override async execute(): Promise<CheckpointDB> {
+    if (this.gpuId === null) {
+      throw new ApiError(500, "Training task error: GPU not acquired.");
+    }
+    return await this.handler.runTraining(
+      this.modelId,
+      this.userId,
+      this.trainingVolumesIds,
+      this.validationVolumesIds,
+      this.testingVolumesIds,
+      this.params,
+      this.outputPath,
+      this.logFile
+    );
+  }
 }
 
 export default class NanoOetziHandler {
@@ -54,10 +133,6 @@ export default class NanoOetziHandler {
 
     NanoOetziHandler.checkInferenceInput(rawVolumeData, checkpoint);
 
-    if (!outputPath) {
-      outputPath = this.createTemporaryOutputPath();
-    }
-
     const multiLock = new WriteMultiLock([
       Checkpoint.lockManager.generateLockInstance(checkpointId),
       Volume.lockManager.generateLockInstance(volumeId, [
@@ -66,72 +141,41 @@ export default class NanoOetziHandler {
     ]);
 
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
-      let taskHistory: TaskHistoryDB | null = null;
       try {
-        taskHistory = await TaskHistory.create({
-          userId: userId,
-          volumeId: volumeId,
-          checkpointId: checkpointId,
-          taskType: TaskHistory.type.Inference,
-          taskStatus: TaskHistory.status.enqueued,
-          enqueuedTime: new Date(),
-        });
-
-        const gpuId = this.gpuTaskHandler.requestGPU();
-        if (gpuId === null) {
-          throw new ApiError(
-            400,
-            "Failed Attempt to start inference: No GPU available to run the task."
-          );
-        }
-
-        return await this.gpuTaskHandler.queueGPUTask(() =>
-          this.runInference(
-            checkpointId,
-            volumeId,
-            userId,
-            outputPath,
-            gpuId,
-            taskHistory.id
-          )
+        const task = new InferenceTask(
+          userId,
+          this,
+          checkpointId,
+          volumeId,
+          outputPath,
+          this.gpuTaskHandler
         );
-      } catch {
-        if (taskHistory) {
-          try {
-            await TaskHistory.update(taskHistory.id, {
-              taskStatus: TaskHistory.status.failed,
-              endTime: new Date(),
-            });
-          } catch (error) {
-            const message = Utils.formatError(error);
-            console.error(message);
-          }
-        }
+
+        return await this.gpuTaskHandler.queueGPUTask(task);
+      } catch (error) {
         console.error(
-          `Inference task by User with id ${userId.toString()} failed.`
+          `Inference task by User with id ${userId.toString()} failed.`,
+          error
         );
       }
     });
   }
 
-  private async runInference(
+  async runInference(
     checkpointId: number,
     volumeId: number,
     userId: number,
-    outputPath: string,
+    outputPath: string | null,
     gpuId: number,
-    taskHistoryId: number
+    logFile?: LogFile
   ): Promise<ResultDB> {
-    const logFile = await LogFile.createLogFile("inference");
     let tempSettingsPath: string | null = null;
 
-    try {
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.running,
-        startTime: new Date(),
-        logFile: logFile.fileName,
-      });
+    if (!outputPath) {
+      outputPath = this.createTemporaryOutputPath();
+    }
 
+    try {
       const rawVolumeData =
         await RawVolumeData.getFromVolumeIdWithData(volumeId);
       const checkpoint = await Checkpoint.getById(checkpointId);
@@ -151,7 +195,7 @@ export default class NanoOetziHandler {
 
       await fs.promises.mkdir(outputPath, { recursive: true });
 
-      await logFile.writeLog("Nano-Oetzi inference started\n");
+      await logFile?.writeLog("Nano-Oetzi inference started\n");
 
       const inferenceDataAbsolutePath = path.resolve(tempSettingsPath);
       const outputAbsolutePath = path.resolve(outputPath);
@@ -165,8 +209,10 @@ export default class NanoOetziHandler {
         "./" + this.config.nanoOetzi.inference.command,
         inferenceDataAbsolutePath,
         outputAbsolutePath,
-        "-m", checkpointAbsolutePath,
-        "--gpu", gpuId.toString(),
+        "-m",
+        checkpointAbsolutePath,
+        "--gpu",
+        gpuId.toString(),
       ];
       if (this.config.nanoOetzi.inference.cleanTemporaryFiles) {
         params.push("-c", "True");
@@ -178,11 +224,11 @@ export default class NanoOetziHandler {
         path.resolve(
           path.join(this.config.nanoOetzi.path, this.config.nanoOetzi.scripts)
         ),
-        async (value) => logFile.writeLog(value),
-        async (value) => logFile.writeLog(value)
+        async (value) => logFile?.writeLog(value),
+        async (value) => logFile?.writeLog(value)
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
       );
 
@@ -197,19 +243,14 @@ export default class NanoOetziHandler {
         volumeId,
         JSON.parse(outputFile) as ResultConfig[],
         outputPath,
-        logFile.fileName
+        logFile?.fileName
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `Result entry created.\n\nSaving task history...\n`
       );
 
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.finished,
-        endTime: new Date(),
-      });
-
-      await logFile.writeLog(`Task history saved.\n\nINFERENCE FINISHED!\n`);
+      await logFile?.writeLog(`Task history saved.\n\nINFERENCE FINISHED!\n`);
 
       WebSocketManager.broadcastAction([userId], [], ActionTypes.InsertResult, {
         result: result,
@@ -220,7 +261,7 @@ export default class NanoOetziHandler {
     } catch (error: unknown) {
       const message = Utils.formatError(error);
 
-      await logFile.writeLog(`--------------\n${message}`);
+      await logFile?.writeLog(`--------------\n${message}`);
       console.error(`NanoOetzi inference error: ${message}`);
       try {
         await fs.promises.rm(outputPath, {
@@ -231,10 +272,6 @@ export default class NanoOetziHandler {
         const message = Utils.formatError(error);
         console.error(`Filed to remove nano oetzi inference cache: ${message}`);
       }
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.failed,
-        endTime: new Date(),
-      });
       throw error;
     } finally {
       this.gpuTaskHandler.releaseGPU(gpuId);
@@ -363,29 +400,23 @@ export default class NanoOetziHandler {
 
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
       try {
-        const taskHistory = await TaskHistory.create({
-          userId: userId,
-          modelId: modelId,
-          taskType: TaskHistory.type.Training,
-          taskStatus: TaskHistory.status.enqueued,
-          enqueuedTime: new Date(),
-        });
-
-        return await this.gpuTaskHandler.queueGPUTask(() =>
-          this.runTraining(
-            modelId,
-            userId,
-            trainingVolumesIds,
-            validationVolumesIds,
-            testingVolumesIds,
-            params,
-            outputPath,
-            taskHistory.id
-          )
+        const task = new TrainingTask(
+          userId,
+          this,
+          modelId,
+          trainingVolumesIds,
+          validationVolumesIds,
+          testingVolumesIds,
+          params,
+          outputPath,
+          this.gpuTaskHandler
         );
-      } catch {
+
+        return await this.gpuTaskHandler.queueGPUTask(task);
+      } catch (error) {
         console.error(
-          `Training task by User with id ${userId.toString()} failed.`
+          `Training task by User with id ${userId.toString()} failed.`,
+          error
         );
       }
     });
@@ -439,7 +470,7 @@ export default class NanoOetziHandler {
     }
   }
 
-  private async runTraining(
+  async runTraining(
     modelId: number,
     userId: number,
     trainingVolumesIds: number[],
@@ -447,23 +478,16 @@ export default class NanoOetziHandler {
     testingVolumesIds: number[],
     params: z.infer<typeof trainingOptions>,
     outputPath: string | null,
-    taskHistoryId: number
+    logFile?: LogFile
   ): Promise<CheckpointDB> {
-    const logFile = await LogFile.createLogFile("training");
     const workFolder = path.join(outputPath, "training-data");
 
     try {
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.running,
-        startTime: new Date(),
-        logFile: logFile.fileName,
-      });
-
-      await logFile.writeLog("Nano-Oetzi training started\n--------------\n");
+      await logFile?.writeLog("Nano-Oetzi training started\n--------------\n");
 
       await fs.promises.mkdir(workFolder, { recursive: true });
 
-      await logFile.writeLog(`Creating training configuration file...\n`);
+      await logFile?.writeLog(`Creating training configuration file...\n`);
 
       const trainingVolumes =
         await Volume.getMultipleByIdWithFileDeep(trainingVolumesIds);
@@ -479,14 +503,14 @@ export default class NanoOetziHandler {
         workFolder
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `Training configuration file created successfully.\n`
       );
 
       const configAbsolutePath = path.resolve(configPath);
       const outputAbsolutePath = path.resolve(workFolder);
 
-      await logFile.writeLog("Converting raw data into pytorch tensors...\n");
+      await logFile?.writeLog("Converting raw data into pytorch tensors...\n");
 
       await Utils.runScript(
         this.config.nanoOetzi.python,
@@ -498,11 +522,11 @@ export default class NanoOetziHandler {
           outputAbsolutePath,
         ],
         null,
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
+        (value) => logFile?.writeLog(value),
+        (value) => logFile?.writeLog(value)
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `\n--------------\nSuccess.\n\nLauching training script...\n`
       );
 
@@ -557,11 +581,11 @@ export default class NanoOetziHandler {
         path.resolve(
           path.join(this.config.nanoOetzi.path, this.config.nanoOetzi.scripts)
         ),
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
+        (value) => logFile?.writeLog(value),
+        (value) => logFile?.writeLog(value)
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `\n--------------\nSuccess.\n\nSearching for training results file...\n`
       );
 
@@ -590,7 +614,7 @@ export default class NanoOetziHandler {
         }
       }
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `Training results file found.\n\nCreating new checkpoint...\n`
       );
 
@@ -602,16 +626,11 @@ export default class NanoOetziHandler {
         newBestModelPath
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `New checkpoint created.\n\nSaving task history...\n`
       );
 
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.finished,
-        endTime: new Date(),
-      });
-
-      await logFile.writeLog(`Task history saved.\n\nTRAINING FINISHED!\n`);
+      await logFile?.writeLog(`Task history saved.\n\nTRAINING FINISHED!\n`);
 
       WebSocketManager.broadcastAction(
         [userId],
@@ -623,7 +642,7 @@ export default class NanoOetziHandler {
       return checkpoint;
     } catch (error) {
       const message = Utils.formatError(error);
-      await logFile.writeLog(`ERROR: \n${message}`);
+      await logFile?.writeLog(`ERROR: \n${message}`);
       console.error(`Nano Oetzi training error: ${message}`);
       try {
         await fs.promises.rm(workFolder, {
@@ -636,10 +655,6 @@ export default class NanoOetziHandler {
           `Failed to remove temporary files after a failed Nano-Oetzi training:\n${message}`
         );
       }
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.failed,
-        endTime: new Date(),
-      });
       throw error;
     } finally {
       if (this.config.nanoOetzi.cleanTemporaryFiles) {

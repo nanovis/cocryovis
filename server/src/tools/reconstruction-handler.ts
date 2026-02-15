@@ -19,6 +19,48 @@ import type {
 } from "@cocryovis/schemas/cryoEt-path-schema";
 import type GPUTaskHandler from "./gpu-task-handler";
 import fs from "fs";
+import { GPUTask } from "./gpu-task-handler";
+
+class ReconstructionTask extends GPUTask<RawVolumeDataDB> {
+  protected logName = "reconstruction";
+
+  constructor(
+    userId: number,
+    gpuManager: GPUTaskHandler,
+    private tiltSeriesFile: fileUpload.UploadedFile,
+    private options: z.infer<typeof tiltSeriesOptions>,
+    private volumeId: number,
+    private reconstructionHandler: ReconstructionHandler
+  ) {
+    super(userId, gpuManager);
+  }
+
+  protected taskHistoryData(): RequireFields<
+    Parameters<typeof TaskHistory.create>[0],
+    "taskType"
+  > {
+    return {
+      taskType: TaskHistory.type.Reconstruction,
+      volumeId: this.volumeId,
+    };
+  }
+
+  async execute(): Promise<RawVolumeDataDB> {
+    if (this.gpuId === null) {
+      throw new ApiError(500, "GPU not acquired for reconstruction task.");
+    }
+    return await this.reconstructionHandler.runTiltSeriesReconstruction(
+      this.tiltSeriesFile,
+      this.options,
+      this.volumeId,
+      this.userId,
+      this.gpuId,
+      {
+        logFile: this.logFile,
+      }
+    );
+  }
+}
 
 export default class ReconstructionHandler {
   private static readonly tempDirectory = "reconstruction-tasks";
@@ -43,8 +85,6 @@ export default class ReconstructionHandler {
 
     await this.validateReconstructionInput(tiltSeriesFile, options, volumeId);
 
-    const outputPath = this.createTemporaryOutputPath();
-
     const multiLock = new WriteMultiLock([
       Volume.lockManager.generateLockInstance(volumeId, [
         RawVolumeData.modelName,
@@ -52,49 +92,19 @@ export default class ReconstructionHandler {
     ]);
 
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
-      let taskHistory: TaskHistoryDB | null = null;
       try {
-        taskHistory = await TaskHistory.create({
-          userId: userId,
-          volumeId: volumeId,
-          taskType: TaskHistory.type.Reconstruction,
-          taskStatus: TaskHistory.status.enqueued,
-          enqueuedTime: new Date(),
-        });
-
-        const gpuId = this.gpuTaskHandler.requestGPU();
-        if (gpuId === null) {
-          throw new ApiError(
-            400,
-            "Failed Attempt to start tilt series reconstruction: No available GPU."
-          );
-        }
-
-        return await this.gpuTaskHandler.queueGPUTask(() =>
-          this.runTiltSeriesReconstruction(
-            tiltSeriesFile,
-            options,
-            volumeId,
-            userId,
-            outputPath,
-            gpuId,
-            taskHistory.id
-          )
+        const task = new ReconstructionTask(
+          userId,
+          this.gpuTaskHandler,
+          tiltSeriesFile,
+          options,
+          volumeId,
+          this
         );
+        return await this.gpuTaskHandler.queueGPUTask(task);
       } catch (error) {
-        if (taskHistory) {
-          try {
-            await TaskHistory.update(taskHistory.id, {
-              taskStatus: TaskHistory.status.failed,
-              endTime: new Date(),
-            });
-          } catch (error) {
-            const message = Utils.formatError(error);
-            console.error(message);
-          }
-        }
         console.error(
-          `Reconstruction task by User with id ${userId.toString()} failed.`
+          `Reconstruction task by User with id ${userId.toString()} failed, error: ${error}`
         );
       }
     });
@@ -114,24 +124,19 @@ export default class ReconstructionHandler {
     }
   }
 
-  private async runTiltSeriesReconstruction(
+  async runTiltSeriesReconstruction(
     tiltSeriesFile: fileUpload.UploadedFile,
     options: z.infer<typeof tiltSeriesOptions>,
     volumeId: number,
     userId: number,
-    outputPath: string,
     gpuId: number,
-    taskHistoryId: number
+    { outputPath, logFile }: { outputPath?: string; logFile?: LogFile } = {}
   ): Promise<RawVolumeDataDB> {
-    const logFile = await LogFile.createLogFile("reconstruction");
+    if (!outputPath) {
+      outputPath = this.createTemporaryOutputPath();
+    }
 
     try {
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.running,
-        startTime: new Date(),
-        logFile: logFile.fileName,
-      });
-
       await this.validateReconstructionInput(tiltSeriesFile, options, volumeId);
 
       await fs.promises.mkdir(outputPath, { recursive: true });
@@ -167,14 +172,14 @@ export default class ReconstructionHandler {
         );
       }
 
-      await logFile.writeLog("Tilt series reconstruction started\n");
+      await logFile?.writeLog("Tilt series reconstruction started\n");
 
       const inputFileName = Utils.stripExtension(tiltSeriesFile.name);
 
       const outputAbsolutePath = path.resolve(
         path.join(outputPath, inputFileName)
       );
-      
+
       // prettier-ignore
       const params = [
         "filename", inputFileAbsolutePath,
@@ -193,11 +198,11 @@ export default class ReconstructionHandler {
         "./" + this.config.Proximal_CryoET.executable,
         params,
         path.resolve(this.config.Proximal_CryoET.path),
-        (value) => logFile.writeLog(value),
-        (value) => logFile.writeLog(value)
+        (value) => logFile?.writeLog(value),
+        (value) => logFile?.writeLog(value)
       );
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `\n--------------\nTilt series reconstruction finished\n\nConverting output to raw...\n`
       );
 
@@ -216,31 +221,22 @@ export default class ReconstructionHandler {
         true
       );
 
-      await logFile.writeLog(`Raw data created.\n\nSaving task history...\n`);
-
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.finished,
-        endTime: new Date(),
-      });
+      await logFile?.writeLog(`Raw data created.\n\nSaving task history...\n`);
 
       WebSocketManager.broadcastAction([userId], [], ActionTypes.AddRawData, {
         volumeId: volumeId,
         rawData: rawData,
       });
 
-      await logFile.writeLog(
+      await logFile?.writeLog(
         `Task history saved.\n\nRECONSTRUCTION FINISHED!\n`
       );
 
       return rawData;
     } catch (error) {
       const errorMessage = Utils.formatError(error);
-      await logFile.writeLog(`ERROR: \n${errorMessage}`);
+      await logFile?.writeLog(`ERROR: \n${errorMessage}`);
       console.error(`Tilt series reconstruction error: ${errorMessage}`);
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.failed,
-        endTime: new Date(),
-      });
       throw error;
     } finally {
       this.gpuTaskHandler.releaseGPU(gpuId);
@@ -271,7 +267,7 @@ export default class ReconstructionHandler {
     inputPath: string,
     outputFolder: string,
     options: z.infer<typeof IMODOptions>,
-    logFile: LogFile
+    logFile?: LogFile
   ): Promise<string> {
     if (!fs.existsSync(inputPath)) {
       throw new ApiError(
@@ -280,12 +276,12 @@ export default class ReconstructionHandler {
       );
     }
 
-    await logFile.writeLog(
+    await logFile?.writeLog(
       "--------------STARTING IMOD TILT SERIESALIGNMENT\n"
     );
 
     // 1. Run CCDERASER
-    await logFile.writeLog("CCDERASER------\n");
+    await logFile?.writeLog("CCDERASER------\n");
     const baseName = Utils.stripExtension(inputPath);
     const inputAbsolutePath = path.resolve(inputPath);
     const ccderaserOutputPath = path.resolve(
@@ -328,13 +324,13 @@ export default class ReconstructionHandler {
       "ccderaser",
       ccderaserParams,
       null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
-    await logFile.writeLog(`CCDERASER finished.\n`);
+    await logFile?.writeLog(`CCDERASER finished.\n`);
 
     // 2. Extract tilt angles
-    await logFile.writeLog("EXTRACTTILTS------\n");
+    await logFile?.writeLog("EXTRACTTILTS------\n");
 
     const extracttiltsOutputPath = path.resolve(
       path.join(outputFolder, baseName + "_tilts.tlt")
@@ -343,12 +339,12 @@ export default class ReconstructionHandler {
       "extracttilts",
       ["-input", ccderaserOutputPath, "-output", extracttiltsOutputPath],
       null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
 
     // 3. Patch tracking with tiltxcorr
-    await logFile.writeLog("TILTXCORR------\n");
+    await logFile?.writeLog("TILTXCORR------\n");
     const fidModelOutputPath = path.resolve(
       path.join(outputFolder, baseName + "_patchtrack.fid")
     );
@@ -385,13 +381,13 @@ export default class ReconstructionHandler {
       "tiltxcorr",
       tiltxcorrParams,
       null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
 
     // 4. Solve alignment with tiltalign
 
-    await logFile.writeLog("TILTALIGN------\n");
+    await logFile?.writeLog("TILTALIGN------\n");
 
     const transformPath = path.resolve(
       path.join(outputFolder, baseName + "_patchtrack.fid")
@@ -417,12 +413,12 @@ export default class ReconstructionHandler {
       "tiltalign",
       tiltAlignParams,
       null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value),
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value),
       [139]
     );
 
-    await logFile.writeLog("NEWSTACK------\n");
+    await logFile?.writeLog("NEWSTACK------\n");
 
     const trimmedPath = path.resolve(
       path.join(outputFolder, baseName + "_trimmed.mrc")
@@ -437,8 +433,8 @@ export default class ReconstructionHandler {
         "-output", trimmedPath
       ],
       null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
 
     // 5. Apply alignment with newstack
@@ -455,11 +451,11 @@ export default class ReconstructionHandler {
         "-xform", transformPath,
       ],
       null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
 
-    await logFile.writeLog(
+    await logFile?.writeLog(
       "--------------IMOD TILT SERIES ALIGNMENT FINISHED\n"
     );
 
@@ -471,9 +467,9 @@ export default class ReconstructionHandler {
     outputFolder: string,
     options: z.infer<typeof CTFOptions>,
     gpuId: number,
-    logFile: LogFile
+    logFile?: LogFile
   ): Promise<string> {
-    await logFile.writeLog("--------------STARTING CTF ESTIMATION\n");
+    await logFile?.writeLog("--------------STARTING CTF ESTIMATION\n");
     if (!fs.existsSync(inputPath)) {
       throw new ApiError(400, `Input file ${inputPath} does not exist.`);
     }
@@ -526,11 +522,11 @@ export default class ReconstructionHandler {
       "./" + appConfig.GCtfFind.executable,
       params,
       path.resolve(appConfig.GCtfFind.path),
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
 
-    await logFile.writeLog("--------------CTF ESTIMATION FINISHED\n");
+    await logFile?.writeLog("--------------CTF ESTIMATION FINISHED\n");
     return outputPath;
   }
 
@@ -539,9 +535,9 @@ export default class ReconstructionHandler {
     outputFolder: string,
     options: z.infer<typeof motionCorrectionOptions>,
     gpuId: number,
-    logFile: LogFile
+    logFile?: LogFile
   ): Promise<string> {
-    await logFile.writeLog("--------------STARTING MOTION CORRECTION\n");
+    await logFile?.writeLog("--------------STARTING MOTION CORRECTION\n");
     if (!fs.existsSync(inputPath)) {
       throw new ApiError(400, `Input file ${inputPath} does not exist.`);
     }
@@ -601,11 +597,11 @@ export default class ReconstructionHandler {
       "./" + appConfig.MotionCor3.executable,
       params,
       path.resolve(appConfig.MotionCor3.path),
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
     );
 
-    await logFile.writeLog("--------------MOTION CORRECTION FINISHED\n");
+    await logFile?.writeLog("--------------MOTION CORRECTION FINISHED\n");
     return outputPath;
   }
 

@@ -7,6 +7,8 @@ declare module "express-session" {
 }
 
 declare global {
+  type RequireFields<T, K extends keyof T> = Partial<T> & Required<Pick<T, K>>;
+
   interface GPUData {
     device_id: number;
     device_name: string;

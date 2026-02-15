@@ -3,7 +3,7 @@ import path from "path";
 import fsPromises from "node:fs/promises";
 import { H5ToLabels, labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 import Utils from "./utils.mjs";
-import TaskQueue from "./task-queue";
+import TaskQueue, { Task } from "./task-queue";
 import Volume from "../models/volume.mjs";
 import appConfig from "./config.mjs";
 import LogFile from "./log-manager.mjs";
@@ -20,6 +20,41 @@ import type {
   volumeSizeSchema,
 } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
+class LabelGenerationTask extends Task<PseudoLabeledVolumeData[]> {
+  private ilastikHandler: IlastikHandler;
+  private volumeId: number;
+  private outputPath: string;
+  protected logName = "label-generation";
+
+  constructor(
+    userId: number,
+    ilastikHandler: IlastikHandler,
+    volumeId: number,
+    outputPath: string
+  ) {
+    super(userId);
+    this.ilastikHandler = ilastikHandler;
+    this.volumeId = volumeId;
+    this.outputPath = outputPath;
+  }
+
+  override taskHistoryData() {
+    return {
+      taskType: TaskHistory.type.LabelInference,
+      volumeId: this.volumeId,
+    };
+  }
+
+  override async execute(): Promise<PseudoLabeledVolumeData[]> {
+    return await this.ilastikHandler.generateLabels(
+      this.volumeId,
+      this.userId,
+      this.outputPath,
+      this.logFile
+    );
+  }
+}
+
 export default class IlastikHandler {
   static readonly rawDataset = "/raw_data";
   static readonly labelsDataset = "/labels";
@@ -34,10 +69,6 @@ export default class IlastikHandler {
     this.taskQueue = new TaskQueue();
     this.ilastikTempDirectory = path.join(this.config.tempPath, "ilastik");
     Object.preventExtensions(this);
-  }
-
-  isInferenceRunning() {
-    return this.taskQueue.hasPendingTask;
   }
 
   async queueLabelGeneration(
@@ -70,20 +101,17 @@ export default class IlastikHandler {
 
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
       try {
-        const taskHistory = await TaskHistory.create({
-          userId: userId,
-          volumeId: volumeId,
-          taskType: TaskHistory.type.LabelInference,
-          taskStatus: TaskHistory.status.enqueued,
-          enqueuedTime: new Date(),
-        });
-
-        return await this.taskQueue.enqueue(() =>
-          this.generateLabels(volumeId, userId, outputPath, taskHistory.id)
+        const task = new LabelGenerationTask(
+          userId,
+          this,
+          volumeId,
+          outputPath
         );
-      } catch {
+
+        return await this.taskQueue.enqueue(task);
+      } catch (error) {
         console.error(
-          `Label generation task by User with id ${userId} failed.`
+          `Label generation task by User with id ${userId} failed to start: ${error}`
         );
       }
     });
@@ -164,24 +192,16 @@ export default class IlastikHandler {
     return modelOutputFullPath;
   }
 
-  private async generateLabels(
+  async generateLabels(
     volumeId: number,
     userId: number,
     outputPath: string,
-    taskHistoryId: number
+    logFile?: LogFile
   ): Promise<PseudoLabeledVolumeData[]> {
-    const logFile = await LogFile.createLogFile("label-generation");
-
     try {
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.running,
-        startTime: new Date(),
-        logFile: logFile.fileName,
-      });
-
       const volume = await Volume.getByIdWithFileDeep(volumeId);
 
-      await logFile.writeLog("Stating label generation process\n\n");
+      await logFile?.writeLog("Stating label generation process\n\n");
 
       IlastikHandler.checkVolumeProperties(volume);
 
@@ -196,7 +216,7 @@ export default class IlastikHandler {
       const rawH5Path = path.join(outputPath, rawH5FileName);
       const labelsH5Path = path.join(outputPath, labelsH5FileName);
 
-      await logFile.writeLog("Converting raw data to HDF5 format...\n");
+      await logFile?.writeLog("Converting raw data to HDF5 format...\n");
       await this.convertDataToH5(
         volume.rawData,
         volume.sparseVolumes,
@@ -205,7 +225,7 @@ export default class IlastikHandler {
         labelsH5Path,
         logFile
       );
-      await logFile.writeLog("Data conversion to HDF5 complete.");
+      await logFile?.writeLog("Data conversion to HDF5 complete.");
 
       const modelFullPath = await this.createIlastikProject(
         rawH5Path,
@@ -239,11 +259,6 @@ export default class IlastikHandler {
         volume.sparseVolumes
       );
 
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.finished,
-        endTime: new Date(),
-      });
-
       WebSocketManager.broadcastAction(
         [userId],
         [],
@@ -257,11 +272,7 @@ export default class IlastikHandler {
       return pseudoLabeledVolumes;
     } catch (error) {
       console.error(`Ilastik label generation error: ${error}`);
-      await logFile.writeLog(`exec error: ${error}`);
-      await TaskHistory.update(taskHistoryId, {
-        taskStatus: TaskHistory.status.failed,
-        endTime: new Date(),
-      });
+      await logFile?.writeLog(`exec error: ${error}`);
       throw error;
     } finally {
       if (appConfig.ilastik.cleanTemporaryFiles) {

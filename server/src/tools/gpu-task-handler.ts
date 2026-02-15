@@ -1,19 +1,65 @@
 import { ApiError } from "./error-handler.mjs";
-import TaskQueue from "./task-queue";
+import TaskQueue, { Task } from "./task-queue";
 import Utils from "./utils.mjs";
+
+export abstract class GPUTask<T = unknown> extends Task<T> {
+  protected gpuManager: GPUTaskHandler;
+  protected gpuId: number | null = null;
+
+  constructor(userId: number, gpuManager: GPUTaskHandler) {
+    super(userId);
+    this.gpuManager = gpuManager;
+  }
+
+  override async reserveResources(): Promise<boolean> {
+    try {
+      this.acquireGPU();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  override async onEnd(): Promise<void> {
+    this.releaseGPU();
+  }
+
+  override canRun(): boolean {
+    return this.gpuManager.isGpuAvailable();
+  }
+
+  protected acquireGPU(): number {
+    const gpuId = this.gpuManager.requestGPU();
+    if (gpuId === null) {
+      throw new ApiError(503, "No available GPU resources.");
+    }
+    this.gpuId = gpuId;
+    return gpuId;
+  }
+
+  protected releaseGPU(): void {
+    if (this.gpuId !== null) {
+      this.gpuManager.releaseGPU(this.gpuId);
+      this.gpuId = null;
+    }
+  }
+}
+
 export default class GPUTaskHandler {
   private taskQueue: TaskQueue;
   private config: AppConfig;
-  private ready: boolean = false;
   private gpuData: GPUData[] = [];
   private availableGpus: Set<number> = new Set();
 
-  constructor(config: AppConfig) {
+  private constructor(config: AppConfig) {
     this.config = config;
     this.taskQueue = new TaskQueue(0);
-    this.initialize().catch((err) => {
-      console.error("Failed to initialize GPUTaskHandler:", err);
-    });
+  }
+
+  static async create(config: AppConfig): Promise<GPUTaskHandler> {
+    const handler = new GPUTaskHandler(config);
+    await handler.initialize();
+    return handler;
   }
 
   private async initialize() {
@@ -29,7 +75,6 @@ export default class GPUTaskHandler {
     }
     this.availableGpus = new Set(this.gpuData.map((gpu) => gpu.device_id));
     this.taskQueue.setMaxConcurrency(this.gpuData.length);
-    this.ready = true;
   }
 
   requestGPU(): number | null {
@@ -51,21 +96,25 @@ export default class GPUTaskHandler {
     };
   }
 
+  isGpuAvailable() {
+    return this.availableGpus.size > 0;
+  }
+
   isTaskRunning() {
-    return this.taskQueue.hasPendingTask;
+    return this.taskQueue.hasActiveTask;
   }
 
   canRunTask() {
-    return this.ready && this.taskQueue.size < this.config.gpuQueueSize;
+    return this.taskQueue.size < this.config.gpuQueueSize;
   }
 
-  async queueGPUTask<T>(task: () => Promise<T>) {
+  async queueGPUTask<T>(task: Task<T>) {
     if (!this.canRunTask()) {
       throw new ApiError(
         400,
         "Failed Attempt to start inference: Too many tasks in queue or GPU not ready."
       );
     }
-    return await this.taskQueue.enqueue(() => task());
+    return await this.taskQueue.enqueue(task);
   }
 }
