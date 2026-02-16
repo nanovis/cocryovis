@@ -3,7 +3,6 @@ import {
   Menu,
   MenuTrigger,
   MenuList,
-  MenuItem,
   MenuPopover,
 } from "@fluentui/react-components";
 import { makeStyles, tokens } from "@fluentui/react-components";
@@ -25,25 +24,15 @@ const MenuBarItem = ({ label, children }: Props) => {
   const classes = useStyles();
 
   return (
-    <>
-      <Menu closeOnScroll={true}>
-        <MenuTrigger>
-          <Button className={classes.button}>{label}</Button>
-        </MenuTrigger>
+    <Menu closeOnScroll>
+      <MenuTrigger>
+        <Button className={classes.button}>{label}</Button>
+      </MenuTrigger>
 
-        <MenuPopover>
-          <MenuList>
-            {children.map((child, index) => {
-              return (
-                <MenuItem disabled key={index}>
-                  {child}
-                </MenuItem>
-              );
-            })}
-          </MenuList>
-        </MenuPopover>
-      </Menu>
-    </>
+      <MenuPopover>
+        <MenuList>{children}</MenuList>
+      </MenuPopover>
+    </Menu>
   );
 };
 

@@ -105,17 +105,14 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
       <div style={{ display: "flex", alignItems: "center" }}>
         <Image src={KaustLogo} className={classes.logoIcon} />
         {!user.isGuest && !rootStore.pageDisabled && (
-          <MenuBarItem
-            label="Select Project"
-            children={[
-              <MenuItem key="newProject" onClick={handleCreateProjectClick}>
-                New Project
-              </MenuItem>,
-              <MenuItem key="openProject" onClick={handleOpenProjectClick}>
-                Open Project
-              </MenuItem>,
-            ]}
-          />
+          <MenuBarItem label="Select Project">
+            <MenuItem key="newProject" onClick={handleCreateProjectClick}>
+              New Project
+            </MenuItem>
+            <MenuItem key="openProject" onClick={handleOpenProjectClick}>
+              Open Project
+            </MenuItem>
+          </MenuBarItem>
         )}
         {user.userProjects.activeProjectId && !rootStore.pageDisabled && (
           <div style={{ display: "flex", alignItems: "center" }}>
