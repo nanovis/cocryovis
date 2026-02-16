@@ -32,7 +32,13 @@ import {
   Spinner,
 } from "@fluentui/react-components";
 import type { SyntheticEvent } from "react";
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useEffectEvent,
+} from "react";
 import * as Utils from "../../utils/helpers";
 import {
   bundleIcon,
@@ -165,7 +171,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     }
   };
 
-  const fetchProjectAccessData = async () => {
+  const fetchProjectAccessData = useEffectEvent(async () => {
     try {
       if (!activeProject) {
         throw new Error("No active project");
@@ -201,25 +207,14 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     } finally {
       setIsFetchingData(false);
     }
-  };
+  });
 
-  useEffect(() => {
-    if (open) {
-      refreshUsersWithAccess();
-    }
-  }, [pendingChanges]);
-
-  useEffect(() => {
-    if (open) {
-      refreshTagPickerOptions();
-    }
-  }, [selectedIds, user.id, query]);
-
-  const refreshUsersWithAccess = () => {
+  const refreshUsersWithAccess = useCallback(() => {
     setUsersWithAccess(
       users.current
         .filter(
           (userData) =>
+            accessInfoMap.current.has(userData.id) &&
             accessInfoMap.current.get(userData.id) >= -1 &&
             pendingChanges.get(userData.id) !== -1
         )
@@ -233,26 +228,38 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
           };
         })
     );
-  };
+  }, [pendingChanges]);
 
-  const refreshTagPickerOptions = () => {
+  const refreshTagPickerOptions = useCallback(() => {
     setTagPickerOptions(
       users.current.filter(
         (userData) =>
-          !accessInfoMap.current.get(userData.id) &&
+          !accessInfoMap.current.has(userData.id) &&
           !selectedIds.includes(userData.id.toString()) &&
           user.id !== userData.id &&
           (userData.name.toLowerCase().includes(query.toLowerCase()) ||
             userData.username.toLowerCase().includes(query.toLowerCase()))
       )
     );
-  };
+  }, [query, selectedIds, user.id]);
 
   useEffect(() => {
     if (open) {
+      refreshUsersWithAccess();
+    }
+  }, [open, refreshUsersWithAccess]);
+
+  useEffect(() => {
+    if (open) {
+      refreshTagPickerOptions();
+    }
+  }, [open, refreshTagPickerOptions]);
+
+  useEffect(() => {
+    if (open && activeProject) {
       fetchProjectAccessData().catch(console.error);
     }
-  }, [open]);
+  }, [open, activeProject]);
 
   useEffect(() => {
     handleScroll();
@@ -690,7 +697,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
             ) : (
               <Button
                 disabled={pageBusy()}
-                onClick={() => async () => {
+                onClick={async () => {
                   if (!activeProject) {
                     return;
                   }
