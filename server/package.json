@@ -4,9 +4,6 @@
   "description": "",
   "main": "src/index.ts",
   "type": "module",
-  "prisma": {
-    "seed": "node prisma/seed.mjs"
-  },
   "scripts": {
     "prisma:init": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
@@ -31,9 +28,12 @@
     "url": "https://github.com/CirilBohak/vol-web-server/issues"
   },
   "homepage": "https://github.com/CirilBohak/vol-web-server#readme",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@cocryovis/schemas": "file:../schemas",
-    "@prisma/client": "^6.8.2",
+    "@prisma/client": "^6.19.2",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "async-express-decorator": "^1.1.0",
@@ -75,7 +75,7 @@
     "globals": "^17.3.0",
     "nodemon": "^3.1.11",
     "prettier": "^3.8.1",
-    "prisma": "^6.8.2",
+    "prisma": "^6.19.2",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
