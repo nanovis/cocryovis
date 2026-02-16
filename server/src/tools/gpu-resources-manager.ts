@@ -2,9 +2,11 @@ import Utils from "./utils.mjs";
 
 export default class GPUResourcesManager {
   private gpuData: GPUData[] = [];
-  private availableGpus: Set<number> = new Set();
+  private availableGpus: Set<number> = new Set<number>();
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor to enforce the use of the async create method
+  }
 
   static async create(): Promise<GPUResourcesManager> {
     const manager = new GPUResourcesManager();

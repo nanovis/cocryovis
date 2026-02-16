@@ -59,12 +59,16 @@ export default defineConfig([
       },
     },
     rules: {
-      "no-unused-vars": [
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
         "error",
         {
-          varsIgnorePattern: "^_",
+          args: "all",
           argsIgnorePattern: "^_",
-          ignoreUsedInTypeScriptTypes: true,
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
         },
       ],
       "@typescript-eslint/no-unnecessary-boolean-literal-compare": "off",
@@ -72,6 +76,7 @@ export default defineConfig([
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-extraneous-class": "off",
+      "@typescript-eslint/no-useless-default-assignment": "off",
     },
   },
   globalIgnores([
@@ -83,6 +88,8 @@ export default defineConfig([
     "node_modules/*",
     "sessions/*",
     "database/*",
+    "dist/*",
+    ".venv",
     "transfer-functions/*",
     "*.json",
     "*.log",
@@ -92,6 +99,7 @@ export default defineConfig([
     "*.md",
     "eslint.config.js",
     "tsup.config.ts",
+    "prisma.config.ts",
 
     "!package.json",
     "!tsconfig*.json",

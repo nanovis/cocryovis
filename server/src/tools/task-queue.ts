@@ -33,7 +33,7 @@ export abstract class Task<T = unknown> {
 
   public canRun?(): boolean;
 
-  public reserveResources?(): Promise<boolean>;
+  public reserveResources?(): boolean | Promise<boolean>;
 
   public async beforeStart(): Promise<void> {
     if (!this.taskHistory) {
@@ -47,7 +47,7 @@ export abstract class Task<T = unknown> {
     });
   }
 
-  public async onSuccess(result: T): Promise<void> {
+  public async onSuccess(_result: T): Promise<void> {
     if (!this.taskHistory) {
       throw new Error("Task history is not set");
     }
@@ -57,7 +57,7 @@ export abstract class Task<T = unknown> {
     });
   }
 
-  public async onFailure(error: unknown): Promise<void> {
+  public async onFailure(_error: unknown): Promise<void> {
     if (!this.taskHistory) {
       throw new Error("Task history is not set");
     }
@@ -67,7 +67,7 @@ export abstract class Task<T = unknown> {
     });
   }
 
-  public onEnd?(): Promise<void>;
+  public onEnd?(): void | Promise<void>;
 
   public async onQueued(): Promise<void> {
     this.taskHistory = await TaskHistory.create({
@@ -131,10 +131,14 @@ export default class TaskQueue {
   async enqueue<T>(task: Task<T>): Promise<T> {
     this.startPolling();
 
-    return new Promise<T>(async (resolve, reject) => {
-      await task.onQueued?.();
-      this.queue.push({ task, resolve, reject });
-      void this.dequeue();
+    return new Promise<T>((resolve, reject) => {
+      Promise.resolve()
+        .then(() => task.onQueued?.())
+        .then(() => {
+          this.queue.push({ task, resolve, reject });
+          void this.dequeue();
+        })
+        .catch(reject);
     });
   }
 

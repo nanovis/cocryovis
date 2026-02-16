@@ -1,6 +1,6 @@
 import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import validateSchema from "../tools/validate-schema.mjs";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import type IlastikHandler from "../tools/ilastik-handler";
 
 export default class IlastikController {
@@ -13,7 +13,7 @@ export default class IlastikController {
 
     await ilastik.queueLabelGeneration(
       params.idVolume,
-      Number(req.session.user.id)
+      req.session.user.id
     );
 
     res.sendStatus(201);

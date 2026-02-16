@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+
 declare type VolumeDB = import("@prisma/client").Volume;
 declare type RawVolumeDataDB = import("@prisma/client").RawVolumeData;
 declare type SparseLabelVolumeDataDB = import("@prisma/client").SparseLabelVolumeData;

@@ -1,5 +1,6 @@
 declare module "better-sqlite3-session-store" {
-  import session from "express-session";
+  import type ExpressSession from "express-session";
+  import type { Store } from "express-session";
 
   interface ExpiredOptions {
     clear?: boolean;
@@ -9,18 +10,22 @@ declare module "better-sqlite3-session-store" {
   interface SqliteStoreOptions {
     client: {
       prepare(sql: string): {
-        run(params?: any): any;
-        get(params?: any): any;
-        all(params?: any): any;
+        run(params?: unknown): unknown;
+        get(params?: unknown): unknown;
+        all(params?: unknown): unknown;
       };
       exec(sql: string): void;
     };
     expired?: ExpiredOptions;
   }
 
-  function createSqliteStore(session: typeof import("express-session")): {
-    new (options: SqliteStoreOptions): session.Store;
-  };
+  type SqliteStoreConstructor = new (options: SqliteStoreOptions) => Store;
+
+  type CreateSqliteStore = (
+    session: typeof ExpressSession
+  ) => SqliteStoreConstructor;
+
+  const createSqliteStore: CreateSqliteStore;
 
   export = createSqliteStore;
 }

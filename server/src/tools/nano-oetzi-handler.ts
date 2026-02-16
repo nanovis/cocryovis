@@ -7,7 +7,7 @@ import { ApiError } from "./error-handler.mjs";
 import type GPUTaskHandler from "./gpu-task-handler";
 import { WriteMultiLock, type WriteLock } from "./write-lock-manager.mjs";
 import Utils from "./utils.mjs";
-import LogFile from "./log-manager.mjs";
+import type LogFile from "./log-manager.mjs";
 import fs from "fs";
 import Result, { type ResultConfig } from "../models/result.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";

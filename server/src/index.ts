@@ -233,7 +233,7 @@ const startServer = async () => {
   WebSocketManager.initializeWebSocketInstance(server, sessionParser);
 
   // 404 Error
-  app.use(function (req, res) {
+  app.use(function (_req, res) {
     res.status(404).json({
       name: "Bad Url",
       message: "Sorry, this page does not exist.",

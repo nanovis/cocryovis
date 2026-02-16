@@ -6,7 +6,7 @@ import Utils from "./utils.mjs";
 import TaskQueue, { Task } from "./task-queue";
 import Volume from "../models/volume.mjs";
 import appConfig from "./config.mjs";
-import LogFile from "./log-manager.mjs";
+import type LogFile from "./log-manager.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
 import SparseLabeledVolumeData from "../models/sparse-labeled-volume-data.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
@@ -111,7 +111,7 @@ export default class IlastikHandler {
         return await this.taskQueue.enqueue(task);
       } catch (error) {
         console.error(
-          `Label generation task by User with id ${userId} failed to start: ${error}`
+          `Label generation task by User with id ${userId.toString()} failed to start: ${Utils.formatError(error)}`
         );
       }
     });
@@ -271,8 +271,9 @@ export default class IlastikHandler {
 
       return pseudoLabeledVolumes;
     } catch (error) {
-      console.error(`Ilastik label generation error: ${error}`);
-      await logFile?.writeLog(`exec error: ${error}`);
+      const errorMsg = Utils.formatError(error);
+      console.error(`Ilastik label generation error: ${errorMsg}`);
+      await logFile?.writeLog(`exec error: ${errorMsg}`);
       throw error;
     } finally {
       if (appConfig.ilastik.cleanTemporaryFiles) {
@@ -282,7 +283,9 @@ export default class IlastikHandler {
             force: true,
           });
         } catch (error) {
-          console.error(`Filed to remove ilastik inference cache: ${error}`);
+          console.error(
+            `Filed to remove ilastik inference cache: ${Utils.formatError(error)}`
+          );
         }
       }
     }

@@ -1,9 +1,9 @@
 import path from "path";
 import Utils from "./utils.mjs";
-import LogFile from "./log-manager.mjs";
+import type LogFile from "./log-manager.mjs";
 import Volume from "../models/volume.mjs";
 import RawVolumeData from "../models/raw-volume-data.mjs";
-import { WriteMultiLock, type WriteLock } from "./write-lock-manager.mjs";
+import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import { PendingLocalFile } from "./file-handler.mjs";
@@ -105,7 +105,7 @@ export default class ReconstructionHandler {
         return await this.gpuTaskHandler.queueGPUTask(task);
       } catch (error) {
         console.error(
-          `Reconstruction task by User with id ${userId.toString()} failed, error: ${error}`
+          `Reconstruction task by User with id ${userId.toString()} failed, error: ${Utils.formatError(error)}`
         );
       }
     });

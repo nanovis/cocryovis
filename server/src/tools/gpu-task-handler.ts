@@ -11,16 +11,16 @@ export abstract class GPUTask<T = unknown> extends Task<T> {
     this.gpuManager = gpuManager;
   }
 
-  override async reserveResources(): Promise<boolean> {
+  override reserveResources(): boolean | Promise<boolean> {
     try {
       this.acquireGPU();
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  override async onEnd(): Promise<void> {
+  override onEnd(): void | Promise<void> {
     this.releaseGPU();
   }
 
@@ -50,10 +50,7 @@ export default class GPUTaskHandler {
   private config: AppConfig;
   readonly gpuResourcesManager: GPUResourcesManager;
 
-  constructor(
-    config: AppConfig,
-    gpuResourcesManager: GPUResourcesManager
-  ) {
+  constructor(config: AppConfig, gpuResourcesManager: GPUResourcesManager) {
     this.config = config;
     this.gpuResourcesManager = gpuResourcesManager;
     this.taskQueue = new TaskQueue(this.gpuResourcesManager.totalGPUs);

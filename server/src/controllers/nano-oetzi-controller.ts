@@ -20,7 +20,7 @@ export default class NanoOetziController {
     await nanoOetziHandler.queueInference(
       checkpointId,
       volumeId,
-      Number(req.session.user.id)
+      req.session.user.id
     );
 
     res.sendStatus(204);
@@ -35,7 +35,7 @@ export default class NanoOetziController {
 
     await nanoOetziHandler.queueTraining(
       body.modelId,
-      Number(req.session.user.id),
+      req.session.user.id,
       body.trainingVolumes,
       body.validationVolumes,
       body.testingVolumes,
