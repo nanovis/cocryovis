@@ -35,16 +35,6 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      // "no-unused-vars": [
-      //   "error",
-      //   {
-      //     args: "all",
-      //     argsIgnorePattern: "^_",
-      //     vars: "all",
-      //     varsIgnorePattern: "^_",
-      //     caughtErrors: "all",
-      //   },
-      // ],
       "no-unused-vars": "off",
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/restrict-template-expressions": "off",
@@ -57,6 +47,7 @@ export default defineConfig([
           vars: "all",
           varsIgnorePattern: "^_",
           caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
       "@typescript-eslint/no-unsafe-return": "off",
