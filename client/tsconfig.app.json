@@ -26,10 +26,11 @@
     "checkJs": true,
 
     "paths": {
-      "#schemas/*": ["../schemas/src/*"],
+      "@cocryovis/schemas/*": ["../schemas/src/*.ts"],
       "@/*": ["./src/*"]
     },
     "types": ["@webgpu/types"]
   },
-  "include": ["src", "../schemas/src"]
+  "include": ["src"],
+  "exclude": ["vite.config.ts"]
 }

@@ -1,7 +1,7 @@
 import type {
   gpuStatusSchema,
   statusSchema,
-} from "#schemas/componentSchemas/status-schema";
+} from "@cocryovis/schemas/componentSchemas/status-schema";
 import type {
   idUserSchema,
   loginSchemaReq,
@@ -10,7 +10,7 @@ import type {
   statusQuery,
   updateUserSchema,
   usersArray,
-} from "#schemas/user-path-schema";
+} from "@cocryovis/schemas/user-path-schema";
 import * as Utils from "../utils/helpers";
 import type z from "zod";
 

@@ -19,18 +19,18 @@ import {
   type VolumeDescriptorSettings,
   type VolumeSettings,
 } from "@/utils/volumeDescriptor";
-import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema";
+import type { rawVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/raw-volume-data-schema";
 import type z from "zod";
 import type {
   volumeSchema,
   volumeUpdateSchema,
-} from "#schemas/componentSchemas/volume-schema";
+} from "@cocryovis/schemas/componentSchemas/volume-schema";
 import type {
   deepVolumeSchema,
   volumesDeepSchemaRes,
-} from "#schemas/volume-path-schema";
-import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema";
-import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema";
+} from "@cocryovis/schemas/volume-path-schema";
+import type { sparseLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/sparse-label-volume-data-schema";
+import type { pseudoLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/pseudo-label-volume-data-schema";
 import { getVolumesFromProjectDeep } from "@/api/volume";
 import * as volumeApi from "../../api/volume";
 import {

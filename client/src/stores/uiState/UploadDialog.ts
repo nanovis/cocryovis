@@ -11,7 +11,7 @@ import {
   volumeDescriptorSettingsSchema,
 } from "@/utils/volumeDescriptor";
 import * as Utils from "../../utils/helpers";
-import type { tomogramSchema } from "#schemas/cryoEt-path-schema";
+import type { tomogramSchema } from "@cocryovis/schemas/cryoEt-path-schema";
 import { getTomographyMetadataFromCryoETId } from "@/api/cryoEt";
 import ToastContainer from "../../utils/toastContainer";
 import type z from "zod";

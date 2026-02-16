@@ -1,7 +1,7 @@
 import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { flow, isAlive, types } from "mobx-state-tree";
 import { Checkpoint } from "./CheckpointModel";
-import type { getResultSchema } from "#schemas/result-path-schema";
+import type { getResultSchema } from "@cocryovis/schemas/result-path-schema";
 import type z from "zod";
 import { getResultsFromVolume, deleteResult } from "@/api/results";
 

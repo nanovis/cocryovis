@@ -16,7 +16,7 @@ import { SparseLabelVolume } from "../userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../userState/PseudoVolumeModel";
 import { PseudoLabelVolume } from "../userState/PseudoVolumeModel";
 import type z from "zod";
-import type { getVolumeSchema } from "#schemas/volume-path-schema";
+import type { getVolumeSchema } from "@cocryovis/schemas/volume-path-schema";
 import { downloadFullVolumeData } from "@/api/volumeData";
 import { getVolumeWithSparseVolumes } from "@/api/volume";
 import ToastContainer from "../../utils/toastContainer";

@@ -8,12 +8,12 @@ import {
 import { ProjectModels } from "./ModelModel";
 import { ProjectVolumes } from "./VolumeModel";
 import * as Utils from "../../utils/helpers";
-import type { projectSchema } from "#schemas/componentSchemas/project-schema";
+import type { projectSchema } from "@cocryovis/schemas/componentSchemas/project-schema";
 import type z from "zod";
 import type {
   projectSchemaDeepRes,
   projectsSchemaDeepRes,
-} from "#schemas/project-path-schema";
+} from "@cocryovis/schemas/project-path-schema";
 import * as ProjectApi from "../../api/projects";
 import { getDemo } from "../../api/demo";
 import ToastContainer from "../../utils/toastContainer";

@@ -3,7 +3,7 @@ import * as Utils from "../utils/helpers";
 import type {
   getResultSchema,
   resultFilesSchema,
-} from "#schemas/result-path-schema";
+} from "@cocryovis/schemas/result-path-schema";
 
 export async function getResultsFromVolume(id: number) {
   const response = await Utils.sendApiRequest(`/volume/${id}/results`, {

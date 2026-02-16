@@ -4,7 +4,7 @@ import { VolVisSettings } from "./VolVisSettings";
 import * as Utils from "../../utils/helpers";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "../RootStore";
-import { transferFunctionSchema } from "#schemas/componentSchemas/volume-settings-schema";
+import { transferFunctionSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 export const TransferFunction = types
   .model({

@@ -1,4 +1,4 @@
-import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema";
+import type { pseudoLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/pseudo-label-volume-data-schema";
 import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { flow, types } from "mobx-state-tree";
 import type z from "zod";

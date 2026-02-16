@@ -1,15 +1,15 @@
 import type z from "zod";
 import * as Utils from "../utils/helpers";
-import type { rawVolumeDataSchema } from "#schemas/componentSchemas/raw-volume-data-schema";
-import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema";
-import type { pseudoLabelVolumeDataSchema } from "#schemas/componentSchemas/pseudo-label-volume-data-schema";
-import type { typeSchema } from "#schemas/componentSchemas/volume-data-schema";
+import type { rawVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/raw-volume-data-schema";
+import type { sparseLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/sparse-label-volume-data-schema";
+import type { pseudoLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/pseudo-label-volume-data-schema";
+import type { typeSchema } from "@cocryovis/schemas/componentSchemas/volume-data-schema";
 import type {
   createFromFilesSchema,
   fromUrlSchema,
   updateAnnotationsSchema,
   volumeDataUpdate,
-} from "#schemas/volume-data-path-schema";
+} from "@cocryovis/schemas/volume-data-path-schema";
 
 type RawVolumeData = z.infer<typeof rawVolumeDataSchema>;
 type SparseLabeledVolumeData = z.infer<typeof sparseLabelVolumeDataSchema>;

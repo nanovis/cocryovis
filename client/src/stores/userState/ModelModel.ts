@@ -7,7 +7,7 @@ import type {
   modelSchema,
   modelSchemaWithCheckpoint,
   modelSchemaWithOptionalCheckpoint,
-} from "#schemas/componentSchemas/model-schema";
+} from "@cocryovis/schemas/componentSchemas/model-schema";
 import * as modelApi from "../../api/models";
 
 export type ModelDB = z.infer<typeof modelSchemaWithOptionalCheckpoint>;

@@ -1,4 +1,4 @@
-import type { checkpointSchemaArray } from "#schemas/componentSchemas/checkpoint-schema";
+import type { checkpointSchemaArray } from "@cocryovis/schemas/componentSchemas/checkpoint-schema";
 import type z from "zod";
 import * as Utils from "../utils/helpers";
 

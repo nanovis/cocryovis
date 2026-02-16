@@ -5,7 +5,7 @@ import { UserProjects } from "./ProjectModel";
 import { Status } from "./Status";
 import { ModelTraining } from "./ModelTraining";
 import type z from "zod";
-import type { publicUser } from "#schemas/user-path-schema";
+import type { publicUser } from "@cocryovis/schemas/user-path-schema";
 
 export type UserDB = z.infer<typeof publicUser>;
 

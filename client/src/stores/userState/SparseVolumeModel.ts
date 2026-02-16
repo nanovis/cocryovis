@@ -7,7 +7,7 @@ import { flow, types } from "mobx-state-tree";
 import * as Utils from "../../utils/helpers";
 import { updateVolumeData } from "@/api/volumeData";
 import ToastContainer from "../../utils/toastContainer";
-import type { sparseLabelVolumeDataSchema } from "#schemas/componentSchemas/sparse-label-volume-data-schema";
+import type { sparseLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/sparse-label-volume-data-schema";
 import type z from "zod";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "@/stores/RootStore";

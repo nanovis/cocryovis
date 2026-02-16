@@ -5,7 +5,7 @@ import { getGpuStatus, getStatus } from "@/api/users";
 import type {
   gpuStatusSchema,
   statusSchema,
-} from "#schemas/componentSchemas/status-schema";
+} from "@cocryovis/schemas/componentSchemas/status-schema";
 
 export interface TaskHistoryItem {
   taskStatus: {
