@@ -20,13 +20,14 @@ import type {
 import type GPUTaskHandler from "./gpu-task-handler";
 import fs from "fs";
 import { GPUTask } from "./gpu-task-handler";
+import type GPUResourcesManager from "./gpu-resources-manager";
 
 class ReconstructionTask extends GPUTask<RawVolumeDataDB> {
   protected logName = "reconstruction";
 
   constructor(
     userId: number,
-    gpuManager: GPUTaskHandler,
+    gpuManager: GPUResourcesManager,
     private tiltSeriesFile: fileUpload.UploadedFile,
     private options: z.infer<typeof tiltSeriesOptions>,
     private volumeId: number,
@@ -95,7 +96,7 @@ export default class ReconstructionHandler {
       try {
         const task = new ReconstructionTask(
           userId,
-          this.gpuTaskHandler,
+          this.gpuTaskHandler.gpuResourcesManager,
           tiltSeriesFile,
           options,
           volumeId,
@@ -239,7 +240,6 @@ export default class ReconstructionHandler {
       console.error(`Tilt series reconstruction error: ${errorMessage}`);
       throw error;
     } finally {
-      this.gpuTaskHandler.releaseGPU(gpuId);
       try {
         await fs.promises.rm(outputPath, {
           recursive: true,

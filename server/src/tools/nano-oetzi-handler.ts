@@ -17,6 +17,7 @@ import Model from "../models/model.mjs";
 import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import { GPUTask } from "./gpu-task-handler";
+import type GPUResourcesManager from "./gpu-resources-manager";
 
 interface DeepVolume extends VolumeDB {
   rawData: RawVolumeDataWithFileDB;
@@ -38,7 +39,7 @@ class InferenceTask extends GPUTask<ResultDB> {
     private checkpointId: number,
     private volumeId: number,
     private outputPath: string | null,
-    gpuManager: GPUTaskHandler
+    gpuManager: GPUResourcesManager
   ) {
     super(userId, gpuManager);
   }
@@ -78,7 +79,7 @@ class TrainingTask extends GPUTask<CheckpointDB> {
     private testingVolumesIds: number[],
     private params: z.infer<typeof trainingOptions>,
     private outputPath: string | null,
-    gpuManager: GPUTaskHandler
+    gpuManager: GPUResourcesManager
   ) {
     super(userId, gpuManager);
   }
@@ -148,7 +149,7 @@ export default class NanoOetziHandler {
           checkpointId,
           volumeId,
           outputPath,
-          this.gpuTaskHandler
+          this.gpuTaskHandler.gpuResourcesManager
         );
 
         return await this.gpuTaskHandler.queueGPUTask(task);
@@ -274,7 +275,6 @@ export default class NanoOetziHandler {
       }
       throw error;
     } finally {
-      this.gpuTaskHandler.releaseGPU(gpuId);
       if (tempSettingsPath != null) {
         try {
           await fs.promises.rm(tempSettingsPath, {
@@ -409,7 +409,7 @@ export default class NanoOetziHandler {
           testingVolumesIds,
           params,
           outputPath,
-          this.gpuTaskHandler
+          this.gpuTaskHandler.gpuResourcesManager
         );
 
         return await this.gpuTaskHandler.queueGPUTask(task);

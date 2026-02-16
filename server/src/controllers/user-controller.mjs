@@ -12,6 +12,7 @@ import {
   statusQuery,
   updateUserSchema,
 } from "@cocryovis/schemas/user-path-schema";
+import GPUResourcesManager from "../tools/gpu-resources-manager";
 
 /**
  * @import GPUTaskHandler from "../tools/gpu-task-handler"
@@ -122,11 +123,11 @@ export default class UserController {
   };
 
   /**
-   * @param {GPUTaskHandler} gpuTaskHandler
+   * @param {GPUResourcesManager} gpuResourcesManager
    * @param {Request} req
    * @param {Response} res
    */
-  static getStatus = async (gpuTaskHandler, req, res) => {
+  static getStatus = async (gpuResourcesManager, req, res) => {
     const { query } = validateSchema(req, {
       querySchema: statusQuery,
     });
@@ -137,7 +138,10 @@ export default class UserController {
     );
     const cpuTaskQueue = await TaskHistory.getCPUTaskQueue();
     const gpuTaskQueue = await TaskHistory.getGPUTaskQueue();
-    const gpuStatus = gpuTaskHandler.getGPUStatus();
+    const gpuStatus = {
+      totalGpus: gpuResourcesManager.totalGPUs,
+      freeGpus: gpuResourcesManager.freeGPUs,
+    };
 
     res.json({
       taskHistory: taskHistory,
@@ -148,12 +152,15 @@ export default class UserController {
   };
 
   /**
-   * @param {GPUTaskHandler} gpuTaskHandler
+   * @param {GPUResourcesManager} gpuResourcesManager
    * @param {Request} req
    * @param {Response} res
    */
-  static getGPUStatus = async (gpuTaskHandler, req, res) => {
-    const gpuStatus = gpuTaskHandler.getGPUStatus();
+  static getGPUStatus = async (gpuResourcesManager, req, res) => {
+    const gpuStatus = {
+      totalGpus: gpuResourcesManager.totalGPUs,
+      freeGpus: gpuResourcesManager.freeGPUs,
+    };
 
     res.json(gpuStatus);
   };

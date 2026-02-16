@@ -18,11 +18,13 @@ import DemoController from '../../controllers/demo-controller.mjs';
 import CryoETController from '../../controllers/cryo-et-controller.mjs';
 import NanoOetziHandler from '../../tools/nano-oetzi-handler';
 import ReconstructionHandler from '../../tools/reconstruction-handler';
+import GPUResourcesManager from '../../tools/gpu-resources-manager';
 
 // Config
 const config = appConfig;
 const ilastikHandler = new IlastikHandler(config);
-const gpuTaskHandler = await GPUTaskHandler.create(config);
+const gpuResourcesManager = await GPUResourcesManager.create();
+const gpuTaskHandler = new GPUTaskHandler(config, gpuResourcesManager);
 const nanoOetziHandler = new NanoOetziHandler(gpuTaskHandler, config);
 const reconstructionHandler = new ReconstructionHandler(gpuTaskHandler, config);
 
@@ -38,8 +40,8 @@ projectsApi.post('/logout', UserController.logout);
 projectsApi.post('/register', UserController.register);
 projectsApi.get('/getLoggedUserData', restrictApi, UserController.getLoggedUserData);
 projectsApi.get('/users', restrictApi, UserController.getAllUsers);
-projectsApi.get(`/status`, restrictApi, async (req, res) => UserController.getStatus(gpuTaskHandler, req, res));
-projectsApi.get(`/gpuStatus`, restrictApi, async (req, res) => UserController.getGPUStatus(gpuTaskHandler, req, res));
+projectsApi.get(`/status`, restrictApi, async (req, res) => UserController.getStatus(gpuResourcesManager, req, res));
+projectsApi.get(`/gpuStatus`, restrictApi, async (req, res) => UserController.getGPUStatus(gpuResourcesManager, req, res));
 projectsApi.put(`/user`, restrictApi, UserController.updateUser);
 projectsApi.delete(`/user`, restrictApi, UserController.deleteUser);
 projectsApi.delete(`/user-admin`, restrictAdminAccess , UserController.adminDeleteUser);
