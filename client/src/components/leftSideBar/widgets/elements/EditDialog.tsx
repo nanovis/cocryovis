@@ -41,14 +41,13 @@ const EditDialog = ({
       setName(defaultName);
       setDescription(defaultDescription);
     }
-  }, [open]);
+  }, [open, defaultName, defaultDescription]);
 
   const handleEdit = async () => {
     setInProgress(true);
     try {
       await onEdit(name, description);
-      setName("");
-      setDescription("");
+      onClose();
     } catch (error) {
       console.error(error);
     } finally {
@@ -56,59 +55,48 @@ const EditDialog = ({
     }
   };
 
+  const loading = inProgress || isActive;
+
   return (
     <Dialog open={open}>
       <DialogSurface>
         <DialogBody>
           <DialogTitle>{title}</DialogTitle>
-          <DialogContent style={{ paddingTop: "15px", paddingBottom: "15px" }}>
+
+          <DialogContent style={{ padding: "15px 0" }}>
             <Field label="Name">
               <Input
                 appearance="underline"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                style={{ marginBottom: "10px" }}
               />
             </Field>
-            <Field label="Description">
+
+            <Field label="Description" style={{ marginTop: 10 }}>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                style={{ marginTop: "10px" }}
                 textarea={{ rows: 4, className: "custom-textarea" }}
               />
             </Field>
           </DialogContent>
+
           <DialogActions>
-            {isActive ? (
-              <div>
-                <Spinner
-                  appearance="primary"
-                  size="medium"
-                  style={{ marginRight: "10px" }}
-                />
-              </div>
+            {loading ? (
+              <Spinner appearance="primary" size="medium" />
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "25px",
-                }}
-              >
+              <>
                 <Button appearance="secondary" onClick={onClose}>
                   Cancel
                 </Button>
                 <Button
                   appearance="primary"
-                  onClick={() => {
-                    handleEdit().catch(console.error);
-                  }}
-                  disabled={inProgress || !open}
+                  onClick={handleEdit}
+                  disabled={!open}
                 >
                   Update
                 </Button>
-              </div>
+              </>
             )}
           </DialogActions>
         </DialogBody>

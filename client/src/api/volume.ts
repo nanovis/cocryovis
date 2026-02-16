@@ -60,7 +60,7 @@ export async function updateVolume(
   id: number,
   request: z.input<typeof volumeUpdateSchema>
 ) {
-  const response = await Utils.sendApiRequest(`/volume/${id}`, {
+  const response = await Utils.sendApiRequest(`volume/${id}`, {
     method: "PUT",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
