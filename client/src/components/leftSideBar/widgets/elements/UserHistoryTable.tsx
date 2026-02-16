@@ -10,12 +10,7 @@ import {
   Table,
   TableHeader,
   TableRow,
-  Menu,
-  MenuTrigger,
   TableHeaderCell,
-  MenuPopover,
-  MenuList,
-  MenuItem,
   TableBody,
   TableCellLayout,
   TableCell,
@@ -95,38 +90,39 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
   const [columns] =
     React.useState<TableColumnDefinition<TaskHistoryItem>[]>(columnsDef);
 
-  const [columnSizingOptions] = React.useState<TableColumnSizingOptions>({
-    taskStatus: {
-      idealWidth: 40,
-      defaultWidth: 40,
-      minWidth: 40,
-    },
-    taskType: {
-      minWidth: 10,
-      idealWidth: 100,
-      defaultWidth: 100,
-    },
-    data: {
-      minWidth: 10,
-    },
-    enqueuedTime: {
-      minWidth: 10,
-      idealWidth: 97,
-    },
-    startTime: {
-      minWidth: 10,
-      idealWidth: 75,
-    },
-    endTime: {
-      minWidth: 10,
-      idealWidth: 75,
-    },
-    log: {
-      minWidth: 25,
-      defaultWidth: 25,
-      idealWidth: 25,
-    },
-  });
+  const [columnSizingOptions] =
+    React.useState<TableColumnSizingOptions>({
+      taskStatus: {
+        idealWidth: 40,
+        defaultWidth: 40,
+        minWidth: 40,
+      },
+      taskType: {
+        minWidth: 10,
+        idealWidth: 100,
+        defaultWidth: 100,
+      },
+      data: {
+        minWidth: 10,
+      },
+      enqueuedTime: {
+        minWidth: 10,
+        idealWidth: 97,
+      },
+      startTime: {
+        minWidth: 10,
+        idealWidth: 75,
+      },
+      endTime: {
+        minWidth: 10,
+        idealWidth: 75,
+      },
+      log: {
+        minWidth: 20,
+        defaultWidth: 20,
+        idealWidth: 20,
+      },
+    });
 
   const { getRows, columnSizing_unstable, tableRef } =
     useTableFeatures<TaskHistoryItem>(
@@ -134,53 +130,38 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
         columns,
         items: taskHistoryItems,
       },
-      [useTableColumnSizing_unstable({ columnSizingOptions })]
+      [
+        useTableColumnSizing_unstable({
+          columnSizingOptions,
+          autoFitColumns: false,
+        }),
+      ]
     );
 
   const rows = getRows();
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <Table
-        sortable
-        aria-label="Table with sort"
-        ref={tableRef}
-        {...columnSizing_unstable.getTableProps()}
-      >
+    <div
+      style={{ overflowX: "auto", scrollbarGutter: "stable", width: "100%" }}
+    >
+      <Table ref={tableRef} {...columnSizing_unstable.getTableProps()}>
         <TableHeader>
           <TableRow>
             {columns.map((column) => (
-              <Menu openOnContext key={column.columnId}>
-                <MenuTrigger>
-                  <TableHeaderCell
-                    key={column.columnId}
-                    {...columnSizing_unstable.getTableHeaderCellProps(
-                      column.columnId
-                    )}
-                  >
-                    <TableCellLayout truncate>
-                      {column.renderHeaderCell()}
-                    </TableCellLayout>
-                  </TableHeaderCell>
-                </MenuTrigger>
-                <MenuPopover>
-                  <MenuList>
-                    <MenuItem
-                      onClick={columnSizing_unstable.enableKeyboardMode(
-                        column.columnId
-                      )}
-                    >
-                      Keyboard Column Resizing
-                    </MenuItem>
-                  </MenuList>
-                </MenuPopover>
-              </Menu>
+              <TableHeaderCell
+                key={column.columnId}
+                {...columnSizing_unstable.getTableHeaderCellProps(
+                  column.columnId
+                )}
+              >
+                <TableCellLayout>{column.renderHeaderCell()}</TableCellLayout>
+              </TableHeaderCell>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map(({ item }, index) => (
-            <TableRow key={index}>
+          {rows.map(({ item }) => (
+            <TableRow key={item.id}>
               <TableCell
                 {...columnSizing_unstable.getTableCellProps("taskStatus")}
               >

@@ -8,12 +8,7 @@ import {
   Table,
   TableHeader,
   TableRow,
-  Menu,
-  MenuTrigger,
   TableHeaderCell,
-  MenuPopover,
-  MenuList,
-  MenuItem,
   TableBody,
   TableCellLayout,
   TableCell,
@@ -27,7 +22,7 @@ import { Hourglass24Regular } from "@fluentui/react-icons";
 import React from "react";
 import globalStyles from "../../../globalStyles";
 import { observer } from "mobx-react-lite";
-import type { TaskQueueItem } from "../../../../stores/userState/Status";
+import type { TaskQueueItem } from "@/stores/userState/Status";
 
 const columnsDef: TableColumnDefinition<TaskQueueItem>[] = [
   createTableColumn<TaskQueueItem>({
@@ -98,47 +93,29 @@ const TaskQueueTable = observer(({ taskQueueItems }: Props) => {
   const rows = getRows();
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <Table
-        sortable
-        aria-label="Table with sort"
-        ref={tableRef}
-        {...columnSizing_unstable.getTableProps()}
-      >
+    <div
+      style={{ overflowX: "auto", scrollbarGutter: "stable", width: "100%" }}
+    >
+      <Table ref={tableRef} {...columnSizing_unstable.getTableProps()}>
         <TableHeader>
           <TableRow>
             {columns.map((column) => (
-              <Menu openOnContext key={column.columnId}>
-                <MenuTrigger>
-                  <TableHeaderCell
-                    key={column.columnId}
-                    {...columnSizing_unstable.getTableHeaderCellProps(
-                      column.columnId
-                    )}
-                  >
-                    <TableCellLayout truncate>
-                      {column.renderHeaderCell()}
-                    </TableCellLayout>
-                  </TableHeaderCell>
-                </MenuTrigger>
-                <MenuPopover>
-                  <MenuList>
-                    <MenuItem
-                      onClick={columnSizing_unstable.enableKeyboardMode(
-                        column.columnId
-                      )}
-                    >
-                      Keyboard Column Resizing
-                    </MenuItem>
-                  </MenuList>
-                </MenuPopover>
-              </Menu>
+              <TableHeaderCell
+                key={column.columnId}
+                {...columnSizing_unstable.getTableHeaderCellProps(
+                  column.columnId
+                )}
+              >
+                <TableCellLayout truncate>
+                  {column.renderHeaderCell()}
+                </TableCellLayout>
+              </TableHeaderCell>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map(({ item }, index) => (
-            <TableRow key={index}>
+          {rows.map(({ item }) => (
+            <TableRow key={item.id}>
               <TableCell
                 {...columnSizing_unstable.getTableCellProps("taskStatus")}
               >

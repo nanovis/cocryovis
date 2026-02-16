@@ -8,6 +8,7 @@ import type {
 } from "@cocryovis/schemas/componentSchemas/status-schema";
 
 export interface TaskHistoryItem {
+  id: number;
   taskStatus: {
     id: number;
   };
@@ -34,6 +35,7 @@ export interface TaskHistoryItem {
 }
 
 export interface TaskQueueItem {
+  id: number;
   taskStatus: {
     ongoing: boolean;
   };
@@ -126,6 +128,7 @@ function parseTaskQueueArray(
   taskQueue: TaskQueueElementInstance[]
 ): TaskQueueItem[] {
   return taskQueue.map((task) => ({
+    id: task.id,
     taskStatus: {
       ongoing: task.taskStatus === 1,
     },
@@ -163,6 +166,7 @@ export const Status = types
       const taskHistoryItems: TaskHistoryItem[] = [];
       self.taskHistory.forEach((task) =>
         taskHistoryItems.push({
+          id: task.id,
           taskStatus: {
             id: task.taskStatus,
           },
