@@ -32,13 +32,7 @@ import {
   Spinner,
 } from "@fluentui/react-components";
 import type { SyntheticEvent } from "react";
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useEffectEvent,
-} from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import * as Utils from "../../utils/helpers";
 import {
   bundleIcon,
@@ -49,9 +43,6 @@ import {
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import type { UserDB } from "@/stores/userState/UserModel";
-import type z from "zod";
-import type { usersArray } from "@cocryovis/schemas/user-path-schema";
-import type { projectAccessInfoSchema } from "@cocryovis/schemas/project-path-schema";
 import { getAllUsers } from "@/api/users";
 import { getAccessInfo, setAccess } from "@/api/projects";
 import ToastContainer from "../../utils/toastContainer";
@@ -97,15 +88,17 @@ const useStyles = makeStyles({
   },
 });
 
-interface UserAccessInfo {
-  userId: number;
-  accessLevel: number;
+enum AccessLevel {
+  ReadOnly = 0,
+  ReadWrite = 1,
+  Remove = -1,
 }
 
 interface Props {
   open: boolean;
   setOpen: (open: boolean) => void;
 }
+
 const ShareProject = observer(({ open, setOpen }: Props) => {
   const { user } = useMst();
 
@@ -119,31 +112,21 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
   const [query, setQuery] = useState("");
 
-  const [selectedOptions, setSelectedOptions] = useState<UserDB[]>([]);
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [accessLevel, setAccessLevel] = useState("Read & Write");
 
-  const users = useRef<UserDB[]>([]);
+  const [users, setUsers] = useState<UserDB[]>([]);
 
-  const accessInfoMap = useRef(new Map());
+  const [accessMap, setAccessMap] = useState<Map<number, number>>(
+    () => new Map()
+  );
 
   const [publicAccess, setPublicAccess] = useState(activeProject?.publicAccess);
-
-  const [usersWithAccess, setUsersWithAccess] = useState<
-    { user: UserDB; accessLevel: number; changed: boolean }[]
-  >([]);
-
-  const [tagPickerOptions, setTagPickerOptions] = useState<UserDB[]>([]);
 
   const [isFetchingData, setIsFetchingData] = useState(false);
 
   const [isModifyingAccess, setIsModifyingAccess] = useState(false);
-
-  const pageBusy = () => {
-    return isFetchingData || isModifyingAccess;
-  };
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -154,9 +137,44 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
   const [isHoveringOverTagPicker, setIsHoveringOverTagPicker] = useState(false);
 
-  const canSetSharing = () => {
-    return !user.isGuest && user.id === activeProject?.ownerId;
-  };
+  const pageBusy = isFetchingData || isModifyingAccess;
+
+  const canSetSharing = !user.isGuest && user.id === activeProject?.ownerId;
+
+  const usersWithAccess = useMemo(() => {
+    return users
+      .filter(
+        (u) =>
+          accessMap.has(u.id) &&
+          accessMap.get(u.id) !== AccessLevel.Remove &&
+          pendingChanges.get(u.id) !== AccessLevel.Remove
+      )
+      .map((u) => {
+        const pending = pendingChanges.get(u.id);
+        return {
+          user: u,
+          accessLevel: pending ?? accessMap.get(u.id),
+          changed: pending !== undefined,
+        };
+      })
+      .filter((u) => u.accessLevel !== AccessLevel.Remove);
+  }, [users, accessMap, pendingChanges]);
+
+  const tagPickerOptions = useMemo(() => {
+    return users.filter(
+      (u) =>
+        !accessMap.has(u.id) &&
+        u.id !== user.id &&
+        !selectedIds.includes(u.id.toString()) &&
+        (u.username.toLowerCase().includes(query.toLowerCase()) ||
+          u.name.toLowerCase().includes(query.toLowerCase()))
+    );
+  }, [users, accessMap, selectedIds, query, user.id]);
+
+  const selectedOptions = useMemo(
+    () => users.filter((u) => selectedIds.includes(String(u.id))),
+    [users, selectedIds]
+  );
 
   const handleScroll = () => {
     const element = scrollRef.current;
@@ -171,122 +189,60 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     }
   };
 
-  const fetchProjectAccessData = useEffectEvent(async () => {
-    try {
-      if (!activeProject) {
-        throw new Error("No active project");
-      }
-      setIsFetchingData(true);
-      let allUsers: z.infer<typeof usersArray>;
-      let accessInfo: z.infer<typeof projectAccessInfoSchema>;
+  useEffect(() => {
+    if (!open || !activeProject) return;
 
+    const fetch = async () => {
+      const toast = new ToastContainer();
       try {
-        allUsers = await getAllUsers();
-        accessInfo = await getAccessInfo(activeProject.id);
-      } catch {
-        throw new Error("Failed to fetch users or access info.");
+        setIsFetchingData(true);
+
+        const [allUsers, accessInfo] = await Promise.all([
+          getAllUsers(),
+          getAccessInfo(activeProject.id),
+        ]);
+
+        setUsers(allUsers);
+        setAccessMap(
+          new Map(accessInfo.userAccess.map((u) => [u.userId, u.accessLevel]))
+        );
+
+        activeProject.setPublicAccess(accessInfo.projectAccess.publicAccess);
+        setPublicAccess(accessInfo.projectAccess.publicAccess);
+      } catch (e) {
+        setOpen(false);
+        toast.error(
+          Utils.getErrorMessage(e) || "Failed to fetch project access data."
+        );
+      } finally {
+        setIsFetchingData(false);
       }
+    };
 
-      activeProject.setPublicAccess(accessInfo.projectAccess.publicAccess);
-      setPublicAccess(activeProject.publicAccess);
-
-      users.current = allUsers;
-
-      updateAccessInfoMap(accessInfo.userAccess);
-
-      refreshUsersWithAccess();
-      refreshTagPickerOptions();
-    } catch (error) {
-      const toastContainer = new ToastContainer();
-      console.error(error);
-      setOpen(false);
-      toastContainer.error(
-        Utils.getErrorMessage(error) ||
-          "Failed to fetch project access data. Please try again."
-      );
-    } finally {
-      setIsFetchingData(false);
-    }
-  });
-
-  const refreshUsersWithAccess = useCallback(() => {
-    setUsersWithAccess(
-      users.current
-        .filter(
-          (userData) =>
-            accessInfoMap.current.has(userData.id) &&
-            accessInfoMap.current.get(userData.id) >= -1 &&
-            pendingChanges.get(userData.id) !== -1
-        )
-        .map((userData) => {
-          const pendingChange = pendingChanges.get(userData.id);
-          return {
-            user: userData,
-            accessLevel:
-              pendingChange ?? accessInfoMap.current.get(userData.id),
-            changed: pendingChange >= 0,
-          };
-        })
-    );
-  }, [pendingChanges]);
-
-  const refreshTagPickerOptions = useCallback(() => {
-    setTagPickerOptions(
-      users.current.filter(
-        (userData) =>
-          !accessInfoMap.current.has(userData.id) &&
-          !selectedIds.includes(userData.id.toString()) &&
-          user.id !== userData.id &&
-          (userData.name.toLowerCase().includes(query.toLowerCase()) ||
-            userData.username.toLowerCase().includes(query.toLowerCase()))
-      )
-    );
-  }, [query, selectedIds, user.id]);
-
-  useEffect(() => {
-    if (open) {
-      refreshUsersWithAccess();
-    }
-  }, [open, refreshUsersWithAccess]);
-
-  useEffect(() => {
-    if (open) {
-      refreshTagPickerOptions();
-    }
-  }, [open, refreshTagPickerOptions]);
-
-  useEffect(() => {
-    if (open && activeProject) {
-      fetchProjectAccessData().catch(console.error);
-    }
-  }, [open, activeProject]);
+    fetch().catch(console.error);
+  }, [open, activeProject, setOpen]);
 
   useEffect(() => {
     handleScroll();
   }, [usersWithAccess]);
 
-  const onOptionSelect = (
-    _ev: Event | SyntheticEvent,
-    data: TagPickerOnOptionSelectData
-  ) => {
-    setQuery("");
+  const onOptionSelect = useCallback(
+    (_ev: Event | SyntheticEvent, data: TagPickerOnOptionSelectData) => {
+      setQuery("");
 
-    if (data.value === "no-options") {
-      return;
-    }
+      if (data.value === "no-options") {
+        return;
+      }
 
-    setSelectedIds(data.selectedOptions);
-    setSelectedOptions(
-      users.current.filter((option) =>
-        data.selectedOptions.includes(option.id.toString())
-      )
-    );
-  };
+      setSelectedIds(data.selectedOptions);
+    },
+    []
+  );
 
   const onConfirmChanges = async () => {
     const toastContainer = new ToastContainer();
     try {
-      if (pageBusy() || !activeProject || publicAccess === undefined) {
+      if (pageBusy || !activeProject || publicAccess === undefined) {
         return;
       }
 
@@ -305,7 +261,10 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
       let changes;
 
       if (selectedIds.length > 0) {
-        const level = accessLevel === "Read & Write" ? 1 : 0;
+        const level =
+          accessLevel === "Read & Write"
+            ? AccessLevel.ReadWrite
+            : AccessLevel.ReadOnly;
         changes = selectedIds.map((id) => ({
           userId: Number(id),
           accessLevel: level,
@@ -323,7 +282,12 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
 
       resetChanges();
 
-      updateAccessInfoMap(accessInfoChanges.userAccess);
+      setAccessMap(
+        new Map(
+          accessInfoChanges.userAccess.map((u) => [u.userId, u.accessLevel])
+        )
+      );
+
       activeProject.setPublicAccess(accessInfoChanges.publicAccess);
       setPublicAccess(activeProject.publicAccess);
 
@@ -334,14 +298,6 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     } finally {
       setIsModifyingAccess(false);
     }
-  };
-  const updateAccessInfoMap = (userAccessInfo: UserAccessInfo[]) => {
-    accessInfoMap.current = new Map(
-      userAccessInfo.map(({ userId, accessLevel }) => [userId, accessLevel])
-    );
-
-    refreshUsersWithAccess();
-    refreshTagPickerOptions();
   };
 
   const handleOnRemoveAccess = (userId: number) => {
@@ -362,22 +318,25 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     setPublicAccess(activeProject?.publicAccess);
   };
 
-  const setUserAccessLevel = (userId: number, accessLevel: number) => {
-    if (accessInfoMap.current.get(userId) === accessLevel) {
+  const setUserAccessLevel = useCallback(
+    (userId: number, accessLevel: number) => {
+      if (accessMap.get(userId) === accessLevel) {
+        setPendingChanges((prev) => {
+          const newPendingChanges = new Map(prev);
+          newPendingChanges.delete(userId);
+          return newPendingChanges;
+        });
+        return;
+      }
+
       setPendingChanges((prev) => {
         const newPendingChanges = new Map(prev);
-        newPendingChanges.delete(userId);
+        newPendingChanges.set(userId, accessLevel);
         return newPendingChanges;
       });
-      return;
-    }
-
-    setPendingChanges((prev) => {
-      const newPendingChanges = new Map(prev);
-      newPendingChanges.set(userId, accessLevel);
-      return newPendingChanges;
-    });
-  };
+    },
+    [accessMap]
+  );
 
   return (
     <Dialog open={open} onOpenChange={(_, data) => setOpen(data.open)}>
@@ -392,7 +351,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
             }}
           >
             Share project "{activeProject?.name}"
-            {pageBusy() && <Spinner delay={200} />}
+            {pageBusy && <Spinner delay={200} />}
           </div>
         </DialogTitle>
         <DialogBody
@@ -424,7 +383,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                   }}
                   size="large"
                   disabled={
-                    pendingChanges.size > 0 || pageBusy() || !canSetSharing()
+                    pendingChanges.size > 0 || pageBusy || !canSetSharing
                   }
                 >
                   <TagPickerControl
@@ -543,7 +502,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                   "Only owner of the project can set access permissions."
                 }
                 relationship={"label"}
-                visible={!canSetSharing() && isHoveringOverTagPicker}
+                visible={!canSetSharing && isHoveringOverTagPicker}
                 positioning="below"
               >
                 <div></div>
@@ -619,7 +578,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                                         : tokens.colorNeutralForeground3,
                                     }}
                                   >
-                                    {accessLevel === 1
+                                    {accessLevel === AccessLevel.ReadWrite
                                       ? "Read & Write"
                                       : "Read Only"}
                                   </Text>
@@ -627,10 +586,12 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                                 onOptionSelect={(_e, data) =>
                                   setUserAccessLevel(
                                     user.id,
-                                    data.optionText === "Read & Write" ? 1 : 0
+                                    data.optionText === "Read & Write"
+                                      ? AccessLevel.ReadWrite
+                                      : AccessLevel.ReadOnly
                                   )
                                 }
-                                disabled={!canSetSharing() || pageBusy()}
+                                disabled={!canSetSharing || pageBusy}
                               >
                                 <Option checkIcon={<></>} value="Read & Write">
                                   Read & Write
@@ -650,7 +611,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                                 size="large"
                                 style={{ marginRight: "10px" }}
                                 onClick={() => handleOnRemoveAccess(user.id)}
-                                disabled={!canSetSharing() || pageBusy()}
+                                disabled={!canSetSharing || pageBusy}
                               />
                             </TableCellActions>
                           </TableCell>
@@ -696,7 +657,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
               </Text>
             ) : (
               <Button
-                disabled={pageBusy()}
+                disabled={pageBusy}
                 onClick={async () => {
                   if (!activeProject) {
                     return;
@@ -721,7 +682,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
               publicAccess !== activeProject?.publicAccess ? (
                 <>
                   <Button
-                    disabled={pageBusy()}
+                    disabled={pageBusy}
                     onClick={resetChanges}
                     appearance="secondary"
                   >
@@ -729,7 +690,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                   </Button>
                   <Button
                     appearance="primary"
-                    disabled={pageBusy() || !canSetSharing()}
+                    disabled={pageBusy || !canSetSharing}
                     onClick={() => {
                       onConfirmChanges().catch(console.error);
                     }}
