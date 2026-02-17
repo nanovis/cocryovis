@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useWebSocketConnection } from "./useWebSocketConnection";
 import type { UserInstance } from "@/stores/userState/UserModel";
 import type { PseudoVolumeSnapshotIn } from "@/stores/userState/PseudoVolumeModel";
@@ -36,55 +36,72 @@ type Response =
   | { actionType: "CPUQueueUpdated"; actionContent: TaskHistorySnapshotIn[] }
   | { actionType: "GPUQueueUpdated"; actionContent: TaskHistorySnapshotIn[] };
 
+const handleInsertPseudoVolumes = (
+  user: UserInstance,
+  contents: PseudoVolumeUpdate
+) => {
+  user.userProjects.projects.forEach((project) => {
+    const volume = project.projectVolumes.volumes.get(contents.volumeId);
+    volume?.addPseudoVolumes(contents.pseudoLabeledVolumes);
+  });
+};
+
+const handleInsertResult = (user: UserInstance, contents: ResultUpdate) => {
+  user.userProjects.projects.forEach((project) => {
+    const volume = project.projectVolumes.volumes.get(contents.volumeId);
+    volume?.volumeResults.addResult(contents.result);
+  });
+};
+
+const handleInsertCheckpoint = (
+  user: UserInstance,
+  contents: CheckpointUpdate
+) => {
+  user.userProjects.projects.forEach((project) => {
+    const model = project.projectModels.models.get(contents.modelId);
+    model?.modelCheckpoints.addCheckpoint(contents.checkpoint);
+  });
+};
+
+const handleAddRawData = (user: UserInstance, contents: RawDataUpdate) => {
+  user.userProjects.projects.forEach((project) => {
+    const volume = project.projectVolumes.volumes.get(contents.volumeId);
+    volume?.setRawVolume(contents.rawData);
+  });
+};
+
+const handleInsertTaskHistory = (
+  user: UserInstance,
+  contents: TaskHistorySnapshotIn
+) => {
+  user.status?.appendTaskHistory(contents);
+};
+
+const handleCPUQueueUpdated = (
+  user: UserInstance,
+  contents: TaskHistorySnapshotIn[]
+) => {
+  user.status?.setCPUTaskQueue(contents);
+};
+
+const handleGPUQueueUpdated = (
+  user: UserInstance,
+  contents: TaskHistorySnapshotIn[]
+) => {
+  user.status?.setGPUTaskQueue(contents);
+};
+
 export function useServerListener(websocketUrl: string, user: UserInstance) {
-  const shouldReconnect = () => {
-    return !user.isGuest;
-  };
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const { lastJsonMessage, connectionStatus } = useWebSocketConnection(
     websocketUrl,
-    shouldReconnect
+    !user.isGuest
   );
-
-  const handleInsertPseudoVolumes = (contents: PseudoVolumeUpdate) => {
-    user.userProjects.projects.forEach((project) => {
-      const volume = project.projectVolumes.volumes.get(contents.volumeId);
-      volume?.addPseudoVolumes(contents.pseudoLabeledVolumes);
-    });
-  };
-
-  const handleInsertResult = (contents: ResultUpdate) => {
-    user.userProjects.projects.forEach((project) => {
-      const volume = project.projectVolumes.volumes.get(contents.volumeId);
-      volume?.volumeResults.addResult(contents.result);
-    });
-  };
-
-  const handleInsertCheckpoint = (contents: CheckpointUpdate) => {
-    user.userProjects.projects.forEach((project) => {
-      const model = project.projectModels.models.get(contents.modelId);
-      model?.modelCheckpoints.addCheckpoint(contents.checkpoint);
-    });
-  };
-
-  const handleAddRawData = (contents: RawDataUpdate) => {
-    user.userProjects.projects.forEach((project) => {
-      const volume = project.projectVolumes.volumes.get(contents.volumeId);
-      volume?.setRawVolume(contents.rawData);
-    });
-  };
-
-  const handleInsertTaskHistory = (contents: TaskHistorySnapshotIn) => {
-    user.status?.appendTaskHistory(contents);
-  };
-
-  const handleCPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
-    user.status?.setCPUTaskQueue(contents);
-  };
-
-  const handleGPUQueueUpdated = (contents: TaskHistorySnapshotIn[]) => {
-    user.status?.setGPUTaskQueue(contents);
-  };
 
   useEffect(() => {
     const action = lastJsonMessage as Response;
@@ -97,25 +114,25 @@ export function useServerListener(websocketUrl: string, user: UserInstance) {
 
     switch (action.actionType) {
       case "InsertPseudoVolumes":
-        handleInsertPseudoVolumes(action.actionContent);
+        handleInsertPseudoVolumes(userRef.current, action.actionContent);
         break;
       case "InsertResult":
-        handleInsertResult(action.actionContent);
+        handleInsertResult(userRef.current, action.actionContent);
         break;
       case "InsertCheckpoint":
-        handleInsertCheckpoint(action.actionContent);
+        handleInsertCheckpoint(userRef.current, action.actionContent);
         break;
       case "AddRawData":
-        handleAddRawData(action.actionContent);
+        handleAddRawData(userRef.current, action.actionContent);
         break;
       case "InsertTaskHistory":
-        handleInsertTaskHistory(action.actionContent);
+        handleInsertTaskHistory(userRef.current, action.actionContent);
         break;
       case "CPUQueueUpdated":
-        handleCPUQueueUpdated(action.actionContent);
+        handleCPUQueueUpdated(userRef.current, action.actionContent);
         break;
       case "GPUQueueUpdated":
-        handleGPUQueueUpdated(action.actionContent);
+        handleGPUQueueUpdated(userRef.current, action.actionContent);
         break;
     }
   }, [lastJsonMessage]);

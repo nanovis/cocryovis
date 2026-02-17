@@ -1,23 +1,20 @@
 import { useEffect, useRef } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
-export function useWebSocketConnection(
-  url: string,
-  shouldReconnect: () => boolean
-) {
+export function useWebSocketConnection(url: string, enabled: boolean) {
   const { lastMessage, lastJsonMessage, readyState, sendJsonMessage } =
-    useWebSocket(shouldReconnect() ? url : null, {
+    useWebSocket(enabled ? url : null, {
       retryOnError: true,
-      shouldReconnect: shouldReconnect,
-      reconnectAttempts: 999999999,
+      reconnectAttempts: Infinity,
       reconnectInterval: 1000,
       onOpen: () => console.log("WebSocket connected"),
       onClose: () => console.log("WebSocket disconnected"),
       onError: (error) => console.error("WebSocket error", error),
     });
 
-  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Is this even relevant on server?
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
       console.log("Starting heartbeat interval");
@@ -27,15 +24,15 @@ export function useWebSocketConnection(
           sendJsonMessage({ type: "heartbeat" });
           console.log("Sent heartbeat");
         },
-        60 * 60 * 1000
-      ); // 1 hour
+        30 * 1000 // 30 seconds
+      );
 
       return () => {
         console.log("Clearing heartbeat interval");
         if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       };
     }
-  }, [readyState]);
+  }, [readyState, sendJsonMessage]);
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: "Connecting",
