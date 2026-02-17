@@ -91,14 +91,12 @@ const Main = () => {
 
   async function initModule() {
     try {
-      // eslint-disable-next-line react-hooks/immutability
       window.WasmModule = null;
       await loadScript("/index.js");
 
       // Check for WebGPU
       await obtainDevice();
 
-      // eslint-disable-next-line react-hooks/immutability
       window.WasmModule = await window.createVolumeRenderer({
         canvas: document.getElementById("canvas"),
 
