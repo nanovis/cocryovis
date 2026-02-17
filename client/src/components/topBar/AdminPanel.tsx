@@ -23,7 +23,7 @@ import {
 import { observer } from "mobx-react-lite";
 import GlobalStyles from "../globalStyles";
 import type { MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { Delete20Regular } from "@fluentui/react-icons";
 import DeleteDialog from "../shared/DeleteDialog";
 import type { publicUser } from "@cocryovis/schemas/user-path-schema";
@@ -75,6 +75,25 @@ const useStyles = makeStyles({
   },
 });
 
+const columns: TableColumnDefinition<User>[] = [
+  createTableColumn<User>({
+    columnId: "id",
+    compare: (a, b) => a.id - b.id,
+  }),
+  createTableColumn<User>({
+    columnId: "username",
+    compare: (a, b) => a.username.localeCompare(b.username),
+  }),
+  createTableColumn<User>({
+    columnId: "name",
+    compare: (a, b) => a.name.localeCompare(b.name),
+  }),
+  createTableColumn<User>({
+    columnId: "email",
+    compare: (a, b) => a.email.localeCompare(b.email),
+  }),
+];
+
 const AdminPanel = observer(() => {
   const { uiState, user } = useMst();
 
@@ -82,22 +101,11 @@ const AdminPanel = observer(() => {
   const globalClasses = GlobalStyles();
   const [users, setUsers] = useState<User[]>([]);
 
-  const [adminPageActiveRequest, setAdminPageActiveRequest] = useState(false);
-  const [showDialogPage, setShowDialogPage] = useState(false);
-  const [userDeleteIndex, setUserDeleteIndex] = useState(-1);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  useEffect(() => {
-    if (uiState.openAdminPanel) {
-      getUserData().catch(console.error);
-    }
-  }, [uiState.openAdminPanel]);
+  const [isPending, startTransition] = useTransition();
 
-  const getUserData = async () => {
-    if (adminPageActiveRequest) {
-      return;
-    }
-    setAdminPageActiveRequest(true);
-
+  const getUserData = useCallback(async () => {
     try {
       const usersData = await getAllUsers();
       setUsers(usersData);
@@ -105,49 +113,32 @@ const AdminPanel = observer(() => {
       console.error(error);
       const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
-    } finally {
-      setAdminPageActiveRequest(false);
     }
-  };
+  }, []);
 
-  const deleteUser = async () => {
-    user.setDeleteUserActiveRequset(true);
+  useEffect(() => {
+    if (uiState.openAdminPanel) {
+      startTransition(async () => {
+        await getUserData();
+      });
+    }
+  }, [uiState.openAdminPanel, getUserData]);
+
+  const deleteUser = useCallback(async () => {
+    if (userToDelete === null || isPending) return;
+
     const toastContainer = new ToastContainer();
 
     try {
-      await adminDeleteUser({ id: users[userDeleteIndex].id });
+      await adminDeleteUser({ id: userToDelete.id });
       await getUserData();
       toastContainer.success("User deleted!");
+      setUserToDelete(null);
     } catch (error) {
       console.error(error);
       toastContainer.error(getErrorMessage(error));
-    } finally {
-      user.setDeleteUserActiveRequset(false);
     }
-  };
-
-  const columns: TableColumnDefinition<User>[] = [
-    createTableColumn<User>({
-      columnId: "id",
-      compare: (a, b) => a.id - b.id,
-    }),
-    createTableColumn<User>({
-      columnId: "username",
-      compare: (a, b) => a.username.localeCompare(b.username),
-    }),
-    createTableColumn<User>({
-      columnId: "name",
-      compare: (a, b) => a.name.localeCompare(b.name),
-    }),
-    createTableColumn<User>({
-      columnId: "email",
-      compare: (a, b) => a.email.localeCompare(b.email),
-    }),
-    // createTableColumn<User>({
-    //   columnId: "privlages",
-    //   compare: (a, b) => a.admin.localeCompare(b.admin),
-    // }),
-  ];
+  }, [userToDelete, getUserData, isPending]);
 
   const {
     getRows,
@@ -173,148 +164,135 @@ const AdminPanel = observer(() => {
 
   const rows = sort(getRows());
 
+  if (!uiState.openAdminPanel) return null;
   return (
-    uiState.openAdminPanel && (
-      <div className={classes.container}>
-        <h1 className={classes.profilePageHeader}>Admin Panel</h1>
-        <Table sortable aria-label="Sortable user table">
-          <TableHeader>
-            <TableRow>
-              <TableHeaderCell
-                className={classes.tableHeaderCell}
-                {...headerSortProps("id")}
-              >
-                ID
-              </TableHeaderCell>
-              <TableHeaderCell
-                className={classes.tableHeaderCell}
-                {...headerSortProps("username")}
-              >
-                Username
-              </TableHeaderCell>
-              <TableHeaderCell
-                className={classes.tableHeaderCell}
-                {...headerSortProps("name")}
-              >
-                Name
-              </TableHeaderCell>
-              <TableHeaderCell
-                className={classes.tableHeaderCell}
-                {...headerSortProps("email")}
-              >
-                Email
-              </TableHeaderCell>
-              {/* <TableHeaderCell
-                className={classes.tableHeaderCell}
-                {...headerSortProps("privileges")}
-              >
-                Administrator
-              </TableHeaderCell> */}
-              <TableHeaderCell className={classes.tableHeaderCell}>
-                Action
-              </TableHeaderCell>
-            </TableRow>
-          </TableHeader>
+    <div className={classes.container}>
+      <h1 className={classes.profilePageHeader}>Admin Panel</h1>
+      <Table sortable aria-label="Sortable user table">
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell
+              className={classes.tableHeaderCell}
+              {...headerSortProps("id")}
+            >
+              ID
+            </TableHeaderCell>
+            <TableHeaderCell
+              className={classes.tableHeaderCell}
+              {...headerSortProps("username")}
+            >
+              Username
+            </TableHeaderCell>
+            <TableHeaderCell
+              className={classes.tableHeaderCell}
+              {...headerSortProps("name")}
+            >
+              Name
+            </TableHeaderCell>
+            <TableHeaderCell
+              className={classes.tableHeaderCell}
+              {...headerSortProps("email")}
+            >
+              Email
+            </TableHeaderCell>
+            <TableHeaderCell className={classes.tableHeaderCell}>
+              Action
+            </TableHeaderCell>
+          </TableRow>
+        </TableHeader>
+      </Table>
+      <div className={classes.scrollableBody}>
+        <Table>
+          <TableBody>
+            {rows.map(({ item }) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <TableCellLayout>{item.id}</TableCellLayout>
+                </TableCell>
+                <TableCell>
+                  <TableCellLayout>{item.username}</TableCellLayout>
+                </TableCell>
+                <TableCell>
+                  <TableCellLayout>{item.name}</TableCellLayout>
+                </TableCell>
+                <TableCell>
+                  <TableCellLayout>{item.email}</TableCellLayout>
+                </TableCell>
+                <TableCell>
+                  <TableCellLayout>
+                    <Button
+                      className={mergeClasses(
+                        globalClasses.actionButton,
+                        globalClasses.actionButtonDelete
+                      )}
+                      onClick={() => setUserToDelete(item)}
+                      disabled={item.admin || isPending}
+                    >
+                      <div className={globalClasses.actionButtonIconContainer}>
+                        <Delete20Regular />
+                      </div>
+                      <div className="buttonText">Delete</div>
+                    </Button>
+                  </TableCellLayout>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
-        <div className={classes.scrollableBody}>
-          <Table>
-            <TableBody>
-              {rows.map(({ item, rowId }) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <TableCellLayout>{item.id}</TableCellLayout>
-                  </TableCell>
-                  <TableCell>
-                    <TableCellLayout>{item.username}</TableCellLayout>
-                  </TableCell>
-                  <TableCell>
-                    <TableCellLayout>{item.name}</TableCellLayout>
-                  </TableCell>
-                  <TableCell>
-                    <TableCellLayout>{item.email}</TableCellLayout>
-                  </TableCell>
-                  {/* <TableCell>
-                    <TableCellLayout>{item.admin}</TableCellLayout>
-                  </TableCell> */}
-                  <TableCell>
-                    <TableCellLayout>
-                      <Button
-                        className={mergeClasses(
-                          globalClasses.actionButton,
-                          globalClasses.actionButtonDelete
-                        )}
-                        onClick={function (): void {
-                          setShowDialogPage(true);
-                          setUserDeleteIndex(Number(rowId));
-                        }}
-                        disabled={item.admin}
-                      >
-                        <div
-                          className={globalClasses.actionButtonIconContainer}
-                        >
-                          <Delete20Regular />
-                        </div>
-                        <div className="buttonText">Delete</div>
-                      </Button>
-                    </TableCellLayout>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {adminPageActiveRequest && users.length === 0 && (
-            <Spinner
-              appearance="primary"
-              size="huge"
-              className={classes.tableLoader}
-            />
-          )}
-        </div>
-        {userDeleteIndex >= 0 && users.length > userDeleteIndex && (
-          <DeleteDialog
-            open={showDialogPage}
-            onClose={function (): void {
-              setShowDialogPage(false);
-            }}
-            style={{ width: "500px" }}
-            onConfirm={() => {
-              deleteUser().catch(console.error);
-            }}
-            TitleText={
-              <div>
-                Are you sure you want to delete{" "}
-                <span
-                  style={{
-                    fontStyle: "italic",
-                    color: tokens.colorBrandForeground1,
-                  }}
-                >
-                  {users[userDeleteIndex].username}
-                </span>
-                ?
-              </div>
-            }
-            BodyText={"This account will be permanently deleted!"}
-            isActive={user.deleteUserActiveRequset}
+        {isPending && users.length === 0 && (
+          <Spinner
+            appearance="primary"
+            size="huge"
+            className={classes.tableLoader}
           />
         )}
-        <div className={classes.refreshContainer}>
-          {adminPageActiveRequest && users.length !== 0 && (
-            <Spinner appearance="primary" size="medium" />
-          )}
-          <Button
-            appearance="secondary"
-            className={classes.refreshButton}
-            onClick={() => {
-              getUserData().catch(console.error);
-            }}
-            disabled={adminPageActiveRequest}
-          >
-            Refresh
-          </Button>
-        </div>
       </div>
-    )
+      {userToDelete && (
+        <DeleteDialog
+          open={!!userToDelete}
+          onClose={function (): void {
+            setUserToDelete(null);
+          }}
+          style={{ width: "500px" }}
+          onConfirm={() => {
+            startTransition(async () => {
+              await deleteUser();
+            });
+          }}
+          TitleText={
+            <div>
+              Are you sure you want to delete{" "}
+              <span
+                style={{
+                  fontStyle: "italic",
+                  color: tokens.colorBrandForeground1,
+                }}
+              >
+                {userToDelete.username}
+              </span>
+              ?
+            </div>
+          }
+          BodyText={"This account will be permanently deleted!"}
+          isActive={user.deleteUserActiveRequest}
+        />
+      )}
+      <div className={classes.refreshContainer}>
+        {isPending && users.length !== 0 && (
+          <Spinner appearance="primary" size="medium" />
+        )}
+        <Button
+          appearance="secondary"
+          className={classes.refreshButton}
+          onClick={() => {
+            getUserData().catch(console.error);
+          }}
+          disabled={isPending}
+        >
+          Refresh
+        </Button>
+      </div>
+    </div>
   );
 });
 

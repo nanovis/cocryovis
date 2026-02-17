@@ -128,7 +128,7 @@ const ProfilePage = observer(() => {
 
   const deleteUser = async () => {
     try {
-      user.setDeleteUserActiveRequset(true);
+      user.setDeleteUserActiveRequest(true);
       await usersApi.deleteUser();
       await logout();
     } catch (error) {
@@ -136,7 +136,7 @@ const ProfilePage = observer(() => {
       const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
-      user.setDeleteUserActiveRequset(false);
+      user.setDeleteUserActiveRequest(false);
     }
   };
 
@@ -261,7 +261,7 @@ const ProfilePage = observer(() => {
         BodyText={
           "This account will be permanently deleted and cannot be recovered!"
         }
-        isActive={user.deleteUserActiveRequset}
+        isActive={user.deleteUserActiveRequest}
       />
       <ChangePasswordDialog
         open={showChangePasswordPage}

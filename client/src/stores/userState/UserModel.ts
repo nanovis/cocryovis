@@ -22,7 +22,7 @@ export const User = types
   })
   .volatile(() => ({
     changePasswordActiveRequest: false,
-    deleteUserActiveRequset: false,
+    deleteUserActiveRequest: false,
   }))
   .views((self) => ({
     get isGuest() {
@@ -34,8 +34,8 @@ export const User = types
     setChangePasswordActiveRequest(active: boolean) {
       self.changePasswordActiveRequest = active;
     },
-    setDeleteUserActiveRequset(active: boolean) {
-      self.deleteUserActiveRequset = active;
+    setDeleteUserActiveRequest(active: boolean) {
+      self.deleteUserActiveRequest = active;
     },
     setUserProjects(userProjects: UserProjectsInstance) {
       self.userProjects = userProjects;
