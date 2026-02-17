@@ -6,13 +6,17 @@ interface UsePollingOptions {
 }
 
 export function usePolling(
-  callback: () => Promise<void> | undefined,
+  callback: () => void | Promise<void>,
   delay: number | null,
   options: UsePollingOptions = {}
 ) {
-  const { immediate = false } = options;
+  const optionsRef = useRef(options);
   const savedCallback = useRef(callback);
   const isRunning = useRef(false);
+
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   useEffect(() => {
     savedCallback.current = callback;
@@ -27,19 +31,19 @@ export function usePolling(
       try {
         await savedCallback.current();
       } catch (error) {
-        if (options.onError) {
-          options.onError(error);
+        if (optionsRef.current.onError) {
+          optionsRef.current.onError(error);
         }
       } finally {
         isRunning.current = false;
       }
     };
 
-    if (immediate) {
+    if (optionsRef.current.immediate) {
       void tick();
     }
 
     const id = setInterval(tick, delay);
     return () => clearInterval(id);
-  }, [delay, immediate]);
+  }, [delay]);
 }
