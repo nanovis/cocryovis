@@ -66,13 +66,21 @@ const ComboboxSearch = <
   // Prevents on close effect from being executed after selecting an option
   const blockClosed = useRef(false);
 
+  const optionToTextRef = useRef(optionToText);
+
   useEffect(() => {
-    setSearchQuery(selectedOption ? optionToText(selectedOption) : "");
+    optionToTextRef.current = optionToText;
+  }, [optionToText]);
+
+  useEffect(() => {
+    setSearchQuery(
+      selectedOption ? optionToTextRef.current(selectedOption) : ""
+    );
   }, [selectedOption]);
 
   const selectionOptions = useComboboxFilter(searchQuery, selectionList, {
     noOptionsMessage: noOptionsMessage,
-    optionToText: optionToText,
+    optionToText: optionToTextRef.current,
     renderOption: renderOption,
   });
 
@@ -99,7 +107,7 @@ const ComboboxSearch = <
     if (data.open && selectedOption) {
       setSearchQuery("");
     } else if (!data.open && !blockClosed.current && selectedOption) {
-      setSearchQuery(optionToText(selectedOption));
+      setSearchQuery(optionToTextRef.current(selectedOption));
     }
     blockClosed.current = false;
   };

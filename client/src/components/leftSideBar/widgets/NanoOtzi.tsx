@@ -503,7 +503,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               noOptionsMessage="No volumes match your search."
               optionToText={({ children }) => children}
               disabled={!volumes || volumes.size < 1}
-            ></ComboboxSearch>
+            />
             <ComboboxSearch
               selectionList={checkpointSelectionList()}
               selectedOption={
@@ -519,7 +519,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               noOptionsMessage="No checkpoints match your search."
               optionToText={({ children }) => children}
               disabled={!models || models.size < 1}
-            ></ComboboxSearch>
+            />
           </div>
 
           <div
@@ -634,7 +634,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                   }
                   onOptionSelect={handleTrainingCheckpointSelect}
                   placeholder="Select a checkpoint (optional)"
-                  noOptionsMessage="No models match your search."
+                  noOptionsMessage="No checkpoints match your search."
                   optionToText={({ children }) => children}
                   disabled={!modelTraining.model}
                   clearable={true}
