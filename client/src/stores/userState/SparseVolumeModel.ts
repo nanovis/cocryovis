@@ -45,10 +45,7 @@ export const SparseLabelVolume = types
         });
       self.name = sparselabel.name;
     }),
-    setColor: flow(function* setColor(
-      color: string,
-      index: number
-    ): Generator<any, void> {
+    setColor: flow(function* setColor(color: string, index: number) {
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Updating label color...");

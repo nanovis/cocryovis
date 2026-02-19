@@ -189,7 +189,7 @@ export async function streamVolumesToGPU(
   }
 
   const buffers = await Promise.all(
-    descriptors.map((d) => d.volumeData.getVolumeData())
+    descriptors.map((d) => Promise.resolve(d.volumeData.getVolumeData()))
   );
 
   const channelStats = settings.map(() => ({ min: Infinity, max: -Infinity }));

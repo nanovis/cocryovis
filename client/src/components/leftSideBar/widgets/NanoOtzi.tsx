@@ -165,16 +165,15 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       // This allows the toast to update, hopefully...
       await new Promise((r) => setTimeout(r, 1000));
 
-      const volumeData = await window.WasmModule.doInference(
+      const volumeData = (await window.WasmModule.doInference(
         settingsFileName,
         "parameters.txt"
-      );
+      )) as Buffer[];
 
       toastContainer.loading("Sending data to server...");
       const volumeDescriptors = [];
 
       const formData = new FormData();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       for (const [i, volume] of volumeData.entries()) {
         const blob = new Blob([volume], {
           type: "application/octet-stream",

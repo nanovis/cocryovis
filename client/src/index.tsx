@@ -113,17 +113,16 @@ const Main = () => {
         preRun: [],
         postRun: [],
         print: (function () {
-          return function (text: any) {
+          return function (text: unknown) {
             text = Array.prototype.slice.call(arguments).join(" ");
             console.log("Renderer log: ", text);
           };
         })(),
-        printErr: function (text: any) {
+        printErr: function (text: unknown) {
           text = Array.prototype.slice.call(arguments).join(" ");
           console.error("Renderer error: ", text);
         },
-        setStatus: function (text: any) {
-          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        setStatus: function (text: string) {
           console.log("Renderer status: " + text);
         },
         monitorRunDependencies: function () {

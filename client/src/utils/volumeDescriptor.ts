@@ -110,7 +110,7 @@ export function volumeSettingsToFile(volumeSettingsObject: VolumeSettings) {
 // }
 
 export abstract class VolumeData {
-  abstract getVolumeData(): Promise<ArrayBuffer>;
+  abstract getVolumeData(): ArrayBuffer | Promise<ArrayBuffer>;
 }
 
 export abstract class MrcVolumeData extends VolumeData {
@@ -125,8 +125,7 @@ export class BufferVolumeData extends VolumeData {
     this.arrayBuffer = arrayBuffer;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async getVolumeData(): Promise<ArrayBuffer> {
+  override getVolumeData(): ArrayBuffer {
     return this.arrayBuffer;
   }
 }
@@ -143,7 +142,7 @@ export class RawFileVolumeData extends VolumeData {
     this.file = file;
   }
 
-  async getVolumeData(): Promise<ArrayBuffer> {
+  override async getVolumeData(): Promise<ArrayBuffer> {
     if (!this.arrayBuffer) {
       this.arrayBuffer = await this.file.arrayBuffer();
     }
@@ -165,7 +164,7 @@ export class MrcFileVolumeData extends MrcVolumeData {
     this.file = file;
   }
 
-  async getVolumeData(): Promise<ArrayBuffer> {
+  override async getVolumeData(): Promise<ArrayBuffer> {
     if (!this.arrayBuffer) {
       const { rawFile, settings } = await convertMRCToRaw(this.file);
       this.arrayBuffer = await rawFile.arrayBuffer();
@@ -192,7 +191,7 @@ export class RawUrlVolumeData extends VolumeData {
     this.url = url;
   }
 
-  async getVolumeData(): Promise<ArrayBuffer> {
+  override async getVolumeData(): Promise<ArrayBuffer> {
     if (!this.arrayBuffer) {
       const file = await fetchVolumeFromUrl(this.url, "raw");
       this.arrayBuffer = await file.arrayBuffer();
@@ -222,7 +221,7 @@ export class MrcUrlVolumeData extends MrcVolumeData {
     return { arrayBuffer: this.arrayBuffer, settings: this.settings };
   }
 
-  async getVolumeData(): Promise<ArrayBuffer> {
+  override async getVolumeData(): Promise<ArrayBuffer> {
     const { arrayBuffer } = await this.getData();
     return arrayBuffer;
   }

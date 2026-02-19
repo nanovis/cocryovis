@@ -81,10 +81,10 @@ const useStyles = makeStyles({
 });
 
 export interface TiltSeriesOptions {
-  alignment?: Record<string, any>;
-  ctf?: Record<string, any>;
-  motionCorrection?: Record<string, any>;
-  reconstruction: { volume_depth: number; [key: string]: any };
+  alignment?: Record<string, unknown>;
+  ctf?: Record<string, unknown>;
+  motionCorrection?: Record<string, unknown>;
+  reconstruction: { volume_depth: number; [key: string]: unknown };
 }
 
 interface Props {
@@ -119,7 +119,7 @@ const ProcessTiltSeriesDialog = observer(
     const parseOptions = (
       optionsList: [string, NumberInputField | BooleanInputField][]
     ) => {
-      const options: Record<string, any> = {};
+      const options: Record<string, unknown> = {};
       for (const [key, input] of optionsList) {
         if (!input.isValid()) {
           throw new Error(`Invalid input for ${input.name}`);

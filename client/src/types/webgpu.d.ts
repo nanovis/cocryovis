@@ -2,7 +2,7 @@ import type { MainModule } from "./wasmInterface";
 
 declare global {
   interface Window {
-    createVolumeRenderer: (options: any) => Promise<MainModule>;
+    createVolumeRenderer: (options: unknown) => Promise<MainModule>;
     WasmModule: MainModule | null;
   }
 }

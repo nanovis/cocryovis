@@ -76,8 +76,7 @@ export async function convertMRCToRaw(
     // Read the data stream and collect the chunks.
     const chunks: BlobPart[] = [];
     const reader = dataBlob.stream().getReader();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    while (true) {
+    for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
       chunks.push(value);
@@ -91,8 +90,7 @@ export async function convertMRCToRaw(
     {
       const reader = dataBlob.stream().getReader();
       let leftover = new Uint8Array(0);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      while (true) {
+      for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const combined = new Uint8Array(leftover.length + value.length);
@@ -106,11 +104,9 @@ export async function convertMRCToRaw(
             combined.byteOffset,
             completeLength / 4
           );
-          // eslint-disable-next-line @typescript-eslint/prefer-for-of
-          for (let i = 0; i < floatChunk.length; i++) {
-            const v = floatChunk[i];
-            if (v < minVal) minVal = v;
-            if (v > maxVal) maxVal = v;
+          for (const chunk of floatChunk) {
+            if (chunk < minVal) minVal = chunk;
+            if (chunk > maxVal) maxVal = chunk;
           }
         }
         leftover = combined.slice(completeLength);
@@ -123,8 +119,7 @@ export async function convertMRCToRaw(
     {
       const reader = dataBlob.stream().getReader();
       let leftover = new Uint8Array(0);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      while (true) {
+      for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const combined = new Uint8Array(leftover.length + value.length);

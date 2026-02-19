@@ -20,7 +20,7 @@ export abstract class InputField<T> {
 
   abstract isValid(): boolean;
 
-  abstract convertToValue(): any;
+  abstract convertToValue(): unknown;
 }
 
 export enum StringInputFieldType {

@@ -11,7 +11,13 @@ import globals from "globals";
 
 export default defineConfig([
   {
-    ignores: ["dist/**", "build/**", "node_modules/**", "public/**"],
+    ignores: [
+      "dist/**",
+      "build/**",
+      "node_modules/**",
+      "public/**",
+      "src/types/wasmInterface.d.ts",
+    ],
   },
   {
     files: ["**/*.{ts,tsx}"],
@@ -54,7 +60,6 @@ export default defineConfig([
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/no-empty-object-type": "off",
-      "@typescript-eslint/no-explicit-any": "off",
       "prefer-rest-params": "off",
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/no-misused-promises": "off",

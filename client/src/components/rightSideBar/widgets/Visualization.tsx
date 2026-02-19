@@ -319,10 +319,6 @@ const Visualization = observer(({ open, close }: Props) => {
 
   const downloadTF = (volVisSettings: VolVisSettingsInstance) => {
     const transferFunction = volVisSettings.transferFunction;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!transferFunction) {
-      return;
-    }
 
     const blob = new Blob(
       [

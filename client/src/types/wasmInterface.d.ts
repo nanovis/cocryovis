@@ -267,7 +267,6 @@ declare class FSNode {
   get isDevice(): any;
 }
 interface WasmModule {
-  // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
   _main(_0: number, _1: BigInt): number;
 }
 

@@ -23,6 +23,7 @@ import { observer } from "mobx-react-lite";
 import { useMst } from "../../../stores/RootStore";
 import { checkpointFileToText } from "../../../api/checkpoint";
 import ToastContainer from "../../../utils/toastContainer";
+import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 const useStyles = makeStyles({
   inferenceButtons: {
@@ -83,7 +84,6 @@ const Local = observer(({ open, close }: Props) => {
 
       await Utils.waitForNextFrame();
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
       const baseName = Utils.removeExtensionFromPath(parsedSettings.file);
 
       const zip = new JSZip();
@@ -94,7 +94,6 @@ const Local = observer(({ open, close }: Props) => {
         })
       );
       zip.file(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
         parsedSettings.file,
         new Blob([fileData], {
           type: "application/octet-stream",
@@ -176,9 +175,8 @@ const Local = observer(({ open, close }: Props) => {
       if (!settingsFile) {
         throw new Error("Failed to read the settings file.");
       }
-      const settings = JSON.parse(settingsFile);
+      const settings = volumeSettings.parse(JSON.parse(settingsFile));
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/restrict-plus-operands,@typescript-eslint/no-unsafe-member-access
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
       toastContainer.loading("Running Local Inference...");
@@ -188,7 +186,6 @@ const Local = observer(({ open, close }: Props) => {
 
       window.WasmModule.FS.writeFile(settingsFileName, settingsFile);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       window.WasmModule.FS.writeFile(settings.file, rawData);
 
       const formData = new FormData();
@@ -197,33 +194,28 @@ const Local = observer(({ open, close }: Props) => {
       const checkpointTxt = await checkpointFileToText(formData);
       window.WasmModule.FS.writeFile("parameters.txt", checkpointTxt);
 
-      const volumeData = await window.WasmModule.doInference(
+      const volumeData = (await window.WasmModule.doInference(
         settingsFileName,
         "parameters.txt"
-      );
+      )) as Buffer[];
 
       const zip = new JSZip();
 
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands,@typescript-eslint/no-unsafe-member-access
       const settingFileList = new Array(volumeData.length + 1);
 
       toastContainer.loading("Creating mean-filtered volume...");
 
       await new Promise((r) => setTimeout(r, 1000));
 
-      const kernel = Array.from({ length: 3 }, () =>
+      const kernel: number[][][] = Array.from({ length: 3 }, () =>
         Array.from({ length: 3 }, () => Array(3).fill(1 / 27))
       );
 
       const meanFilteredInput = Utils.convolve3D(
         rawData,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
         settings.size.x,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
         settings.size.y,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
         settings.size.z,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         kernel
       );
 
@@ -231,10 +223,7 @@ const Local = observer(({ open, close }: Props) => {
       zip.file(meanFilteredRawFileName, meanFilteredInput);
 
       const meanFilteredSettings = { ...settings };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       meanFilteredSettings.file = meanFilteredRawFileName;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      meanFilteredSettings.transferFunction = "tf-raw.json";
       const meanFilteredSettingsFileName = "meanFiltered.json";
       settingFileList[3] = meanFilteredSettingsFileName;
       zip.file(
@@ -245,7 +234,6 @@ const Local = observer(({ open, close }: Props) => {
 
       toastContainer.loading("Preparing files for download...");
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       for (const [i, volume] of volumeData.entries()) {
         const fileName = `volume_${i}`;
         const rawFileName = `${fileName}.raw`;
@@ -257,27 +245,18 @@ const Local = observer(({ open, close }: Props) => {
 
         const settingsFileName = `${fileName}.json`;
         const volSettings = { ...settings };
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         volSettings.file = rawFileName;
         switch (i) {
           case 0:
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            volSettings.transferFunction = "tf-Background.json";
             settingFileList[4] = settingsFileName;
             break;
           case 1:
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            volSettings.transferFunction = "tf-Membrane.json";
             settingFileList[1] = settingsFileName;
             break;
           case 2:
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            volSettings.transferFunction = "tf-Spikes.json";
             settingFileList[0] = settingsFileName;
             break;
           case 3:
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            volSettings.transferFunction = "tf-Inner.json";
             settingFileList[2] = settingsFileName;
             break;
         }

@@ -5,6 +5,8 @@ import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
 import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
 import type { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
 import type { TransferFunction } from "@/utils/volumeDescriptor";
+import type z from "zod";
+import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 export type FileMap = Map<string, File>;
 
@@ -26,17 +28,21 @@ export async function sendApiRequest(
 
   const fetchOptions = { ...defaultOptions, ...request };
 
-  let errorMsg = "Error connecting to the server.";
-
   const response = await fetch(`/api/${url}`, fetchOptions);
 
   if (!response.ok) {
     const contentType = response.headers.get("Content-Type");
     const isJson = contentType?.includes("application/json");
-    const content = isJson ? await response.json() : await response.text();
+    let errorMsg: string | undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    errorMsg = isJson ? content.message : content;
+    if (isJson) {
+      const errorContents: { message?: string } = await response.json();
+      errorMsg = errorContents.message;
+    } else {
+      errorMsg = await response.text();
+    }
+
+    if (errorMsg === undefined) errorMsg = "Unknown Error";
 
     console.error(
       `Error when calling ${url}: (${response.status}) ${errorMsg}`
@@ -214,10 +220,10 @@ export async function zipToFileMap(archive: Blob) {
   return fileMap;
 }
 
-function InplaceMapMerge(
-  destination: Map<any, any>,
-  source: Map<any, any>,
-  onDuplicate?: (key: any) => void
+function InplaceMapMerge<T, K>(
+  destination: Map<T, K>,
+  source: Map<T, K>,
+  onDuplicate?: (key: T) => void
 ) {
   source.forEach((value, key) => {
     if (onDuplicate && destination.has(key)) {
@@ -264,7 +270,7 @@ export function pickDefaultTF(
 export async function validateRawFileUpload(files: FileMap | null) {
   try {
     if (!files || files.size == 0) {
-      throw new Error("No files silected.");
+      throw new Error("No files selected.");
     }
 
     if (files.size > 2) {
@@ -273,14 +279,15 @@ export async function validateRawFileUpload(files: FileMap | null) {
       );
     }
 
-    let settings: any = undefined;
+    let settings: z.infer<typeof volumeSettings> | undefined = undefined;
     let rawFile: File | undefined = undefined;
     for (const [fileName, file] of files.entries()) {
       if (fileName.endsWith(".raw")) {
         rawFile = file;
       } else if (fileName.endsWith(".json")) {
         const fileText = await file.text();
-        settings = JSON.parse(fileText);
+        const settingsJson = JSON.parse(fileText);
+        settings = volumeSettings.parse(settingsJson);
       }
     }
 
@@ -333,15 +340,13 @@ export async function convertTiltSeriesToRawData(
 
   window.WasmModule.FS.writeFile(file.name, data);
   const settings = await window.WasmModule.loadForSart(file.name, volumeDepth);
-  if (!settings) {
+  if (!settings || typeof settings !== "string") {
     throw new Error("Conversion failed.");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  const parsedSettings = JSON.parse(settings);
+  const parsedSettings = volumeSettings.parse(JSON.parse(settings));
 
   const fileData = (await window.WasmModule.FS.readFile(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     parsedSettings.file
   )) as ArrayBuffer;
 

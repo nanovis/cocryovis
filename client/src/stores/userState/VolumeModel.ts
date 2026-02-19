@@ -42,6 +42,7 @@ import {
 import ToastContainer from "../../utils/toastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "@/stores/RootStore";
+import type { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 export type LabeledVolumeTypes =
   | "SparseLabeledVolumeData"
@@ -211,10 +212,9 @@ export const Volume = types
       self.setRawVolume(rawData);
     }),
     uploadTiltSeries: flow(function* uploadTiltSeries(
-      parsedSettings: any,
+      parsedSettings: z.infer<typeof volumeSettings>,
       fileData: ArrayBuffer
     ) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
       const rawFile = new File([fileData], parsedSettings.file, {
         type: "application/octet-stream",
       });
