@@ -71,8 +71,9 @@ export const VolumeResults = types
   }))
   .actions((self) => ({
     refreshResults: flow(function* refreshResults() {
-      const results: z.infer<typeof getResultSchema> =
-        yield getResultsFromVolume(self.volumeId);
+      const results = (yield getResultsFromVolume(self.volumeId)) as z.infer<
+        typeof getResultSchema
+      >;
 
       if (!isAlive(self)) {
         return;

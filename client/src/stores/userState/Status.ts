@@ -258,10 +258,10 @@ export const Status = types
       self.activeRequests += 1;
       try {
         const currentPageNumber = self.pageNumber;
-        const contents: z.infer<typeof statusSchema> = yield getStatus(
+        const contents = (yield getStatus(
           currentPageNumber,
           self.pageSize
-        );
+        )) as z.infer<typeof statusSchema>;
         // Check if the model is still alive after async call
         if (!isAlive(self)) {
           return;
@@ -286,7 +286,7 @@ export const Status = types
     fetchGpuStatus: flow(function* () {
       try {
         console.log("Fetching GPU status...");
-        const contents: z.infer<typeof gpuStatusSchema> = yield getGpuStatus();
+        const contents = (yield getGpuStatus()) as z.infer<typeof gpuStatusSchema>;
         if (!isAlive(self)) {
           return;
         }

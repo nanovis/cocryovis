@@ -39,20 +39,26 @@ export const SparseLabelVolume = types
   }))
   .actions((self) => ({
     updateName: flow(function* updateName(name: string) {
-      const sparselabel: z.infer<typeof sparseLabelVolumeDataSchema> =
-        yield updateVolumeData("SparseLabeledVolumeData", self.id, {
+      const sparselabel = (yield updateVolumeData(
+        "SparseLabeledVolumeData",
+        self.id,
+        {
           name: name,
-        });
+        }
+      )) as z.infer<typeof sparseLabelVolumeDataSchema>;
       self.name = sparselabel.name;
     }),
     setColor: flow(function* setColor(color: string, index: number) {
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Updating label color...");
-        const sparselabel: z.infer<typeof sparseLabelVolumeDataSchema> =
-          yield updateVolumeData("SparseLabeledVolumeData", self.id, {
+        const sparselabel = (yield updateVolumeData(
+          "SparseLabeledVolumeData",
+          self.id,
+          {
             color: color,
-          });
+          }
+        )) as z.infer<typeof sparseLabelVolumeDataSchema>;
 
         self.color = sparselabel.color;
 

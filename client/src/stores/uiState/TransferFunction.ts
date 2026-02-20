@@ -55,12 +55,14 @@ export const TransferFunction = types
         throw new Error("Wrong file format.");
       }
 
-      const fileContent: string = yield Utils.readFileAsText(file);
+      const fileContent = (yield Utils.readFileAsText(file)) as string | null | undefined;
       if (!isAlive(self)) {
         return;
       }
-      const parsed: unknown = JSON.parse(fileContent);
-      const newTransferFunction = transferFunctionSchema.parse(parsed);
+      if (!fileContent) {
+        throw new Error("Could not read file.");
+      }
+      const newTransferFunction = transferFunctionSchema.parse(JSON.parse(fileContent));
       self.rampLow = newTransferFunction.rampLow;
       self.rampHigh = newTransferFunction.rampHigh;
       self.red = newTransferFunction.color.x;

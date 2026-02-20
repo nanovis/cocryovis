@@ -10,7 +10,7 @@ export async function getResultsFromVolume(id: number) {
     method: "GET",
     credentials: "include",
   });
-  const Results: z.infer<typeof getResultSchema> = await response.json();
+  const Results = (await response.json()) as z.infer<typeof getResultSchema>;
   return Results;
 }
 
@@ -19,8 +19,8 @@ export async function createResultFromFiles(id: number, request: FormData) {
     method: "POST",
     body: request,
   });
-  const Result: z.infer<typeof resultFilesSchema> = await response.json();
-  return Result;
+  const result = (await response.json()) as z.infer<typeof resultFilesSchema>;
+  return result;
 }
 
 export async function deleteResult(idResult: number) {

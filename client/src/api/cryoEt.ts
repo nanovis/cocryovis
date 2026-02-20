@@ -14,6 +14,6 @@ export async function getTomographyMetadataFromCryoETId(id: number) {
     method: "GET",
     credentials: "include",
   });
-  const tomogram: z.infer<typeof tomogramSchema> = await response.json();
+  const tomogram = (await response.json()) as z.infer<typeof tomogramSchema>;
   return tomogram;
 }

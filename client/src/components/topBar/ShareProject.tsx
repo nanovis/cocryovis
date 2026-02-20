@@ -133,7 +133,9 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const [pendingChanges, setPendingChanges] = useState(() => new Map());
+  const [pendingChanges, setPendingChanges] = useState<Map<number, number>>(
+    () => new Map()
+  );
 
   const [isHoveringOverTagPicker, setIsHoveringOverTagPicker] = useState(false);
 

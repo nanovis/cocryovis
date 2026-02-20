@@ -14,8 +14,9 @@ export async function getCheckpointsFromModel(id: number) {
     method: "GET",
     credentials: "include",
   });
-  const checkpoints: z.infer<typeof checkpointSchemaArray> =
-    await response.json();
+  const checkpoints = (await response.json()) as z.infer<
+    typeof checkpointSchemaArray
+  >;
   return checkpoints;
 }
 
@@ -25,8 +26,9 @@ export async function uploadCheckpoints(id: number, request: FormData) {
     credentials: "include",
     body: request,
   });
-  const checkpoints: z.infer<typeof checkpointSchemaArray> =
-    await response.json();
+  const checkpoints = (await response.json()) as z.infer<
+    typeof checkpointSchemaArray
+  >;
   return checkpoints;
 }
 

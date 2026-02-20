@@ -57,7 +57,6 @@ export default defineConfig([
         },
       ],
       "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/no-empty-object-type": "off",
       "prefer-rest-params": "off",

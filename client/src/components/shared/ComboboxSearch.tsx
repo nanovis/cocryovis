@@ -150,9 +150,9 @@ const ComboboxSearch = <
             <Tooltip
               hideDelay={0}
               showDelay={0}
-              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
               key={option.props.value}
-              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
               content={option.props.tooltip}
               positioning="after"
               relationship={"description"}
@@ -160,7 +160,7 @@ const ComboboxSearch = <
               {option}
             </Tooltip>
           ) : (
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
             <div key={option.props?.value ?? -1}>{option}</div>
           )
         )}

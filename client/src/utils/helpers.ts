@@ -36,7 +36,7 @@ export async function sendApiRequest(
     let errorMsg: string | undefined;
 
     if (isJson) {
-      const errorContents: { message?: string } = await response.json();
+      const errorContents = await response.json() as { message?: string };
       errorMsg = errorContents.message;
     } else {
       errorMsg = await response.text();
@@ -286,8 +286,7 @@ export async function validateRawFileUpload(files: FileMap | null) {
         rawFile = file;
       } else if (fileName.endsWith(".json")) {
         const fileText = await file.text();
-        const settingsJson = JSON.parse(fileText);
-        settings = volumeSettings.parse(settingsJson);
+        settings = volumeSettings.parse(JSON.parse(fileText));
       }
     }
 
@@ -339,7 +338,7 @@ export async function convertTiltSeriesToRawData(
   const data = new Uint8Array(fileContent);
 
   window.WasmModule.FS.writeFile(file.name, data);
-  const settings = await window.WasmModule.loadForSart(file.name, volumeDepth);
+  const settings = await window.WasmModule.loadForSart(file.name, volumeDepth) as string;
   if (!settings || typeof settings !== "string") {
     throw new Error("Conversion failed.");
   }

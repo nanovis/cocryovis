@@ -25,10 +25,13 @@ export const PseudoLabelVolume = types
   })
   .actions((self) => ({
     updateName: flow(function* updateName(name: string) {
-      const pseudolabel: z.infer<typeof pseudoLabelVolumeDataSchema> =
-        yield updateVolumeData("PseudoLabeledVolumeData", self.id, {
+      const pseudolabel = (yield updateVolumeData(
+        "PseudoLabeledVolumeData",
+        self.id,
+        {
           name: name,
-        });
+        }
+      )) as z.infer<typeof pseudoLabelVolumeDataSchema>;
       self.name = pseudolabel.name;
     }),
   }));

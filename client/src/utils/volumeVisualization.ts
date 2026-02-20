@@ -38,8 +38,9 @@ export async function fileMapToVisualizationConfig(
   let settingsFilePaths: string[] | undefined;
   if (configBlob) {
     const configFileContent = await configBlob.text();
-    const configFileContentJSON = JSON.parse(configFileContent);
-    const config = visualizationConfigSchema.parse(configFileContentJSON);
+    const config = visualizationConfigSchema.parse(
+      JSON.parse(configFileContent)
+    );
     if (config.files.length === 0) {
       throw new Error("No files found in config.json.");
     }

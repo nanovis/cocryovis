@@ -14,7 +14,9 @@ export async function getAllUserProjectsDeep() {
   const response = await Utils.sendApiRequest("projects-deep", {
     method: "GET",
   });
-  const projects: z.infer<typeof projectsSchemaDeepRes> = await response.json();
+  const projects = (await response.json()) as z.infer<
+    typeof projectsSchemaDeepRes
+  >;
   return projects;
 }
 
@@ -27,7 +29,7 @@ export async function createProject(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const project: z.infer<typeof projectSchema> = await response.json();
+  const project = (await response.json()) as z.infer<typeof projectSchema>;
   return project;
 }
 
@@ -35,8 +37,9 @@ export async function getAccessInfo(id: number) {
   const response = await Utils.sendApiRequest(`project/${id}/access`, {
     method: "GET",
   });
-  const accessInfo: z.infer<typeof projectAccessInfoSchema> =
-    await response.json();
+  const accessInfo = (await response.json()) as z.infer<
+    typeof projectAccessInfoSchema
+  >;
   return accessInfo;
 }
 
@@ -44,7 +47,9 @@ export async function getProjectDeep(id: number) {
   const response = await Utils.sendApiRequest(`project/${id}/deep`, {
     method: "GET",
   });
-  const project: z.infer<typeof projectSchemaDeepRes> = await response.json();
+  const project = (await response.json()) as z.infer<
+    typeof projectSchemaDeepRes
+  >;
   return project;
 }
 
@@ -58,8 +63,9 @@ export async function setAccess(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const accessInfoChanges: z.infer<typeof setAccessSchemaRes> =
-    await response.json();
+  const accessInfoChanges = (await response.json()) as z.infer<
+    typeof setAccessSchemaRes
+  >;
   return accessInfoChanges;
 }
 

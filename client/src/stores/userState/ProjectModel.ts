@@ -82,8 +82,9 @@ export const UserProjects = types
     },
     fetchProject: flow(function* fetchProject(id: number) {
       try {
-        const project: z.infer<typeof projectSchemaDeepRes> =
-          yield ProjectApi.getProjectDeep(id);
+        const project = (yield ProjectApi.getProjectDeep(id)) as z.infer<
+          typeof projectSchemaDeepRes
+        >;
         if (!isAlive(self)) {
           return;
         }
@@ -109,8 +110,9 @@ export const UserProjects = types
       }
       try {
         self.fetchProjectsActiveRequest = true;
-        const projects: z.infer<typeof projectsSchemaDeepRes> =
-          yield ProjectApi.getAllUserProjectsDeep();
+        const projects = (yield ProjectApi.getAllUserProjectsDeep()) as z.infer<
+          typeof projectsSchemaDeepRes
+        >;
         if (!isAlive(self)) {
           return;
         }
@@ -145,11 +147,10 @@ export const UserProjects = types
       projectDescription: string
     ) {
       try {
-        const project: z.infer<typeof projectSchema> =
-          yield ProjectApi.createProject({
-            name: projectName,
-            description: projectDescription,
-          });
+        const project = (yield ProjectApi.createProject({
+          name: projectName,
+          description: projectDescription,
+        })) as z.infer<typeof projectSchema>;
 
         if (!isAlive(self)) {
           return;
@@ -196,7 +197,9 @@ export const UserProjects = types
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Loading demo project...");
-        const project: z.infer<typeof projectSchemaDeepRes> = yield getDemo();
+        const project = (yield getDemo()) as z.infer<
+          typeof projectSchemaDeepRes
+        >;
         if (!isAlive(self)) {
           return;
         }

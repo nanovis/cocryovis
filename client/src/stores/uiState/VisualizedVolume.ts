@@ -246,8 +246,9 @@ export const VisualizedVolume = types
           throw new Error("Only raw volumes can be labeled.");
         }
 
-        const volume: z.infer<typeof getVolumeSchema> =
-          yield getVolumeWithSparseVolumes(self.volume.id);
+        const volume = (yield getVolumeWithSparseVolumes(
+          self.volume.id
+        )) as z.infer<typeof getVolumeSchema>;
         if (!isAlive(self)) {
           return;
         }

@@ -38,6 +38,7 @@ import {
   createFromMrcFile,
   createFromUrl,
   deleteVolumeData,
+  type VolumeDataMap,
 } from "@/api/volumeData";
 import ToastContainer from "../../utils/toastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
@@ -47,6 +48,23 @@ import type { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-
 export type LabeledVolumeTypes =
   | "SparseLabeledVolumeData"
   | "PseudoLabeledVolumeData";
+
+async function uploadLabeledVolume<T extends keyof VolumeDataMap>(
+  id: number,
+  files: FileList,
+  type: T
+): Promise<VolumeDataMap[T]> {
+  const fileMap = await Utils.unpackAndcreateFileMap(files);
+
+  const { rawFile, settings } = await Utils.validateRawFileUpload(fileMap);
+
+  const volume = await createFromFiles(type, id, {
+    rawFile,
+    volumeSettings: settings,
+  });
+
+  return volume;
+}
 
 export const Volume = types
   .model({
@@ -158,11 +176,10 @@ export const Volume = types
       rawFile: File,
       settings: VolumeSettings
     ) {
-      const rawData: z.infer<typeof rawVolumeDataSchema> =
-        yield createFromFiles("RawVolumeData", self.id, {
-          rawFile,
-          volumeSettings: settings,
-        });
+      const rawData = (yield createFromFiles("RawVolumeData", self.id, {
+        rawFile,
+        volumeSettings: settings,
+      })) as z.infer<typeof rawVolumeDataSchema>;
       if (!isAlive(self)) {
         return;
       }
@@ -178,8 +195,9 @@ export const Volume = types
       const formData = new FormData();
       formData.append("files", mrcFile);
 
-      const rawData: z.infer<typeof rawVolumeDataSchema> =
-        yield createFromMrcFile(self.id, formData);
+      const rawData = (yield createFromMrcFile(self.id, formData)) as z.infer<
+        typeof rawVolumeDataSchema
+      >;
 
       if (!isAlive(self)) {
         return;
@@ -197,14 +215,11 @@ export const Volume = types
       }
 
       // TODO better unify server and client setting types
-      const rawData: z.infer<typeof rawVolumeDataSchema> = yield createFromUrl(
-        self.id,
-        {
-          url: url,
-          fileType: fileType,
-          volumeSettings: settings,
-        }
-      );
+      const rawData = (yield createFromUrl(self.id, {
+        url: url,
+        fileType: fileType,
+        volumeSettings: settings,
+      })) as z.infer<typeof rawVolumeDataSchema>;
       if (!isAlive(self)) {
         return;
       }
@@ -219,11 +234,10 @@ export const Volume = types
         type: "application/octet-stream",
       });
 
-      const rawData: z.infer<typeof rawVolumeDataSchema> =
-        yield createFromFiles("RawVolumeData", self.id, {
-          rawFile,
-          volumeSettings: parsedSettings,
-        });
+      const rawData = (yield createFromFiles("RawVolumeData", self.id, {
+        rawFile,
+        volumeSettings: parsedSettings,
+      })) as z.infer<typeof rawVolumeDataSchema>;
       if (!isAlive(self)) {
         return;
       }
@@ -233,17 +247,11 @@ export const Volume = types
     uploadSparseLabelVolume: flow(function* uploadSparseLabelVolume(
       files: FileList
     ) {
-      const fileMap: Utils.FileMap = yield Utils.unpackAndcreateFileMap(files);
-      if (!isAlive(self)) {
-        return;
-      }
-      const { rawFile, settings } = yield Utils.validateRawFileUpload(fileMap);
-
-      const volume: z.infer<typeof sparseLabelVolumeDataSchema> =
-        yield createFromFiles("SparseLabeledVolumeData", self.id, {
-          rawFile,
-          volumeSettings: settings,
-        });
+      const volume = (yield uploadLabeledVolume(
+        self.id,
+        files,
+        "SparseLabeledVolumeData"
+      )) as z.infer<typeof sparseLabelVolumeDataSchema>;
       if (!isAlive(self)) {
         return;
       }
@@ -253,17 +261,11 @@ export const Volume = types
     uploadPseudoLabelVolume: flow(function* uploadPseudoLabelVolume(
       files: FileList
     ) {
-      const fileMap: Utils.FileMap = yield Utils.unpackAndcreateFileMap(files);
-      if (!isAlive(self)) {
-        return;
-      }
-      const { rawFile, settings } = yield Utils.validateRawFileUpload(fileMap);
-
-      const volume: z.infer<typeof pseudoLabelVolumeDataSchema> =
-        yield createFromFiles("PseudoLabeledVolumeData", self.id, {
-          rawFile,
-          volumeSettings: settings,
-        });
+      const volume = (yield uploadLabeledVolume(
+        self.id,
+        files,
+        "PseudoLabeledVolumeData"
+      )) as z.infer<typeof pseudoLabelVolumeDataSchema>;
       if (!isAlive(self)) {
         return;
       }
@@ -293,8 +295,14 @@ export const Volume = types
       }
       try {
         self.updateVolumeActiveRequest = true;
-        const volume: z.infer<typeof volumeSchema> =
-          yield volumeApi.updateVolume(self.id, changes);
+        const volume = (yield volumeApi.updateVolume(
+          self.id,
+          changes
+        )) as z.infer<typeof volumeSchema>;
+        if (isAlive(self)) {
+          self.updateVolumeActiveRequest = false;
+        }
+
         self.name = volume.name;
         self.description = volume.description;
         return volume;
@@ -390,13 +398,10 @@ export const ProjectVolumes = types
       name: string,
       description: string
     ) {
-      const volume: z.infer<typeof volumeSchema> = yield volumeApi.createVolume(
-        self.projectId,
-        {
-          name: name,
-          description: description,
-        }
-      );
+      const volume = (yield volumeApi.createVolume(self.projectId, {
+        name: name,
+        description: description,
+      })) as z.infer<typeof volumeSchema>;
       if (!isAlive(self)) {
         return;
       }
@@ -429,8 +434,9 @@ export const ProjectVolumes = types
   }))
   .actions((self) => ({
     refreshVolumes: flow(function* refreshVolumes() {
-      const volumes: z.infer<typeof volumesDeepSchemaRes> =
-        yield getVolumesFromProjectDeep(self.projectId);
+      const volumes = (yield getVolumesFromProjectDeep(
+        self.projectId
+      )) as z.infer<typeof volumesDeepSchemaRes>;
       if (!isAlive(self)) {
         return;
       }

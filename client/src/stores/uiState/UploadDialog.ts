@@ -349,8 +349,9 @@ export const CryoETUploadInputs = types
       const toastContainer = new ToastContainer();
       try {
         toastContainer.loading("Fetching CryoET metadata...");
-        const metadata: z.infer<typeof tomogramSchema> =
-          yield getTomographyMetadataFromCryoETId(self.cryoETId);
+        const metadata = (yield getTomographyMetadataFromCryoETId(
+          self.cryoETId
+        )) as z.infer<typeof tomogramSchema>;
         if (!isAlive(self)) {
           return;
         }

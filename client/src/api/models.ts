@@ -21,8 +21,9 @@ export async function getModelsFromProjectWithCheckpoints(id: number) {
     },
     { query }
   );
-  const models: z.infer<typeof modelSchemaWithCheckpoint>[] =
-    await response.json();
+  const models = (await response.json()) as z.infer<
+    typeof modelSchemaWithCheckpoint
+  >[];
   return models;
 }
 
@@ -36,7 +37,7 @@ export async function createModel(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const model: z.infer<typeof modelSchema> = await response.json();
+  const model = (await response.json()) as z.infer<typeof modelSchema>;
   return model;
 }
 

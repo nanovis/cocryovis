@@ -14,7 +14,7 @@ import type {
 type RawVolumeData = z.infer<typeof rawVolumeDataSchema>;
 type SparseLabeledVolumeData = z.infer<typeof sparseLabelVolumeDataSchema>;
 type PseudoLabeledVolumeData = z.infer<typeof pseudoLabelVolumeDataSchema>;
-interface VolumeDataMap {
+export interface VolumeDataMap {
   RawVolumeData: RawVolumeData;
   SparseLabeledVolumeData: SparseLabeledVolumeData;
   PseudoLabeledVolumeData: PseudoLabeledVolumeData;
@@ -29,7 +29,7 @@ export async function getVolumeDataById<T extends keyof VolumeDataMap>(
     credentials: "include",
   });
 
-  const volumeData: VolumeDataMap[T] = await response.json();
+  const volumeData = (await response.json()) as VolumeDataMap[T];
   return volumeData;
 }
 
@@ -45,7 +45,7 @@ export async function updateVolumeData<T extends keyof VolumeDataMap>(
     body: JSON.stringify(request),
   });
 
-  const volumeData: VolumeDataMap[T] = await response.json();
+  const volumeData = (await response.json()) as VolumeDataMap[T];
   return volumeData;
 }
 
@@ -91,7 +91,7 @@ export async function createFromFiles<T extends keyof VolumeDataMap>(
       body: formData,
     }
   );
-  const volumeData: VolumeDataMap[T] = await response.json();
+  const volumeData = (await response.json()) as VolumeDataMap[T];
   return volumeData;
 }
 
@@ -104,7 +104,7 @@ export async function createFromMrcFile(id: number, request: FormData) {
       body: request,
     }
   );
-  const rawVolumeData: RawVolumeData = await response.json();
+  const rawVolumeData = (await response.json()) as RawVolumeData;
   return rawVolumeData;
 }
 
@@ -121,7 +121,7 @@ export async function createFromUrl(
       body: JSON.stringify(request),
     }
   );
-  const rawVolumeData: RawVolumeData = await response.json();
+  const rawVolumeData = (await response.json()) as RawVolumeData;
   return rawVolumeData;
 }
 
@@ -141,8 +141,9 @@ export async function updateAnnotations(
       body: formData,
     }
   );
-  const volumeData: z.infer<typeof sparseLabelVolumeDataSchema> =
-    await response.json();
+  const volumeData = (await response.json()) as z.infer<
+    typeof sparseLabelVolumeDataSchema
+  >;
   return volumeData;
 }
 

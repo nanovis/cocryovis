@@ -29,8 +29,7 @@ export type VolumeDescriptorSettings = z.output<
 export type TransferFunction = z.infer<typeof transferFunctionSchema>;
 
 export function volumeSettingsFromJson(json: string): VolumeSettings {
-  const data = JSON.parse(json);
-  const volumeSettingsObject = volumeSettings.parse(data);
+  const volumeSettingsObject = volumeSettings.parse(JSON.parse(json));
 
   if (
     !BYTES_PER_VOXEL_OPTIONS.some(

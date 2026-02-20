@@ -21,7 +21,7 @@ export async function login(request: z.input<typeof loginSchemaReq>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const userData: z.infer<typeof publicUser> = await response.json();
+  const userData = (await response.json()) as z.infer<typeof publicUser>;
   return userData;
 }
 
@@ -38,7 +38,7 @@ export async function register(request: z.input<typeof registerSchema>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const contents: z.infer<typeof publicUser> = await response.json();
+  const contents = (await response.json()) as z.infer<typeof publicUser>;
   return contents;
 }
 
@@ -46,7 +46,7 @@ export async function getLoggedUserData() {
   const response = await Utils.sendApiRequest("getLoggedUserData", {
     method: "GET",
   });
-  const userData: z.infer<typeof publicUser> = await response.json();
+  const userData = (await response.json()) as z.infer<typeof publicUser>;
   return userData;
 }
 
@@ -54,7 +54,7 @@ export async function getAllUsers() {
   const response = await Utils.sendApiRequest("users", {
     method: "GET",
   });
-  const allUsers: z.infer<typeof usersArray> = await response.json();
+  const allUsers = (await response.json()) as z.infer<typeof usersArray>;
   return allUsers;
 }
 
@@ -71,7 +71,7 @@ export async function getStatus(pageNumber: number, pageSize: number) {
     },
     { query }
   );
-  const contents: z.infer<typeof statusSchema> = await response.json();
+  const contents = (await response.json()) as z.infer<typeof statusSchema>;
   return contents;
 }
 
@@ -80,7 +80,7 @@ export async function getGpuStatus() {
     method: "GET",
     credentials: "include",
   });
-  const contents: z.infer<typeof gpuStatusSchema> = await response.json();
+  const contents = (await response.json()) as z.infer<typeof gpuStatusSchema>;
   return contents;
 }
 
@@ -91,7 +91,7 @@ export async function updateUser(request: z.input<typeof updateUserSchema>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const contents: z.infer<typeof publicUser> = await response.json();
+  const contents = (await response.json()) as z.infer<typeof publicUser>;
   return contents;
 }
 

@@ -137,9 +137,9 @@ const ComboboxTagMultiselect = <
           option.props.tooltip ? (
             <Tooltip
               hideDelay={0}
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
               key={option.props.value}
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
               content={option.props.tooltip}
               positioning="after"
               relationship={"description"}
@@ -147,7 +147,7 @@ const ComboboxTagMultiselect = <
               {option}
             </Tooltip>
           ) : (
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
             <div key={option.props?.value ?? -1}>{option}</div>
           )
         )}

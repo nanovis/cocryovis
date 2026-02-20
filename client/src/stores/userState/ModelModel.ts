@@ -88,10 +88,10 @@ export const ProjectModels = types
     },
     createModel: flow(function* createModel(name: string, description: string) {
       self.setCreateModelActiveRequest(true);
-      const model: z.infer<typeof modelSchema> = yield modelApi.createModel(
-        self.projectId,
-        { name: name, description: description }
-      );
+      const model = (yield modelApi.createModel(self.projectId, {
+        name: name,
+        description: description,
+      })) as z.infer<typeof modelSchema>;
 
       if (!isAlive(self)) {
         return;
@@ -117,8 +117,9 @@ export const ProjectModels = types
   }))
   .actions((self) => ({
     refreshModels: flow(function* refreshModels() {
-      const models: z.infer<typeof modelSchemaWithCheckpoint>[] =
-        yield modelApi.getModelsFromProjectWithCheckpoints(self.projectId);
+      const models = (yield modelApi.getModelsFromProjectWithCheckpoints(
+        self.projectId
+      )) as z.infer<typeof modelSchemaWithCheckpoint>[];
 
       if (!isAlive(self)) {
         return;

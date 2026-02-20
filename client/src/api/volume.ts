@@ -16,7 +16,9 @@ export async function getVolumesFromProjectDeep(id: number) {
     method: "GET",
     credentials: "include",
   });
-  const volumes: z.infer<typeof volumesDeepSchemaRes> = await response.json();
+  const volumes = (await response.json()) as z.infer<
+    typeof volumesDeepSchemaRes
+  >;
   return volumes;
 }
 
@@ -30,7 +32,7 @@ export async function createVolume(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const volume: z.infer<typeof volumeSchema> = await response.json();
+  const volume = (await response.json()) as z.infer<typeof volumeSchema>;
   return volume;
 }
 
@@ -45,7 +47,7 @@ export async function getVolumeWithSparseVolumes(Id: number) {
     },
     { query }
   );
-  const volume: z.infer<typeof getVolumeSchema> = await response.json();
+  const volume = (await response.json()) as z.infer<typeof getVolumeSchema>;
   return volume;
 }
 
@@ -66,6 +68,6 @@ export async function updateVolume(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  const volume: z.infer<typeof volumeSchema> = await response.json();
+  const volume = (await response.json()) as z.infer<typeof volumeSchema>;
   return volume;
 }

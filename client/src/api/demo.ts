@@ -6,6 +6,8 @@ export async function getDemo() {
   const response = await Utils.sendApiRequest("demo", {
     method: "GET",
   });
-  const project: z.infer<typeof projectSchemaDeepRes> = await response.json();
+  const project = (await response.json()) as z.infer<
+    typeof projectSchemaDeepRes
+  >;
   return project;
 }
