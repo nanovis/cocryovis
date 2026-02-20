@@ -197,7 +197,7 @@ const Local = observer(({ open, close }: Props) => {
       const volumeData = (await window.WasmModule.doInference(
         settingsFileName,
         "parameters.txt"
-      )) as Buffer[];
+      )) as Uint8Array[];
 
       const zip = new JSZip();
 
@@ -207,8 +207,10 @@ const Local = observer(({ open, close }: Props) => {
 
       await new Promise((r) => setTimeout(r, 1000));
 
-      const kernel: number[][][] = Array.from({ length: 3 }, () =>
-        Array.from({ length: 3 }, () => Array(3).fill(1 / 27))
+      const kernel = Array.from({ length: 3 }, (): number[][] =>
+        Array.from({ length: 3 }, (): number[] =>
+          Array.from({ length: 3 }, () => 1 / 27)
+        )
       );
 
       const meanFilteredInput = Utils.convolve3D(

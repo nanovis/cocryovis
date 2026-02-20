@@ -168,14 +168,15 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       const volumeData = (await window.WasmModule.doInference(
         settingsFileName,
         "parameters.txt"
-      )) as Buffer[];
+      )) as Uint8Array[];
 
       toastContainer.loading("Sending data to server...");
       const volumeDescriptors = [];
 
       const formData = new FormData();
       for (const [i, volume] of volumeData.entries()) {
-        const blob = new Blob([volume], {
+        
+        const blob = new Blob([new Uint8Array(volume)], {
           type: "application/octet-stream",
         });
 
