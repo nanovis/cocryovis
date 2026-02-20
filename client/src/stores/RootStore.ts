@@ -3,15 +3,13 @@ import { flow, isAlive, types } from "mobx-state-tree";
 import type { UserDB } from "./userState/UserModel";
 import { User } from "./userState/UserModel";
 import { createContext, use } from "react";
-import Cookies from "js-cookie";
 import { UiState } from "./uiState/UiState";
 import * as Api from "../api/users";
 import ToastContainer from "../utils/toastContainer";
 import { getErrorMessage } from "@/utils/helpers";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import type { OrbitCameraController } from "@/utils/orbitCameraController";
-
-const CookieName = "LoggedUser";
+import { removeUserCookie, setUserCookie } from "@/utils/cookie";
 
 export const RootStore = types
   .model({
@@ -70,10 +68,7 @@ export const RootStore = types
           userProjects: {},
           status: {},
         });
-        const expirationTime = new Date(new Date().getTime() + 60 * 1000 * 24);
-        Cookies.set(CookieName, JSON.stringify(userData), {
-          expires: expirationTime,
-        });
+        setUserCookie(userData);
         self.user.userProjects.fetchProjects().catch((error: unknown) => {
           const toastContainer = new ToastContainer();
           toastContainer.error(getErrorMessage(error));
@@ -98,7 +93,7 @@ export const RootStore = types
       }
       self.user = User.create({});
       self.uiState.visualizedVolume = undefined;
-      Cookies.remove(CookieName);
+      removeUserCookie();
       window.location.reload();
     }),
   }));

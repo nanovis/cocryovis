@@ -16,7 +16,6 @@ import SignInPage from "./components/topBar/SignInPage";
 import type { SignUpCredentials } from "./components/topBar/SignUpPage";
 import SignUpPage from "./components/topBar/SignUpPage";
 import ProfilePage from "./components/topBar/ProfilePage";
-import Cookies from "js-cookie";
 import * as Utils from "./utils/helpers";
 import { useServerListener } from "./hooks/useServerListener";
 import { observer } from "mobx-react-lite";
@@ -26,6 +25,7 @@ import AdminPanel from "./components/topBar/AdminPanel";
 import { getLoggedUserData, login, register } from "./api/users";
 import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/toastContainer";
 import RendererCanvas from "./components/RendererCanvas/RendererCanvas";
+import { getUserCookie, removeUserCookie } from "./utils/cookie";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height
@@ -46,8 +46,6 @@ const useStyles = makeStyles({
 });
 
 const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
-  const CookieName = "LoggedUser";
-
   const toasterId = useId("toaster");
   const toastFunctions = useToastController(toasterId);
 
@@ -62,14 +60,6 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
   const mouseOverCanvas = useRef(false);
 
   const connectionStatus = useServerListener(websocketUrl, user);
-
-  const fetchAuthCookieData = () => {
-    const cookieData = Cookies.get(CookieName);
-    if (!cookieData) {
-      return null;
-    }
-    return JSON.parse(cookieData);
-  };
 
   // TODO put the following auth functions into mobx
   const resolveProjectUrl = useCallback(async () => {
@@ -103,7 +93,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
   const getIsUserAuth = useEffectEvent(async () => {
     if (rootStore.triedReloadingSession) return;
     rootStore.setTriedReloadingSession(true);
-    const cookieData = fetchAuthCookieData();
+    const cookieData = getUserCookie();
     if (cookieData) {
       const toastContainer = new ToastContainer();
       try {
@@ -113,7 +103,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
         rootStore.login(userData);
         toastContainer.success("Session restored.");
       } catch {
-        Cookies.remove(CookieName);
+        removeUserCookie();
         await rootStore.logout();
         uiState.setOpenSignInPage(true);
       } finally {
