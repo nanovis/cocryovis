@@ -35,7 +35,6 @@ import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
 import * as Utils from "../../../utils/helpers";
 import DeleteDialog from "../../shared/DeleteDialog";
 import { CONFIG } from "@/constants";
-import "../../../App.css";
 import globalStyles from "../../globalStyles";
 import ComboboxSearch from "../../shared/ComboboxSearch";
 import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";

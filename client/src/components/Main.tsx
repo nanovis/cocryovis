@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import App from "./App";
-import { RootStoreProvider, rootStore } from "./stores/RootStore";
+import { RootStoreProvider, rootStore } from "../stores/RootStore";
 import {
   FluentProvider,
   createDarkTheme,
   createLightTheme,
 } from "@fluentui/react-components";
 import React from "react";
-import { loadScript } from "./utils/helpers";
+import { loadScript } from "../utils/helpers";
 import { obtainDevice } from "@/renderer/renderer";
 
 const customDarkTheme = {

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import "./App.css";
 
-import MenuBar from "./components/topBar/MenuBar";
-import SideControls from "./components/leftSideBar/SideControls";
-import RightSideControls from "./components/rightSideBar/RightSideControls";
+import MenuBar from "./topBar/MenuBar";
+import SideControls from "./leftSideBar/SideControls";
+import RightSideControls from "./rightSideBar/RightSideControls";
 
 import {
   makeStyles,
@@ -11,21 +11,21 @@ import {
   useId,
   useToastController,
 } from "@fluentui/react-components";
-import type { SignInCredentials } from "./components/topBar/SignInPage";
-import SignInPage from "./components/topBar/SignInPage";
-import type { SignUpCredentials } from "./components/topBar/SignUpPage";
-import SignUpPage from "./components/topBar/SignUpPage";
-import ProfilePage from "./components/topBar/ProfilePage";
-import * as Utils from "./utils/helpers";
-import { useServerListener } from "./hooks/useServerListener";
+import type { SignInCredentials } from "./topBar/SignInPage";
+import SignInPage from "./topBar/SignInPage";
+import type { SignUpCredentials } from "./topBar/SignUpPage";
+import SignUpPage from "./topBar/SignUpPage";
+import ProfilePage from "./topBar/ProfilePage";
+import * as Utils from "../utils/helpers";
+import { useServerListener } from "../hooks/useServerListener";
 import { observer } from "mobx-react-lite";
-import { useMst } from "./stores/RootStore";
-import { websocketUrl } from "./urls";
-import AdminPanel from "./components/topBar/AdminPanel";
-import { getLoggedUserData, login, register } from "./api/users";
-import ToastContainer, { DEFAULT_TOASTER_PROPS } from "./utils/toastContainer";
-import RendererCanvas from "./components/RendererCanvas/RendererCanvas";
-import { getUserCookie, removeUserCookie } from "./utils/cookie";
+import { useMst } from "../stores/RootStore";
+import { websocketUrl } from "../urls";
+import AdminPanel from "./topBar/AdminPanel";
+import { getLoggedUserData, login, register } from "../api/users";
+import ToastContainer, { DEFAULT_TOASTER_PROPS } from "../utils/toastContainer";
+import RendererCanvas from "./RendererCanvas/RendererCanvas";
+import { getUserCookie, removeUserCookie } from "../utils/cookie";
 
 const useStyles = makeStyles({
   app: { height: "100vh", display: "flex", flexDirection: "column" }, // Use viewport height

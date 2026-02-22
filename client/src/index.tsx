@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom/client";
-import Main from "@/Main";
+import Main from "@/components/Main";
 
 window.addEventListener(
   "keydown",
