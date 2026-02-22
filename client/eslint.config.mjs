@@ -64,9 +64,6 @@ export default defineConfig([
           ignoreProperties: true,
         },
       ],
-      "@eslint-react/use-state": "off",
-      "@eslint-react/naming-convention/ref-name": "off",
-      "@eslint-react/set-state-in-effect": "off",
     },
   },
 ]);

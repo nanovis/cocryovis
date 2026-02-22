@@ -19,10 +19,10 @@ import {
   Spinner,
 } from "@fluentui/react-components";
 import { Hourglass24Regular } from "@fluentui/react-icons";
-import React from "react";
 import globalStyles from "../../../globalStyles";
 import { observer } from "mobx-react-lite";
 import type { TaskQueueItem } from "@/stores/userState/Status";
+import { useState } from "react";
 
 const columnsDef: TableColumnDefinition<TaskQueueItem>[] = [
   createTableColumn<TaskQueueItem>({
@@ -55,9 +55,9 @@ const TaskQueueTable = observer(({ taskQueueItems }: Props) => {
   const globalClasses = globalStyles();
 
   const [columns] =
-    React.useState<TableColumnDefinition<TaskQueueItem>[]>(columnsDef);
+    useState<TableColumnDefinition<TaskQueueItem>[]>(columnsDef);
 
-  const [columnSizingOptions] = React.useState<TableColumnSizingOptions>({
+  const [columnSizingOptions] = useState<TableColumnSizingOptions>({
     taskStatus: {
       idealWidth: 40,
       minWidth: 40,

@@ -57,7 +57,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
   const user = rootStore.user;
   const uiState = rootStore.uiState;
 
-  const mouseOverCanvas = useRef(false);
+  const mouseOverCanvasRef = useRef(false);
 
   const connectionStatus = useServerListener(websocketUrl, user);
 
@@ -145,7 +145,7 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
   };
 
   const globalKeyDown = useEffectEvent((event: KeyboardEvent) => {
-    if (mouseOverCanvas.current) {
+    if (mouseOverCanvasRef.current) {
       switch (event.key.toLowerCase()) {
         case "f":
           uiState.visualizedVolume?.setFullscreen(
@@ -209,8 +209,8 @@ const App = observer(({ toggleTheme }: { toggleTheme: () => void }) => {
           onContextMenu={(e) => {
             e.preventDefault();
           }}
-          onMouseEnter={() => (mouseOverCanvas.current = true)}
-          onMouseLeave={() => (mouseOverCanvas.current = false)}
+          onMouseEnter={() => (mouseOverCanvasRef.current = true)}
+          onMouseLeave={() => (mouseOverCanvasRef.current = false)}
         >
           {uiState.openSignInPage && <SignInPage onSignIn={handleSignIn} />}
           {uiState.openSignUpPage && <SignUpPage onSignUp={handleSignUp} />}

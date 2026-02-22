@@ -64,7 +64,7 @@ const ComboboxSearch = <
   const [visibleTooltip, setVisibleTooltip] = useState(false);
 
   // Prevents on close effect from being executed after selecting an option
-  const blockClosed = useRef(false);
+  const blockClosedRef = useRef(false);
 
   const optionToTextRef = useRef(optionToText);
 
@@ -73,6 +73,7 @@ const ComboboxSearch = <
   }, [optionToText]);
 
   useEffect(() => {
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     setSearchQuery(
       selectedOption ? optionToTextRef.current(selectedOption) : ""
     );
@@ -93,7 +94,7 @@ const ComboboxSearch = <
       return;
     }
     onOptionSelect(data.optionValue);
-    blockClosed.current = true;
+    blockClosedRef.current = true;
   };
 
   const handleOpenChange = (
@@ -106,10 +107,10 @@ const ComboboxSearch = <
     setOpen(data.open);
     if (data.open && selectedOption) {
       setSearchQuery("");
-    } else if (!data.open && !blockClosed.current && selectedOption) {
+    } else if (!data.open && !blockClosedRef.current && selectedOption) {
       setSearchQuery(optionToTextRef.current(selectedOption));
     }
-    blockClosed.current = false;
+    blockClosedRef.current = false;
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {

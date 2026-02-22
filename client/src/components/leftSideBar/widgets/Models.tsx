@@ -46,14 +46,14 @@ const Models = observer(({ open, close }: Props) => {
 
   const globalClasses = globalStyles();
 
-  const [isCreateModelDialogOpen, setCreateModelDialogOpen] = useState(false);
+  const [isCreateModelDialogOpen, setIsCreateModelDialogOpen] = useState(false);
   const [modelName, setModelName] = useState("");
   const [modelDescription, setModelDescription] = useState("");
   const [deleteModelDialogOpen, setDeleteModelDialogOpen] = useState(false);
   const [deleteCheckpointDialogOpen, setDeleteCheckpointDialogOpen] =
     useState(false);
-  const [isLoadingModels, setLoadingModels] = useState(false);
-  const [isLoadingCheckpoints, setLoadingCheckpoints] = useState(false);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [isLoadingCheckpoints, setIsLoadingCheckpoints] = useState(false);
 
   // Ref for checkpoint file input
   const checkpointFileRef = useRef<HTMLInputElement | null>(null);
@@ -63,11 +63,11 @@ const Models = observer(({ open, close }: Props) => {
   };
 
   const openCreateModelDialog = () => {
-    setCreateModelDialogOpen(true);
+    setIsCreateModelDialogOpen(true);
   };
 
   const closeCreateModelDialog = () => {
-    setCreateModelDialogOpen(false);
+    setIsCreateModelDialogOpen(false);
   };
 
   const handleCloseModelDialog = () => {
@@ -88,7 +88,7 @@ const Models = observer(({ open, close }: Props) => {
       }
       projectModels.setCreateModelActiveRequest(true);
       await projectModels.createModel(modelName, modelDescription);
-      setCreateModelDialogOpen(false);
+      setIsCreateModelDialogOpen(false);
     } catch (error) {
       console.error("Error:", error);
       const toastContainer = new ToastContainer();
@@ -199,25 +199,25 @@ const Models = observer(({ open, close }: Props) => {
 
   const refreshModels = async () => {
     try {
-      setLoadingModels(true);
+      setIsLoadingModels(true);
       await projectModels?.refreshModels();
     } catch (error) {
       console.error("Error:", error);
     } finally {
-      setLoadingModels(false);
+      setIsLoadingModels(false);
     }
   };
 
   const refreshCheckpoints = async () => {
     try {
-      setLoadingCheckpoints(true);
+      setIsLoadingCheckpoints(true);
       await modelCheckpoints?.refreshCheckpoints();
     } catch (error) {
       console.error("Error:", error);
       const toastContainer = new ToastContainer();
       toastContainer.error(getErrorMessage(error));
     } finally {
-      setLoadingCheckpoints(false);
+      setIsLoadingCheckpoints(false);
     }
   };
 

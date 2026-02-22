@@ -178,18 +178,16 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
     [users, selectedIds]
   );
 
-  const handleScroll = () => {
-    const element = scrollRef.current;
-    if (element) {
-      const scrollTop = element.scrollTop;
-      const scrollHeight = element.scrollHeight;
-      const clientHeight = element.clientHeight;
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
 
-      setIsScrolled(scrollTop > 0);
+    const nextScrolled = el.scrollTop > 0;
+    const nextAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight;
 
-      setIsAtBottom(scrollTop + clientHeight >= scrollHeight);
-    }
-  };
+    setIsScrolled((p) => (p !== nextScrolled ? nextScrolled : p));
+    setIsAtBottom((p) => (p !== nextAtBottom ? nextAtBottom : p));
+  }, []);
 
   useEffect(() => {
     if (!open || !activeProject) return;
@@ -225,8 +223,17 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
   }, [open, activeProject, setOpen]);
 
   useEffect(() => {
-    handleScroll();
-  }, [usersWithAccess]);
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => {
+      updateScrollState();
+    });
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [updateScrollState]);
 
   const onOptionSelect = useCallback(
     (_ev: Event | SyntheticEvent, data: TagPickerOnOptionSelectData) => {
@@ -530,7 +537,7 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
                     isScrolled && "scrolled",
                     !isAtBottom && "bottom-highlighted"
                   )}
-                  onScroll={handleScroll}
+                  onScroll={updateScrollState}
                   ref={scrollRef}
                 >
                   <Table

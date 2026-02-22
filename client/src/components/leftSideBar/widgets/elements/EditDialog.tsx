@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogSurface,
@@ -35,13 +35,6 @@ const EditDialog = ({
   const [name, setName] = useState(defaultName);
   const [description, setDescription] = useState(defaultDescription);
   const [inProgress, setInProgress] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setName(defaultName);
-      setDescription(defaultDescription);
-    }
-  }, [open, defaultName, defaultDescription]);
 
   const handleEdit = async () => {
     setInProgress(true);

@@ -139,12 +139,13 @@ const Volume = observer(({ open, close }: Props) => {
 
   const classes = useStyles();
   const globalClasses = globalStyles();
-  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
-  const [isDeleteResultDialogOpen, setDeleteResultDialogOpen] = useState(false);
-  const [isLoadingResults, setLoadingResults] = useState(false);
-  const [isLoadingVolumes, setLoadingVolumes] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteResultDialogOpen, setIsDeleteResultDialogOpen] =
+    useState(false);
+  const [isLoadingResults, setIsLoadingResults] = useState(false);
+  const [isLoadingVolumes, setIsLoadingVolumes] = useState(false);
   const [isUploadingData, setIsUploadingData] = useState(false);
   const [isTiltSeriesDialogOpen, setIsTiltSeriesDialogOpen] = useState(false);
   const [isUploadVolumeDialogOpen, setIsUploadVolumeDialogOpen] =
@@ -163,31 +164,31 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const editVolumeDialogOpen = () => {
-    setEditDialogOpen(true);
+    setIsEditDialogOpen(true);
   };
 
   const editVolumeDialogClose = () => {
-    setEditDialogOpen(false);
+    setIsEditDialogOpen(false);
   };
 
   const createVolume = () => {
-    setCreateDialogOpen(true);
+    setIsCreateDialogOpen(true);
   };
 
   const openDeleteDialog = () => {
-    setDeleteDialogOpen(true);
+    setIsDeleteDialogOpen(true);
   };
 
   const closeDeleteDialog = () => {
-    setDeleteDialogOpen(false);
+    setIsDeleteDialogOpen(false);
   };
 
   const closeCreateDialog = () => {
-    setCreateDialogOpen(false);
+    setIsCreateDialogOpen(false);
   };
 
   const handleCloseCheckpointDialog = () => {
-    setDeleteResultDialogOpen(false);
+    setIsDeleteResultDialogOpen(false);
   };
 
   const handleEditDialog = async (name: string, description: string) => {
@@ -562,14 +563,14 @@ const Volume = observer(({ open, close }: Props) => {
 
   const refreshVolumes = async () => {
     try {
-      setLoadingVolumes(true);
+      setIsLoadingVolumes(true);
       await projectVolumes?.refreshVolumes();
     } catch (error) {
       console.error("Error:", error);
       const toastContainer = new ToastContainer();
       toastContainer.error(Utils.getErrorMessage(error));
     } finally {
-      setLoadingVolumes(false);
+      setIsLoadingVolumes(false);
     }
   };
 
@@ -713,7 +714,7 @@ const Volume = observer(({ open, close }: Props) => {
     try {
       volumeResults.setRemoveResultActiveRequest(true);
       await volumeResults.removeResult(selectedResultId);
-      setDeleteResultDialogOpen(false);
+      setIsDeleteResultDialogOpen(false);
       toastContainer.success("Result deleted!");
     } catch (error) {
       console.error("Error", error);
@@ -724,14 +725,14 @@ const Volume = observer(({ open, close }: Props) => {
 
   const refreshVolumeResultsData = async () => {
     try {
-      setLoadingResults(true);
+      setIsLoadingResults(true);
       await volumeResults?.refreshResults();
     } catch (error) {
       console.error(error);
       const toastContainer = new ToastContainer();
       toastContainer.error(Utils.getErrorMessage(error));
     } finally {
-      setLoadingResults(false);
+      setIsLoadingResults(false);
     }
   };
 
@@ -1619,7 +1620,7 @@ const Volume = observer(({ open, close }: Props) => {
                   selectedVolume && globalClasses.actionButtonDelete
                 )}
                 disabled={!selectedResultId || !activeProject?.hasWriteAccess}
-                onClick={() => setDeleteResultDialogOpen(true)}
+                onClick={() => setIsDeleteResultDialogOpen(true)}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
                   <Delete20Regular />

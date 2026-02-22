@@ -19,26 +19,26 @@ export function useCanvasControls({
   onWheel,
   syncToFrame = true,
 }: Props) {
-  const isPrimaryDown = useRef(false);
+  const isPrimaryDownRef = useRef(false);
   const frameRef = useRef<number | null>(null);
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleMouseDown = useCallback(
     (event: MouseEvent<HTMLCanvasElement>) => {
       if (event.button !== 0) return;
-      isPrimaryDown.current = true;
+      isPrimaryDownRef.current = true;
     },
     []
   );
 
   const handleMouseUp = useCallback((event: MouseEvent<HTMLCanvasElement>) => {
     if (event.button !== 0) return;
-    isPrimaryDown.current = false;
+    isPrimaryDownRef.current = false;
   }, []);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent<HTMLCanvasElement>) => {
-      if (!isPrimaryDown.current) return;
+      if (!isPrimaryDownRef.current) return;
 
       const canvas = canvasRef.current;
       if (!canvas) return;

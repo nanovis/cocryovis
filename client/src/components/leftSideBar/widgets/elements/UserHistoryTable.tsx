@@ -28,11 +28,11 @@ import {
   ErrorCircle24Filled,
   Hourglass24Regular,
 } from "@fluentui/react-icons";
-import React from "react";
 import globalStyles from "../../../globalStyles";
 import { observer } from "mobx-react-lite";
 import type { TaskHistoryItem } from "../../../../stores/userState/Status";
 import * as Utils from "../../../../utils/helpers";
+import { useState } from "react";
 
 const useStyles = makeStyles({
   dataIcon: {
@@ -88,41 +88,40 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
   const globalClasses = globalStyles();
 
   const [columns] =
-    React.useState<TableColumnDefinition<TaskHistoryItem>[]>(columnsDef);
+    useState<TableColumnDefinition<TaskHistoryItem>[]>(columnsDef);
 
-  const [columnSizingOptions] =
-    React.useState<TableColumnSizingOptions>({
-      taskStatus: {
-        idealWidth: 40,
-        defaultWidth: 40,
-        minWidth: 40,
-      },
-      taskType: {
-        minWidth: 10,
-        idealWidth: 100,
-        defaultWidth: 100,
-      },
-      data: {
-        minWidth: 10,
-      },
-      enqueuedTime: {
-        minWidth: 10,
-        idealWidth: 97,
-      },
-      startTime: {
-        minWidth: 10,
-        idealWidth: 75,
-      },
-      endTime: {
-        minWidth: 10,
-        idealWidth: 75,
-      },
-      log: {
-        minWidth: 20,
-        defaultWidth: 20,
-        idealWidth: 20,
-      },
-    });
+  const [columnSizingOptions] = useState<TableColumnSizingOptions>({
+    taskStatus: {
+      idealWidth: 40,
+      defaultWidth: 40,
+      minWidth: 40,
+    },
+    taskType: {
+      minWidth: 10,
+      idealWidth: 100,
+      defaultWidth: 100,
+    },
+    data: {
+      minWidth: 10,
+    },
+    enqueuedTime: {
+      minWidth: 10,
+      idealWidth: 97,
+    },
+    startTime: {
+      minWidth: 10,
+      idealWidth: 75,
+    },
+    endTime: {
+      minWidth: 10,
+      idealWidth: 75,
+    },
+    log: {
+      minWidth: 20,
+      defaultWidth: 20,
+      idealWidth: 20,
+    },
+  });
 
   const { getRows, columnSizing_unstable, tableRef } =
     useTableFeatures<TaskHistoryItem>(

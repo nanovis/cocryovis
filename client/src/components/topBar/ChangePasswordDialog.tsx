@@ -55,9 +55,9 @@ const ChangePasswordDialog = observer(({ open, onClose }: Props) => {
   const { user } = useMst();
 
   const classes = useStyles();
-  const [matchingPasswords, setIsMatchingPasswords] = useState(false);
+  const [matchingPasswords, setMatchingPasswords] = useState(false);
   function resetMatchingPassword() {
-    setIsMatchingPasswords(false);
+    setMatchingPasswords(false);
     onClose();
   }
 

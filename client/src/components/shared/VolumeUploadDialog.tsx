@@ -21,7 +21,7 @@ import {
   Textarea,
   Image,
 } from "@fluentui/react-components";
-import { useState } from "react";
+import { useState, type ChangeEvent, type DragEvent } from "react";
 import * as Utils from "../../utils/helpers";
 import {
   ArrowResetFilled,
@@ -33,7 +33,6 @@ import {
   type VolumeDescriptor,
 } from "@/utils/volumeDescriptor";
 import { volumeSettingsFromJson } from "@/utils/volumeDescriptor";
-import React from "react";
 import type { UploadDialogInstance } from "@/stores/uiState/UploadDialog";
 import {
   endianOptions,
@@ -112,11 +111,11 @@ const VolumeUploadDialog = observer(
 
     const [isFileOver, setIsFileOver] = useState(false);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
       onFilesUploaded(event.target.files).catch(console.error);
     };
 
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
       onFilesUploaded(event.dataTransfer.files).catch(console.error);
     };
@@ -215,16 +214,16 @@ const VolumeUploadDialog = observer(
       fileUploadInputs.setPendingFile(mrcFile);
     };
 
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
     };
 
-    const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
       setIsFileOver(true);
       event.preventDefault();
     };
 
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
       setIsFileOver(false);
       event.preventDefault();
     };

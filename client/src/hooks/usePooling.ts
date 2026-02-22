@@ -11,31 +11,31 @@ export function usePolling(
   options: UsePollingOptions = {}
 ) {
   const optionsRef = useRef(options);
-  const savedCallback = useRef(callback);
-  const isRunning = useRef(false);
+  const savedCallbackRef = useRef(callback);
+  const isRunningRef = useRef(false);
 
   useEffect(() => {
     optionsRef.current = options;
   }, [options]);
 
   useEffect(() => {
-    savedCallback.current = callback;
+    savedCallbackRef.current = callback;
   }, [callback]);
 
   useEffect(() => {
     if (delay === null) return;
 
     const tick = async () => {
-      if (isRunning.current) return;
-      isRunning.current = true;
+      if (isRunningRef.current) return;
+      isRunningRef.current = true;
       try {
-        await savedCallback.current();
+        await savedCallbackRef.current();
       } catch (error) {
         if (optionsRef.current.onError) {
           optionsRef.current.onError(error);
         }
       } finally {
-        isRunning.current = false;
+        isRunningRef.current = false;
       }
     };
 
