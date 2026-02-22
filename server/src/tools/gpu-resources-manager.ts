@@ -10,20 +10,30 @@ export default class GPUResourcesManager {
 
   static async create(): Promise<GPUResourcesManager> {
     const manager = new GPUResourcesManager();
-    const gpuDataJson = await Utils.runPythonScriptWithOutput(
-      "get-gpu-data.py",
-      []
-    );
-    manager.gpuData = JSON.parse(gpuDataJson) as GPUData[];
-    if (manager.gpuData.length === 0) {
-      console.warn("No GPU devices found, GPU functionality will be disabled.");
-    } else {
-      console.log("GPU Data:", manager.gpuData);
+    try {
+      const gpuDataJson = await Utils.runPythonScriptWithOutput(
+        "get-gpu-data.py",
+        []
+      );
+      manager.gpuData = JSON.parse(gpuDataJson) as GPUData[];
+      if (manager.gpuData.length === 0) {
+        console.warn(
+          "No GPU devices found, GPU functionality will be disabled."
+        );
+      } else {
+        console.log("GPU Data:", manager.gpuData);
+      }
+      manager.availableGpus = new Set(
+        manager.gpuData.map((gpu) => gpu.device_id)
+      );
+      return manager;
+    } catch (error) {
+      console.error(
+        "Error initializing GPUResourcesManager, GPU functionality will be disabled:",
+        error
+      );
+      return manager;
     }
-    manager.availableGpus = new Set(
-      manager.gpuData.map((gpu) => gpu.device_id)
-    );
-    return manager;
   }
 
   get totalGPUs() {
