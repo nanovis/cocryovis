@@ -454,7 +454,7 @@ const OptionsTab = observer(
           input instanceof BooleanInputField ? (
             <BooleanInputValidatedField
               // Static list of inputs.
-              // eslint-disable-next-line react-x/no-array-index-key
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               key={index}
               input={input}
               labelPosition="before"
@@ -463,7 +463,7 @@ const OptionsTab = observer(
           ) : (
             <NumberInputValidatedField
               // Static list of inputs.
-              // eslint-disable-next-line react-x/no-array-index-key
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               key={index}
               input={input}
               disabled={disabled}

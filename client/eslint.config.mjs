@@ -2,11 +2,9 @@
 
 import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+import eslintReact from "@eslint-react/eslint-plugin";
+import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 
 export default defineConfig([
@@ -25,14 +23,11 @@ export default defineConfig([
       js.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
-      reactHooks.configs.flat["recommended-latest"],
+      eslintReact.configs["recommended-typescript"],
       reactRefresh.configs.vite,
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
     ],
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
         projectService: true,
@@ -62,7 +57,6 @@ export default defineConfig([
       "prefer-rest-params": "off",
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/no-misused-promises": "off",
-      "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-inferrable-types": [
         "error",
         {
@@ -70,6 +64,9 @@ export default defineConfig([
           ignoreProperties: true,
         },
       ],
+      "@eslint-react/use-state": "off",
+      "@eslint-react/naming-convention/ref-name": "off",
+      "@eslint-react/set-state-in-effect": "off",
     },
   },
 ]);

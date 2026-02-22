@@ -78,7 +78,8 @@ export default function useRenderer(
       rendererRef.current?.destroy();
       rendererRef.current = null;
     };
-  }, [canvasRef]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [canvasRef]);
 
   return {
     rendererRef,
