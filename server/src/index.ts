@@ -80,13 +80,6 @@ const startServer = async () => {
 
   app.use(cors(corsOptions));
 
-  // config
-  app.set("view engine", "ejs");
-  app.set("views", [
-    path.join(".", "views"),
-    path.join(".", "views", "project"),
-  ]);
-
   console.log("Running environment: ", app.get("env"));
 
   // middleware
@@ -186,7 +179,7 @@ const startServer = async () => {
 
   app.use("/logs", express.static("logs", { index: false }));
 
-  let server: HTTPServer | HTTPSServer | null = null;
+  let server: HTTPServer | HTTPSServer | undefined;
 
   if (useHttps) {
     console.log("Initializing https server");
