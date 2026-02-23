@@ -16,7 +16,7 @@ import {
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, description: string) => void;
+  onCreate: (name: string, description: string) => void | Promise<void>;
   isActive: boolean;
 }
 
@@ -24,11 +24,11 @@ const CreateVolumeDialog = ({ open, onClose, onCreate, isActive }: Props) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleCreate = () => {
-    onCreate(name, description);
+  async function handleCreate() {
+    await onCreate(name, description);
     setName("");
     setDescription("");
-  };
+  }
 
   return (
     <Dialog open={open}>
@@ -73,7 +73,10 @@ const CreateVolumeDialog = ({ open, onClose, onCreate, isActive }: Props) => {
                 <Button appearance="secondary" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button appearance="primary" onClick={handleCreate}>
+                <Button
+                  appearance="primary"
+                  onClick={() => void handleCreate()}
+                >
                   Create
                 </Button>
               </div>

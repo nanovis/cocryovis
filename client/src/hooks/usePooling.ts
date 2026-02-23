@@ -43,7 +43,9 @@ export function usePolling(
       void tick();
     }
 
-    const id = setInterval(tick, delay);
+    const id = setInterval(() => {
+      void tick();
+    }, delay);
     return () => clearInterval(id);
   }, [delay]);
 }

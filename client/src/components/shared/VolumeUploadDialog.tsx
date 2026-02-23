@@ -658,7 +658,7 @@ const VolumeUploadDialog = observer(
                       <Button
                         appearance="primary"
                         style={{ marginLeft: "10px" }}
-                        onClick={fetchCryoETMetadata}
+                        onClick={() => void fetchCryoETMetadata()}
                         disabled={
                           uploadDialogStore.isBusy ||
                           cryoETUploadInputs.cryoETId === undefined
@@ -743,7 +743,7 @@ const VolumeUploadDialog = observer(
                 </Button>
                 <Button
                   appearance="primary"
-                  onClick={confirmEffect}
+                  onClick={() => void confirmEffect()}
                   disabled={
                     uploadDialogStore.isBusy || !uploadDialogStore.isValid
                   }

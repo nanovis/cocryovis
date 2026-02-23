@@ -667,17 +667,13 @@ const ShareProject = observer(({ open, setOpen }: Props) => {
             ) : (
               <Button
                 disabled={pageBusy}
-                onClick={async () => {
+                onClick={() => {
                   if (!activeProject) {
                     return;
                   }
-                  try {
-                    await navigator.clipboard.writeText(
-                      activeProject.getProjectUrl()
-                    );
-                  } catch (error) {
-                    console.error("Failed to copy link: ", error);
-                  }
+                  navigator.clipboard
+                    .writeText(activeProject.getProjectUrl())
+                    .catch(console.error);
                 }}
                 appearance="secondary"
                 icon={<LinkRegular />}

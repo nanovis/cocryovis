@@ -339,7 +339,7 @@ const Models = observer(({ open, close }: Props) => {
                   />
                 }
                 disabled={isPageBusy()}
-                onClick={refreshModels}
+                onClick={() => void refreshModels()}
               />
             </Tooltip>
           </div>
@@ -412,7 +412,7 @@ const Models = observer(({ open, close }: Props) => {
 
           <input
             type="file"
-            onChange={handleCheckpointFileChange}
+            onChange={(e) => void handleCheckpointFileChange(e)}
             accept=".ckpt, .zip"
             multiple
             ref={checkpointFileRef}
@@ -426,7 +426,7 @@ const Models = observer(({ open, close }: Props) => {
             }
             open={deleteModelDialogOpen}
             onClose={handleCloseModelDialog}
-            onConfirm={handleRemoveModel}
+            onConfirm={() => void handleRemoveModel()}
             isActive={!!projectModels?.deleteModelActiveRequest}
           />
 
@@ -477,7 +477,7 @@ const Models = observer(({ open, close }: Props) => {
                   />
                 }
                 disabled={!selectedModelId || isPageBusy()}
-                onClick={refreshCheckpoints}
+                onClick={() => void refreshCheckpoints()}
               />
             </Tooltip>
           </div>
@@ -496,7 +496,7 @@ const Models = observer(({ open, close }: Props) => {
                 appearance="secondary"
                 className={globalClasses.actionButton}
                 disabled={!selectedCheckpointId}
-                onClick={handleDownloadCheckpoint}
+                onClick={() => void handleDownloadCheckpoint()}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
                   <ArrowDownload20Regular />
@@ -541,7 +541,7 @@ const Models = observer(({ open, close }: Props) => {
             }
             open={deleteCheckpointDialogOpen}
             onClose={handleCloseCheckpointDialog}
-            onConfirm={handleRemoveCheckpoint}
+            onConfirm={() => void handleRemoveCheckpoint()}
             isActive={!!modelCheckpoints?.deleteModelCheckpointActiveRequset}
           />
         </div>
@@ -551,7 +551,7 @@ const Models = observer(({ open, close }: Props) => {
       <CreateModelDialog
         open={isCreateModelDialogOpen}
         onClose={closeCreateModelDialog}
-        onConfirm={handleCreateModel}
+        onConfirm={() => void handleCreateModel()}
         modelName={modelName}
         setModelName={setModelName}
         modelDescription={modelDescription}

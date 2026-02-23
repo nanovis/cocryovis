@@ -51,12 +51,11 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/no-empty-object-type": "off",
       "prefer-rest-params": "off",
       "@typescript-eslint/array-type": "off",
-      "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-inferrable-types": [
         "error",
         {

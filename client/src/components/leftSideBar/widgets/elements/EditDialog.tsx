@@ -84,7 +84,7 @@ const EditDialog = ({
                 </Button>
                 <Button
                   appearance="primary"
-                  onClick={handleEdit}
+                  onClick={() => void handleEdit()}
                   disabled={!open}
                 >
                   Update

@@ -175,7 +175,6 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const formData = new FormData();
       for (const [i, volume] of volumeData.entries()) {
-        
         const blob = new Blob([new Uint8Array(volume)], {
           type: "application/octet-stream",
         });
@@ -541,7 +540,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                 appearance="primary"
                 className={globalClasses.actionButton}
                 disabled={!canDoInference() || !activeProject?.hasWriteAccess}
-                onClick={startInferenceLocal}
+                onClick={() => void startInferenceLocal()}
                 style={{ flex: 1 }}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
@@ -567,7 +566,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                 appearance="secondary"
                 className={globalClasses.actionButton}
                 disabled={!canDoInference() || !activeProject?.hasWriteAccess}
-                onClick={startInference}
+                onClick={() => void startInference()}
                 style={{ flex: 1 }}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
@@ -772,7 +771,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
                 disabled={
                   !modelTraining.canDoTraining || !activeProject?.hasWriteAccess
                 }
-                onClick={modelTraining.startTraining}
+                onClick={() => void modelTraining.startTraining()}
                 style={{ flexGrow: 1 }}
               >
                 <div className={globalClasses.actionButtonIconContainer}>

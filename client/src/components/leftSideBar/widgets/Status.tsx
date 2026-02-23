@@ -205,7 +205,7 @@ const Status = observer(({ open, close }: Props) => {
                     maxPageNumber={user.status.maxPageNumber}
                     ListLenght={user.status.taskHistoryLenght}
                     setPageNumberFunction={(pageNumber) =>
-                      setPageNumber(pageNumber)
+                      void setPageNumber(pageNumber)
                     }
                     showSpinner={user.status.activeRequests > 0}
                   ></Paganation>

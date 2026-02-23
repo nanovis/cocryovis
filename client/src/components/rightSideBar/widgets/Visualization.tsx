@@ -181,7 +181,7 @@ const TFUploadElement = ({
       </Tooltip>
       <input
         type="file"
-        onChange={(event) => handleTFUpload(event, settingsInstance)}
+        onChange={(event) => void handleTFUpload(event, settingsInstance)}
         accept=".json"
         ref={fileInputRef}
         className={globalClasses.hiddenInput}
@@ -433,7 +433,7 @@ const Visualization = observer(({ open, close }: Props) => {
               relationship={"label"}
             >
               <Button
-                onClick={handleSaveAnnotations}
+                onClick={() => void handleSaveAnnotations()}
                 className={classes.Button}
                 disabled={
                   annotationsActionsDisabled() ||

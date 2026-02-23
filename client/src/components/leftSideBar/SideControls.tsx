@@ -167,7 +167,7 @@ const SideControls = observer(() => {
         BodyText={"Do you really want to delete this project?"}
         open={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={handleConfirmDelete}
+        onConfirm={() => void handleConfirmDelete()}
         isActive={user.userProjects.projectDeleteActiveRequest}
       />
     </>

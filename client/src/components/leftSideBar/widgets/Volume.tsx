@@ -910,7 +910,7 @@ const Volume = observer(({ open, close }: Props) => {
                   />
                 }
                 disabled={isPageBusy()}
-                onClick={refreshVolumes}
+                onClick={() => void refreshVolumes()}
               />
             </Tooltip>
           </div>
@@ -961,7 +961,7 @@ const Volume = observer(({ open, close }: Props) => {
                 )}
                 disabled={!hasRawData() || isPageBusy()}
                 onClick={() =>
-                  handleDownloadVolumeData(
+                  void handleDownloadVolumeData(
                     "RawVolumeData",
                     selectedVolume?.rawData?.id
                   )
@@ -988,7 +988,7 @@ const Volume = observer(({ open, close }: Props) => {
                 )}
                 disabled={!hasRawData() || isPageBusy()}
                 onClick={() =>
-                  handleVisualisationRequest(
+                  void handleVisualisationRequest(
                     "RawVolumeData",
                     selectedVolume?.rawData?.id,
                     selectedVolume
@@ -1103,7 +1103,7 @@ const Volume = observer(({ open, close }: Props) => {
                 icon={<ProjectionScreenText24Regular />}
                 disabled={!projectVolumes?.canVisualizeSparseLabels}
                 onClick={() =>
-                  visualizeLabelVolumes(
+                  void visualizeLabelVolumes(
                     selectedVolume,
                     "SparseLabeledVolumeData"
                   )
@@ -1158,11 +1158,11 @@ const Volume = observer(({ open, close }: Props) => {
                 />
                 <Switch
                   checked={visualizedVolume?.labelEditingMode ?? false}
-                  onChange={async (_, data) => {
+                  onChange={(_, data) => {
                     if (!visualizedVolume) {
                       return;
                     }
-                    await visualizedVolume.setLabelEditingMode(data.checked);
+                    void visualizedVolume.setLabelEditingMode(data.checked);
                   }}
                   disabled={!canActivateEditingMode()}
                 />
@@ -1196,7 +1196,7 @@ const Volume = observer(({ open, close }: Props) => {
 
           <input
             type="file"
-            onChange={handleSparseLabelFileChange}
+            onChange={(e) => void handleSparseLabelFileChange(e)}
             accept=".raw, .json, .zip"
             multiple
             ref={sparseLabelFileRef}
@@ -1214,19 +1214,19 @@ const Volume = observer(({ open, close }: Props) => {
                     visualizedVolume.manualLabelIndex === index
                   }
                   onDownload={() =>
-                    handleDownloadVolumeData(
+                    void handleDownloadVolumeData(
                       "SparseLabeledVolumeData",
                       selectedVolume.sparseVolumeArray[index].id
                     )
                   }
                   onVisualize={() =>
-                    handleVisualisationRequest(
+                    void handleVisualisationRequest(
                       "SparseLabeledVolumeData",
                       selectedVolume.sparseVolumeArray[index].id,
                       selectedVolume.sparseVolumeArray[index]
                     )
                   }
-                  onDelete={() =>
+                  onDelete={async () =>
                     handleVolumeDataConfirmDelete(
                       "SparseLabeledVolumeData",
                       selectedVolume.sparseVolumeArray[index].id
@@ -1241,8 +1241,8 @@ const Volume = observer(({ open, close }: Props) => {
                   color={
                     selectedVolume.sparseVolumeArray[index].color ?? undefined
                   }
-                  onColorChange={async (color) => {
-                    await selectedVolume.sparseVolumeArray[index].setColor(
+                  onColorChange={(color) => {
+                    void selectedVolume.sparseVolumeArray[index].setColor(
                       color,
                       index
                     );
@@ -1377,7 +1377,7 @@ const Volume = observer(({ open, close }: Props) => {
                     4 ||
                   !activeProject?.hasWriteAccess
                 }
-                onClick={queuePseudoLabelGeneration}
+                onClick={() => void queuePseudoLabelGeneration()}
               />
             </Tooltip>
             <Tooltip
@@ -1421,7 +1421,7 @@ const Volume = observer(({ open, close }: Props) => {
                 icon={<ProjectionScreenText24Regular />}
                 disabled={!projectVolumes?.canVisualizePseudoLabels}
                 onClick={() =>
-                  visualizeLabelVolumes(
+                  void visualizeLabelVolumes(
                     selectedVolume,
                     "PseudoLabeledVolumeData"
                   )
@@ -1456,7 +1456,7 @@ const Volume = observer(({ open, close }: Props) => {
 
           <input
             type="file"
-            onChange={handlePseudoLabelFileChange}
+            onChange={(e) => void handlePseudoLabelFileChange(e)}
             accept=".raw, .json, .zip"
             multiple
             ref={pseudoLabelFileRef}
@@ -1470,19 +1470,19 @@ const Volume = observer(({ open, close }: Props) => {
                 <ItemTitleDownloadDelete
                   title={selectedVolume.pseudoVolumeArray[index].name}
                   onDownload={() =>
-                    handleDownloadVolumeData(
+                    void handleDownloadVolumeData(
                       "PseudoLabeledVolumeData",
                       selectedVolume.pseudoVolumeArray[index].id
                     )
                   }
                   onVisualize={() =>
-                    handleVisualisationRequest(
+                    void handleVisualisationRequest(
                       "PseudoLabeledVolumeData",
                       selectedVolume.pseudoVolumeArray[index].id,
                       selectedVolume.pseudoVolumeArray[index]
                     )
                   }
-                  onDelete={() =>
+                  onDelete={async () =>
                     handleVolumeDataConfirmDelete(
                       "PseudoLabeledVolumeData",
                       selectedVolume.pseudoVolumeArray[index].id
@@ -1561,7 +1561,7 @@ const Volume = observer(({ open, close }: Props) => {
                   />
                 }
                 disabled={resultActionsDisabled()}
-                onClick={() => refreshVolumeResultsData()}
+                onClick={() => void refreshVolumeResultsData()}
               />
             </Tooltip>
           </div>
@@ -1573,7 +1573,7 @@ const Volume = observer(({ open, close }: Props) => {
                 globalClasses.actionButton,
                 classes.uploadDownloadButtom
               )}
-              onClick={handleDownloadResultFiles}
+              onClick={() => void handleDownloadResultFiles()}
               disabled={!selectedResultId}
             >
               <div className={globalClasses.actionButtonIconContainer}>
@@ -1594,7 +1594,7 @@ const Volume = observer(({ open, close }: Props) => {
                   classes.visualizeButton
                 )}
                 disabled={!selectedResultId}
-                onClick={handleResultVisualisationRequest}
+                onClick={() => void handleResultVisualisationRequest()}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
                   <ProjectionScreen20Regular />
@@ -1638,7 +1638,7 @@ const Volume = observer(({ open, close }: Props) => {
         }
         open={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
-        onConfirm={confirmDeleteVolume}
+        onConfirm={() => void confirmDeleteVolume()}
         isActive={!!projectVolumes?.removeVolumeActiveRequest}
       />
 
@@ -1666,7 +1666,7 @@ const Volume = observer(({ open, close }: Props) => {
         }
         open={isDeleteResultDialogOpen}
         onClose={handleCloseCheckpointDialog}
-        onConfirm={removeResult}
+        onConfirm={() => void removeResult()}
         isActive={!!volumeResults?.removeResultActiveRequest}
       />
     </div>
