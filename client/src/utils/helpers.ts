@@ -36,7 +36,7 @@ export async function sendApiRequest(
     let errorMsg: string | undefined;
 
     if (isJson) {
-      const errorContents = await response.json() as { message?: string };
+      const errorContents = (await response.json()) as { message?: string };
       errorMsg = errorContents.message;
     } else {
       errorMsg = await response.text();
@@ -254,8 +254,8 @@ export function pickDefaultTF(
   currentIndex: number,
   blank = false
 ): { tfName: string; tfDefinition: TransferFunction } {
-  let tfName = null;
-  let tfDefinition = null;
+  let tfName;
+  let tfDefinition;
   if (blank) {
     tfName = `${DEFAULT_TF.prefix}_${DEFAULT_TF.defaultTransferFunction.comment}.json`;
     tfDefinition = DEFAULT_TF.defaultTransferFunction;
@@ -338,7 +338,10 @@ export async function convertTiltSeriesToRawData(
   const data = new Uint8Array(fileContent);
 
   window.WasmModule.FS.writeFile(file.name, data);
-  const settings = await window.WasmModule.loadForSart(file.name, volumeDepth) as string;
+  const settings = (await window.WasmModule.loadForSart(
+    file.name,
+    volumeDepth
+  )) as string;
   if (!settings || typeof settings !== "string") {
     throw new Error("Conversion failed.");
   }
