@@ -25,6 +25,10 @@ DATABASE_URL=file:./db.sqlite
 
 # Secret used to sign the session cookie
 SESSION_SECRET=
+
+# Admin Credentials
+ADMIN_USERNAME=
+ADMIN_PASSWORD=
 ```
 
 To install the app, you need node.js. In the project folder run:

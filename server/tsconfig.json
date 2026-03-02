@@ -15,5 +15,5 @@
       "@cocryovis/schemas/*": ["../schemas/src/*.ts"]
     }
   },
-  "include": ["src", "../schemas/src"]
+  "include": ["src", "prisma/**/*.ts"]
 }
