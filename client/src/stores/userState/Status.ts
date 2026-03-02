@@ -286,7 +286,9 @@ export const Status = types
     fetchGpuStatus: flow(function* () {
       try {
         console.log("Fetching GPU status...");
-        const contents = (yield getGpuStatus()) as z.infer<typeof gpuStatusSchema>;
+        const contents = (yield getGpuStatus()) as z.infer<
+          typeof gpuStatusSchema
+        >;
         if (!isAlive(self)) {
           return;
         }
