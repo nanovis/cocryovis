@@ -1,7 +1,6 @@
 // @ts-check
 
 import DatabaseModel, { withTransaction } from "./database-model.mjs";
-import bkfd2Password from "pbkdf2-password";
 import prismaManager from "../tools/prisma-manager.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
@@ -9,6 +8,8 @@ import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 import { Prisma } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { securityConfig } from "../tools/config.mjs";
 
 /**
  * @import { publicUser } from "@cocryovis/schemas/user-path-schema"
@@ -20,8 +21,6 @@ import { Prisma } from "@prisma/client";
 export default class User extends DatabaseModel {
   static modelName = "user";
   static lockManager = new WriteLockManager(this.modelName);
-
-  static hasher = bkfd2Password();
 
   static get db() {
     return prismaManager.db.user;
@@ -35,17 +34,11 @@ export default class User extends DatabaseModel {
   static async authenticate(username, password) {
     const user = await User.getByUsername(username);
 
-    return await new Promise((resolve, reject) => {
-      User.hasher(
-        { password: password, salt: user.passwordSalt },
-        function (err, pass, salt, hash) {
-          if (err) return reject(err);
-          if (hash !== user.passwordHash)
-            return reject(new ApiError(401, "Authentication Failed"));
-          return resolve(user);
-        }
-      );
-    });
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (!match) {
+      throw new ApiError(401, "Authentication Failed");
+    }
+    return user;
   }
 
   /**
@@ -88,6 +81,17 @@ export default class User extends DatabaseModel {
   }
 
   /**
+   * @param {string} password
+   * @returns {Promise<{ salt: string, hash: string}>}
+   */
+  static async encryptPassword(password) {
+    const bcryptCost = securityConfig.bcryptCost;
+    const passwordSalt = await bcrypt.genSalt(bcryptCost);
+    const passwordHash = await bcrypt.hash(password, passwordSalt);
+    return { salt: passwordSalt, hash: passwordHash };
+  }
+
+  /**
    * @param {string} username
    * @param {string} password
    * @param {string} name
@@ -101,12 +105,7 @@ export default class User extends DatabaseModel {
     if (!password || password.length === 0) {
       throw new ApiError(400, "Missing password.");
     }
-    const { salt, hash } = await new Promise((resolve, reject) => {
-      User.hasher({ password: password }, function (err, pass, salt, hash) {
-        if (err) reject(new Error("Error hashing user password."));
-        resolve({ salt: salt, hash: hash });
-      });
-    });
+    const { salt, hash } = await User.encryptPassword(password);
 
     return await prismaManager.db.user.create({
       data: {
@@ -126,15 +125,7 @@ export default class User extends DatabaseModel {
    */
   static async update(id, changes) {
     if (Object.hasOwn(changes, "password")) {
-      const { salt, hash } = await new Promise((resolve, reject) => {
-        User.hasher(
-          { password: changes.password },
-          function (err, pass, salt, hash) {
-            if (err) reject("Error hashing user password.");
-            resolve({ salt: salt, hash: hash });
-          }
-        );
-      });
+      const { salt, hash } = await User.encryptPassword(changes.password);
       changes.passwordSalt = salt;
       changes.passwordHash = hash;
       delete changes.password;

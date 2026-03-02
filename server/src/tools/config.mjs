@@ -1,5 +1,12 @@
 import { readFileSync } from "fs";
 
+/**
+ * @type {{ bcryptCost: number }}
+ */
+export const securityConfig = {
+  bcryptCost: parseInt(process.env.BCRYPT_COST ?? "10", 10),
+};
+
 class Config {
   /**
    * @type {AppConfig}
