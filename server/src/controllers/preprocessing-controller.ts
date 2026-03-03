@@ -34,13 +34,14 @@ export default class PreProcessingController {
       volumeId: number;
     };
 
-    await reconstructionHandler.queueTiltSeriesReconstruction(
-      req.files.tiltSeries,
-      data.options,
-      data.volumeId,
-      req.session.user.id
-    );
+    const taskHistory =
+      await reconstructionHandler.queueTiltSeriesReconstruction(
+        req.files.tiltSeries,
+        data.options,
+        data.volumeId,
+        req.session.user.id
+      );
 
-    res.sendStatus(204);
+    res.json({ id: taskHistory.id });
   }
 }

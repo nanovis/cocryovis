@@ -21,6 +21,7 @@ import type GPUTaskHandler from "./gpu-task-handler";
 import fs from "fs";
 import { GPUTask } from "./gpu-task-handler";
 import type GPUResourcesManager from "./gpu-resources-manager";
+import { Deferred } from "./task-queue";
 
 class ReconstructionTask extends GPUTask<RawVolumeDataDB> {
   protected logName = "reconstruction";
@@ -76,7 +77,7 @@ export default class ReconstructionHandler {
     options: z.infer<typeof tiltSeriesOptions>,
     volumeId: number,
     userId: number
-  ): Promise<void> {
+  ): Promise<TaskHistoryDB> {
     if (!this.gpuTaskHandler.canRunTask()) {
       throw new ApiError(
         400,
@@ -92,6 +93,8 @@ export default class ReconstructionHandler {
       ]),
     ]);
 
+    const defferedHistory = new Deferred<TaskHistoryDB>();
+
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
       try {
         const task = new ReconstructionTask(
@@ -102,13 +105,21 @@ export default class ReconstructionHandler {
           volumeId,
           this
         );
-        return await this.gpuTaskHandler.queueGPUTask(task);
+
+        const { taskHistory, executionPromise } =
+          await this.gpuTaskHandler.queueGPUTask(task);
+
+        defferedHistory.resolve(taskHistory);
+
+        return await executionPromise;
       } catch (error) {
         console.error(
           `Reconstruction task by User with id ${userId.toString()} failed, error: ${Utils.formatError(error)}`
         );
       }
     });
+
+    return defferedHistory.promise;
   }
 
   private async validateReconstructionInput(

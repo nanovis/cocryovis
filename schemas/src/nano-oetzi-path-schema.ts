@@ -51,7 +51,13 @@ export const nanoOetziPath: ZodOpenApiPathsObject = {
         },
       },
       responses: {
-        204: {},
+        200: {
+          content: {
+            "application/json": {
+              schema: z.object({ id: z.number() }),
+            },
+          },
+        },
         ...defaultError,
       },
     },
@@ -66,7 +72,13 @@ export const nanoOetziPath: ZodOpenApiPathsObject = {
         },
       },
       responses: {
-        204: {},
+        200: {
+          content: {
+            "application/json": {
+              schema: z.object({ id: z.number() }),
+            },
+          },
+        },
         ...defaultError,
       },
     },

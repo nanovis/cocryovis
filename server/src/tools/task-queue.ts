@@ -1,6 +1,19 @@
 import TaskHistory from "../models/task-history.mjs";
 import LogFile from "./log-manager.mjs";
 
+export class Deferred<T> {
+  public readonly promise: Promise<T>;
+  public resolve!: (value: T) => void;
+  public reject!: (reason?: unknown) => void;
+
+  constructor() {
+    this.promise = new Promise<T>((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+}
+
 export type TaskAction<T> = () => Promise<T>;
 
 export abstract class Task<T = unknown> {
@@ -22,6 +35,10 @@ export abstract class Task<T = unknown> {
   //   await task.onQueued();
   //   return task;
   // }
+
+  public get history(): Readonly<TaskHistoryDB> | undefined {
+    return this.taskHistory;
+  }
 
   protected abstract taskHistoryData(): RequireFields<
     Parameters<typeof TaskHistory.create>[0],
@@ -69,7 +86,7 @@ export abstract class Task<T = unknown> {
 
   public onEnd?(): void | Promise<void>;
 
-  public async onQueued(): Promise<void> {
+  public async onQueued(): Promise<TaskHistoryDB> {
     this.taskHistory = await TaskHistory.create({
       userId: this.userId,
       taskType: TaskHistory.type.Inference,
@@ -77,6 +94,7 @@ export abstract class Task<T = unknown> {
       enqueuedTime: new Date(),
       ...this.taskHistoryData?.(),
     });
+    return this.taskHistory;
   }
 }
 
@@ -128,18 +146,28 @@ export default class TaskQueue {
     void this.dequeue();
   }
 
-  async enqueue<T>(task: Task<T>): Promise<T> {
+  async enqueue<T>(task: Task<T>): Promise<{
+    taskHistory: TaskHistoryDB;
+    executionPromise: Promise<T>;
+  }> {
     this.startPolling();
 
-    return new Promise<T>((resolve, reject) => {
-      Promise.resolve()
-        .then(() => task.onQueued?.())
-        .then(() => {
-          this.queue.push({ task, resolve, reject });
-          void this.dequeue();
-        })
-        .catch(reject);
+    const taskHistory = await task.onQueued();
+
+    const deferred = new Deferred<T>();
+
+    this.queue.push({
+      task,
+      resolve: deferred.resolve,
+      reject: deferred.reject,
     });
+
+    void this.dequeue();
+
+    return {
+      taskHistory,
+      executionPromise: deferred.promise,
+    };
   }
 
   private async dequeue(): Promise<void> {

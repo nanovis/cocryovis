@@ -17,13 +17,13 @@ export default class NanoOetziController {
     const checkpointId = body.checkpointId;
     const volumeId = body.volumeId;
 
-    await nanoOetziHandler.queueInference(
+    const taskHistory = await nanoOetziHandler.queueInference(
       checkpointId,
       volumeId,
       req.session.user.id
     );
 
-    res.sendStatus(204);
+    res.json({ taskId: taskHistory.id });
   };
 
   static queueTraining = async (
@@ -33,7 +33,7 @@ export default class NanoOetziController {
   ) => {
     const { body } = validateSchema(req, { bodySchema: trainingReq });
 
-    await nanoOetziHandler.queueTraining(
+    const taskHistory = await nanoOetziHandler.queueTraining(
       body.modelId,
       req.session.user.id,
       body.trainingVolumes,
@@ -42,6 +42,6 @@ export default class NanoOetziController {
       body
     );
 
-    res.sendStatus(204);
+    res.json({ taskId: taskHistory.id });
   };
 }

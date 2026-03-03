@@ -142,7 +142,13 @@ export const cryoEtPath: ZodOpenApiPathsObject = {
         },
       },
       responses: {
-        201: {},
+        200: {
+          content: {
+            "application/json": {
+              schema: z.object({ id: z.number() }),
+            },
+          },
+        },
         ...defaultError,
       },
     },

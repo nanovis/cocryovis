@@ -18,6 +18,7 @@ import PseudoLabeledVolumeData from "../models/pseudo-labeled-volume-data.mjs";
 import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import { GPUTask } from "./gpu-task-handler";
 import type GPUResourcesManager from "./gpu-resources-manager";
+import { Deferred } from "./task-queue";
 
 interface DeepVolume extends VolumeDB {
   rawData: RawVolumeDataWithFileDB;
@@ -121,7 +122,7 @@ export default class NanoOetziHandler {
     volumeId: number,
     userId: number,
     outputPath: string | null = null
-  ) {
+  ): Promise<TaskHistoryDB> {
     if (!this.gpuTaskHandler.canRunTask()) {
       throw new ApiError(
         400,
@@ -141,6 +142,8 @@ export default class NanoOetziHandler {
       ]),
     ]);
 
+    const historyDeferred = new Deferred<TaskHistoryDB>();
+
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
       try {
         const task = new InferenceTask(
@@ -152,7 +155,12 @@ export default class NanoOetziHandler {
           this.gpuTaskHandler.gpuResourcesManager
         );
 
-        return await this.gpuTaskHandler.queueGPUTask(task);
+        const { taskHistory, executionPromise } =
+          await this.gpuTaskHandler.queueGPUTask(task);
+
+        historyDeferred.resolve(taskHistory);
+
+        return await executionPromise;
       } catch (error) {
         console.error(
           `Inference task by User with id ${userId.toString()} failed.`,
@@ -160,6 +168,8 @@ export default class NanoOetziHandler {
         );
       }
     });
+
+    return historyDeferred.promise;
   }
 
   async runInference(
@@ -297,7 +307,7 @@ export default class NanoOetziHandler {
     testingVolumesIds: number[],
     params: z.infer<typeof trainingOptions>,
     outputPath: string | null = null
-  ): Promise<void> {
+  ): Promise<TaskHistoryDB> {
     if (!trainingVolumesIds || trainingVolumesIds.length == 0) {
       throw new ApiError(
         400,
@@ -398,6 +408,8 @@ export default class NanoOetziHandler {
 
     const multiLock = new WriteMultiLock([modelLock, ...volumeLocks]);
 
+    const deferredHistory = new Deferred<TaskHistoryDB>();
+
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
       try {
         const task = new TrainingTask(
@@ -412,7 +424,12 @@ export default class NanoOetziHandler {
           this.gpuTaskHandler.gpuResourcesManager
         );
 
-        return await this.gpuTaskHandler.queueGPUTask(task);
+        const { taskHistory, executionPromise } =
+          await this.gpuTaskHandler.queueGPUTask(task);
+
+        deferredHistory.resolve(taskHistory);
+
+        return await executionPromise;
       } catch (error) {
         console.error(
           `Training task by User with id ${userId.toString()} failed.`,
@@ -420,6 +437,8 @@ export default class NanoOetziHandler {
         );
       }
     });
+
+    return deferredHistory.promise;
   }
 
   private checkTrainingInput(params: z.infer<typeof trainingOptions>) {

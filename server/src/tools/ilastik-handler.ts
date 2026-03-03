@@ -3,7 +3,7 @@ import path from "path";
 import fsPromises from "node:fs/promises";
 import { H5ToLabels, labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 import Utils from "./utils.mjs";
-import TaskQueue, { Task } from "./task-queue";
+import TaskQueue, { Deferred, Task } from "./task-queue";
 import Volume from "../models/volume.mjs";
 import appConfig from "./config.mjs";
 import type LogFile from "./log-manager.mjs";
@@ -75,7 +75,7 @@ export default class IlastikHandler {
     volumeId: number,
     userId: number,
     outputPath: string | null = null
-  ): Promise<void> {
+  ): Promise<TaskHistoryDB> {
     if (this.taskQueue.size >= this.config.ilastikQueueSize) {
       throw new ApiError(
         400,
@@ -99,6 +99,8 @@ export default class IlastikHandler {
       ]),
     ]);
 
+    const defferedHistory = new Deferred<TaskHistoryDB>();
+
     WriteMultiLock.withWriteMultiLock(multiLock, async () => {
       try {
         const task = new LabelGenerationTask(
@@ -108,13 +110,20 @@ export default class IlastikHandler {
           outputPath
         );
 
-        return await this.taskQueue.enqueue(task);
+        const { taskHistory, executionPromise } =
+          await this.taskQueue.enqueue(task);
+
+        defferedHistory.resolve(taskHistory);
+
+        return await executionPromise;
       } catch (error) {
         console.error(
           `Label generation task by User with id ${userId.toString()} failed to start: ${Utils.formatError(error)}`
         );
       }
     });
+
+    return defferedHistory.promise;
   }
 
   async runIlastikInference(

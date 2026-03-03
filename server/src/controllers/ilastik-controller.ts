@@ -11,11 +11,11 @@ export default class IlastikController {
   ) {
     const { params } = validateSchema(req, { paramsSchema: idVolume });
 
-    await ilastik.queueLabelGeneration(
+    const taskHistory = await ilastik.queueLabelGeneration(
       params.idVolume,
       req.session.user.id
     );
 
-    res.sendStatus(201);
+    res.json({ taskId: taskHistory.id });
   }
 }
