@@ -14,18 +14,21 @@ import {
 } from "@fluentui/react-icons";
 import { useState, useRef } from "react";
 import CreateModelDialog from "./elements/CreateModelDialog";
-import DeleteDialog from "../../shared/DeleteDialog";
-import * as Utils from "../../../utils/helpers";
-import globalStyles from "../../globalStyles";
-import ComboboxSearch from "../../shared/ComboboxSearch";
+import DeleteDialog from "@/components/shared/DeleteDialog";
+import * as Utils from "@/utils/helpers";
+import globalStyles from "@/components/globalStyles";
+import ComboboxSearch from "@/components/shared/ComboboxSearch";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
-import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
-import type { ModelInstance } from "../../../stores/userState/ModelModel";
-import type { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
-import ToastContainer from "../../../utils/toastContainer";
-import { getErrorMessage } from "../../../utils/helpers";
-import type { JSX } from "react/jsx-runtime";
+import { useMst } from "@/stores/RootStore";
+import { WriteAccessTooltipContentWrapper } from "@/components/shared/WriteAccessTooltip";
+import ToastContainer from "@/utils/toastContainer";
+import { getErrorMessage } from "@/utils/helpers";
+import {
+  checkpointRenderOption,
+  checkpointTooltip,
+  modelRenderOption,
+  modelTooltip,
+} from "@/components/shared/ComboboxOptions";
 
 interface Props {
   open: boolean;
@@ -221,60 +224,6 @@ const Models = observer(({ open, close }: Props) => {
     }
   };
 
-  const modelPropertyList = (model: ModelInstance) => {
-    return {
-      children: model.name,
-      value: model.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {model.id}
-          {model.description.length > 0 && (
-            <>
-              <br />
-              <b>Description:</b> {model.description}
-            </>
-          )}
-        </div>
-      ),
-    };
-  };
-
-  const modelSelectionList = () => {
-    const selectionList: Array<{
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }> = [];
-    projectModels?.models.forEach((model) =>
-      selectionList.push(modelPropertyList(model))
-    );
-    return selectionList;
-  };
-
-  const checkpointPropertyList = (checkpoint: CheckpointInstance) => {
-    return {
-      children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
-      value: checkpoint.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {checkpoint.id}
-        </div>
-      ),
-    };
-  };
-
-  const checkpointSelectionList = () => {
-    const selectionList: Array<{
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }> = [];
-    modelCheckpoints?.checkpoints.forEach((checkpoint) =>
-      selectionList.push(checkpointPropertyList(checkpoint))
-    );
-    return selectionList;
-  };
-
   return open ? (
     <div className={globalClasses.leftSidebar}>
       <div className={globalClasses.sidebarContents}>
@@ -295,11 +244,11 @@ const Models = observer(({ open, close }: Props) => {
           {/* Dropdown for selecting project models */}
           <div className={globalClasses.drowdownActionsContainer}>
             <ComboboxSearch
-              selectionList={modelSelectionList()}
-              selectedOption={
-                selectedModel ? modelPropertyList(selectedModel) : undefined
-              }
+              selectionList={projectModels?.modelComboboxOptions ?? []}
+              selectedOption={selectedModel?.comboboxOption}
               onOptionSelect={handleModelSelect}
+              renderOption={modelRenderOption}
+              renderTooltipContent={modelTooltip}
               placeholder="Select a model"
               noOptionsMessage="No models match your search."
               className={globalClasses.selectionDropdown}
@@ -444,13 +393,11 @@ const Models = observer(({ open, close }: Props) => {
           {/* Dropdown for selecting checkpoints */}
           <div className={globalClasses.drowdownActionsContainer}>
             <ComboboxSearch
-              selectionList={checkpointSelectionList()}
-              selectedOption={
-                selectedCheckpoint
-                  ? checkpointPropertyList(selectedCheckpoint)
-                  : undefined
-              }
+              selectionList={modelCheckpoints?.checkpointComboboxOptions ?? []}
+              selectedOption={selectedCheckpoint?.comboboxOption}
               onOptionSelect={handleCheckpointSelect}
+              renderOption={checkpointRenderOption}
+              renderTooltipContent={checkpointTooltip}
               placeholder="Select a checkpoint"
               noOptionsMessage="No checkpoints match your search."
               className={globalClasses.selectionDropdown}

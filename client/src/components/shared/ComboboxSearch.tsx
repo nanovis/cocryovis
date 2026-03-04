@@ -4,25 +4,18 @@ import type {
 } from "@fluentui/react-components";
 import { Combobox, useComboboxFilter } from "@fluentui/react-components";
 
-import { Tooltip } from "@fluentui/react-components";
-import type {
-  ReactNode,
-  MouseEvent,
-  KeyboardEvent,
-  FocusEvent,
-  ChangeEvent,
-} from "react";
+import type { MouseEvent, KeyboardEvent, FocusEvent, ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import TooltipWrapper from "./TooltipWrapper";
 import type { JSX } from "react/jsx-runtime";
 
-interface Props<
-  T extends {
-    children: ReactNode | string;
-    value: string;
-    tooltip?: JSX.Element;
-  },
-> {
+export interface ComboboxOption {
+  children: string;
+  value: string;
+  tooltip?: JSX.Element;
+}
+
+interface Props<T extends ComboboxOption> {
   selectionList: T[];
   selectedOption: T | undefined;
   onOptionSelect: (data: string | null) => void;
@@ -30,28 +23,22 @@ interface Props<
   noOptionsMessage: string;
   optionToText?: (option: T) => string;
   renderOption?: (props: T) => JSX.Element;
+  renderTooltipContent?: (props: T) => JSX.Element;
   className?: string;
-  showTooltip?: boolean;
   disabled?: boolean;
   clearable?: boolean;
 }
 
-const ComboboxSearch = <
-  T extends {
-    children: ReactNode | string;
-    value: string;
-    tooltip?: JSX.Element;
-  },
->({
+const ComboboxSearch = <T extends ComboboxOption>({
   selectionList,
   selectedOption,
   onOptionSelect,
   placeholder,
   noOptionsMessage,
-  optionToText = ({ children }) => children as string,
+  optionToText = ({ children }) => children,
   renderOption,
+  renderTooltipContent,
   className,
-  showTooltip = true,
   disabled = false,
   clearable = false,
 }: Props<T>) => {
@@ -145,31 +132,14 @@ const ComboboxSearch = <
         style={{ flex: 1 }}
         clearable={clearable}
       >
-        {selectionOptions.map((option) =>
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          showTooltip && option.props.tooltip ? (
-            <Tooltip
-              hideDelay={0}
-              showDelay={0}
-              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-              key={option.props.value}
-              /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
-              content={option.props.tooltip}
-              positioning="after"
-              relationship={"description"}
-            >
-              {option}
-            </Tooltip>
-          ) : (
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-            <div key={option.props?.value ?? -1}>{option}</div>
-          )
-        )}
+        {selectionOptions}
       </Combobox>
       {/* Attaching the tooltip directly onto combobox breaks it, so it is attached to a hidden element beside it instead.*/}
       <TooltipWrapper
         content={
-          !open && showTooltip ? (selectedOption?.tooltip ?? null) : null
+          !open && selectedOption && renderTooltipContent
+            ? renderTooltipContent(selectedOption)
+            : null
         }
         relationship="description"
         visible={visibleTooltip}

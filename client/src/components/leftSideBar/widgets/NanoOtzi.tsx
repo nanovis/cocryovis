@@ -20,27 +20,33 @@ import {
   DesktopTower20Regular,
   GlobeDesktop20Regular,
 } from "@fluentui/react-icons";
-import * as Utils from "../../../utils/helpers";
-import globalStyles from "../../globalStyles";
-import ComboboxSearch from "../../shared/ComboboxSearch";
-import ComboboxTagMultiselect from "../../shared/ComboboxTagMultiselect";
+import * as Utils from "@/utils/helpers";
+import globalStyles from "@/components/globalStyles";
+import ComboboxSearch from "@/components/shared/ComboboxSearch";
+import ComboboxTagMultiselect from "@/components/shared/ComboboxTagMultiselect";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
-import { WriteAccessTooltipContentWrapper } from "../../shared/WriteAccessTooltip";
-import type { VolumeInstance } from "../../../stores/userState/VolumeModel";
-import type { CheckpointInstance } from "../../../stores/userState/CheckpointModel";
-import type { ModelInstance } from "../../../stores/userState/ModelModel";
+import { useMst } from "@/stores/RootStore";
+import { WriteAccessTooltipContentWrapper } from "@/components/shared/WriteAccessTooltip";
 import {
   BooleanInputValidatedField,
   DropdownInputValidatedField,
   NumberInputValidatedField,
-} from "../../shared/ValidatedFields";
-import { queueInference } from "../../../api/nanoOetzi";
-import { getVolumeDataById, getVolumeData } from "../../../api/volumeData";
-import { checkpointToText } from "../../../api/checkpoint";
-import { createResultFromFiles } from "../../../api/results";
-import ToastContainer from "../../../utils/toastContainer";
-import type { JSX } from "react/jsx-runtime";
+} from "@/components/shared/ValidatedFields";
+import { queueInference } from "@/api/nanoOetzi";
+import { getVolumeDataById, getVolumeData } from "@/api/volumeData";
+import { checkpointToText } from "@/api/checkpoint";
+import { createResultFromFiles } from "@/api/results";
+import ToastContainer from "@/utils/toastContainer";
+import {
+  checkpointRenderOption,
+  checkpointRenderOptionWithModel,
+  checkpointTooltip,
+  checkpointTooltipWithModel,
+  modelRenderOption,
+  modelTooltip,
+  volumeRenderOption,
+  volumeTooltip,
+} from "@/components/shared/ComboboxOptions";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {
@@ -236,36 +242,6 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     }
   };
 
-  const volumeSelectionProperties = (volume: VolumeInstance) => {
-    return {
-      children: volume.name,
-      value: volume.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {volume.id}
-          {volume.description.length > 0 && (
-            <>
-              <br />
-              <b>Description:</b> {volume.description}
-            </>
-          )}
-        </div>
-      ),
-    };
-  };
-
-  const volumeSelectionList = () => {
-    const selectionList: Array<{
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }> = [];
-    volumes?.forEach((volume) =>
-      selectionList.push(volumeSelectionProperties(volume))
-    );
-    return selectionList;
-  };
-
   const handleInferenceVolumeSelect = (value: string | null) => {
     if (!value) {
       return;
@@ -274,114 +250,12 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     setInferenceVolumeId(Number(value));
   };
 
-  const checkpointListProperties = (checkpoint: CheckpointInstance) => {
-    return {
-      children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
-      value: checkpoint.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {checkpoint.id}
-        </div>
-      ),
-    };
-  };
-
-  const checkpointSelectionProperties = (
-    checkpoint: CheckpointInstance | undefined
-  ) => {
-    if (!checkpoint) {
-      return;
-    }
-    return {
-      children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
-      value: checkpoint.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {checkpoint.id}
-        </div>
-      ),
-    };
-  };
-
-  const checkpointSelectionPropertiesWithModel = (
-    checkpoint: CheckpointInstance,
-    models: ModelInstance[]
-  ) => {
-    return {
-      children: Utils.getFileNameFromPath(checkpoint.filePath) ?? "",
-      value: checkpoint.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {checkpoint.id}
-          <br />
-          <b>Model: </b> {models.map((model) => model.name).join(", ")}
-        </div>
-      ),
-    };
-  };
-
-  const checkpointSelectionList = () => {
-    const selectionList: Array<{
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }> = [];
-    projectModels?.uniqueCheckpoints.forEach(({ checkpoint, models }) =>
-      selectionList.push(
-        checkpointSelectionPropertiesWithModel(checkpoint, models)
-      )
-    );
-    return selectionList;
-  };
-
-  const modelCheckpointSelectionList = () => {
-    const selectionList: Array<{
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }> = [];
-    modelTraining.model?.modelCheckpoints.checkpoints.forEach((checkpoint) =>
-      selectionList.push(checkpointListProperties(checkpoint))
-    );
-    return selectionList;
-  };
-
   const handleInferenceCheckpointSelect = (value: string | null) => {
     if (!value) {
       return;
     }
 
     setInferenceCheckpointId(Number(value));
-  };
-
-  const modelSelectionProperties = (model: ModelInstance) => {
-    return {
-      children: model.name,
-      value: model.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {model.id}
-          {model.description.length > 0 && (
-            <>
-              <br />
-              <b>Description:</b> {model.description}
-            </>
-          )}
-        </div>
-      ),
-    };
-  };
-
-  const modelSelectionList = () => {
-    const selectionList: Array<{
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }> = [];
-    models?.forEach((model) =>
-      selectionList.push(modelSelectionProperties(model))
-    );
-    return selectionList;
   };
 
   const handleTrainingModelSelect = (value: string | null) => {
@@ -491,29 +365,31 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             }}
           >
             <ComboboxSearch
-              selectionList={volumeSelectionList()}
+              selectionList={projectVolumes?.volumeComboboxOptions ?? []}
               selectedOption={
-                inferenceVolume
-                  ? volumeSelectionProperties(inferenceVolume)
-                  : undefined
+                inferenceVolume ? inferenceVolume.comboboxOption : undefined
               }
               onOptionSelect={handleInferenceVolumeSelect}
+              renderOption={volumeRenderOption}
+              renderTooltipContent={volumeTooltip}
               placeholder="Select a volume"
               noOptionsMessage="No volumes match your search."
               optionToText={({ children }) => children}
               disabled={!volumes || volumes.size < 1}
             />
             <ComboboxSearch
-              selectionList={checkpointSelectionList()}
+              selectionList={projectModels?.checkpointsComboboxOptions ?? []}
               selectedOption={
                 inferenceCheckpoint
-                  ? checkpointSelectionPropertiesWithModel(
-                      inferenceCheckpoint.checkpoint,
-                      inferenceCheckpoint.models
-                    )
+                  ? {
+                      ...inferenceCheckpoint.checkpoint.comboboxOption,
+                      modelName: inferenceCheckpoint.model.name,
+                    }
                   : undefined
               }
               onOptionSelect={handleInferenceCheckpointSelect}
+              renderOption={checkpointRenderOptionWithModel}
+              renderTooltipContent={checkpointTooltipWithModel}
               placeholder="Select a checkpoint"
               noOptionsMessage="No checkpoints match your search."
               optionToText={({ children }) => children}
@@ -596,13 +472,11 @@ const NanoOtzi = observer(({ open, close }: Props) => {
               Training
             </h2>
             <ComboboxSearch
-              selectionList={modelSelectionList()}
-              selectedOption={
-                modelTraining.model !== undefined
-                  ? modelSelectionProperties(modelTraining.model)
-                  : undefined
-              }
+              selectionList={projectModels?.modelComboboxOptions ?? []}
+              selectedOption={modelTraining.model?.comboboxOption}
               onOptionSelect={handleTrainingModelSelect}
+              renderOption={modelRenderOption}
+              renderTooltipContent={modelTooltip}
               placeholder="Select a model"
               noOptionsMessage="No models match your search."
               optionToText={({ children }) => children}
@@ -620,18 +494,20 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             >
               <div>
                 <ComboboxSearch
-                  selectionList={modelCheckpointSelectionList()}
+                  selectionList={
+                    modelTraining.model?.modelCheckpoints
+                      .checkpointComboboxOptions ?? []
+                  }
                   selectedOption={
-                    modelTraining.checkpointId !== undefined &&
-                    modelTraining.model !== undefined
-                      ? checkpointSelectionProperties(
-                          modelTraining.model.modelCheckpoints.checkpoints.get(
-                            modelTraining.checkpointId
-                          )
-                        )
+                    modelTraining.checkpointId !== undefined
+                      ? modelTraining.model?.modelCheckpoints.checkpoints.get(
+                          modelTraining.checkpointId
+                        )?.comboboxOption
                       : undefined
                   }
                   onOptionSelect={handleTrainingCheckpointSelect}
+                  renderOption={checkpointRenderOption}
+                  renderTooltipContent={checkpointTooltip}
                   placeholder="Select a checkpoint (optional)"
                   noOptionsMessage="No checkpoints match your search."
                   optionToText={({ children }) => children}
@@ -711,8 +587,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             </Accordion>
 
             <ComboboxTagMultiselect
-              selectionList={modelTraining.trainingVolumeOptions.map((volume) =>
-                volumeSelectionProperties(volume)
+              selectionList={modelTraining.trainingVolumeOptions.map(
+                (volume) => volume.comboboxOption
               )}
               selectedOptions={modelTraining.trainingVolumeIds}
               onOptionSelect={onTrainingVolumeSelect}
@@ -726,7 +602,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
             <ComboboxTagMultiselect
               selectionList={modelTraining.validationVolumeOptions.map(
-                (volume) => volumeSelectionProperties(volume)
+                (volume) => volume.comboboxOption
               )}
               selectedOptions={modelTraining.validationVolumeIds}
               onOptionSelect={onValidationVolumeSelect}
@@ -739,8 +615,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
             />
 
             <ComboboxTagMultiselect
-              selectionList={modelTraining.testingVolumeOptions.map((volume) =>
-                volumeSelectionProperties(volume)
+              selectionList={modelTraining.testingVolumeOptions.map(
+                (volume) => volume.comboboxOption
               )}
               selectedOptions={modelTraining.testingVolumeIds}
               onOptionSelect={onTestingVolumeSelect}

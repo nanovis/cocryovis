@@ -1,6 +1,9 @@
 import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { flow, isAlive, types } from "mobx-state-tree";
-import type { CheckpointInstance } from "./CheckpointModel";
+import type {
+  CheckpointInstance,
+  CheckpointWithModelComboboxOption,
+} from "./CheckpointModel";
 import { ModelCheckpoints } from "./CheckpointModel";
 import type z from "zod";
 import type {
@@ -8,17 +11,32 @@ import type {
   modelSchemaWithCheckpoint,
   modelSchemaWithOptionalCheckpoint,
 } from "@cocryovis/schemas/componentSchemas/model-schema";
-import * as modelApi from "../../api/models";
+import * as modelApi from "@/api/models";
+import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
 
 export type ModelDB = z.infer<typeof modelSchemaWithOptionalCheckpoint>;
 
-export const Model = types.model({
-  id: types.identifierNumber,
-  name: types.string,
-  description: types.string,
-  creatorId: types.maybeNull(types.integer),
-  modelCheckpoints: ModelCheckpoints,
-});
+export interface ModelComboboxOption extends ComboboxOption {
+  description: string;
+}
+
+export const Model = types
+  .model({
+    id: types.identifierNumber,
+    name: types.string,
+    description: types.string,
+    creatorId: types.maybeNull(types.integer),
+    modelCheckpoints: ModelCheckpoints,
+  })
+  .views((self) => ({
+    get comboboxOption(): ModelComboboxOption {
+      return {
+        value: self.id.toString(),
+        description: self.description,
+        children: self.name,
+      };
+    },
+  }));
 
 export interface ModelInstance extends Instance<typeof Model> {}
 export interface ModelSnapshotIn extends SnapshotIn<typeof Model> {}
@@ -39,20 +57,31 @@ export const ProjectModels = types
         ? self.models.get(self.selectedModelId)
         : undefined;
     },
+    get modelComboboxOptions(): ModelComboboxOption[] {
+      console.log("Computing modelComboboxOptions");
+      return Array.from(self.models.values()).map(
+        (model) => model.comboboxOption
+      );
+    },
     get uniqueCheckpoints() {
       const checkpoints = new Map<
         number,
-        { checkpoint: CheckpointInstance; models: ModelInstance[] }
+        { checkpoint: CheckpointInstance; model: ModelInstance }
       >();
       self.models.forEach((model) => {
         model.modelCheckpoints.checkpoints.forEach((checkpoint) => {
-          if (!checkpoints.has(checkpoint.id)) {
-            checkpoints.set(checkpoint.id, { checkpoint, models: [] });
-          }
-          checkpoints.get(checkpoint.id)?.models.push(model);
+          checkpoints.set(checkpoint.id, { checkpoint, model });
         });
       });
       return checkpoints;
+    },
+    get checkpointsComboboxOptions(): CheckpointWithModelComboboxOption[] {
+      return Array.from(this.uniqueCheckpoints.values()).map(
+        ({ checkpoint, model }) => ({
+          ...checkpoint.comboboxOption,
+          modelName: model.name,
+        })
+      );
     },
   }))
   .actions((self) => ({

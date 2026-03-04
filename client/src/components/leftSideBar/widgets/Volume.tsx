@@ -31,14 +31,14 @@ import {
 } from "@fluentui/react-icons";
 import { useState, useRef } from "react";
 import CreateVolumeDialog from "./elements/CreateVolumeDialog";
-import ItemTitleDownloadDelete from "../../shared/ItemTitleDownloadDelete";
-import * as Utils from "../../../utils/helpers";
-import DeleteDialog from "../../shared/DeleteDialog";
+import ItemTitleDownloadDelete from "@/components/shared/ItemTitleDownloadDelete";
+import * as Utils from "@/utils/helpers";
+import DeleteDialog from "@/components/shared/DeleteDialog";
 import { CONFIG } from "@/constants";
-import globalStyles from "../../globalStyles";
-import ComboboxSearch from "../../shared/ComboboxSearch";
-import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
-import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
+import globalStyles from "@/components/globalStyles";
+import ComboboxSearch from "@/components/shared/ComboboxSearch";
+import type { TiltSeriesOptions } from "@/components/shared/ProcessTiltSeriesDialog";
+import ProcessTiltSeriesDialog from "@/components/shared/ProcessTiltSeriesDialog";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import type {
@@ -48,8 +48,7 @@ import type {
 import {
   WriteAccessTooltipContent,
   WriteAccessTooltipContentWrapper,
-} from "../../shared/WriteAccessTooltip";
-import type { ResultInstance } from "@/stores/userState/ResultModel";
+} from "@/components/shared/WriteAccessTooltip";
 import {
   MrcFileVolumeData,
   MrcUrlVolumeData,
@@ -58,7 +57,7 @@ import {
   type TransferFunction,
   VolumeDescriptor,
 } from "@/utils/volumeDescriptor";
-import VolumeUploadDialog from "../../shared/VolumeUploadDialog";
+import VolumeUploadDialog from "@/components/shared/VolumeUploadDialog";
 import {
   SparseLabelVolume,
   type SparseVolumeInstance,
@@ -71,15 +70,20 @@ import {
   getVolumeVisualizationFiles,
 } from "@/api/volumeData";
 import { getResultData } from "@/api/results";
-import ToastContainer from "../../../utils/toastContainer";
+import ToastContainer from "@/utils/toastContainer";
 import EditDialog from "./elements/EditDialog";
-import type { JSX } from "react/jsx-runtime";
 import {
   fileMapToVisualizationConfig,
   visualizeVolumeFromConfig,
 } from "@/utils/volumeVisualization";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
 import { getType } from "mobx-state-tree";
+import {
+  resultRenderOption,
+  resultTooltip,
+  volumeRenderOption,
+  volumeTooltip,
+} from "@/components/shared/ComboboxOptions";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -751,63 +755,6 @@ const Volume = observer(({ open, close }: Props) => {
     return !selectedVolume || isPageBusy();
   };
 
-  const volumeSelectionProperties = (volume: VolumeInstance) => {
-    return {
-      children: volume.name,
-      value: volume.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {volume.id}
-          {volume.description.length > 0 && (
-            <>
-              <br />
-              <b>Description:</b> {volume.description}
-            </>
-          )}
-        </div>
-      ),
-    };
-  };
-
-  const volumeSelectionList = () => {
-    const selectionList: {
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }[] = [];
-    projectVolumes?.volumes.forEach((volume) =>
-      selectionList.push(volumeSelectionProperties(volume))
-    );
-    return selectionList;
-  };
-
-  const resultSelectionProperties = (result: ResultInstance) => {
-    return {
-      children: `Result ${result.id}`,
-      value: result.id.toString(),
-      tooltip: (
-        <div className={globalClasses.selectionDropdownTooltip}>
-          <b>ID:</b> {result.id}
-          <br />
-          <b>Checkpoint:</b>{" "}
-          {Utils.getFileNameFromPath(result.checkpoint?.filePath)}
-        </div>
-      ),
-    };
-  };
-
-  const resultSelectionList = () => {
-    const selectionList: {
-      children: string;
-      value: string;
-      tooltip: JSX.Element;
-    }[] = [];
-    results?.forEach((result) =>
-      selectionList.push(resultSelectionProperties(result))
-    );
-    return selectionList;
-  };
-
   const canActivateEditingMode = () => {
     return selectedVolume && visualizedVolume && visualizedVolume.canEditLabels;
   };
@@ -860,13 +807,11 @@ const Volume = observer(({ open, close }: Props) => {
           {/* Dropdown for selecting project volumes */}
           <div className={globalClasses.drowdownActionsContainer}>
             <ComboboxSearch
-              selectionList={volumeSelectionList()}
-              selectedOption={
-                selectedVolume
-                  ? volumeSelectionProperties(selectedVolume)
-                  : undefined
-              }
+              selectionList={projectVolumes?.volumeComboboxOptions ?? []}
+              selectedOption={selectedVolume?.comboboxOption}
               onOptionSelect={handleVolumeSelect}
+              renderOption={volumeRenderOption}
+              renderTooltipContent={volumeTooltip}
               placeholder="Select a volume"
               noOptionsMessage="No volumes match your search."
               className={globalClasses.selectionDropdown}
@@ -1531,13 +1476,11 @@ const Volume = observer(({ open, close }: Props) => {
           {/* Results List Dropdown */}
           <div className={globalClasses.drowdownActionsContainer}>
             <ComboboxSearch
-              selectionList={resultSelectionList()}
-              selectedOption={
-                selectedResult
-                  ? resultSelectionProperties(selectedResult)
-                  : undefined
-              }
+              selectionList={volumeResults?.resultComboboxOptions ?? []}
+              selectedOption={selectedResult?.comboboxOption}
               onOptionSelect={handleResultSelect}
+              renderOption={resultRenderOption}
+              renderTooltipContent={resultTooltip}
               placeholder="Select a result"
               noOptionsMessage="No results match your search."
               className={globalClasses.selectionDropdown}

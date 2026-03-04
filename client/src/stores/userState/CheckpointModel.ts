@@ -3,13 +3,29 @@ import { flow, isAlive, types } from "mobx-state-tree";
 import type z from "zod";
 import type { checkpointSchemaArray } from "@cocryovis/schemas/componentSchemas/checkpoint-schema";
 import * as checkpointApi from "../../api/checkpoint";
+import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
+import { getFileNameFromPath } from "@/utils/helpers";
 
-export const Checkpoint = types.model({
-  id: types.identifierNumber,
-  filePath: types.maybeNull(types.string),
-  folderPath: types.maybeNull(types.string),
-  creatorId: types.maybeNull(types.integer),
-});
+export interface CheckpointComboboxOption extends ComboboxOption {}
+export interface CheckpointWithModelComboboxOption extends ComboboxOption {
+  modelName: string;
+}
+
+export const Checkpoint = types
+  .model({
+    id: types.identifierNumber,
+    filePath: types.maybeNull(types.string),
+    folderPath: types.maybeNull(types.string),
+    creatorId: types.maybeNull(types.integer),
+  })
+  .views((self) => ({
+    get comboboxOption(): CheckpointComboboxOption {
+      return {
+        value: self.id.toString(),
+        children: getFileNameFromPath(self.filePath) ?? "",
+      };
+    },
+  }));
 
 export interface CheckpointInstance extends Instance<typeof Checkpoint> {}
 export interface CheckpointSnapshotIn extends SnapshotIn<typeof Checkpoint> {}
@@ -28,6 +44,11 @@ export const ModelCheckpoints = types
       return self.selectedCheckpointId
         ? self.checkpoints.get(self.selectedCheckpointId)
         : undefined;
+    },
+    get checkpointComboboxOptions(): CheckpointComboboxOption[] {
+      return Array.from(self.checkpoints.values()).map(
+        (checkpoint) => checkpoint.comboboxOption
+      );
     },
   }))
   .actions((self) => ({

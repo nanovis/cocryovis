@@ -4,17 +4,33 @@ import { Checkpoint } from "./CheckpointModel";
 import type { getResultSchema } from "@cocryovis/schemas/result-path-schema";
 import type z from "zod";
 import { getResultsFromVolume, deleteResult } from "@/api/results";
+import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
+import { getFileNameFromPath } from "@/utils/helpers";
 
-export const Result = types.model({
-  id: types.identifierNumber,
-  folderPath: types.maybeNull(types.string),
-  files: types.maybeNull(types.string),
-  rawVolumeChannel: types.maybeNull(types.integer),
-  logFile: types.maybeNull(types.string),
-  creatorId: types.maybeNull(types.integer),
-  checkpoint: types.maybeNull(Checkpoint),
-  volumeId: types.integer,
-});
+export interface ResultComboboxOption extends ComboboxOption {
+  checkpoint: string;
+}
+
+export const Result = types
+  .model({
+    id: types.identifierNumber,
+    folderPath: types.maybeNull(types.string),
+    files: types.maybeNull(types.string),
+    rawVolumeChannel: types.maybeNull(types.integer),
+    logFile: types.maybeNull(types.string),
+    creatorId: types.maybeNull(types.integer),
+    checkpoint: types.maybeNull(Checkpoint),
+    volumeId: types.integer,
+  })
+  .views((self) => ({
+    get comboboxOption(): ResultComboboxOption {
+      return {
+        value: self.id.toString(),
+        children: `Result ${self.id}`,
+        checkpoint: getFileNameFromPath(self.checkpoint?.filePath) ?? "",
+      };
+    },
+  }));
 
 export interface ResultInstance extends Instance<typeof Result> {}
 export interface ResultSnapshotIn extends SnapshotIn<typeof Result> {}
@@ -34,6 +50,11 @@ export const VolumeResults = types
       return self.selectedResultId
         ? self.results.get(self.selectedResultId)
         : undefined;
+    },
+    get resultComboboxOptions(): ResultComboboxOption[] {
+      return Array.from(self.results.values()).map(
+        (result) => result.comboboxOption
+      );
     },
   }))
   .actions((self) => ({

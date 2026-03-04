@@ -44,10 +44,15 @@ import ToastContainer from "../../utils/toastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "@/stores/RootStore";
 import type { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
 
 export type LabeledVolumeTypes =
   | "SparseLabeledVolumeData"
   | "PseudoLabeledVolumeData";
+
+export interface VolumeComboboxOption extends ComboboxOption {
+  description: string;
+}
 
 async function uploadLabeledVolume<T extends keyof VolumeDataMap>(
   id: number,
@@ -102,6 +107,13 @@ export const Volume = types
     get renderer(): VolumeRenderer | null {
       const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
       return rootStore.renderer;
+    },
+    get comboboxOption(): VolumeComboboxOption {
+      return {
+        value: self.id.toString(),
+        description: self.description,
+        children: self.name,
+      };
     },
   }))
   .actions((self) => ({
@@ -335,6 +347,9 @@ export const ProjectVolumes = types
       return self.selectedVolumeId
         ? self.volumes.get(self.selectedVolumeId)
         : undefined;
+    },
+    get volumeComboboxOptions(): VolumeComboboxOption[] {
+      return this.volumeArray.map((volume) => volume.comboboxOption);
     },
   }))
   .views((self) => ({
