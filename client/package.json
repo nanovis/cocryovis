@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@cocryovis/schemas": "file:../schemas",
-    "@fluentui/react-components": "^9.73.1",
+    "@fluentui/react-components": "^9.73.2",
     "@warpem/mrc-parser": "^1.0.0",
     "buffer-backed-object": "github:Scurek/buffer-backed-object#main",
     "detect-browser": "^5.3.0",
