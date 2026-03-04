@@ -1,44 +1,50 @@
 import type { VolumeDescriptorSettings } from "./volumeDescriptor";
+import { parseHeader, MRCDataType, type MRCHeader } from "@warpem/mrc-parser";
 
-/**
- * MRC file into a RAW and JSON file using streaming/chunked.
- * Read the header separately and then processes the data blob in chunks.
- * Float modes (2 and 12), two passes are performed: one to compute min/max and a second to normalize data.
- */
-export async function readMRCHeader(
-  mrcFile: File
-): Promise<{ mode: number; settings: VolumeDescriptorSettings }> {
-  //Read header (first 1024 bytes)
-  const headerBuffer = await mrcFile.slice(0, 1024).arrayBuffer();
-  const headerView = new DataView(headerBuffer);
+export async function readMRCHeader(mrcFile: File): Promise<MRCHeader> {
+  const base = await mrcFile.slice(0, 1024).arrayBuffer();
+  let header = parseHeader(base);
+  if (header.extendedBytes > 0) {
+    const fullHeaderBuffer = await mrcFile
+      .slice(0, 1024 + header.extendedBytes)
+      .arrayBuffer();
+    header = parseHeader(fullHeaderBuffer);
+  }
 
-  // Extract header info
-  const nx = headerView.getInt32(0, true);
-  const ny = headerView.getInt32(4, true);
-  const nz = headerView.getInt32(8, true);
-  const mode = headerView.getInt32(12, true);
+  return header;
+}
+
+export async function getDescriptorFromMrcHeaderOrFile(
+  headerOrFile: MRCHeader | File
+): Promise<VolumeDescriptorSettings> {
+  let header: MRCHeader;
+  if (headerOrFile instanceof File) {
+    header = await readMRCHeader(headerOrFile);
+  } else {
+    header = headerOrFile;
+  }
+
+  const dimensions = header.dimensions;
+  const mode = header.mode;
 
   let bytesPerVoxel: number;
   let usedBits: number;
   let isSigned: boolean;
 
-  if (mode === 0 || mode === 1 || mode === 6) {
-    // Modes 0, 1, 6: Data can be used directly.
-    if (mode === 0) {
-      bytesPerVoxel = 1;
-      usedBits = 8;
-      isSigned = true;
-    } else if (mode === 1) {
-      bytesPerVoxel = 2;
-      usedBits = 16;
-      isSigned = true;
-    } else {
-      // mode === 6
-      bytesPerVoxel = 2;
-      usedBits = 16;
-      isSigned = false;
-    }
-  } else if (mode === 2 || mode === 12) {
+  if (mode === MRCDataType.Byte) {
+    bytesPerVoxel = 1;
+    usedBits = 8;
+    isSigned = true;
+  } else if (mode === MRCDataType.Short) {
+    bytesPerVoxel = 2;
+    usedBits = 16;
+    isSigned = true;
+  } else if (mode === MRCDataType.UnsignedShort) {
+    bytesPerVoxel = 2;
+    usedBits = 16;
+    isSigned = false;
+  } else if (mode === MRCDataType.Float) {
+    // Float will be converted to 8-bit unsigned for compatibility, so we set these values accordingly.
     bytesPerVoxel = 1;
     usedBits = 8;
     isSigned = false;
@@ -47,117 +53,127 @@ export async function readMRCHeader(
   }
 
   return {
-    mode: mode,
-    settings: {
-      size: { x: nx, y: ny, z: nz },
-      ratio: { x: 1.0, y: 1.0, z: 1.0 },
-      bytesPerVoxel: bytesPerVoxel,
-      usedBits: usedBits,
-      skipBytes: 0,
-      isLittleEndian: true,
-      isSigned: isSigned,
-      addValue: 0,
-    },
+    size: { x: dimensions.x, y: dimensions.y, z: dimensions.z },
+    ratio: { x: 1.0, y: 1.0, z: 1.0 },
+    bytesPerVoxel: bytesPerVoxel,
+    usedBits: usedBits,
+    skipBytes: 0,
+    isLittleEndian: true,
+    isSigned: isSigned,
+    addValue: 0,
   };
+}
+
+export function createFloat32Decoder(): TransformStream<
+  Uint8Array,
+  Float32Array
+> {
+  let leftover = new Uint8Array(0);
+
+  return new TransformStream<Uint8Array, Float32Array>({
+    transform(chunk, controller) {
+      const combined = new Uint8Array(leftover.length + chunk.length);
+      combined.set(leftover);
+      combined.set(chunk, leftover.length);
+
+      const usable = combined.length - (combined.length % 4);
+
+      if (usable > 0) {
+        const floats = new Float32Array(
+          combined.buffer,
+          combined.byteOffset,
+          usable / 4
+        );
+
+        controller.enqueue(new Float32Array(floats));
+      }
+
+      leftover = combined.slice(usable);
+    },
+
+    flush() {
+      leftover = new Uint8Array(0);
+    },
+  });
+}
+
+export function createFloatNormalizer(
+  min: number,
+  max: number
+): TransformStream<Float32Array, Uint8Array> {
+  const scale = max > min ? 255 / (max - min) : 0;
+
+  return new TransformStream<Float32Array, Uint8Array>({
+    transform(floats, controller) {
+      const out = new Uint8Array(floats.length);
+
+      for (let i = 0; i < floats.length; i++) {
+        const v = (floats[i] - min) * scale;
+        out[i] = Math.min(255, Math.max(0, v)) | 0;
+      }
+
+      controller.enqueue(out);
+    },
+  });
 }
 
 export async function convertMRCToRaw(
   mrcFile: File
 ): Promise<{ rawFile: File; settings: VolumeDescriptorSettings }> {
   //Read header (first 1024 bytes)
-  const header = await readMRCHeader(mrcFile);
+  const header: MRCHeader = await readMRCHeader(mrcFile);
 
-  let rawDataBlob: Blob;
+  if (
+    header.mapOrder.x !== 1 ||
+    header.mapOrder.y !== 2 ||
+    header.mapOrder.z !== 3
+  ) {
+    throw new Error(
+      `Unsupported MRC map order: ${header.mapOrder.x}, ${header.mapOrder.y}, ${header.mapOrder.z}`
+    );
+  }
 
   // The rest of the file contains the data.
-  const dataBlob = mrcFile.slice(1024);
+  const dataBlob = mrcFile.slice(1024 + header.extendedBytes);
 
+  let outputStream: ReadableStream<Uint8Array>;
+
+  // No conversion required
   if (header.mode === 0 || header.mode === 1 || header.mode === 6) {
-    // Read the data stream and collect the chunks.
-    const chunks: BlobPart[] = [];
-    const reader = dataBlob.stream().getReader();
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-    }
-    rawDataBlob = new Blob(chunks);
-  } else if (header.mode === 2 || header.mode === 12) {
-    // --- First Pass: Determine min and max ---
-    let minVal = Infinity;
-    let maxVal = -Infinity;
-
-    {
-      const reader = dataBlob.stream().getReader();
-      let leftover = new Uint8Array(0);
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const combined = new Uint8Array(leftover.length + value.length);
-        combined.set(leftover);
-        combined.set(value, leftover.length);
-        const completeLength = combined.length - (combined.length % 4);
-        if (completeLength > 0) {
-          //Float32Array
-          const floatChunk = new Float32Array(
-            combined.buffer,
-            combined.byteOffset,
-            completeLength / 4
-          );
-          for (const chunk of floatChunk) {
-            if (chunk < minVal) minVal = chunk;
-            if (chunk > maxVal) maxVal = chunk;
-          }
-        }
-        leftover = combined.slice(completeLength);
-      }
-    }
-
-    // --- Second Pass: Normalize and convert float values to 8-bit ---
-    const chunks: BlobPart[] = [];
-    const range = maxVal - minVal;
-    {
-      const reader = dataBlob.stream().getReader();
-      let leftover = new Uint8Array(0);
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const combined = new Uint8Array(leftover.length + value.length);
-        combined.set(leftover);
-        combined.set(value, leftover.length);
-        const completeLength = combined.length - (combined.length % 4);
-        if (completeLength > 0) {
-          const floatChunk = new Float32Array(
-            combined.buffer,
-            combined.byteOffset,
-            completeLength / 4
-          );
-          // Prepare an output chunk with one 8-bit value per float.
-          const outChunk = new Uint8Array(completeLength / 4);
-          if (range === 0) {
-            outChunk.fill(0);
-          } else {
-            for (let i = 0; i < floatChunk.length; i++) {
-              outChunk[i] = Math.round(
-                ((floatChunk[i] - minVal) / range) * 255
-              );
-            }
-          }
-          chunks.push(outChunk);
-        }
-        leftover = combined.slice(completeLength);
-      }
-    }
-    rawDataBlob = new Blob(chunks);
-  } else {
-    throw new Error("MRC file data is in an incompatible format.");
+    outputStream = dataBlob.stream();
   }
+
+  // Float normalization
+  else if (header.mode === 2 || header.mode === 12) {
+    const min = header.minValue;
+    const max = header.maxValue;
+
+    console.log(`MRC Float Data: min=${min}, max=${max}`);
+
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
+      throw new Error("Invalid MRC header statistics");
+    }
+
+    outputStream = dataBlob
+      .stream()
+      .pipeThrough(createFloat32Decoder())
+      .pipeThrough(createFloatNormalizer(min, max));
+  } else {
+    throw new Error(`Unsupported MRC mode: ${header.mode}`);
+  }
+
+  const rawBlob = await new Response(outputStream).blob();
 
   // Create a new RAW File (renaming .mrc to .raw)
   const rawFileName = mrcFile.name.replace(/\.mrc$/i, ".raw");
-  const rawFile = new File([rawDataBlob], rawFileName, {
+  const rawFile = new File([rawBlob], rawFileName, {
     type: "application/octet-stream",
   });
 
-  return { rawFile, settings: header.settings };
+  const settings = await getDescriptorFromMrcHeaderOrFile(header);
+  console.log(
+    `Converted MRC to RAW with settings: ${JSON.stringify(settings)}`
+  );
+
+  return { rawFile, settings: settings };
 }

@@ -6,7 +6,10 @@ import type z from "zod";
 import * as Utils from "./helpers";
 import { fileTypeSchema } from "@cocryovis/schemas/volume-data-path-schema";
 import { type FileMap, isMrcFile, isRawFile } from "./helpers";
-import { convertMRCToRaw, readMRCHeader } from "@/utils/mrcParser";
+import {
+  convertMRCToRaw,
+  getDescriptorFromMrcHeaderOrFile,
+} from "@/utils/mrcParser";
 
 export const BIT_OPTIONS = [8, 16, 32, 64] as const;
 export type BitOptions = (typeof BIT_OPTIONS)[number];
@@ -158,7 +161,7 @@ export class MrcFileVolumeData extends MrcVolumeData {
   constructor(file: File) {
     super();
     if (!isMrcFile(file.name)) {
-      throw new Error("Invalid raw file.");
+      throw new Error("Invalid mrc file.");
     }
     this.file = file;
   }
@@ -174,8 +177,7 @@ export class MrcFileVolumeData extends MrcVolumeData {
 
   async getSettings(): Promise<VolumeDescriptorSettings> {
     if (!this.settings) {
-      const header = await readMRCHeader(this.file);
-      this.settings = header.settings;
+      this.settings = await getDescriptorFromMrcHeaderOrFile(this.file);
     }
     return this.settings;
   }
