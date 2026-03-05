@@ -13,6 +13,7 @@
     "dev": "tsx src/index.ts",
     "dev:env": "conda run --no-capture-output -p ./.venv tsx src/index.ts",
     "build": "tsc",
+    "tscheck": "tsc --noEmit",
     "format": "prettier --write .",
     "lint": "npx eslint .",
     "upgrade:check": "npx npm-check-updates --format group",

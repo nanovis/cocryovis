@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "tscheck": "tsc --noEmit",
     "format": "prettier --write .",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint --fix .",

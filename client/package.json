@@ -47,6 +47,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "tscheck": "tsc -b --noEmit",
     "format": "prettier --write .",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint --fix .",
