@@ -222,7 +222,7 @@ projectsApi.get(`/result/:idResult`, restrictReadResultAccess, ResultController.
 // Get Results From Volume
 projectsApi.get(`/volume/:idVolume/results`, restrictReadVolumeAccess,ResultController.getFromVolume);
 
-// Create Result from Fules
+// Create Result from Files
 projectsApi.post(`/volume/:idVolume/results`, restrictApi, ResultController.createFromFiles);
 
 // Remove Result

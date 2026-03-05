@@ -1,15 +1,15 @@
 // @ts-check
 
-import path from "path";
 import Result from "../models/result.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
-import fileSystem from "fs";
 import archiver from "archiver";
 import Utils from "../tools/utils.mjs";
 import appConfig from "../tools/config.mjs";
 import { idResult } from "@cocryovis/schemas/componentSchemas/result-schema";
 import validateSchema from "../tools/validate-schema.mjs";
 import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
+import ResultVolume from "../models/result-volume.mjs";
+import ResultDataFile from "../models/result-data-file.mjs";
 
 /**
  * @import { createFromFilesSchema } from "@cocryovis/schemas/result-path-schema"
@@ -38,7 +38,7 @@ export default class ResultController {
   static getDetails = async (req, res) => {
     const result = await Result.getByIdDeep(Number(req.params.idResult), {
       checkpoint: true,
-      files: true,
+      resultVolumes: true,
     });
 
     res.json(result);
@@ -80,9 +80,9 @@ export default class ResultController {
     const { params } = validateSchema(req, { paramsSchema: idResult });
 
     const result = await Result.getByIdDeep(params.idResult, {
-      files: true,
+      resultVolumes: true,
     });
-    if (result.files.length === 0) {
+    if (result.resultVolumes.length === 0) {
       throw new ApiError(
         400,
         "Visualisation requires the result to contain at least one file."
@@ -96,21 +96,21 @@ export default class ResultController {
     res.attachment(`Result_${result.id}.zip`);
     archive.pipe(res);
 
-    const fileReferences = result.files;
+    const fileReferences = result.resultVolumes;
     fileReferences.sort((a, b) => a.index - b.index);
 
     const settings = [];
     const rawFileNames = [];
     for (const reference of fileReferences) {
-      const settingsReferenceFile = await fileSystem.promises.readFile(
-        path.join(result.folderPath, reference.settingsFileName),
-        "utf8"
-      );
-      const settingsReference = JSON.parse(settingsReferenceFile.toString());
-      settingsReference.name = reference.name;
+      const dataFile = await ResultDataFile.getById(reference.dataFileId);
+
+      const settingsReference = ResultVolume.toSettingSchema({
+        ...reference,
+        dataFile,
+      });
       settings.push(settingsReference);
 
-      rawFileNames.push(path.join(result.folderPath, reference.rawFileName));
+      rawFileNames.push(dataFile.rawFilePath);
     }
 
     await Utils.packVisualizationArchive(

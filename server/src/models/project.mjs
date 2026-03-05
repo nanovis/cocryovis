@@ -8,6 +8,7 @@ import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 import { Prisma } from "@prisma/client";
+import ResultDataFile from "./result-data-file.mjs";
 
 /**
  * @import z from "zod"
@@ -459,22 +460,10 @@ export default class Project extends DatabaseModel {
         });
       });
 
-      const allCheckpoints = [];
-      project.models.forEach((m) => allCheckpoints.push(...m.checkpoints));
-      const allRawVolumes = [];
-      project.volumes.forEach(
-        (v) => v.rawData && allRawVolumes.push(v.rawData.id)
-      );
-
-      const allSparseVolumes = [];
-      project.volumes.forEach((v) => allSparseVolumes.push(...v.sparseVolumes));
-
-      const allPseudoVolumes = [];
-      project.volumes.forEach((v) => allPseudoVolumes.push(...v.pseudoVolumes));
-
       await RawVolumeDataFile.deleteZombies(tx);
       await SparseVolumeDataFile.deleteZombies(tx);
       await PseudoVolumeDataFile.deleteZombies(tx);
+      await ResultDataFile.deleteZombies(tx);
 
       return project;
     });

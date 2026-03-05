@@ -55,6 +55,7 @@ model ProjectAccess {
 
   @@id([userId, projectId])
 }
+
 model Volume {
   id            Int                     @id @default(autoincrement())
   name          String
@@ -207,27 +208,46 @@ model Checkpoint {
 }
 
 model Result {
-  id               Int          @id @default(autoincrement())
-  folderPath       String?
-  files            ResultFile[]
+  id               Int            @id @default(autoincrement())
+  resultVolumes    ResultVolume[]
   rawVolumeChannel Int?
   logFile          String?
-  creator          User?        @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creator          User?          @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId        Int?
-  checkpoint       Checkpoint   @relation(fields: [checkpointId], references: [id], onDelete: Restrict)
+  checkpoint       Checkpoint     @relation(fields: [checkpointId], references: [id], onDelete: Restrict)
   checkpointId     Int
-  volume           Volume       @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  volume           Volume         @relation(fields: [volumeId], references: [id], onDelete: Cascade)
   volumeId         Int
 }
 
-model ResultFile {
-  id               Int    @id @default(autoincrement())
-  name             String
-  rawFileName      String
-  settingsFileName String
-  index            Int
-  result           Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  resultId         Int
+model ResultVolume {
+  id             Int            @id @default(autoincrement())
+  name           String
+  index          Int
+  result         Result         @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId       Int
+  dataFile       ResultDataFile @relation(fields: [dataFileId], references: [id])
+  dataFileId     Int
+  // Volume Info
+  sizeX          Int
+  sizeY          Int
+  sizeZ          Int
+  ratioX         Float
+  ratioY         Float
+  ratioZ         Float
+  skipBytes      Int
+  isLittleEndian Boolean
+  isSigned       Boolean
+  addValue       Int
+  bytesPerVoxel  Int
+  usedBits       Int
+}
+
+model ResultDataFile {
+  id            Int            @id @default(autoincrement())
+  path          String?
+  rawFilePath   String?
+  resultVolumes ResultVolume[]
 }
 
 model TaskHistory {

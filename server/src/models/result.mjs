@@ -9,19 +9,13 @@ import fileSystem from "fs";
 import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
-import ResultFile from "./resultFile.mjs";
 import fileUpload from "express-fileupload";
 import { PendingFile } from "../tools/file-handler.mjs";
 import Utils from "../tools/utils.mjs";
-import VolumeData from "./volume-data.mjs";
 import { Prisma } from "@prisma/client";
-
-//  * @typedef {object} Config
-//    * @property {string} name
-//    * @property {string} rawFileName
-//    * @property {string} settingsFileName
-//    * @property {number} index
-//    * @property {boolean?} rawVolumeChannel
+import ResultVolume from "./result-volume.mjs";
+import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import ResultDataFile from "./result-data-file.mjs";
 
 /**
  * @typedef { import("@prisma/client").Result } ResultDB
@@ -51,11 +45,11 @@ export default class Result extends DatabaseModel {
    * @param {object} options
    * @param {boolean} [options.checkpoint]
    * @param {boolean} [options.volume]
-   * @param {boolean} [options.files]
+   * @param {boolean} [options.resultVolumes]
    */
   static async getFromVolume(
     volumeId,
-    { checkpoint = false, volume = false, files = false }
+    { checkpoint = false, volume = false, resultVolumes = false }
   ) {
     const results = await this.db.findMany({
       where: {
@@ -64,7 +58,7 @@ export default class Result extends DatabaseModel {
       include: {
         checkpoint: checkpoint,
         volume: volume,
-        files: files,
+        resultVolumes: resultVolumes,
       },
     });
 
@@ -76,11 +70,11 @@ export default class Result extends DatabaseModel {
    * @param {object} options
    * @param {boolean} [options.checkpoint]
    * @param {boolean} [options.volume]
-   * @param {boolean} [options.files]
+   * @param {boolean} [options.resultVolumes]
    */
   static async getByIdDeep(
     id,
-    { checkpoint = false, volume = false, files = false }
+    { checkpoint = false, volume = false, resultVolumes = false }
   ) {
     const result = await this.db.findUnique({
       where: {
@@ -89,7 +83,7 @@ export default class Result extends DatabaseModel {
       include: {
         checkpoint: checkpoint,
         volume: volume,
-        files: files,
+        resultVolumes: resultVolumes,
       },
     });
     if (result === null) {
@@ -131,15 +125,6 @@ export default class Result extends DatabaseModel {
     logFile = null,
     client
   ) {
-    const resultsFolderPath = path.join(appConfig.dataPath, this.resultsFolder);
-    if (!fileSystem.existsSync(resultsFolderPath)) {
-      fileSystem.mkdirSync(resultsFolderPath, {
-        recursive: true,
-      });
-    }
-
-    let resultPath = null;
-
     try {
       return await withTransaction(client, async (tx) => {
         /** @type {ResultDB} */
@@ -151,15 +136,12 @@ export default class Result extends DatabaseModel {
           },
         });
 
-        resultPath = await Result.reserveFolderName(result.id);
-        await fsPromises.rename(folderPath, resultPath);
-
         let rawVolumeChannel = null;
 
         for (const fileDescriptor of config) {
-          const rawFilePath = path.join(resultPath, fileDescriptor.rawFileName);
+          const rawFilePath = path.join(folderPath, fileDescriptor.rawFileName);
           const settingsFilePath = path.join(
-            resultPath,
+            folderPath,
             fileDescriptor.settingsFileName
           );
           if (
@@ -172,21 +154,29 @@ export default class Result extends DatabaseModel {
             );
           }
           const settingFile = await fsPromises.readFile(settingsFilePath);
-          const settings = JSON.parse(settingFile.toString("utf8"));
-          if (!settings.transferFunction) {
-            settings.transferFunction = Result.#getTFName(fileDescriptor.name);
-            await fsPromises.writeFile(
-              settingsFilePath,
-              JSON.stringify(settings, null, 2),
-              "utf8"
-            );
-          }
-          await ResultFile.create(
-            fileDescriptor.name,
-            fileDescriptor.rawFileName,
-            fileDescriptor.settingsFileName,
-            fileDescriptor.index,
+          const settings = volumeSettings.parse(
+            JSON.parse(settingFile.toString("utf8"))
+          );
+
+          await ResultVolume.create(
             result.id,
+            rawFilePath,
+            {
+              name: fileDescriptor.name,
+              index: fileDescriptor.index,
+              sizeX: settings.size.x,
+              sizeY: settings.size.y,
+              sizeZ: settings.size.z,
+              ratioX: settings.ratio.x,
+              ratioY: settings.ratio.y,
+              ratioZ: settings.ratio.z,
+              skipBytes: settings.skipBytes,
+              isLittleEndian: settings.isLittleEndian,
+              isSigned: settings.isSigned,
+              addValue: settings.addValue,
+              bytesPerVoxel: settings.bytesPerVoxel,
+              usedBits: settings.usedBits,
+            },
             tx
           );
 
@@ -204,7 +194,6 @@ export default class Result extends DatabaseModel {
         result = await tx.result.update({
           where: { id: result.id },
           data: {
-            folderPath: resultPath,
             rawVolumeChannel: rawVolumeChannel,
             logFile: logFile,
           },
@@ -213,17 +202,28 @@ export default class Result extends DatabaseModel {
         return result;
       });
     } catch (error) {
-      if (resultPath !== null) {
-        await fsPromises.rm(resultPath, {
+      try {
+        await fsPromises.rm(folderPath, {
           recursive: true,
           force: true,
         });
+      } catch (fsError) {
+        console.error(
+          `Error cleaning up result creation folder: ${fsError.message}`
+        );
       }
-      await fsPromises.rm(folderPath, {
-        recursive: true,
-        force: true,
-      });
       throw error;
+    } finally {
+      try {
+        await fsPromises.rm(folderPath, {
+          recursive: true,
+          force: true,
+        });
+      } catch (fsError) {
+        console.error(
+          `Error cleaning up result creation folder: ${fsError.message}`
+        );
+      }
     }
   }
 
@@ -251,8 +251,6 @@ export default class Result extends DatabaseModel {
 
     const pendingFiles = files.map((file) => new PendingFile(file));
 
-    const settings = VolumeData.toSettingSchema(volumeData);
-
     const resultsFolderPath = path.join(appConfig.dataPath, this.resultsFolder);
 
     fsPromises.mkdir(resultsFolderPath, {
@@ -272,15 +270,18 @@ export default class Result extends DatabaseModel {
       meanFilteredTmpFolder = await fsPromises.mkdtemp(
         path.join(appConfig.tempPath, "mean-filter") + "/"
       );
+      const meanFilteredFileName =
+        path.parse(volumeData.dataFile.rawFilePath).name +
+        "_mean3_inverted.raw";
       meanFilteredFilePath = path.join(
         meanFilteredTmpFolder,
-        "tmp_mean_filtered.raw"
+        meanFilteredFileName
       );
       await Utils.meanFilter(
         volumeData.dataFile.rawFilePath,
-        settings.size.x,
-        settings.size.y,
-        settings.size.z,
+        volumeData.sizeX,
+        volumeData.sizeY,
+        volumeData.sizeZ,
         meanFilteredFilePath
       );
     }
@@ -296,36 +297,28 @@ export default class Result extends DatabaseModel {
           },
         });
 
-        resultPath = await Result.reserveFolderName(result.id, true);
-
         let rawVolumeChannel = null;
 
         for (const [i, pendingFile] of pendingFiles.entries()) {
-          const settingFile = {
-            ...settings,
-            transferFunction: "",
-          };
-          settingFile.file = pendingFile.filteredFileName;
-          settingFile.transferFunction = Result.#getTFName(
-            volumeDescriptors[i].name
-          );
-          const settingFileName = `${Utils.stripExtension(
-            pendingFile.filteredFileName
-          )}.json`;
-
-          await pendingFile.saveAs(resultPath);
-          await fsPromises.writeFile(
-            path.join(resultPath, settingFileName),
-            JSON.stringify(settingFile, null, 2),
-            "utf8"
-          );
-
-          await ResultFile.create(
-            volumeDescriptors[i].name,
-            pendingFile.filteredFileName,
-            settingFileName,
-            volumeDescriptors[i].index,
+          await ResultVolume.create(
             result.id,
+            pendingFile,
+            {
+              name: volumeDescriptors[i].name,
+              index: volumeDescriptors[i].index,
+              sizeX: volumeData.sizeX,
+              sizeY: volumeData.sizeY,
+              sizeZ: volumeData.sizeZ,
+              ratioX: volumeData.ratioX,
+              ratioY: volumeData.ratioY,
+              ratioZ: volumeData.ratioZ,
+              skipBytes: volumeData.skipBytes,
+              isLittleEndian: volumeData.isLittleEndian,
+              isSigned: volumeData.isSigned,
+              addValue: volumeData.addValue,
+              bytesPerVoxel: volumeData.bytesPerVoxel,
+              usedBits: volumeData.usedBits,
+            },
             tx
           );
 
@@ -341,33 +334,6 @@ export default class Result extends DatabaseModel {
         }
 
         if (meanFilteredFilePath !== null) {
-          const volumeName = "Mean3-Inverted";
-          const meanFilteredFileName = `${Utils.stripExtension(
-            volumeData.dataFile.rawFilePath
-          )}_mean3_inverted.raw`;
-
-          const settingFile = {
-            ...settings,
-            transferFunction: "",
-          };
-          settingFile.file = meanFilteredFileName;
-          settingFile.transferFunction = Result.#getTFName(volumeName);
-
-          fsPromises.rename(
-            meanFilteredFilePath,
-            path.join(resultPath, meanFilteredFileName)
-          );
-
-          const settingFileName = `${Utils.stripExtension(
-            meanFilteredFileName
-          )}.json`;
-
-          await fsPromises.writeFile(
-            path.join(resultPath, settingFileName),
-            JSON.stringify(settingFile, null, 2),
-            "utf8"
-          );
-
           const usedIndices = volumeDescriptors
             .map((descriptor) => descriptor.index)
             .sort((a, b) => a - b);
@@ -382,12 +348,25 @@ export default class Result extends DatabaseModel {
 
           rawVolumeChannel = index;
 
-          await ResultFile.create(
-            volumeName,
-            meanFilteredFileName,
-            settingFileName,
-            index,
+          await ResultVolume.create(
             result.id,
+            meanFilteredFilePath,
+            {
+              name: "Mean3-Inverted",
+              index: index,
+              sizeX: volumeData.sizeX,
+              sizeY: volumeData.sizeY,
+              sizeZ: volumeData.sizeZ,
+              ratioX: volumeData.ratioX,
+              ratioY: volumeData.ratioY,
+              ratioZ: volumeData.ratioZ,
+              skipBytes: volumeData.skipBytes,
+              isLittleEndian: volumeData.isLittleEndian,
+              isSigned: volumeData.isSigned,
+              addValue: volumeData.addValue,
+              bytesPerVoxel: volumeData.bytesPerVoxel,
+              usedBits: volumeData.usedBits,
+            },
             tx
           );
         }
@@ -395,7 +374,6 @@ export default class Result extends DatabaseModel {
         result = await tx.result.update({
           where: { id: result.id },
           data: {
-            folderPath: resultPath,
             rawVolumeChannel: rawVolumeChannel,
           },
         });
@@ -427,27 +405,6 @@ export default class Result extends DatabaseModel {
   }
 
   /**
-   * @param {string} volumeName
-   * @returns {string}
-   */
-  static #getTFName(volumeName) {
-    switch (volumeName) {
-      case "Spikes":
-        return "tf-Spikes.json";
-      case "Membrane":
-        return "tf-Membrane.json";
-      case "Inner":
-        return "tf-Inner.json";
-      case "Background":
-        return "tf-Background.json";
-      case "Mean3-Inverted":
-        return "tf-raw.json";
-      default:
-        return "tf-default.json";
-    }
-  }
-
-  /**
    * @param {number} id
    * @param {import("@prisma/client").Prisma.ResultUpdateInput} changes
    * @returns {Promise<ResultDB>}
@@ -467,23 +424,10 @@ export default class Result extends DatabaseModel {
         where: { id: resultId },
       });
 
-      if (result.folderPath) {
-        fsPromises.rm(result.folderPath, {
-          force: true,
-          recursive: true,
-        });
-      }
+      await ResultDataFile.deleteZombies(tx);
 
       return result;
     });
-  }
-
-  /**
-   * @param {ResultDB} result
-   * @returns {string[]}
-   */
-  static getFilePaths(result) {
-    return [result.folderPath];
   }
 
   /**

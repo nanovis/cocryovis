@@ -14,6 +14,7 @@ import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
 import { Prisma } from "@prisma/client";
+import ResultDataFile from "./result-data-file.mjs";
 
 /**
  * @import z from "zod"
@@ -222,6 +223,7 @@ export default class Volume extends DatabaseModel {
         await RawVolumeDataFile.deleteZombies(tx);
         await SparseVolumeDataFile.deleteZombies(tx);
         await PseudoVolumeDataFile.deleteZombies(tx);
+        await ResultDataFile.deleteZombies(tx);
         return deletedVolume;
       });
     });

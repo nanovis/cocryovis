@@ -10,7 +10,7 @@ import { Prisma } from "@prisma/client";
 import VolumeDataFile from "./volume-data-file.mjs";
 
 /**
- * @typedef { import("@prisma/client").PseudoVolumeDataFile }PseudoVolumeDataFileDB
+ * @typedef { import("@prisma/client").PseudoVolumeDataFile } PseudoVolumeDataFileDB
  */
 
 export default class PseudoVolumeDataFile extends VolumeDataFile {
