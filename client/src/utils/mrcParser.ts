@@ -1,25 +1,72 @@
 import type { VolumeDescriptorSettings } from "./volumeDescriptor";
-import { parseHeader, MRCDataType, type MRCHeader } from "@warpem/mrc-parser";
+import {
+  parseHeader,
+  MRCDataType,
+  MRCHeader,
+  type Int3,
+  type Float3,
+} from "@warpem/mrc-parser";
 
-export async function readMRCHeader(mrcFile: File): Promise<MRCHeader> {
-  const base = await mrcFile.slice(0, 1024).arrayBuffer();
-  let header = parseHeader(base);
-  if (header.extendedBytes > 0) {
-    const fullHeaderBuffer = await mrcFile
-      .slice(0, 1024 + header.extendedBytes)
-      .arrayBuffer();
-    header = parseHeader(fullHeaderBuffer);
+class FullMRCHeader extends MRCHeader {
+  cellDimensions: Int3 = { x: 0, y: 0, z: 0 };
+
+  private constructor() {
+    super();
   }
 
-  return header;
+  static async fromFile(file: File): Promise<FullMRCHeader> {
+    let buffer = await file.slice(0, 1024).arrayBuffer();
+    let header = parseHeader(buffer);
+    if (header.extendedBytes > 0) {
+      buffer = await file.slice(0, 1024 + header.extendedBytes).arrayBuffer();
+      header = parseHeader(buffer);
+    }
+
+    const fullHeader = new FullMRCHeader();
+    Object.assign(fullHeader, header);
+
+    const view = new DataView(buffer);
+    fullHeader.cellDimensions.x = view.getFloat32(40, true);
+    fullHeader.cellDimensions.y = view.getFloat32(44, true);
+    fullHeader.cellDimensions.z = view.getFloat32(48, true);
+
+    return fullHeader;
+  }
+
+  computeVoxelSize(header: FullMRCHeader): Float3 {
+    return {
+      x: header.cellDimensions.x / header.gridDimensions.x,
+      y: header.cellDimensions.y / header.gridDimensions.y,
+      z: header.cellDimensions.z / header.gridDimensions.z,
+    };
+  }
+
+  computePhysicalSize(header: FullMRCHeader): Float3 {
+    const voxelSize = this.computeVoxelSize(header);
+    return {
+      x: voxelSize.x * header.dimensions.x,
+      y: voxelSize.y * header.dimensions.y,
+      z: voxelSize.z * header.dimensions.z,
+    };
+  }
+
+  computeVolumeRatio(header: FullMRCHeader): Float3 {
+    const physicalSize = this.computePhysicalSize(header);
+    const maxSize = Math.max(physicalSize.x, physicalSize.y, physicalSize.z);
+    return {
+      x: physicalSize.x / maxSize,
+      y: physicalSize.y / maxSize,
+      z: physicalSize.z / maxSize,
+    };
+  }
 }
 
 export async function getDescriptorFromMrcHeaderOrFile(
-  headerOrFile: MRCHeader | File
+  headerOrFile: FullMRCHeader | File
 ): Promise<VolumeDescriptorSettings> {
-  let header: MRCHeader;
+  let header: FullMRCHeader;
   if (headerOrFile instanceof File) {
-    header = await readMRCHeader(headerOrFile);
+    header = await FullMRCHeader.fromFile(headerOrFile);
   } else {
     header = headerOrFile;
   }
@@ -121,7 +168,7 @@ export async function convertMRCToRaw(
   mrcFile: File
 ): Promise<{ rawFile: File; settings: VolumeDescriptorSettings }> {
   //Read header (first 1024 bytes)
-  const header: MRCHeader = await readMRCHeader(mrcFile);
+  const header: FullMRCHeader = await FullMRCHeader.fromFile(mrcFile);
 
   if (
     header.mapOrder.x !== 1 ||
@@ -171,9 +218,6 @@ export async function convertMRCToRaw(
   });
 
   const settings = await getDescriptorFromMrcHeaderOrFile(header);
-  console.log(
-    `Converted MRC to RAW with settings: ${JSON.stringify(settings)}`
-  );
 
   return { rawFile, settings: settings };
 }
