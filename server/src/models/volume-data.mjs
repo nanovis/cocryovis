@@ -10,10 +10,11 @@ import { PendingUpload } from "../tools/file-handler.mjs";
 import { ApiError } from "../tools/error-handler.mjs";
 import archiver from "archiver";
 import { Prisma } from "@prisma/client";
+import prismaManager from "../tools/prisma-manager.mjs";
 
 /**
  * @import z from "zod"
- * @import { volumeDescriptorSettings, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+ * @import { volumeDescriptorSettingsSchema, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoLabelVolumeDataDB
@@ -45,9 +46,10 @@ export default class VolumeData extends DatabaseModel {
 
   /**
    * @param {VolumeDataDB & {dataFile: {rawFilePath: string}}} volumeData
+   * @param { PhysicalDimensions } physicalDimensions
    * @returns {z.infer<typeof volumeSettings>}
    */
-  static toSettingSchema(volumeData) {
+  static toSettingSchema(volumeData, physicalDimensions) {
     return {
       file: path.basename(volumeData.dataFile.rawFilePath),
       size: {
@@ -55,10 +57,11 @@ export default class VolumeData extends DatabaseModel {
         y: volumeData.sizeY,
         z: volumeData.sizeZ,
       },
-      ratio: {
-        x: volumeData.ratioX,
-        y: volumeData.ratioY,
-        z: volumeData.ratioZ,
+      physicalUnit: physicalDimensions.physicalUnit,
+      physicalSize: {
+        x: physicalDimensions.physicalSizeX,
+        y: physicalDimensions.physicalSizeY,
+        z: physicalDimensions.physicalSizeZ,
       },
       bytesPerVoxel: volumeData.bytesPerVoxel,
       usedBits: volumeData.usedBits,
@@ -70,16 +73,13 @@ export default class VolumeData extends DatabaseModel {
   }
 
   /**
-   * @param {z.infer<typeof volumeDescriptorSettings>} settings
+   * @param {z.infer<typeof volumeDescriptorSettingsSchema>} settings
    */
   static fromSettingSchema(settings) {
     return {
       sizeX: settings.size.x,
       sizeY: settings.size.y,
       sizeZ: settings.size.z,
-      ratioX: settings.ratio.x,
-      ratioY: settings.ratio.y,
-      ratioZ: settings.ratio.z,
       bytesPerVoxel: settings.bytesPerVoxel,
       usedBits: settings.usedBits,
       skipBytes: settings.skipBytes,
@@ -139,7 +139,7 @@ export default class VolumeData extends DatabaseModel {
    * @param {number} creatorId
    * @param {number} volumeId
    * @param {PendingUpload[]} files
-   * @param {z.infer<typeof volumeDescriptorSettings>} settings
+   * @param {z.infer<typeof volumeDescriptorSettingsSchema>} settings
    * @param {boolean?} skipLock
    * @param {Prisma.TransactionClient | undefined} [client]
    * @returns {Promise<object>}
@@ -260,6 +260,10 @@ export default class VolumeData extends DatabaseModel {
     /**@type {VolumeDataWithFile} */
     const volumeData = await this.getWithData(id);
 
+    const volume = await prismaManager.db.volume.findUnique({
+      where: { id: volumeData.volumeId },
+    });
+
     let hasFiles = false;
 
     const archive = archiver("zip", {
@@ -273,7 +277,7 @@ export default class VolumeData extends DatabaseModel {
       hasFiles = true;
     }
     if (downloadSettingsFile) {
-      const settings = VolumeData.toSettingSchema(volumeData);
+      const settings = VolumeData.toSettingSchema(volumeData, volume);
       const settingsJSON = JSON.stringify(settings, null, 4);
       archive.append(settingsJSON, {
         name: `${Utils.stripExtension(volumeData.dataFile.rawFilePath)}.json`,

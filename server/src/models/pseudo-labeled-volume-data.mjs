@@ -124,7 +124,7 @@ export default class PseudoLabeledVolumeData extends VolumeData {
    * @param {number} creatorId
    * @param {number} volumeId
    * @param {number} originalLabelId
-   * @param {z.infer<typeof volumeSettings>} settings
+   * @param {CommonVolumeSettings} settings
    * @param {import("@prisma/client").Prisma.TransactionClient} client
    * @returns {Promise<import("./volume-data.mjs").PseudoVolumeDataWithFileDB>}
    */
@@ -149,7 +149,15 @@ export default class PseudoLabeledVolumeData extends VolumeData {
             id: originalLabelId,
           },
         },
-        ...PseudoLabeledVolumeData.fromSettingSchema(settings),
+        sizeX: settings.sizeX,
+        sizeY: settings.sizeY,
+        sizeZ: settings.sizeZ,
+        skipBytes: settings.skipBytes,
+        isLittleEndian: settings.isLittleEndian,
+        isSigned: settings.isSigned,
+        addValue: settings.addValue,
+        bytesPerVoxel: settings.bytesPerVoxel,
+        usedBits: settings.usedBits,
         volume: {
           connect: {
             id: volumeId,

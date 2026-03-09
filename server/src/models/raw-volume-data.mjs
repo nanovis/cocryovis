@@ -17,7 +17,7 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeDescriptorSettings, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+ * @import { volumeDescriptorSettingsSchema, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  */
 
@@ -91,7 +91,7 @@ export default class RawVolumeData extends VolumeData {
    * @param {number} creatorId
    * @param {number} volumeId
    * @param {PendingUpload[]} files
-   * @param {z.infer<typeof volumeDescriptorSettings>} settings
+   * @param {z.infer<typeof volumeDescriptorSettingsSchema>} settings
    * @param {boolean?} skipLock
    * @returns {Promise<RawVolumeDataDB>}
    */
@@ -252,6 +252,8 @@ export default class RawVolumeData extends VolumeData {
   ) {
     const volumeData = await RawVolumeData.getWithData(id);
 
+    const volume = await Volume.getById(volumeData.volumeId);
+
     let hasFiles = false;
 
     const archive = archiver("zip", {
@@ -265,7 +267,7 @@ export default class RawVolumeData extends VolumeData {
       hasFiles = true;
     }
     if (downloadSettingsFile) {
-      const settings = RawVolumeData.toSettingSchema(volumeData);
+      const settings = RawVolumeData.toSettingSchema(volumeData, volume);
       const settingsJSON = JSON.stringify(settings, null, 4);
       archive.append(settingsJSON, {
         name: `${Utils.stripExtension(volumeData.dataFile.rawFilePath)}.json`,

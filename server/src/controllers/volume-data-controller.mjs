@@ -24,6 +24,7 @@ import {
 } from "@cocryovis/schemas/volume-data-path-schema";
 import VolumeData from "../models/volume-data.mjs";
 import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import Volume from "../models/volume.mjs";
 
 /**
  * @import z from "zod"
@@ -115,6 +116,8 @@ export default class VolumeDataController {
       );
     }
 
+    const volume = await Volume.getById(volumeData.volumeId);
+
     const archive = archiver("zip", {
       zlib: { level: appConfig.compressionLevel },
     });
@@ -125,7 +128,7 @@ export default class VolumeDataController {
 
     await Utils.packVisualizationArchive(
       archive,
-      [VolumeData.toSettingSchema(volumeData)],
+      [VolumeData.toSettingSchema(volumeData, volume)],
       [volumeData.dataFile.rawFilePath]
     );
 

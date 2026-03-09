@@ -464,7 +464,7 @@ export async function loadScript(src: string): Promise<void> {
   });
 }
 
-export function toSettingSchema(
+export function toInferenceSettingSchema(
   volumeData: RawVolumeInstance | SparseVolumeInstance | PseudoVolumeInstance
 ) {
   return {
@@ -473,11 +473,6 @@ export function toSettingSchema(
       x: volumeData.sizeX,
       y: volumeData.sizeY,
       z: volumeData.sizeZ,
-    },
-    ratio: {
-      x: volumeData.ratioX,
-      y: volumeData.ratioY,
-      z: volumeData.ratioZ,
     },
     bytesPerVoxel: volumeData.bytesPerVoxel,
     usedBits: volumeData.usedBits,

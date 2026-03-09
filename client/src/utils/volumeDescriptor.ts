@@ -1,5 +1,6 @@
 import {
   type transferFunctionSchema,
+  type volumeDescriptorSettingsSchema,
   volumeSettings,
 } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import type z from "zod";
@@ -23,9 +24,6 @@ export type FileTypeOptions = z.infer<typeof fileTypeSchema>;
 export const fileTypeOptions =
   fileTypeSchema.options as readonly FileTypeOptions[];
 
-export const volumeDescriptorSettingsSchema = volumeSettings.omit({
-  file: true,
-});
 export type VolumeDescriptorSettings = z.output<
   typeof volumeDescriptorSettingsSchema
 >;

@@ -7,6 +7,18 @@ declare module "express-session" {
 }
 
 declare global {
+  interface CommonVolumeSettings {
+    name: string;
+    sizeX: number;
+    sizeY: number;
+    sizeZ: number;
+    skipBytes: number;
+    isLittleEndian: boolean;
+    isSigned: boolean;
+    addValue: number;
+    bytesPerVoxel: number;
+    usedBits: number;
+  }
   type RequireFields<T, K extends keyof T> = Partial<T> & Required<Pick<T, K>>;
 
   interface GPUData {

@@ -254,11 +254,6 @@ const Visualization = observer(({ open, close }: Props) => {
                 y: uiState.visualizedVolume.volume.rawData.sizeY,
                 z: uiState.visualizedVolume.volume.rawData.sizeZ,
               },
-              ratio: {
-                x: uiState.visualizedVolume.volume.rawData.ratioX,
-                y: uiState.visualizedVolume.volume.rawData.ratioY,
-                z: uiState.visualizedVolume.volume.rawData.ratioZ,
-              },
               bytesPerVoxel: 1,
               usedBits: 8,
               isLittleEndian: true,

@@ -153,7 +153,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const rawDataFile = new Uint8Array(arrayBuffer);
 
-      const settings = Utils.toSettingSchema(rawData);
+      const settings = Utils.toInferenceSettingSchema(rawData);
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 

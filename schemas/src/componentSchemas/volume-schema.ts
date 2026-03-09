@@ -1,10 +1,15 @@
 import z from "zod";
 import { idSchema } from "./id-param-schema";
+import { physicalUnitSchema } from "./volume-settings-schema";
 
 export const volumeSchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string(),
+  physicalUnit: physicalUnitSchema,
+  physicalSizeX: z.number(),
+  physicalSizeY: z.number(),
+  physicalSizeZ: z.number(),
   creatorId: z.number().nullable(),
 });
 

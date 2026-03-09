@@ -9,7 +9,6 @@ import path from "path";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import Project from "./project.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
-import VolumeData from "./volume-data.mjs";
 import RawVolumeDataFile from "./raw-volume-data-file.mjs";
 import SparseVolumeDataFile from "./sparse-volume-data-file.mjs";
 import PseudoVolumeDataFile from "./pseudo-volume-data-file.mjs";
@@ -276,7 +275,7 @@ export default class Volume extends DatabaseModel {
               creatorId,
               volumeId,
               originalLabels[i].id,
-              VolumeData.toSettingSchema(originalLabels[i]),
+              originalLabels[i],
               tx
             );
           newFolders.push(pseudoLabelVolumeData.dataFile.path);

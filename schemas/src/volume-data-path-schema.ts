@@ -16,7 +16,7 @@ import {
 } from "./componentSchemas/raw-volume-data-schema";
 import { fileSchema, singleFileSchema } from "./componentSchemas/file-schema";
 import {
-  volumeDescriptorSettings,
+  volumeDescriptorSettingsSchema,
   volumeSettings,
 } from "./componentSchemas/volume-settings-schema";
 import type { ZodOpenApiPathsObject } from "zod-openapi";
@@ -47,7 +47,7 @@ export const fromUrlSchema = z
     url: z.url({
       protocol: /^https?$/,
     }),
-    volumeSettings: volumeDescriptorSettings.optional(),
+    volumeSettings: volumeDescriptorSettingsSchema.optional(),
   })
   .refine((f) => f.fileType !== "raw" || f.volumeSettings, {
     message: "Raw files require volume settings.",

@@ -116,9 +116,10 @@ export default class ResultVolume extends DatabaseModel {
 
   /**
    * @param {ResultVolumeWithFileDB} volumeData
+   * @param { PhysicalDimensions } physicalDimensions
    * @returns {z.infer<typeof volumeSettings>}
    */
-  static toSettingSchema(volumeData) {
+  static toSettingSchema(volumeData, physicalDimensions) {
     return {
       file: path.basename(volumeData.dataFile.rawFilePath),
       size: {
@@ -126,10 +127,11 @@ export default class ResultVolume extends DatabaseModel {
         y: volumeData.sizeY,
         z: volumeData.sizeZ,
       },
-      ratio: {
-        x: volumeData.ratioX,
-        y: volumeData.ratioY,
-        z: volumeData.ratioZ,
+      physicalUnit: physicalDimensions.physicalUnit,
+      physicalSize: {
+        x: physicalDimensions.physicalSizeX,
+        y: physicalDimensions.physicalSizeY,
+        z: physicalDimensions.physicalSizeZ,
       },
       bytesPerVoxel: volumeData.bytesPerVoxel,
       usedBits: volumeData.usedBits,

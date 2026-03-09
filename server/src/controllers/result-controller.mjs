@@ -10,6 +10,7 @@ import validateSchema from "../tools/validate-schema.mjs";
 import { idVolume } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import ResultVolume from "../models/result-volume.mjs";
 import ResultDataFile from "../models/result-data-file.mjs";
+import Volume from "../models/volume.mjs";
 
 /**
  * @import { createFromFilesSchema } from "@cocryovis/schemas/result-path-schema"
@@ -82,6 +83,9 @@ export default class ResultController {
     const result = await Result.getByIdDeep(params.idResult, {
       resultVolumes: true,
     });
+
+    const parentVolume = await Volume.getById(result.volumeId);
+
     if (result.resultVolumes.length === 0) {
       throw new ApiError(
         400,
@@ -104,10 +108,13 @@ export default class ResultController {
     for (const reference of fileReferences) {
       const dataFile = await ResultDataFile.getById(reference.dataFileId);
 
-      const settingsReference = ResultVolume.toSettingSchema({
-        ...reference,
-        dataFile,
-      });
+      const settingsReference = ResultVolume.toSettingSchema(
+        {
+          ...reference,
+          dataFile,
+        },
+        parentVolume
+      );
       settings.push(settingsReference);
 
       rawFileNames.push(dataFile.rawFilePath);

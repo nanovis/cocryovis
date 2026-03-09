@@ -33,25 +33,25 @@ class FullMRCHeader extends MRCHeader {
     return fullHeader;
   }
 
-  computeVoxelSize(header: FullMRCHeader): Float3 {
+  computeVoxelSize(): Float3 {
     return {
-      x: header.cellDimensions.x / header.gridDimensions.x,
-      y: header.cellDimensions.y / header.gridDimensions.y,
-      z: header.cellDimensions.z / header.gridDimensions.z,
+      x: this.cellDimensions.x / this.gridDimensions.x,
+      y: this.cellDimensions.y / this.gridDimensions.y,
+      z: this.cellDimensions.z / this.gridDimensions.z,
     };
   }
 
-  computePhysicalSize(header: FullMRCHeader): Float3 {
-    const voxelSize = this.computeVoxelSize(header);
+  computePhysicalSize(): Float3 {
+    const voxelSize = this.computeVoxelSize();
     return {
-      x: voxelSize.x * header.dimensions.x,
-      y: voxelSize.y * header.dimensions.y,
-      z: voxelSize.z * header.dimensions.z,
+      x: voxelSize.x * this.dimensions.x,
+      y: voxelSize.y * this.dimensions.y,
+      z: voxelSize.z * this.dimensions.z,
     };
   }
 
-  computeVolumeRatio(header: FullMRCHeader): Float3 {
-    const physicalSize = this.computePhysicalSize(header);
+  computeVolumeRatio(): Float3 {
+    const physicalSize = this.computePhysicalSize();
     const maxSize = Math.max(physicalSize.x, physicalSize.y, physicalSize.z);
     return {
       x: physicalSize.x / maxSize,
@@ -101,7 +101,8 @@ export async function getDescriptorFromMrcHeaderOrFile(
 
   return {
     size: { x: dimensions.x, y: dimensions.y, z: dimensions.z },
-    ratio: { x: 1.0, y: 1.0, z: 1.0 },
+    physicalUnit: "ANGSTROM",
+    physicalSize: header.computePhysicalSize(),
     bytesPerVoxel: bytesPerVoxel,
     usedBits: usedBits,
     skipBytes: 0,

@@ -67,16 +67,34 @@ export class VolumeManager {
 
       const settings = await descriptor.getSettings();
 
-      const ratio = settings.ratio;
-      const ratioArray = [ratio.x, ratio.y, ratio.z];
+      let scaledRatio!: [number, number, number];
+      if (settings.physicalUnit === "PIXEL") {
+        const size = settings.size;
+        const physicalSize = settings.physicalSize;
+        const sizeArray = [
+          size.x * physicalSize.x,
+          size.y * physicalSize.y,
+          size.z * physicalSize.z,
+        ];
 
-      const size = settings.size;
-      const sizeArray = [size.x, size.y, size.z];
-
-      const maxSize = Math.max(...sizeArray);
-      const scaledRatio = ratioArray.map(
-        (r, i) => (r * sizeArray[i]) / maxSize
-      );
+        const maxSize = Math.max(...sizeArray);
+        scaledRatio = sizeArray.map((s) => s / maxSize) as [
+          number,
+          number,
+          number,
+        ];
+      } else {
+        const maxPhysicalSize = Math.max(
+          settings.physicalSize.x,
+          settings.physicalSize.y,
+          settings.physicalSize.z
+        );
+        scaledRatio = [
+          settings.physicalSize.x / maxPhysicalSize,
+          settings.physicalSize.y / maxPhysicalSize,
+          settings.physicalSize.z / maxPhysicalSize,
+        ];
+      }
 
       this.channelData.set(tfIndex, {
         color: [color.x / 255, color.y / 255, color.z / 255, 1],

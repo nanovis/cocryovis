@@ -15,10 +15,7 @@ import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import type z from "zod";
-import type {
-  volumeSettings,
-  volumeSizeSchema,
-} from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 class LabelGenerationTask extends Task<PseudoLabeledVolumeData[]> {
   private ilastikHandler: IlastikHandler;
@@ -214,8 +211,6 @@ export default class IlastikHandler {
 
       IlastikHandler.checkVolumeProperties(volume);
 
-      const settings = RawVolumeData.toSettingSchema(volume.rawData);
-
       const rawH5FileName =
         Utils.stripExtension(volume.rawData.dataFile.rawFilePath) + ".h5";
       const labelsH5FileName =
@@ -229,7 +224,6 @@ export default class IlastikHandler {
       await this.convertDataToH5(
         volume.rawData,
         volume.sparseVolumes,
-        settings,
         rawH5Path,
         labelsH5Path,
         logFile
@@ -303,7 +297,6 @@ export default class IlastikHandler {
   private async convertDataToH5(
     rawData: RawVolumeDataWithFileDB,
     sparseLabelsStack: SparseVolumeDataWithFileDB[],
-    settings: z.infer<typeof volumeSettings>,
     rawOutputPath: string,
     labelsOutputPath: string,
     logFile: LogFile | null = null
@@ -319,19 +312,25 @@ export default class IlastikHandler {
       });
     }
 
+    const dimensions = {
+      x: rawData.sizeX,
+      y: rawData.sizeY,
+      z: rawData.sizeZ,
+    };
+
     await rawToH5(
       rawData.dataFile.rawFilePath,
-      settings.size,
-      settings.usedBits,
-      settings.isSigned,
-      settings.isLittleEndian,
+      dimensions,
+      rawData.usedBits,
+      rawData.isSigned,
+      rawData.isLittleEndian,
       rawOutputPath,
       IlastikHandler.rawDataset,
       logFile
     );
     await labelsToH5(
       sparseLabelsStack.map((l) => l.dataFile.rawFilePath),
-      settings.size,
+      dimensions,
       labelsOutputPath,
       IlastikHandler.labelsDataset,
       logFile
@@ -384,32 +383,23 @@ export default class IlastikHandler {
       }
     }
 
-    const settings = RawVolumeData.toSettingSchema(volume.rawData);
-    if (!Object.hasOwn(settings, "size")) {
-      throw new ApiError(
-        400,
-        "Pseudo Labels Generation error: Missing data dimensions data."
-      );
-    }
-    const dimensions = settings.size;
+    const dimensions = {
+      x: volume.rawData.sizeX,
+      y: volume.rawData.sizeY,
+      z: volume.rawData.sizeZ,
+    };
     for (const sparseLabel of volume.sparseVolumes) {
-      const settings = RawVolumeData.toSettingSchema(sparseLabel);
-      if (
-        !Object.hasOwn(settings, "bytesPerVoxel") ||
-        settings.bytesPerVoxel != 1
-      ) {
+      if (sparseLabel.bytesPerVoxel != 1) {
         throw new ApiError(
           400,
           "Pseudo Labels Generation error: Labels must be in uint8 data format."
         );
       }
-      if (!Object.hasOwn(settings, "size")) {
-        throw new ApiError(
-          400,
-          "Pseudo Labels Generation error: Missing data dimensions data."
-        );
-      }
-      IlastikHandler.checkDimensions(dimensions, settings.size);
+      IlastikHandler.checkDimensions(dimensions, {
+        x: sparseLabel.sizeX,
+        y: sparseLabel.sizeY,
+        z: sparseLabel.sizeZ,
+      });
     }
   }
 }

@@ -8,6 +8,7 @@
     "prisma:init": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:db": "npx prisma studio",
+    "prisma:seed": "npx prisma db seed",
     "prisma:seed:users": "tsx prisma/seeds/test-users.ts",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",

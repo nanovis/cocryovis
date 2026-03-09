@@ -56,10 +56,22 @@ model ProjectAccess {
   @@id([userId, projectId])
 }
 
+enum PhysicalUnit {
+  PIXEL
+  UNIT
+  ANGSTROM
+  NANOMETER
+  MICROMETER
+}
+
 model Volume {
   id            Int                     @id @default(autoincrement())
   name          String
   description   String
+  physicalUnit  PhysicalUnit            @default(PIXEL)
+  physicalSizeX Float                   @default(1)
+  physicalSizeY Float                   @default(1)
+  physicalSizeZ Float                   @default(1)
   creator       User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId     Int?
   project       Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -79,9 +91,6 @@ model RawVolumeData {
   sizeX          Int
   sizeY          Int
   sizeZ          Int
-  ratioX         Float
-  ratioY         Float
-  ratioZ         Float
   skipBytes      Int
   isLittleEndian Boolean
   isSigned       Boolean
@@ -125,9 +134,6 @@ model SparseLabelVolumeData {
   sizeX          Int
   sizeY          Int
   sizeZ          Int
-  ratioX         Float
-  ratioY         Float
-  ratioZ         Float
   skipBytes      Int
   isLittleEndian Boolean
   isSigned       Boolean
@@ -157,9 +163,6 @@ model PseudoLabelVolumeData {
   sizeX           Int
   sizeY           Int
   sizeZ           Int
-  ratioX          Float
-  ratioY          Float
-  ratioZ          Float
   skipBytes       Int
   isLittleEndian  Boolean
   isSigned        Boolean
@@ -232,9 +235,6 @@ model ResultVolume {
   sizeX          Int
   sizeY          Int
   sizeZ          Int
-  ratioX         Float
-  ratioY         Float
-  ratioZ         Float
   skipBytes      Int
   isLittleEndian Boolean
   isSigned       Boolean

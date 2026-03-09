@@ -197,11 +197,11 @@ export default class NanoOetziHandler {
         rawVolumeData.dataFile.path,
         `${Utils.stripExtension(rawVolumeData.dataFile.rawFilePath)}.json`
       );
-      const settings = RawVolumeData.toSettingSchema(rawVolumeData);
-      await fs.promises.writeFile(
-        tempSettingsPath,
-        JSON.stringify(settings),
-        "utf8"
+
+      await NanoOetziHandler.writeNanoOetziSettingsFile(
+        rawVolumeData.dataFile.rawFilePath,
+        rawVolumeData,
+        tempSettingsPath
       );
 
       await fs.promises.mkdir(outputPath, { recursive: true });
@@ -769,21 +769,23 @@ export default class NanoOetziHandler {
         );
       }
 
-      const volumeSettings = RawVolumeData.toSettingSchema(reference.rawData);
-      if (volumeSettings.usedBits != 8) {
+      if (reference.rawData.usedBits != 8) {
         throw new ApiError(
           400,
           "NanoOetzi inference error: One or more raw volume data inputs have an unsopported data format."
         );
       }
 
+      const dimensions = {
+        x: reference.rawData.sizeX,
+        y: reference.rawData.sizeY,
+        z: reference.rawData.sizeZ,
+      };
+
       if (properties.dimensions == null) {
-        properties.dimensions = volumeSettings.size;
+        properties.dimensions = dimensions;
       } else {
-        NanoOetziHandler.checkDimensions(
-          volumeSettings.size,
-          properties.dimensions
-        );
+        NanoOetziHandler.checkDimensions(dimensions, properties.dimensions);
       }
       if (properties.channels == null) {
         properties.channels = reference.pseudoVolumes.length;
@@ -812,19 +814,20 @@ export default class NanoOetziHandler {
             "NanoOetzi inference error: One or more pseudo labeled volumes are missing a raw file."
           );
         }
-        const pseudoVolumeSettings =
-          RawVolumeData.toSettingSchema(pseudoVolume);
 
-        if (pseudoVolumeSettings.usedBits != 8) {
+        const dimensions = {
+          x: pseudoVolume.sizeX,
+          y: pseudoVolume.sizeY,
+          z: pseudoVolume.sizeZ,
+        };
+
+        if (pseudoVolume.usedBits != 8) {
           throw new ApiError(
             400,
             "NanoOetzi inference error: One or more pseudo labeled volumes have an unsopported data format."
           );
         }
-        NanoOetziHandler.checkDimensions(
-          pseudoVolumeSettings.size,
-          properties.dimensions
-        );
+        NanoOetziHandler.checkDimensions(dimensions, properties.dimensions);
         volumeInput.labels.push(pseudoVolume.dataFile.rawFilePath);
       }
 
@@ -872,6 +875,32 @@ export default class NanoOetziHandler {
   private createTemporaryOutputPath() {
     return Utils.createTemporaryFolder(
       path.join(this.config.tempPath, NanoOetziHandler.tempDirectory)
+    );
+  }
+
+  private static writeNanoOetziSettingsFile(
+    filePath: string,
+    settings: CommonVolumeSettings,
+    outputPath: string
+  ): Promise<void> {
+    const nanoOetziSettings = {
+      file: path.basename(filePath),
+      usedBits: settings.usedBits,
+      isSigned: settings.isSigned,
+      isLittleEndian: settings.isLittleEndian,
+      addValue: settings.addValue,
+      skipBytes: settings.skipBytes,
+      bytesPerVoxel: settings.bytesPerVoxel,
+      size: {
+        x: settings.sizeX,
+        y: settings.sizeY,
+        z: settings.sizeZ,
+      },
+    };
+    return fs.promises.writeFile(
+      outputPath,
+      JSON.stringify(nanoOetziSettings),
+      "utf8"
     );
   }
 }
