@@ -1,5 +1,5 @@
 import { useMst } from "@/stores/RootStore";
-import { SVG, type Svg } from "@svgdotjs/svg.js";
+import { SVG, type G, type Svg } from "@svgdotjs/svg.js";
 import { observer } from "mobx-react-lite";
 import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
 import { planeBBox, slicePixelSize } from "@/renderer/utilities/math";
@@ -51,6 +51,9 @@ const Ruler = observer(({ canvasRef }: Props) => {
   const verticalContainerRef = useRef<HTMLDivElement>(null);
   const horizontalDrawRef = useRef<Svg>(null);
   const verticalDrawRef = useRef<Svg>(null);
+
+  const scheduleRef = useRef<number | null>(null);
+
   const rootStore = useMst();
 
   const redrawRuler = useEffectEvent(() => {
@@ -121,6 +124,15 @@ const Ruler = observer(({ canvasRef }: Props) => {
     );
   });
 
+  const scheduleRedraw = useEffectEvent(() => {
+    if (scheduleRef.current !== null) return;
+
+    scheduleRef.current = requestAnimationFrame(() => {
+      scheduleRef.current = null;
+      redrawRuler();
+    });
+  });
+
   useEffect(() => {
     if (!horizontalContainerRef.current) return;
 
@@ -153,10 +165,11 @@ const Ruler = observer(({ canvasRef }: Props) => {
 
     if (!canvas || !renderer) return;
 
-    const unsubscribeCamera = renderer.camera.observable.observe(redrawRuler);
+    const unsubscribeCamera =
+      renderer.camera.observable.observe(scheduleRedraw);
     const unsubscribeClip =
       renderer.clippingPlaneManager.clippingParametersBuffer.observable.observe(
-        redrawRuler
+        scheduleRedraw
       );
 
     return () => {
@@ -164,6 +177,14 @@ const Ruler = observer(({ canvasRef }: Props) => {
       unsubscribeClip();
     };
   }, [rootStore.renderer, canvasRef]);
+
+  useEffect(() => {
+    return () => {
+      if (scheduleRef.current !== null) {
+        cancelAnimationFrame(scheduleRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className={classes.container}>
