@@ -11,6 +11,8 @@ export interface CameraParams {
   far: number;
 }
 
+type CameraListener = (camera: Camera) => void;
+
 export class Camera extends WebGpuBuffer {
   private readonly params: CameraParams;
 
@@ -24,6 +26,8 @@ export class Camera extends WebGpuBuffer {
 
   private views = new Map<string, CameraParams>();
 
+  private listeners = new Set<CameraListener>();
+
   constructor(device: GPUDevice, params: CameraParams) {
     super(device, Camera.size, "Camera Buffer");
 
@@ -34,6 +38,22 @@ export class Camera extends WebGpuBuffer {
     this.inverseViewMatrix = inverseViewMatrix;
 
     this.projectionMatrix = this.computeProjectionMatrix();
+  }
+
+  observe(listener: CameraListener) {
+    this.listeners.add(listener);
+
+    return () => this.listeners.delete(listener);
+  }
+
+  unobserve(listener: CameraListener) {
+    this.listeners.delete(listener);
+  }
+
+  private notify() {
+    for (const listener of this.listeners) {
+      listener(this);
+    }
   }
 
   protected createBuffer(size: number): GPUBuffer {
@@ -130,6 +150,7 @@ export class Camera extends WebGpuBuffer {
   setParameters(params: Partial<CameraParams>) {
     Object.assign(this.params, params);
     this.dirty = true;
+    this.notify();
   }
 
   getViewVector() {
@@ -175,21 +196,27 @@ export class Camera extends WebGpuBuffer {
     clippingPlaneOrigin: vec3,
     volumeRatio: vec3
   ) {
-    this.params.up = clippingPlaneUp;
-    this.params.viewCenter = clippingPlaneOrigin;
+    const up = vec3.clone(clippingPlaneUp);
+    const viewCenter = vec3.clone(clippingPlaneOrigin);
     const objectSize =
       Math.abs(volumeRatio[0] * clippingPlaneUp[0]) +
       Math.abs(volumeRatio[1] * clippingPlaneUp[1]) +
       Math.abs(volumeRatio[2] * clippingPlaneUp[2]);
+
     const scaledFov = glMatrix.toRadian(this.params.fovY / 2);
     const distance = objectSize / Math.tan(scaledFov);
-    vec3.scaleAndAdd(
-      this.params.position,
+    const position = vec3.scaleAndAdd(
+      vec3.create(),
       clippingPlaneOrigin,
       clippingPlaneNormal,
       -distance
     );
-    this.dirty = true;
+
+    this.setParameters({
+      up: up,
+      viewCenter: viewCenter,
+      position: position,
+    });
   }
 
   getBuffer(): GPUBuffer {

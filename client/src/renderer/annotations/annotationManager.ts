@@ -10,7 +10,7 @@ import { AnnotationVolume } from "./annotationVolume";
 import type { VolumeManager } from "../volume/volumeManager";
 import { mat4, vec3, vec4 } from "gl-matrix";
 import type { Camera } from "../core/camera";
-import { intersectRayPlane } from "../utilities/math";
+import { findRayPlaneIntersection } from "../utilities/math";
 import type { ClippingPlaneManager } from "../volume/clippingPlaneManager";
 import type { RenderingParametersBuffer } from "../renderingParametersBuffer";
 import { AnnotationsDataBuffer } from "./annotationsDataBuffer";
@@ -286,21 +286,20 @@ export class AnnotationManager {
 
     const clippingPlaneBuffer =
       this.clippingPlaneManager.clippingParametersBuffer;
-    const t = intersectRayPlane(
+    const vertex = findRayPlaneIntersection(
       rayOrigin,
       rayDir,
       clippingPlaneBuffer.params.clippingPlaneOrigin,
       clippingPlaneBuffer.params.clippingPlaneNormal
     );
 
-    if (t === undefined) {
+    if (vertex === undefined) {
       return;
     }
 
     const ratio = this.volumeManager.channelData.get(0).ratio;
     // const ratio = [1, 1, 1];
 
-    const vertex = vec3.scaleAndAdd(vec3.create(), rayOrigin, rayDir, t);
     vertex[0] = (vertex[0] / ratio[0]) * 0.5 + 0.5;
     vertex[1] = (vertex[1] / ratio[1]) * 0.5 + 0.5;
     vertex[2] = (vertex[2] / ratio[2]) * 0.5 + 0.5;

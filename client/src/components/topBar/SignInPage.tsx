@@ -14,11 +14,12 @@ import { useMst } from "@/stores/RootStore";
 
 const useStyles = makeStyles({
   container: {
-    position: "fixed",
+    position: "absolute",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     height: "100%",
+    zIndex: 1,
   },
   signInHeader: {
     marginTop: "50px",

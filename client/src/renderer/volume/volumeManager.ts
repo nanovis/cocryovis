@@ -18,6 +18,8 @@ export class VolumeManager {
   volumeParameterBuffer: VolumeParameterBuffer;
   private modelMatrix: mat4 = mat4.create();
 
+  private _settings: VolumeDescriptor["settings"] | undefined;
+
   constructor(device: GPUDevice) {
     this.device = device;
     this.channelData = new ChannelData(device);
@@ -31,6 +33,29 @@ export class VolumeManager {
     });
     this.volume = new Volume(device, volumeSampler);
     this.volumeParameterBuffer = new VolumeParameterBuffer(device);
+  }
+
+  computedPhysicalSize() {
+    if (!this._settings) {
+      return undefined;
+    }
+
+    const physicalSize = this._settings.physicalSize;
+
+    if (this._settings.physicalUnit === "PIXEL") {
+      const size = this._settings.size;
+      return {
+        x: physicalSize.x * size.x,
+        y: physicalSize.y * size.y,
+        z: physicalSize.z * size.z,
+      };
+    }
+
+    return {
+      x: physicalSize.x,
+      y: physicalSize.y,
+      z: physicalSize.z,
+    };
   }
 
   async loadVolumes(
@@ -49,6 +74,7 @@ export class VolumeManager {
     }
 
     // this.channelData.clearChannelData();
+    this._settings = undefined;
 
     let tfIndex = 0;
     for (const descriptor of descriptors) {
@@ -66,6 +92,9 @@ export class VolumeManager {
       }
 
       const settings = await descriptor.getSettings();
+      if (!this._settings) {
+        this._settings = settings;
+      }
 
       let scaledRatio!: [number, number, number];
       if (settings.physicalUnit === "PIXEL") {

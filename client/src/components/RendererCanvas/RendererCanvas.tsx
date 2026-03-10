@@ -6,11 +6,17 @@ import { useMst } from "@/stores/RootStore";
 import { CONFIG } from "@/constants";
 import { OrbitCameraController } from "@/utils/orbitCameraController";
 import { useCanvasControls } from "@/hooks/useCanvasControls";
+import Ruler from "./Ruler";
+
+const canvasPadding = 5;
 
 const useStyles = makeStyles({
   canvasContainer: {
+    position: "relative",
     width: "100%",
     height: "100%",
+    padding: `${canvasPadding}px`,
+    boxSizing: "border-box",
   },
   canvas: {
     width: "100%",
@@ -22,6 +28,12 @@ const useStyles = makeStyles({
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
+  },
+  ruler: {
+    position: "absolute",
+    width: `calc(100% - ${2 * canvasPadding}px)`,
+    bottom: 0,
+    left: `${canvasPadding}px`,
   },
 });
 
@@ -94,6 +106,9 @@ const RendererCanvas = observer(() => {
       )}
       {error && <div className={classes.message}>{error}</div>}
       <canvas ref={canvasRef} className={classes.canvas} {...canvasControls} />
+      <div className={classes.ruler}>
+        <Ruler canvasRef={canvasRef} />
+      </div>
     </div>
   );
 });
