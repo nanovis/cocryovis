@@ -4,6 +4,7 @@ import {
   type DecodedBuffer,
   Float32Vec4,
 } from "buffer-backed-object";
+import { Observable } from "../utilities/observable";
 
 const clippingParametersDescriptor = {
   clippingPlaneOrigin: Float32Vec4(),
@@ -24,6 +25,8 @@ export class ClippingParametersBuffer extends WebGpuBufferBBO<
     clippingEnabled: false,
   } as const;
 
+  readonly observable = new Observable(() => this.bufferObject);
+
   constructor(device: GPUDevice, init?: Partial<ClippingParameters>) {
     super(device, clippingParametersDescriptor, "Clipping Parameters Buffer", {
       align: 16,
@@ -41,5 +44,13 @@ export class ClippingParametersBuffer extends WebGpuBufferBBO<
       label: this.label,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
+  }
+
+  override set(
+    params: Partial<DecodedBuffer<typeof clippingParametersDescriptor>>
+  ) {
+    this.dirty = true;
+    Object.assign(this.bufferObject, params);
+    this.observable.notify();
   }
 }

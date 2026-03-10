@@ -1,7 +1,7 @@
 import { useMst } from "@/stores/RootStore";
 import { SVG, type Svg } from "@svgdotjs/svg.js";
 import { observer } from "mobx-react-lite";
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
 import { planeBBox, slicePixelSize } from "@/renderer/utilities/math";
 
 const color = "#FFFFFF";
@@ -13,52 +13,71 @@ interface Props {
 const Ruler = observer(({ canvasRef }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const drawRef = useRef<Svg>(null);
-  const { renderer } = useMst();
+  const rootStore = useMst();
 
-  const canvas = canvasRef.current;
+  const redrawRuler = useEffectEvent(() => {
+    const canvas = canvasRef.current;
+    const renderer = rootStore.renderer;
+    if (!canvas || !renderer) return;
+
+    const camera = renderer.camera;
+
+    const clippingPlaneParams =
+      renderer.clippingPlaneManager.clippingParametersBuffer.params;
+
+    const boundingBox = planeBBox(
+      camera,
+      canvas.width,
+      canvas.height,
+      clippingPlaneParams.clippingPlaneOrigin,
+      clippingPlaneParams.clippingPlaneNormal
+    );
+
+    const volumeSize = renderer.volumeManager.computedPhysicalSize();
+    if (!volumeSize) return;
+
+    const invViewProj = camera.getViewProjectionMatrix().inverseViewProjMatrix;
+
+    const pixelSize = slicePixelSize(
+      canvas.width,
+      canvas.height,
+      invViewProj,
+      clippingPlaneParams.clippingPlaneOrigin,
+      clippingPlaneParams.clippingPlaneNormal,
+      [volumeSize.x, volumeSize.y, volumeSize.z]
+    );
+
+    redraw(boundingBox.width, boundingBox.x, pixelSize?.pixelSizeX ?? 0);
+  });
 
   useEffect(() => {
-    if (!canvas || !containerRef.current || !renderer) return;
+    if (!containerRef.current) return;
 
-    const container = containerRef.current;
-
-    drawRef.current = SVG().addTo(container).size("100%", 20);
-
-    const unsubscribe = renderer.camera.observe((camera) => {
-      const clippingPlaneParams =
-        renderer.clippingPlaneManager.clippingParametersBuffer.params;
-      const boundingBox = planeBBox(
-        camera,
-        canvas.width,
-        canvas.height,
-        clippingPlaneParams.clippingPlaneOrigin,
-        clippingPlaneParams.clippingPlaneNormal
-      );
-      const volumeSize = renderer.volumeManager.computedPhysicalSize();
-      if (!volumeSize) {
-        return;
-      }
-
-      const invViewProj =
-        camera.getViewProjectionMatrix().inverseViewProjMatrix;
-
-      const pixelSize = slicePixelSize(
-        canvas.width,
-        canvas.height,
-        invViewProj,
-        clippingPlaneParams.clippingPlaneOrigin,
-        clippingPlaneParams.clippingPlaneNormal,
-        [volumeSize.x, volumeSize.y, volumeSize.z]
-      );
-
-      redraw(boundingBox.width, boundingBox.x, pixelSize?.pixelSizeX ?? 0);
-    });
+    drawRef.current = SVG().addTo(containerRef.current).size("100%", 20);
 
     return () => {
-      unsubscribe();
       drawRef.current?.remove();
+      drawRef.current = null;
     };
-  }, [canvas, renderer]);
+  }, []);
+
+  useEffect(() => {
+    const renderer = rootStore.renderer;
+    const canvas = canvasRef.current;
+
+    if (!canvas || !renderer) return;
+
+    const unsubscribeCamera = renderer.camera.observable.observe(redrawRuler);
+    const unsubscribeClip =
+      renderer.clippingPlaneManager.clippingParametersBuffer.observable.observe(
+        redrawRuler
+      );
+
+    return () => {
+      unsubscribeCamera();
+      unsubscribeClip();
+    };
+  }, [rootStore.renderer, canvasRef]);
 
   function redraw(width: number, offset: number, mmPerPixel: number) {
     if (!drawRef.current) {

@@ -1,5 +1,6 @@
 import { glMatrix, mat4, vec3 } from "gl-matrix";
 import { WebGpuBuffer } from "./webGpuBuffer";
+import { Observable } from "../utilities/observable";
 
 export interface CameraParams {
   position: vec3;
@@ -10,8 +11,6 @@ export interface CameraParams {
   near: number;
   far: number;
 }
-
-type CameraListener = (camera: Camera) => void;
 
 export class Camera extends WebGpuBuffer {
   private readonly params: CameraParams;
@@ -32,7 +31,7 @@ export class Camera extends WebGpuBuffer {
 
   private views = new Map<string, CameraParams>();
 
-  private listeners = new Set<CameraListener>();
+  readonly observable = new Observable(() => this);
 
   constructor(device: GPUDevice, params: CameraParams) {
     super(device, Camera.size, "Camera Buffer");
@@ -49,22 +48,6 @@ export class Camera extends WebGpuBuffer {
       this.getViewProjectionMatrix();
     this.viewProjectionMatrix = viewProjMatrix;
     this.inverseViewProjectionMatrix = inverseViewProjMatrix;
-  }
-
-  observe(listener: CameraListener) {
-    this.listeners.add(listener);
-
-    return () => this.listeners.delete(listener);
-  }
-
-  unobserve(listener: CameraListener) {
-    this.listeners.delete(listener);
-  }
-
-  private notify() {
-    for (const listener of this.listeners) {
-      listener(this);
-    }
   }
 
   protected createBuffer(size: number): GPUBuffer {
@@ -202,7 +185,7 @@ export class Camera extends WebGpuBuffer {
     this.viewDirty = true;
     this.projDirty = true;
     this.viewProjDirty = true;
-    this.notify();
+    this.observable.notify();
   }
 
   getViewVector() {
