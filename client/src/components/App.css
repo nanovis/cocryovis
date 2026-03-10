@@ -93,3 +93,7 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--colorNeutralForeground3Hover);
 }
+
+.fui-Field__validationMessage {
+  min-height: 18px;
+}

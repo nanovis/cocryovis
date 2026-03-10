@@ -71,7 +71,7 @@ import {
 } from "@/api/volumeData";
 import { getResultData } from "@/api/results";
 import ToastContainer from "@/utils/toastContainer";
-import EditDialog from "./elements/EditDialog";
+import VolumeEditDialog from "./elements/VolumeEditDialog";
 import {
   fileMapToVisualizationConfig,
   visualizeVolumeFromConfig,
@@ -84,6 +84,8 @@ import {
   volumeRenderOption,
   volumeTooltip,
 } from "@/components/shared/ComboboxOptions";
+import type z from "zod";
+import type { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-schema";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -194,14 +196,14 @@ const Volume = observer(({ open, close }: Props) => {
     setIsDeleteResultDialogOpen(false);
   };
 
-  const handleEditDialog = async (name: string, description: string) => {
+  const handleEditDialog = async (data: z.infer<typeof volumeUpdateSchema>) => {
     if (!selectedVolume) {
       return;
     }
     const toastContainer = new ToastContainer();
     try {
       toastContainer.loading("Updating volume...");
-      await selectedVolume.updateVolume({ name, description });
+      await selectedVolume.updateVolume(data);
       editVolumeDialogClose();
       toastContainer.success("Updated volume!");
     } catch (error) {
@@ -1585,7 +1587,7 @@ const Volume = observer(({ open, close }: Props) => {
         isActive={!!projectVolumes?.removeVolumeActiveRequest}
       />
 
-      <EditDialog
+      <VolumeEditDialog
         open={isEditDialogOpen}
         title="Edit Volume"
         onClose={editVolumeDialogClose}

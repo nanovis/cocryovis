@@ -14,8 +14,8 @@ export const volumeSchema = z.object({
 });
 
 export const volumeUpdateSchema = z.object({
-  name: z.string(),
-  description: z.string(),
+  name: z.string().min(1, "Name is required").optional(),
+  description: z.string().optional(),
 });
 
 export const idVolume = z
