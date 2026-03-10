@@ -203,8 +203,9 @@ export function slicePixelSize(
 
   if (!py) return null;
 
-  const pixelSizeX = anisotropicDistance(p0, px, voxelSize);
-  const pixelSizeY = anisotropicDistance(p0, py, voxelSize);
+  // Scale by 0.5, since the volume spans from -1 to 1 in all dimensions
+  const pixelSizeX = anisotropicDistance(p0, px, voxelSize) * 0.5;
+  const pixelSizeY = anisotropicDistance(p0, py, voxelSize) * 0.5;
 
   return {
     pixelSizeX,

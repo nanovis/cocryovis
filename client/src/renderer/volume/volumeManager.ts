@@ -35,6 +35,30 @@ export class VolumeManager {
     this.volumeParameterBuffer = new VolumeParameterBuffer(device);
   }
 
+  get settings(): Readonly<VolumeDescriptor["settings"]> | undefined {
+    return this._settings;
+  }
+
+  getUnits() {
+    if (!this._settings) {
+      return undefined;
+    }
+    switch (this._settings.physicalUnit) {
+      case "PIXEL":
+        return "px";
+      case "UNIT":
+        return "units";
+      case "MICROMETER":
+        return "µm";
+      case "NANOMETER":
+        return "nm";
+      case "ANGSTROM":
+        return "Å";
+      default:
+        return undefined;
+    }
+  }
+
   computedPhysicalSize() {
     if (!this._settings) {
       return undefined;

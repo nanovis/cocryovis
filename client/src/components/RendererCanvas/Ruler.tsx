@@ -5,8 +5,6 @@ import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
 import { planeBBox, slicePixelSize } from "@/renderer/utilities/math";
 import { makeStyles } from "@fluentui/react-components";
 
-const color = "#FFFFFF";
-
 const useStyles = makeStyles({
   container: {
     position: "absolute",
@@ -30,6 +28,18 @@ const useStyles = makeStyles({
   },
 });
 
+const config = {
+  barHeight: 100,
+  tickSpacing: 10,
+  color: "#FFFFFF",
+  startEndColor: "#FF0000",
+  fontSize: 14,
+  minorTickHeight: 10,
+  majorTickHeight: 20,
+  horizontalTextOffset: 20,
+  verticalTextOffset: 10,
+} as const;
+
 interface Props {
   canvasRef: RefObject<HTMLCanvasElement | null>;
 }
@@ -49,6 +59,15 @@ const Ruler = observer(({ canvasRef }: Props) => {
     const horizontalDraw = horizontalDrawRef.current;
     const verticalDraw = verticalDrawRef.current;
     if (!canvas || !renderer || !horizontalDraw || !verticalDraw) return;
+
+    const clippingPlaneType =
+      renderer.clippingPlaneManager.getClippingPlaneType();
+
+    if (clippingPlaneType !== "view-aligned") {
+      horizontalDraw.clear();
+      verticalDraw.clear();
+      return;
+    }
 
     const camera = renderer.camera;
 
@@ -77,17 +96,24 @@ const Ruler = observer(({ canvasRef }: Props) => {
       [volumeSize.x, volumeSize.y, volumeSize.z]
     );
 
+    const unit = renderer.volumeManager.getUnits();
+    if (!unit) return;
+
     redrawHorizontal(
       horizontalDraw,
       boundingBox.width,
       boundingBox.x,
-      pixelSize?.pixelSizeX ?? 0
+      canvas.width,
+      pixelSize?.pixelSizeX ?? 0,
+      unit
     );
     redrawVertical(
       verticalDraw,
       boundingBox.height,
       boundingBox.y,
-      pixelSize?.pixelSizeY ?? 0
+      canvas.height,
+      pixelSize?.pixelSizeY ?? 0,
+      unit
     );
   });
 
@@ -96,7 +122,7 @@ const Ruler = observer(({ canvasRef }: Props) => {
 
     horizontalDrawRef.current = SVG()
       .addTo(horizontalContainerRef.current)
-      .size("100%", 20);
+      .size("100%", config.barHeight);
 
     return () => {
       horizontalDrawRef.current?.remove();
@@ -109,7 +135,7 @@ const Ruler = observer(({ canvasRef }: Props) => {
 
     verticalDrawRef.current = SVG()
       .addTo(verticalContainerRef.current)
-      .size(20, "100%");
+      .size(config.barHeight, "100%");
 
     return () => {
       verticalDrawRef.current?.remove();
@@ -147,50 +173,98 @@ function redrawHorizontal(
   svg: Svg,
   width: number,
   offset: number,
-  mmPerPixel: number
+  containerWidth: number,
+  unitsPerPixel: number,
+  unit: string
 ) {
   svg.clear();
+  offset = Math.max(offset, 0);
+  width = Math.min(width, containerWidth - offset);
 
-  const tickSpacing = 10;
-  const ticks = Math.floor(width / tickSpacing);
+  const ticks = Math.floor(width / config.tickSpacing);
+  const minorTickEnd = config.barHeight - config.minorTickHeight;
+  const majorTickEnd = config.barHeight - config.majorTickHeight;
 
   for (let i = 0; i < ticks; i++) {
-    const x = i * tickSpacing + offset;
+    const x = i * config.tickSpacing + offset;
 
     svg
-      .line(x, 20, x, i % 10 === 0 ? 0 : 10)
-      .stroke({ width: 1, color: color });
+      .line(x, config.barHeight, x, i % 10 === 0 ? majorTickEnd : minorTickEnd)
+      .stroke({
+        width: 1,
+        color: i === 0 ? config.startEndColor : config.color,
+      });
   }
   svg
-    .text(`${(width * mmPerPixel).toFixed(1)} mm`)
-    .font({ size: 12, family: "Arial", anchor: "end" })
-    .fill(color)
-    .move(offset + width - 5, 0);
+    .line(offset + width, config.barHeight, offset + width, majorTickEnd)
+    .stroke({ width: 1, color: config.startEndColor });
+
+  const textPosition =
+    offset + width > containerWidth - 120
+      ? {
+          x: offset + width - 120,
+          y: config.barHeight - config.horizontalTextOffset - 20,
+        }
+      : {
+          x: offset + width + 10,
+          y: config.barHeight - config.horizontalTextOffset,
+        };
+
+  console.log(textPosition);
+  svg
+    .text(`${(width * unitsPerPixel).toFixed(1)} ${unit}`)
+    .font({ size: config.fontSize, family: "Arial", anchor: "end" })
+    .fill(config.color)
+    .move(textPosition.x, textPosition.y);
 }
 
 function redrawVertical(
   svg: Svg,
   height: number,
   offset: number,
-  mmPerPixel: number
+  containerHeight: number,
+  unitsPerPixel: number,
+  unit: string
 ) {
   svg.clear();
+  offset = Math.max(offset, 0);
+  height = Math.min(height, containerHeight - offset);
 
-  const tickSpacing = 10;
-  const ticks = Math.floor(height / tickSpacing);
+  const ticks = Math.floor(height / config.tickSpacing);
+  const minorTickEnd = config.barHeight - config.minorTickHeight;
+  const majorTickEnd = config.barHeight - config.majorTickHeight;
 
   for (let i = 0; i < ticks; i++) {
-    const y = i * tickSpacing + offset;
+    const y = i * config.tickSpacing + offset;
 
     svg
-      .line(20, y, i % 10 === 0 ? 0 : 10, y)
-      .stroke({ width: 1, color: color });
+      .line(config.barHeight, y, i % 10 === 0 ? majorTickEnd : minorTickEnd, y)
+      .stroke({
+        width: 1,
+        color: i === 0 ? config.startEndColor : config.color,
+      });
   }
   svg
-    .text(`${(height * mmPerPixel).toFixed(1)} mm`)
-    .font({ size: 12, family: "Arial", anchor: "end" })
-    .fill(color)
-    .move(0, offset + height - 5);
+    .line(config.barHeight, offset + height, majorTickEnd, offset + height)
+    .stroke({ width: 1, color: config.startEndColor });
+
+  const textPosition =
+    offset + height > containerHeight - 120
+      ? {
+          y: offset + height - 120,
+          x: config.barHeight - config.verticalTextOffset - 20,
+        }
+      : {
+          y: offset + height + 20,
+          x: config.barHeight - config.verticalTextOffset,
+        };
+
+  svg
+    .text(`${(height * unitsPerPixel).toFixed(1)} ${unit}`)
+    .css("text-anchor", "end")
+    .font({ size: config.fontSize, family: "Arial", anchor: "end" })
+    .fill(config.color)
+    .attr({ x: textPosition.x, y: textPosition.y });
 }
 
 export default Ruler;
