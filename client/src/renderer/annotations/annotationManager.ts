@@ -8,7 +8,7 @@ import { BindGroup } from "../core/bindGroup";
 import { AnnotationParametersBuffer } from "./annotationParametersBuffer";
 import { AnnotationVolume } from "./annotationVolume";
 import type { VolumeManager } from "../volume/volumeManager";
-import { mat4, vec3, vec4 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
 import type { Camera } from "../core/camera";
 import { findRayPlaneIntersection } from "../utilities/math";
 import type { ClippingPlaneManager } from "../volume/clippingPlaneManager";
@@ -251,18 +251,8 @@ export class AnnotationManager {
     const near = vec4.fromValues(ndcX, ndcY, 0, 1);
     const far = vec4.fromValues(ndcX, ndcY, 1, 1);
 
-    const viewMatrix = this.camera.getViewMatrix().viewMatrix;
-    const projectionMatrix = this.camera.getProjectionMatrix();
-
-    const invViewProj = mat4.invert(
-      mat4.create(),
-      mat4.multiply(mat4.create(), projectionMatrix, viewMatrix)
-    );
-
-    if (invViewProj === null) {
-      console.warn("Failed to invert view projection matrix");
-      return;
-    }
+    const invViewProj =
+      this.camera.getViewProjectionMatrix().inverseViewProjMatrix;
 
     vec4.transformMat4(near, near, invViewProj);
     vec4.transformMat4(far, far, invViewProj);

@@ -2,7 +2,6 @@ import { useMst } from "@/stores/RootStore";
 import { SVG, type Svg } from "@svgdotjs/svg.js";
 import { observer } from "mobx-react-lite";
 import { useEffect, useRef, type RefObject } from "react";
-import { mat4 } from "gl-matrix";
 import { planeBBox, slicePixelSize } from "@/renderer/utilities/math";
 
 const color = "#FFFFFF";
@@ -40,15 +39,8 @@ const Ruler = observer(({ canvasRef }: Props) => {
         return;
       }
 
-      const projectionMatrix = camera.getProjectionMatrix();
-      const viewMatrix = camera.getViewMatrix().viewMatrix;
-      const viewProj = mat4.create();
-      mat4.multiply(viewProj, projectionMatrix, viewMatrix);
-      const invViewProj = mat4.invert(mat4.create(), viewProj);
-      if (!invViewProj) {
-        console.warn("Failed to invert view-projection matrix");
-        return;
-      }
+      const invViewProj =
+        camera.getViewProjectionMatrix().inverseViewProjMatrix;
 
       const pixelSize = slicePixelSize(
         canvas.width,
@@ -62,31 +54,8 @@ const Ruler = observer(({ canvasRef }: Props) => {
       redraw(boundingBox.width, boundingBox.x, pixelSize?.pixelSizeX ?? 0);
     });
 
-    // const observer = new ResizeObserver((entries) => {
-    //   const entry = entries[0];
-
-    //   // let width = entry.contentRect.width;
-    //   // const height = entry.contentRect.height;
-
-    //   // const minAxis = Math.min(width, height);
-    //   // const widthOffset = (width - minAxis) / 2;
-    //   // width = minAxis;
-
-    //   // const test = getPixelsPerWorldUnit(renderer.camera, canvas);
-    //   // console.log(test);
-
-    //   // console.log(bbox(renderer.camera, canvas));
-
-    //   const boundingBox = bbox(renderer.camera, canvas);
-
-    //   redraw(boundingBox.width, boundingBox.x);
-    // });
-
-    // observer.observe(canvas);
-
     return () => {
       unsubscribe();
-      // observer.disconnect();
       drawRef.current?.remove();
     };
   }, [canvas, renderer]);
@@ -109,7 +78,6 @@ const Ruler = observer(({ canvasRef }: Props) => {
         .line(x, 20, x, i % 10 === 0 ? 0 : 10)
         .stroke({ width: 1, color: color });
     }
-    // Draw number at the end
     draw
       .text(`${(width * mmPerPixel).toFixed(1)} mm`)
       .font({ size: 12, family: "Arial", anchor: "end" })

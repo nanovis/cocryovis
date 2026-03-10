@@ -44,7 +44,7 @@ export function anisotropicDistance(a: vec3, b: vec3, voxel: vec3) {
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-const corners = [
+const BOX_VERTICES = [
   vec3.fromValues(-1, -1, -1),
   vec3.fromValues(-1, -1, 1),
   vec3.fromValues(-1, 1, -1),
@@ -53,7 +53,7 @@ const corners = [
   vec3.fromValues(1, -1, 1),
   vec3.fromValues(1, 1, -1),
   vec3.fromValues(1, 1, 1),
-];
+] as const;
 
 const BOX_EDGES = [
   [0, 1],
@@ -68,7 +68,8 @@ const BOX_EDGES = [
   [4, 6],
   [5, 7],
   [6, 7],
-];
+] as const;
+
 export function planeBBox(
   camera: Camera,
   width: number,
@@ -95,8 +96,8 @@ export function planeBBox(
   const p4 = vec4.create();
 
   for (const [i, j] of BOX_EDGES) {
-    const a = corners[i];
-    const b = corners[j];
+    const a = BOX_VERTICES[i];
+    const b = BOX_VERTICES[j];
 
     vec3.subtract(ab, b, a);
 

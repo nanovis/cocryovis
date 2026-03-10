@@ -18,9 +18,15 @@ export class Camera extends WebGpuBuffer {
 
   private dirty: boolean = true;
 
+  private viewDirty: boolean = true;
+  private projDirty: boolean = true;
+  private viewProjDirty: boolean = true;
+
   private viewMatrix: mat4;
   private inverseViewMatrix: mat4;
   private projectionMatrix: mat4;
+  private viewProjectionMatrix: mat4;
+  private inverseViewProjectionMatrix: mat4;
 
   private static readonly size = 256;
 
@@ -33,11 +39,16 @@ export class Camera extends WebGpuBuffer {
 
     this.params = params;
 
-    const { viewMatrix, inverseViewMatrix } = this.computeViewMatrix();
+    const { viewMatrix, inverseViewMatrix } = this.getViewMatrix();
     this.viewMatrix = viewMatrix;
     this.inverseViewMatrix = inverseViewMatrix;
 
-    this.projectionMatrix = this.computeProjectionMatrix();
+    this.projectionMatrix = this.getProjectionMatrix();
+
+    const { viewProjMatrix, inverseViewProjMatrix } =
+      this.getViewProjectionMatrix();
+    this.viewProjectionMatrix = viewProjMatrix;
+    this.inverseViewProjectionMatrix = inverseViewProjMatrix;
   }
 
   observe(listener: CameraListener) {
@@ -109,10 +120,12 @@ export class Camera extends WebGpuBuffer {
   }
 
   getViewMatrix(): { viewMatrix: mat4; inverseViewMatrix: mat4 } {
-    if (this.dirty) {
+    if (this.viewDirty) {
       const { viewMatrix, inverseViewMatrix } = this.computeViewMatrix();
       this.viewMatrix = viewMatrix;
       this.inverseViewMatrix = inverseViewMatrix;
+      this.viewDirty = false;
+      this.viewProjDirty = true;
     }
     return {
       viewMatrix: this.viewMatrix,
@@ -121,10 +134,46 @@ export class Camera extends WebGpuBuffer {
   }
 
   getProjectionMatrix(): mat4 {
-    if (this.dirty) {
+    if (this.projDirty) {
       this.projectionMatrix = this.computeProjectionMatrix();
+      this.projDirty = false;
+      this.viewProjDirty = true;
     }
     return this.projectionMatrix;
+  }
+
+  private computeViewProjectionMatrix(): {
+    viewProjMatrix: mat4;
+    inverseViewProjMatrix: mat4;
+  } {
+    const viewMatrix = this.getViewMatrix();
+    const projMatrix = this.getProjectionMatrix();
+    const viewProjMatrix = mat4.multiply(
+      mat4.create(),
+      projMatrix,
+      viewMatrix.viewMatrix
+    );
+    const inverseViewProjMatrix = mat4.create();
+    mat4.invert(inverseViewProjMatrix, viewProjMatrix);
+    return { viewProjMatrix, inverseViewProjMatrix };
+  }
+
+  getViewProjectionMatrix(): {
+    viewProjMatrix: mat4;
+    inverseViewProjMatrix: mat4;
+  } {
+    if (this.viewProjDirty) {
+      console.log("Recomputing view-projection matrix");
+      const { viewProjMatrix, inverseViewProjMatrix } =
+        this.computeViewProjectionMatrix();
+      this.viewProjectionMatrix = viewProjMatrix;
+      this.inverseViewProjectionMatrix = inverseViewProjMatrix;
+      this.viewProjDirty = false;
+    }
+    return {
+      viewProjMatrix: this.viewProjectionMatrix,
+      inverseViewProjMatrix: this.inverseViewProjectionMatrix,
+    };
   }
 
   get viewCenter(): vec3 {
@@ -150,6 +199,9 @@ export class Camera extends WebGpuBuffer {
   setParameters(params: Partial<CameraParams>) {
     Object.assign(this.params, params);
     this.dirty = true;
+    this.viewDirty = true;
+    this.projDirty = true;
+    this.viewProjDirty = true;
     this.notify();
   }
 
@@ -168,16 +220,14 @@ export class Camera extends WebGpuBuffer {
     const { viewMatrix, inverseViewMatrix } = this.getViewMatrix();
     const projectionMatrix = this.getProjectionMatrix();
 
-    const inverseMvp = mat4.create();
-    mat4.multiply(inverseMvp, projectionMatrix, viewMatrix);
-    mat4.invert(inverseMvp, inverseMvp);
+    const { inverseViewProjMatrix } = this.getViewProjectionMatrix();
 
     const data = new Float32Array(64);
 
     data.set(viewMatrix, 0);
     data.set(inverseViewMatrix, 16);
     data.set(projectionMatrix, 32);
-    data.set(inverseMvp, 48);
+    data.set(inverseViewProjMatrix, 48);
 
     this.device.queue.writeBuffer(
       this.buffer,
