@@ -74,15 +74,19 @@ const Ruler = observer(({ canvasRef }: Props) => {
     const clippingPlaneParams =
       renderer.clippingPlaneManager.clippingParametersBuffer.params;
 
+    const ratio = renderer.volumeManager.getRatio();
+    if (!ratio) return;
+
     const boundingBox = planeBBox(
       camera,
       canvas.width,
       canvas.height,
       clippingPlaneParams.clippingPlaneOrigin,
-      clippingPlaneParams.clippingPlaneNormal
+      clippingPlaneParams.clippingPlaneNormal,
+      [ratio.x, ratio.y, ratio.z]
     );
 
-    const volumeSize = renderer.volumeManager.computedPhysicalSize();
+    const volumeSize = renderer.volumeManager.getScaledPhysicalSize();
     if (!volumeSize) return;
 
     const invViewProj = camera.getViewProjectionMatrix().inverseViewProjMatrix;
@@ -210,7 +214,6 @@ function redrawHorizontal(
           y: config.barHeight - config.horizontalTextOffset,
         };
 
-  console.log(textPosition);
   svg
     .text(`${(width * unitsPerPixel).toFixed(1)} ${unit}`)
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })

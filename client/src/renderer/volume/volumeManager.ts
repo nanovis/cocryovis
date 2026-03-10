@@ -59,7 +59,7 @@ export class VolumeManager {
     }
   }
 
-  computedPhysicalSize() {
+  getPhysicalSize() {
     if (!this._settings) {
       return undefined;
     }
@@ -69,9 +69,9 @@ export class VolumeManager {
     if (this._settings.physicalUnit === "PIXEL") {
       const size = this._settings.size;
       return {
-        x: physicalSize.x * size.x,
-        y: physicalSize.y * size.y,
-        z: physicalSize.z * size.z,
+        x: size.x,
+        y: size.y,
+        z: size.z,
       };
     }
 
@@ -79,6 +79,35 @@ export class VolumeManager {
       x: physicalSize.x,
       y: physicalSize.y,
       z: physicalSize.z,
+    };
+  }
+
+  getScaledPhysicalSize() {
+    const physicalSize = this.getPhysicalSize();
+    if (!physicalSize) return undefined;
+    const ratio = this.getRatio();
+    if (!ratio) return undefined;
+
+    return {
+      x: physicalSize.x * (1 / ratio.x),
+      y: physicalSize.y * (1 / ratio.y),
+      z: physicalSize.z * (1 / ratio.z),
+    };
+  }
+
+  getRatio() {
+    if (!this._settings) {
+      return undefined;
+    }
+
+    const physicalSize = this.getPhysicalSize();
+    if (!physicalSize) return undefined;
+
+    const maxSize = Math.max(physicalSize.x, physicalSize.y, physicalSize.z);
+    return {
+      x: physicalSize.x / maxSize,
+      y: physicalSize.y / maxSize,
+      z: physicalSize.z / maxSize,
     };
   }
 

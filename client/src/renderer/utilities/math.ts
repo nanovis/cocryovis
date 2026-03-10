@@ -75,7 +75,8 @@ export function planeBBox(
   width: number,
   height: number,
   origin: vec3,
-  normal: vec3
+  normal: vec3,
+  ratio: vec3
 ) {
   let minX = Infinity,
     maxX = -Infinity;
@@ -96,8 +97,8 @@ export function planeBBox(
   const p4 = vec4.create();
 
   for (const [i, j] of BOX_EDGES) {
-    const a = BOX_VERTICES[i];
-    const b = BOX_VERTICES[j];
+    const a = vec3.mul(vec3.create(), BOX_VERTICES[i], ratio);
+    const b = vec3.mul(vec3.create(), BOX_VERTICES[j], ratio);
 
     vec3.subtract(ab, b, a);
 
