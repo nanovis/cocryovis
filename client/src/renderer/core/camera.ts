@@ -146,7 +146,6 @@ export class Camera extends WebGpuBuffer {
     inverseViewProjMatrix: mat4;
   } {
     if (this.viewProjDirty) {
-      console.log("Recomputing view-projection matrix");
       const { viewProjMatrix, inverseViewProjMatrix } =
         this.computeViewProjectionMatrix();
       this.viewProjectionMatrix = viewProjMatrix;

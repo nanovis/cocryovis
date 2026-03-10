@@ -173,6 +173,39 @@ const Ruler = observer(({ canvasRef }: Props) => {
   );
 });
 
+function outlinedLine(
+  draw: Svg,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  options: {
+    color: string;
+    width: number;
+    borderColor: string;
+    borderWidth: number;
+    linecap?: "butt" | "round" | "square";
+  }
+): G {
+  const g = draw.group();
+
+  const linecap = options.linecap ?? "butt";
+
+  g.line(x1, y1, x2, y2).stroke({
+    color: options.borderColor,
+    width: options.width + options.borderWidth * 2,
+    linecap,
+  });
+
+  g.line(x1, y1, x2, y2).stroke({
+    color: options.color,
+    width: options.width,
+    linecap,
+  });
+
+  return g;
+}
+
 function redrawHorizontal(
   svg: Svg,
   width: number,
@@ -192,16 +225,36 @@ function redrawHorizontal(
   for (let i = 0; i < ticks; i++) {
     const x = i * config.tickSpacing + offset;
 
-    svg
-      .line(x, config.barHeight, x, i % 10 === 0 ? majorTickEnd : minorTickEnd)
-      .stroke({
-        width: 1,
+    outlinedLine(
+      svg,
+      x,
+      config.barHeight,
+      x,
+      i % 10 === 0 ? majorTickEnd : minorTickEnd,
+      {
         color: i === 0 ? config.startEndColor : config.color,
-      });
+        width: 1,
+        borderColor: "#000",
+        borderWidth: 1,
+        linecap: "round",
+      }
+    );
   }
-  svg
-    .line(offset + width, config.barHeight, offset + width, majorTickEnd)
-    .stroke({ width: 1, color: config.startEndColor });
+
+  outlinedLine(
+    svg,
+    offset + width,
+    config.barHeight,
+    offset + width,
+    majorTickEnd,
+    {
+      color: config.startEndColor,
+      width: 1,
+      borderColor: "#000",
+      borderWidth: 1,
+      linecap: "round",
+    }
+  );
 
   const textPosition =
     offset + width > containerWidth - 120
@@ -218,6 +271,13 @@ function redrawHorizontal(
     .text(`${(width * unitsPerPixel).toFixed(1)} ${unit}`)
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })
     .fill(config.color)
+    .stroke({
+      color: "#000",
+      width: 2,
+    })
+    .attr({
+      "paint-order": "stroke",
+    })
     .move(textPosition.x, textPosition.y);
 }
 
@@ -239,17 +299,36 @@ function redrawVertical(
 
   for (let i = 0; i < ticks; i++) {
     const y = i * config.tickSpacing + offset;
-
-    svg
-      .line(config.barHeight, y, i % 10 === 0 ? majorTickEnd : minorTickEnd, y)
-      .stroke({
-        width: 1,
+    outlinedLine(
+      svg,
+      config.barHeight,
+      y,
+      i % 10 === 0 ? majorTickEnd : minorTickEnd,
+      y,
+      {
         color: i === 0 ? config.startEndColor : config.color,
-      });
+        width: 1,
+        borderColor: "#000",
+        borderWidth: 1,
+        linecap: "round",
+      }
+    );
   }
-  svg
-    .line(config.barHeight, offset + height, majorTickEnd, offset + height)
-    .stroke({ width: 1, color: config.startEndColor });
+
+  outlinedLine(
+    svg,
+    config.barHeight,
+    offset + height,
+    majorTickEnd,
+    offset + height,
+    {
+      color: config.startEndColor,
+      width: 1,
+      borderColor: "#000",
+      borderWidth: 1,
+      linecap: "round",
+    }
+  );
 
   const textPosition =
     offset + height > containerHeight - 120
@@ -267,6 +346,13 @@ function redrawVertical(
     .css("text-anchor", "end")
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })
     .fill(config.color)
+    .stroke({
+      color: "#000",
+      width: 2,
+    })
+    .attr({
+      "paint-order": "stroke",
+    })
     .attr({ x: textPosition.x, y: textPosition.y });
 }
 
