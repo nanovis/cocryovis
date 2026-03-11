@@ -95,7 +95,7 @@ const useStyles = makeStyles({
     },
   },
   uploadDownloadButtom: {
-    width: "188px",
+    width: "198px",
   },
   titleRow: {
     display: "flex",
@@ -878,7 +878,7 @@ const Volume = observer(({ open, close }: Props) => {
                     <div className={globalClasses.actionButtonIconContainer}>
                       <ArrowUpload20Regular />
                     </div>
-                    <div className="buttonText">Upload Raw Data</div>
+                    <div className="buttonText">Upload Data</div>
                   </MenuButton>
                 </MenuTrigger>
 
@@ -888,7 +888,7 @@ const Volume = observer(({ open, close }: Props) => {
                       disabled={isPageBusy() || !activeProject?.hasWriteAccess}
                       onClick={() => setIsUploadVolumeDialogOpen(true)}
                     >
-                      Raw Data
+                      Tomogram
                     </MenuItem>
                     <MenuItem
                       disabled={isPageBusy() || !activeProject?.hasWriteAccess}
@@ -917,12 +917,12 @@ const Volume = observer(({ open, close }: Props) => {
                 <div className={globalClasses.actionButtonIconContainer}>
                   <ArrowDownload20Regular />
                 </div>
-                <div className="buttonText">Download Raw Data</div>
+                <div className="buttonText">Download Tomogram</div>
               </Button>
             )}
 
             <Tooltip
-              content="Visualize Raw Data"
+              content="Visualize Tomogram"
               relationship="label"
               appearance="inverted"
               hideDelay={0}
@@ -992,7 +992,7 @@ const Volume = observer(({ open, close }: Props) => {
             open={isUploadVolumeDialogOpen}
             onClose={() => setIsUploadVolumeDialogOpen(false)}
             onConfirm={uploadRawData}
-            titleText={"Upload Raw Data"}
+            titleText={"Upload Tomogram"}
             confirmText="Upload"
             uploadDialogStore={uiState.uploadDialog}
           />

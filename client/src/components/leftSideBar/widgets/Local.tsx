@@ -337,7 +337,7 @@ const Local = observer(({ open, close }: Props) => {
                 <Cube20Regular />
               </div>
 
-              <div className="buttonText">Select Raw Data Files</div>
+              <div className="buttonText">Select Tomogram File</div>
             </Button>
             {!inferenceRawDataFile && !inferenceRawDataSettings ? (
               <Text
@@ -359,7 +359,7 @@ const Local = observer(({ open, close }: Props) => {
                 <Text className={classes.rawFileName}>
                   {inferenceRawDataFile
                     ? inferenceRawDataFile.name
-                    : "No Raw Data file selected."}
+                    : "No Tomogram file selected."}
                 </Text>
                 <Text className={classes.rawFileName}>
                   {inferenceRawDataSettings
