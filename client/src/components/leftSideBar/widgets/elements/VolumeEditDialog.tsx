@@ -19,12 +19,9 @@ import { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-s
 import type z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller, useWatch } from "react-hook-form";
-import { physicalUnitSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import { physicalUnitLabeledOptions } from "@/stores/userState/VolumeModel";
 
 type VolumeUpdateSchema = z.infer<typeof volumeUpdateSchema>;
-const labels = physicalUnitSchema.meta()?.labels as
-  | Record<string, string>
-  | undefined;
 
 interface Props {
   open: boolean;
@@ -161,9 +158,9 @@ const VolumeEditDialog = ({
                     {...register("physicalUnit")}
                     style={{ width: "fit-content" }}
                   >
-                    {physicalUnitSchema.options.map((value) => (
+                    {physicalUnitLabeledOptions.map(({ value, label }) => (
                       <option key={value} value={value}>
-                        {labels?.[value] ?? value}
+                        {label}
                       </option>
                     ))}
                   </Select>

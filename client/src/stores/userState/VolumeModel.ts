@@ -43,7 +43,7 @@ import {
 import ToastContainer from "../../utils/toastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore } from "@/stores/RootStore";
-import type { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import { physicalUnitSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
 
 export type LabeledVolumeTypes =
@@ -71,18 +71,27 @@ async function uploadLabeledVolume<T extends keyof VolumeDataMap>(
   return volume;
 }
 
+export const physicalUnitOptions: string[] = physicalUnitSchema.options;
+
+export const physicalUnitOptionLabels = physicalUnitSchema.meta()?.labels as
+  | Record<string, string>
+  | undefined;
+
+export function toPhysicalUnitLabel(value: string): string {
+  return physicalUnitOptionLabels?.[value] ?? value;
+}
+
+export const physicalUnitLabeledOptions = physicalUnitOptions.map((value) => ({
+  value,
+  label: physicalUnitOptionLabels?.[value] ?? value,
+}));
+
 export const Volume = types
   .model({
     id: types.identifierNumber,
     name: types.string,
     description: types.string,
-    physicalUnit: types.enumeration([
-      "PIXEL",
-      "UNIT",
-      "ANGSTROM",
-      "NANOMETER",
-      "MICROMETER",
-    ]),
+    physicalUnit: types.enumeration(physicalUnitOptions),
     physicalSizeX: types.number,
     physicalSizeY: types.number,
     physicalSizeZ: types.number,
@@ -175,6 +184,21 @@ export const Volume = types
         enabled: show,
       });
     },
+    refresh: flow(function* () {
+      const volume = (yield volumeApi.getVolumeById(self.id)) as z.infer<
+        typeof volumeSchema
+      >;
+      if (!isAlive(self)) {
+        return;
+      }
+
+      self.name = volume.name;
+      self.description = volume.description;
+      self.physicalUnit = volume.physicalUnit;
+      self.physicalSizeX = volume.physicalSizeX;
+      self.physicalSizeY = volume.physicalSizeY;
+      self.physicalSizeZ = volume.physicalSizeZ;
+    }),
   }))
   .actions((self) => ({
     toggleShownAnnotation(index: number) {
@@ -195,9 +219,18 @@ export const Volume = types
       self.addPseudoVolumes(volumes);
     },
     uploadRawVolume: flow(function* uploadRawVolume(
-      rawFile: File,
+      dataOrFile: File | ArrayBuffer,
       settings: VolumeSettings
     ) {
+      let rawFile!: File;
+      if (dataOrFile instanceof File) {
+        rawFile = dataOrFile;
+      } else {
+        rawFile = new File([dataOrFile], settings.file, {
+          type: "application/octet-stream",
+        });
+      }
+
       const rawData = (yield createFromFiles("RawVolumeData", self.id, {
         rawFile,
         volumeSettings: settings,
@@ -205,7 +238,9 @@ export const Volume = types
       if (!isAlive(self)) {
         return;
       }
+
       self.setRawVolume(rawData);
+      yield self.refresh();
     }),
     uploadMrcVolume: flow(function* uploadMrcVolume(mrcFile: File) {
       if (!mrcFile.name.endsWith(".mrc")) {
@@ -226,6 +261,7 @@ export const Volume = types
       }
 
       self.setRawVolume(rawData);
+      yield self.refresh();
     }),
     uploadFromUrl: flow(function* uploadFromUrl(
       url: string,
@@ -247,24 +283,8 @@ export const Volume = types
       }
 
       self.setRawVolume(rawData);
-    }),
-    uploadTiltSeries: flow(function* uploadTiltSeries(
-      parsedSettings: z.infer<typeof volumeSettings>,
-      fileData: ArrayBuffer
-    ) {
-      const rawFile = new File([fileData], parsedSettings.file, {
-        type: "application/octet-stream",
-      });
 
-      const rawData = (yield createFromFiles("RawVolumeData", self.id, {
-        rawFile,
-        volumeSettings: parsedSettings,
-      })) as z.infer<typeof rawVolumeDataSchema>;
-      if (!isAlive(self)) {
-        return;
-      }
-
-      self.setRawVolume(rawData);
+      yield self.refresh();
     }),
     uploadSparseLabelVolume: flow(function* uploadSparseLabelVolume(
       files: FileList
@@ -279,6 +299,8 @@ export const Volume = types
       }
 
       self.sparseVolumes.put(volume);
+
+      yield self.refresh();
     }),
     uploadPseudoLabelVolume: flow(function* uploadPseudoLabelVolume(
       files: FileList
@@ -293,6 +315,8 @@ export const Volume = types
       }
 
       self.addPseudoVolumes([volume]);
+
+      yield self.refresh();
     }),
     deleteLabeledVolume: flow(function* deleteLabeledVolume(
       dataType: LabeledVolumeTypes,

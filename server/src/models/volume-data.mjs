@@ -168,6 +168,29 @@ export default class VolumeData extends DatabaseModel {
         }
 
         return await withTransaction(client, async (tx) => {
+          const volume = await tx.volume.findUnique({
+            where: {
+              id: volumeId,
+            },
+            include: {
+              rawData: true,
+            },
+          });
+
+          if (volume.rawData === undefined) {
+            await tx.volume.update({
+              where: {
+                id: volumeId,
+              },
+              data: {
+                physicalUnit: settings.physicalUnit,
+                physicalSizeX: settings.physicalSize.x,
+                physicalSizeY: settings.physicalSize.y,
+                physicalSizeZ: settings.physicalSize.y,
+              },
+            });
+          }
+
           /** @type {VolumeDataDB} */
           const volumeData = await tx[this.modelName].create({
             data: {

@@ -136,6 +136,18 @@ export default class RawVolumeData extends VolumeData {
           tempDirectory
         );
         return await withTransaction(client, async (tx) => {
+          await tx.volume.update({
+            where: {
+              id: volumeId,
+            },
+            data: {
+              physicalUnit: settings.physicalUnit,
+              physicalSizeX: settings.physicalSize.x,
+              physicalSizeY: settings.physicalSize.y,
+              physicalSizeZ: settings.physicalSize.z,
+            },
+          });
+
           /** @type {RawVolumeDataDB} */
           const volumeData = await tx.rawVolumeData.create({
             data: {

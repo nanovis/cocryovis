@@ -42,6 +42,10 @@ import {
 import globalStyles from "../globalStyles";
 import { observer } from "mobx-react-lite";
 import CZIIIcon from "./CZIIIcon";
+import {
+  physicalUnitLabeledOptions,
+  toPhysicalUnitLabel,
+} from "@/stores/userState/VolumeModel";
 
 const useStyles = makeStyles({
   dnd: {
@@ -182,6 +186,11 @@ const VolumeUploadDialog = observer(
       fileUploadInputs.setWidth(x.toString());
       fileUploadInputs.setHeight(y.toString());
       fileUploadInputs.setDepth(z.toString());
+
+      fileUploadInputs.setPhysicalUnit(settings.physicalUnit);
+      fileUploadInputs.setPhysicalSizeX(settings.physicalSize.x.toString());
+      fileUploadInputs.setPhysicalSizeY(settings.physicalSize.y.toString());
+      fileUploadInputs.setPhysicalSizeZ(settings.physicalSize.z.toString());
 
       if ("isLittleEndian" in settings) {
         fileUploadInputs.setEndian(
@@ -504,6 +513,98 @@ const VolumeUploadDialog = observer(
                       </Dropdown>
                     </Field>
                   </div>
+                  <div className={classes.inputRow}>
+                    <Field
+                      label="Physical Unit"
+                      className={classes.dimensionsField}
+                    >
+                      <Dropdown
+                        style={{ minWidth: "150px" }}
+                        onOptionSelect={(_, data) =>
+                          fileUploadInputs.setPhysicalUnit(data.optionValue)
+                        }
+                        value={
+                          !fileUploadInputs.isMrcUpload &&
+                          fileUploadInputs.physicalUnit
+                            ? toPhysicalUnitLabel(fileUploadInputs.physicalUnit)
+                            : ""
+                        }
+                        placeholder={
+                          fileUploadInputs.isMrcUpload ? "auto" : "Select"
+                        }
+                        disabled={!fileUploadInputs.canSetParameters}
+                      >
+                        {physicalUnitLabeledOptions.map(({ value, label }) => (
+                          <Option key={value} value={value}>
+                            {label}
+                          </Option>
+                        ))}
+                      </Dropdown>
+                    </Field>
+                    <Field
+                      label="Physical Width"
+                      className={classes.dimensionsField}
+                    >
+                      <Input
+                        value={
+                          fileUploadInputs.isMrcUpload ||
+                          fileUploadInputs.physicalUnit === "PIXEL"
+                            ? "auto"
+                            : (fileUploadInputs.physicalSizeX?.toString() ?? "")
+                        }
+                        className={classes.dimensionsInput}
+                        onChange={(_, data) =>
+                          fileUploadInputs.setPhysicalSizeX(data.value)
+                        }
+                        disabled={
+                          !fileUploadInputs.canSetParameters ||
+                          fileUploadInputs.physicalUnit === "PIXEL"
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label="Physical Height"
+                      className={classes.dimensionsField}
+                    >
+                      <Input
+                        value={
+                          fileUploadInputs.isMrcUpload ||
+                          fileUploadInputs.physicalUnit === "PIXEL"
+                            ? "auto"
+                            : (fileUploadInputs.physicalSizeY?.toString() ?? "")
+                        }
+                        onChange={(_, data) =>
+                          fileUploadInputs.setPhysicalSizeY(data.value)
+                        }
+                        className={classes.dimensionsInput}
+                        disabled={
+                          !fileUploadInputs.canSetParameters ||
+                          fileUploadInputs.physicalUnit === "PIXEL"
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label="Physical Depth"
+                      className={classes.dimensionsField}
+                    >
+                      <Input
+                        value={
+                          fileUploadInputs.isMrcUpload ||
+                          fileUploadInputs.physicalUnit === "PIXEL"
+                            ? "auto"
+                            : (fileUploadInputs.physicalSizeZ?.toString() ?? "")
+                        }
+                        className={classes.dimensionsInput}
+                        onChange={(_, data) =>
+                          fileUploadInputs.setPhysicalSizeZ(data.value)
+                        }
+                        disabled={
+                          !fileUploadInputs.canSetParameters ||
+                          fileUploadInputs.physicalUnit === "PIXEL"
+                        }
+                      />
+                    </Field>
+                  </div>
                 </div>
               )}
               {uploadDialogStore.tab === Tabs.fromUrl && (
@@ -633,6 +734,98 @@ const VolumeUploadDialog = observer(
                           <Option key={option}>{option}</Option>
                         ))}
                       </Dropdown>
+                    </Field>
+                  </div>
+                  <div className={classes.inputRow}>
+                    <Field
+                      label="Physical Unit"
+                      className={classes.dimensionsField}
+                    >
+                      <Dropdown
+                        style={{ minWidth: "150px" }}
+                        onOptionSelect={(_, data) =>
+                          urlUploadInputs.setPhysicalUnit(data.optionValue)
+                        }
+                        value={
+                          !urlUploadInputs.isMrcUpload &&
+                          urlUploadInputs.physicalUnit
+                            ? toPhysicalUnitLabel(urlUploadInputs.physicalUnit)
+                            : ""
+                        }
+                        placeholder={
+                          urlUploadInputs.isMrcUpload ? "auto" : "Select"
+                        }
+                        disabled={!urlUploadInputs.canSetParameters}
+                      >
+                        {physicalUnitLabeledOptions.map(({ value, label }) => (
+                          <Option key={value} value={value}>
+                            {label}
+                          </Option>
+                        ))}
+                      </Dropdown>
+                    </Field>
+                    <Field
+                      label="Physical Width"
+                      className={classes.dimensionsField}
+                    >
+                      <Input
+                        value={
+                          urlUploadInputs.isMrcUpload ||
+                          urlUploadInputs.physicalUnit === "PIXEL"
+                            ? "auto"
+                            : (urlUploadInputs.physicalSizeX?.toString() ?? "")
+                        }
+                        className={classes.dimensionsInput}
+                        onChange={(_, data) =>
+                          urlUploadInputs.setPhysicalSizeX(data.value)
+                        }
+                        disabled={
+                          !urlUploadInputs.canSetParameters ||
+                          urlUploadInputs.physicalUnit === "PIXEL"
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label="Physical Height"
+                      className={classes.dimensionsField}
+                    >
+                      <Input
+                        value={
+                          urlUploadInputs.isMrcUpload ||
+                          urlUploadInputs.physicalUnit === "PIXEL"
+                            ? "auto"
+                            : (urlUploadInputs.physicalSizeY?.toString() ?? "")
+                        }
+                        onChange={(_, data) =>
+                          urlUploadInputs.setPhysicalSizeY(data.value)
+                        }
+                        className={classes.dimensionsInput}
+                        disabled={
+                          !urlUploadInputs.canSetParameters ||
+                          urlUploadInputs.physicalUnit === "PIXEL"
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label="Physical Depth"
+                      className={classes.dimensionsField}
+                    >
+                      <Input
+                        value={
+                          urlUploadInputs.isMrcUpload ||
+                          urlUploadInputs.physicalUnit === "PIXEL"
+                            ? "auto"
+                            : (urlUploadInputs.physicalSizeZ?.toString() ?? "")
+                        }
+                        className={classes.dimensionsInput}
+                        onChange={(_, data) =>
+                          urlUploadInputs.setPhysicalSizeZ(data.value)
+                        }
+                        disabled={
+                          !urlUploadInputs.canSetParameters ||
+                          urlUploadInputs.physicalUnit === "PIXEL"
+                        }
+                      />
                     </Field>
                   </div>
                 </div>

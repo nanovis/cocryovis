@@ -44,6 +44,18 @@ def mrc_to_raw(mrc_file_path, output_path):
         else:
             raise Exception("MRC file data is in incompatible format.")
 
+        voxel_size = {
+            "x": mrc.header.cella.x / mrc.header.mx.item(),
+            "y": mrc.header.cella.y / mrc.header.my.item(),
+            "z": mrc.header.cella.z / mrc.header.mz.item(),
+        }
+
+        physical_size = {
+            "x": voxel_size["x"] * mrc.header.nx.item(),
+            "y": voxel_size["y"] * mrc.header.ny.item(),
+            "z": voxel_size["z"] * mrc.header.nz.item(),
+        }
+
         raw_filename = generate_unique_filename(output_path, raw_file_output)
 
         # Flip the data along the y-axis
@@ -51,12 +63,19 @@ def mrc_to_raw(mrc_file_path, output_path):
 
         data.tofile(os.path.join(output_path, raw_filename))
 
-        json_output = generate_settings_object(raw_filename,
-                                               mrc.header.nx.item(),
-                                               mrc.header.ny.item(),
-                                               mrc.header.nz.item(),
-                                               bytes_per_voxel, used_bits,
-                                               is_signed, True)
+        json_output = generate_settings_object(
+            raw_filename=raw_filename,
+            width=mrc.header.nx.item(),
+            height=mrc.header.ny.item(),
+            depth=mrc.header.nz.item(),
+            bytes_per_voxel=bytes_per_voxel,
+            used_bits=used_bits,
+            is_signed=is_signed,
+            is_little_endian=True,
+            physicalUnit="ANGSTROM",
+            physicalSizeX=physical_size["x"],
+            physicalSizeY=physical_size["y"],
+            physicalSizeZ=physical_size["z"])
 
         # with open(os.path.join(output_path, json_file_output), "w") as outfile:
         #     outfile.write(json.dumps(json_output, indent=2))

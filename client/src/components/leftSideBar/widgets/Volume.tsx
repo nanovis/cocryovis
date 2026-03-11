@@ -372,7 +372,7 @@ const Volume = observer(({ open, close }: Props) => {
 
         await Utils.waitForNextFrame();
 
-        await selectedVolume?.uploadTiltSeries(parsedSettings, fileData);
+        await selectedVolume?.uploadRawVolume(fileData, parsedSettings);
 
         toastContainer.success("Data successfully uploaded!");
       }
@@ -1593,7 +1593,8 @@ const Volume = observer(({ open, close }: Props) => {
         onClose={editVolumeDialogClose}
         onEdit={handleEditDialog}
         isActive={!!selectedVolume?.updateVolumeActiveRequest}
-        defaults={selectedVolume ?? ({} as z.infer<typeof volumeUpdateSchema>)}
+        // Forced cast due to enums
+        defaults={(selectedVolume ?? {}) as z.infer<typeof volumeUpdateSchema>}
       />
 
       <CreateVolumeDialog

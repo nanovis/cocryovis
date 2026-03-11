@@ -15,6 +15,7 @@ import { getTomographyMetadataFromCryoETId } from "@/api/cryoEt";
 import ToastContainer from "../../utils/toastContainer";
 import type z from "zod";
 import { volumeDescriptorSettingsSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import { physicalUnitOptions } from "../userState/VolumeModel";
 
 export enum Tabs {
   fromFile = "fromFile",
@@ -41,6 +42,11 @@ function stringToPositiveInteger(value: string) {
   return isNaN(parsedValue) || parsedValue <= 0 ? undefined : parsedValue;
 }
 
+function stringToPositiveNumber(value: string) {
+  const parsedValue = parseFloat(value);
+  return isNaN(parsedValue) || parsedValue <= 0 ? undefined : parsedValue;
+}
+
 export const FileUploadInputs = types
   .model({
     pendingFile: types.frozen<File | null>(null),
@@ -49,6 +55,16 @@ export const FileUploadInputs = types
     depth: types.maybe(types.refinement(types.integer, (value) => value > 0)),
     format: types.maybe(types.enumeration(formatOptions)),
     endian: types.optional(types.enumeration(endianOptions), "Little Endian"),
+    physicalUnit: types.maybe(types.enumeration(physicalUnitOptions)),
+    physicalSizeX: types.maybe(
+      types.refinement(types.number, (value) => value > 0)
+    ),
+    physicalSizeY: types.maybe(
+      types.refinement(types.number, (value) => value > 0)
+    ),
+    physicalSizeZ: types.maybe(
+      types.refinement(types.number, (value) => value > 0)
+    ),
   })
   .views((self) => ({
     get dialog(): UploadDialogInstance {
@@ -65,7 +81,11 @@ export const FileUploadInputs = types
         self.width !== undefined &&
         self.height !== undefined &&
         self.depth !== undefined &&
-        self.format !== undefined
+        self.format !== undefined &&
+        self.physicalUnit !== undefined &&
+        self.physicalSizeX !== undefined &&
+        self.physicalSizeY !== undefined &&
+        self.physicalSizeZ !== undefined
       );
     },
   }))
@@ -110,6 +130,21 @@ export const FileUploadInputs = types
       self.endian =
         endian && endianOptions.includes(endian) ? endian : "Little Endian";
     },
+    setPhysicalUnit(physicalUnit?: string) {
+      self.physicalUnit =
+        physicalUnit && physicalUnitOptions.includes(physicalUnit)
+          ? physicalUnit
+          : undefined;
+    },
+    setPhysicalSizeX(sizeX: string) {
+      self.physicalSizeX = stringToPositiveNumber(sizeX);
+    },
+    setPhysicalSizeY(sizeY: string) {
+      self.physicalSizeY = stringToPositiveNumber(sizeY);
+    },
+    setPhysicalSizeZ(sizeZ: string) {
+      self.physicalSizeZ = stringToPositiveNumber(sizeZ);
+    },
     reset() {
       self.pendingFile = null;
       self.width = undefined;
@@ -117,6 +152,10 @@ export const FileUploadInputs = types
       self.depth = undefined;
       self.format = undefined;
       self.endian = "Little Endian";
+      self.physicalUnit = undefined;
+      self.physicalSizeX = undefined;
+      self.physicalSizeY = undefined;
+      self.physicalSizeZ = undefined;
     },
     generateVolumeDescriptor(): VolumeDescriptor {
       const usedBits = self.format
@@ -142,10 +181,11 @@ export const FileUploadInputs = types
             y: self.height,
             z: self.depth,
           },
-          ratio: {
-            x: 1,
-            y: 1,
-            z: 1,
+          physicalUnit: self.physicalUnit,
+          physicalSize: {
+            x: self.physicalSizeX,
+            y: self.physicalSizeY,
+            z: self.physicalSizeZ,
           },
           isSigned: isSigned,
           isLittleEndian: isLittleEndian,
@@ -178,6 +218,16 @@ export const UrlUploadInputs = types
     depth: types.maybe(types.refinement(types.integer, (value) => value > 0)),
     format: types.maybe(types.enumeration(formatOptions)),
     endian: types.optional(types.enumeration(endianOptions), "Little Endian"),
+    physicalUnit: types.maybe(types.enumeration(physicalUnitOptions)),
+    physicalSizeX: types.maybe(
+      types.refinement(types.number, (value) => value > 0)
+    ),
+    physicalSizeY: types.maybe(
+      types.refinement(types.number, (value) => value > 0)
+    ),
+    physicalSizeZ: types.maybe(
+      types.refinement(types.number, (value) => value > 0)
+    ),
   })
   .views((self) => ({
     get dialog(): UploadDialogInstance {
@@ -194,7 +244,11 @@ export const UrlUploadInputs = types
         self.width !== undefined &&
         self.height !== undefined &&
         self.depth !== undefined &&
-        self.format !== undefined
+        self.format !== undefined &&
+        self.physicalUnit !== undefined &&
+        self.physicalSizeX !== undefined &&
+        self.physicalSizeY !== undefined &&
+        self.physicalSizeZ !== undefined
       );
     },
   }))
@@ -204,7 +258,7 @@ export const UrlUploadInputs = types
         self.url.length > 0 && (!self.isRawUpload || self.hasValidParameters)
       );
     },
-    canSetParameters(): boolean {
+    get canSetParameters(): boolean {
       return !self.dialog.isBusy && self.isRawUpload;
     },
   }))
@@ -238,6 +292,21 @@ export const UrlUploadInputs = types
       self.endian =
         endian && endianOptions.includes(endian) ? endian : "Little Endian";
     },
+    setPhysicalUnit(physicalUnit?: string) {
+      self.physicalUnit =
+        physicalUnit && physicalUnitOptions.includes(physicalUnit)
+          ? physicalUnit
+          : undefined;
+    },
+    setPhysicalSizeX(sizeX: string) {
+      self.physicalSizeX = stringToPositiveNumber(sizeX);
+    },
+    setPhysicalSizeY(sizeY: string) {
+      self.physicalSizeY = stringToPositiveNumber(sizeY);
+    },
+    setPhysicalSizeZ(sizeZ: string) {
+      self.physicalSizeZ = stringToPositiveNumber(sizeZ);
+    },
     reset() {
       self.url = "";
       self.fileType = "mrc";
@@ -246,6 +315,10 @@ export const UrlUploadInputs = types
       self.depth = undefined;
       self.format = undefined;
       self.endian = "Little Endian";
+      self.physicalUnit = undefined;
+      self.physicalSizeX = undefined;
+      self.physicalSizeY = undefined;
+      self.physicalSizeZ = undefined;
     },
     generateVolumeDescriptor(): VolumeDescriptor {
       const usedBits = self.format
@@ -270,10 +343,11 @@ export const UrlUploadInputs = types
           y: self.height,
           z: self.depth,
         },
-        ratio: {
-          x: 1,
-          y: 1,
-          z: 1,
+        physicalUnit: self.physicalUnit,
+        physicalSize: {
+          x: self.physicalSizeX,
+          y: self.physicalSizeY,
+          z: self.physicalSizeZ,
         },
         isSigned: isSigned,
         isLittleEndian: isLittleEndian,

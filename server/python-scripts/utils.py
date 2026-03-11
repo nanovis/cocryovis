@@ -1,5 +1,6 @@
 import os
 
+
 def generate_unique_filename(directory: str, filename: str) -> str:
     name, extension = os.path.splitext(filename)
 
@@ -13,9 +14,18 @@ def generate_unique_filename(directory: str, filename: str) -> str:
     return unique_filename
 
 
-def generate_settings_object(raw_filename: str, width: int, height: int,
-                             depth: int, bytes_per_voxel: int, used_bits: int,
-                             is_signed: bool, is_little_endian: bool) -> dict:
+def generate_settings_object(raw_filename: str,
+                             width: int,
+                             height: int,
+                             depth: int,
+                             bytes_per_voxel: int,
+                             used_bits: int,
+                             is_signed: bool,
+                             is_little_endian: bool,
+                             physicalUnit: str = "PIXEL",
+                             physicalSizeX: float = 1,
+                             physicalSizeY: float = 1,
+                             physicalSizeZ: float = 1) -> dict:
     return {
         "file": raw_filename,
         "size": {
@@ -23,10 +33,11 @@ def generate_settings_object(raw_filename: str, width: int, height: int,
             "y": height,
             "z": depth
         },
-        "ratio": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0
+        "physicalUnit": physicalUnit,
+        "physicalSize": {
+            "x": physicalSizeX,
+            "y": physicalSizeY,
+            "z": physicalSizeZ
         },
         "bytesPerVoxel": bytes_per_voxel,
         "usedBits": used_bits,

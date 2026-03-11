@@ -11,6 +11,15 @@ import type {
   volumeUpdateSchema,
 } from "@cocryovis/schemas/componentSchemas/volume-schema";
 
+export async function getVolumeById(id: number) {
+  const response = await Utils.sendApiRequest(`volume/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
+  const volume = (await response.json()) as z.infer<typeof volumeSchema>;
+  return volume;
+}
+
 export async function getVolumesFromProjectDeep(id: number) {
   const response = await Utils.sendApiRequest(`project/${id}/volumes/deep`, {
     method: "GET",

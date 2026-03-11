@@ -7,11 +7,12 @@ import { exec, spawn } from "child_process";
 import appConfig from "./config.mjs";
 import { promisify } from "node:util";
 import fs from "fs";
+import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+
 const execPromise = promisify(exec);
 
 /**
  * @import z from "zod"
- * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  */
 export default class Utils {
   /**
@@ -55,8 +56,7 @@ export default class Utils {
     //     `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
     // );
 
-    /** @type z.infer<typeof volumeSettings> */
-    const data = JSON.parse(stdout);
+    const data = volumeSettings.parse(JSON.parse(stdout));
     return {
       rawFileName: data.file,
       settings: data,
