@@ -327,6 +327,10 @@ export const Volume = types
 
         self.name = volume.name;
         self.description = volume.description;
+        self.physicalUnit = volume.physicalUnit;
+        self.physicalSizeX = volume.physicalSizeX;
+        self.physicalSizeY = volume.physicalSizeY;
+        self.physicalSizeZ = volume.physicalSizeZ;
         return volume;
       } finally {
         if (isAlive(self)) {

@@ -1593,8 +1593,7 @@ const Volume = observer(({ open, close }: Props) => {
         onClose={editVolumeDialogClose}
         onEdit={handleEditDialog}
         isActive={!!selectedVolume?.updateVolumeActiveRequest}
-        defaultName={selectedVolume?.name ?? ""}
-        defaultDescription={selectedVolume?.description ?? ""}
+        defaults={selectedVolume ?? ({} as z.infer<typeof volumeUpdateSchema>)}
       />
 
       <CreateVolumeDialog

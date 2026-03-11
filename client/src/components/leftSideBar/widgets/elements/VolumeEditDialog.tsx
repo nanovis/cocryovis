@@ -11,13 +11,20 @@ import {
   Field,
   Textarea,
   Spinner,
+  Select,
+  makeStyles,
+  Divider,
 } from "@fluentui/react-components";
 import { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import type z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { physicalUnitSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 type VolumeUpdateSchema = z.infer<typeof volumeUpdateSchema>;
+const labels = physicalUnitSchema.meta()?.labels as
+  | Record<string, string>
+  | undefined;
 
 interface Props {
   open: boolean;
@@ -25,9 +32,30 @@ interface Props {
   onClose: () => void;
   onEdit: (data: VolumeUpdateSchema) => Promise<void>;
   isActive: boolean;
-  defaultName: string;
-  defaultDescription: string;
+  defaults: VolumeUpdateSchema;
 }
+
+const useStyles = makeStyles({
+  dialogContent: {
+    padding: "15px 0",
+    display: "grid",
+    gap: "12px",
+  },
+  sizeFieldsContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    height: "100px",
+  },
+  sizeField: {
+    height: "fit-content",
+    "& input": {
+      width: "100%",
+    },
+  },
+});
+
+const axes = ["X", "Y", "Z"] as const;
 
 const VolumeEditDialog = ({
   open,
@@ -35,35 +63,32 @@ const VolumeEditDialog = ({
   onEdit,
   isActive,
   title,
-  defaultName,
-  defaultDescription,
+  defaults,
 }: Props) => {
+  const classes = useStyles();
+
   const {
     control,
     handleSubmit,
+    register,
     reset,
     formState: { errors, isSubmitting, isValid },
   } = useForm<VolumeUpdateSchema>({
     resolver: zodResolver(volumeUpdateSchema),
-    mode: "onBlur",
-    defaultValues: {
-      name: defaultName,
-      description: defaultDescription,
-    },
+    mode: "onChange",
+    defaultValues: defaults,
   });
 
   const loading = isSubmitting || isActive;
 
   useEffect(() => {
     if (open) {
-      reset({
-        name: defaultName,
-        description: defaultDescription,
-      });
+      reset(defaults);
     }
-  }, [open, defaultName, defaultDescription, reset]);
+  }, [open, defaults, reset]);
 
   const onSubmit = async (data: VolumeUpdateSchema) => {
+    console.log(data);
     try {
       await onEdit(data);
       onClose();
@@ -71,6 +96,11 @@ const VolumeEditDialog = ({
       console.error(error);
     }
   };
+
+  const physicalUnit = useWatch({
+    control,
+    name: "physicalUnit",
+  });
 
   return (
     <Dialog open={open}>
@@ -83,7 +113,7 @@ const VolumeEditDialog = ({
           <DialogBody>
             <DialogTitle>{title}</DialogTitle>
 
-            <DialogContent style={{ padding: "15px 0" }}>
+            <DialogContent className={classes.dialogContent}>
               <Controller
                 name="name"
                 control={control}
@@ -91,7 +121,7 @@ const VolumeEditDialog = ({
                   <Field
                     label="Name"
                     validationState={errors.name ? "error" : "none"}
-                    validationMessage={errors.name?.message ?? " "}
+                    validationMessage={errors.name?.message ?? "\u00A0"}
                   >
                     <Input
                       {...field}
@@ -108,12 +138,10 @@ const VolumeEditDialog = ({
                 render={({ field }) => (
                   <Field
                     label="Description"
-                    style={{ marginTop: 10 }}
                     validationState={errors.description ? "error" : "none"}
-                    validationMessage={errors.description?.message ?? " "}
+                    validationMessage={errors.description?.message ?? "\u00A0"}
                   >
                     <Textarea
-                      style={{ overflow: "hidden" }}
                       {...field}
                       textarea={{ rows: 4 }}
                       value={field.value ?? ""}
@@ -121,6 +149,58 @@ const VolumeEditDialog = ({
                   </Field>
                 )}
               />
+              <Divider>Physical Size</Divider>
+              <div className={classes.sizeFieldsContainer}>
+                <Field
+                  label="Unit"
+                  validationState={errors.physicalUnit ? "error" : "none"}
+                  validationMessage={errors.physicalUnit?.message ?? "\u00A0"}
+                  className={classes.sizeField}
+                >
+                  <Select
+                    {...register("physicalUnit")}
+                    style={{ width: "fit-content" }}
+                  >
+                    {physicalUnitSchema.options.map((value) => (
+                      <option key={value} value={value}>
+                        {labels?.[value] ?? value}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                {axes.map((axis) => {
+                  const fieldName = `physicalSize${axis}` as const;
+                  const error = errors[fieldName];
+                  const defaultValue = defaults[fieldName];
+
+                  return (
+                    <Field
+                      key={axis}
+                      label={axis}
+                      validationState={
+                        error && physicalUnit !== "PIXEL" ? "error" : "none"
+                      }
+                      validationMessage={
+                        error && physicalUnit !== "PIXEL"
+                          ? error.message
+                          : "\u00A0"
+                      }
+                      className={classes.sizeField}
+                    >
+                      {physicalUnit === "PIXEL" ? (
+                        <Input key={`${axis}-auto`} value="auto" disabled />
+                      ) : (
+                        <Input
+                          key={`${axis}-input`}
+                          defaultValue={defaultValue?.toString()}
+                          {...register(fieldName, { valueAsNumber: true })}
+                        />
+                      )}
+                    </Field>
+                  );
+                })}
+              </div>
             </DialogContent>
 
             <DialogActions>

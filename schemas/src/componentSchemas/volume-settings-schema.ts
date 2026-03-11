@@ -6,13 +6,24 @@ export const volumeSizeSchema = z.object({
   z: z.int().positive(),
 });
 
-export const physicalUnitSchema = z.enum([
-  "PIXEL",
-  "UNIT",
-  "ANGSTROM",
-  "NANOMETER",
-  "MICROMETER",
-]);
+export const physicalUnitSchema = z
+  .enum(["PIXEL", "UNIT", "ANGSTROM", "NANOMETER", "MICROMETER"])
+  .meta({
+    labels: {
+      PIXEL: "Pixel",
+      UNIT: "Unit",
+      ANGSTROM: "Angstrom",
+      NANOMETER: "Nanometer",
+      MICROMETER: "Micrometer",
+    },
+  });
+
+const ratioSchema = z.object({
+  x: z.number().positive(),
+  y: z.number().positive(),
+  z: z.number().positive(),
+});
+
 export const physicalSizeSchema = z.object({
   x: z.number().positive(),
   y: z.number().positive(),
@@ -40,15 +51,41 @@ const processLegacyRatio = (input: unknown) => {
 
   const data = input as Record<string, unknown>;
 
-  if ("ratio" in data && data.physicalSize === undefined) {
+  if (data.physicalSize !== undefined || data.physicalUnit !== undefined)
+    return data;
+
+  const ratio = ratioSchema.safeParse({ username: 42, xp: "100" });
+  if (!ratio.success) {
+    return data;
+  }
+  const { x, y, z } = ratio.data;
+  if (x === y && y === z) {
     return {
       ...data,
       physicalUnit: "PIXEL",
-      physicalSize: data.ratio,
+      physicalSize: { x: 1, y: 1, z: 1 },
     };
   }
 
-  return data;
+  const size = volumeSizeSchema.safeParse(data.size);
+  if (!size.success) {
+    return data;
+  }
+  const { x: sx, y: sy, z: sz } = size.data;
+
+  const maxRelativeSize = Math.max(sx * x, sy * y, sz * z);
+
+  const scaledRatio = {
+    x: (sx * x) / maxRelativeSize,
+    y: (sy * y) / maxRelativeSize,
+    z: (sz * z) / maxRelativeSize,
+  };
+
+  return {
+    ...data,
+    physicalUnit: "UNIT",
+    physicalSize: scaledRatio,
+  };
 };
 
 export const volumeSettings = z.preprocess(
