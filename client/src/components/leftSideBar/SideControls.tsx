@@ -90,7 +90,7 @@ const SideControls = observer(() => {
           />
 
           <WidgetToggleButton
-            title={"Training and Inference"}
+            title={"Neural Training and Inference"}
             labelPositioning={"after"}
             LabelIcon={Molecule24Regular}
             isOpen={
@@ -110,7 +110,7 @@ const SideControls = observer(() => {
           />
 
           <WidgetToggleButton
-            title={"Data"}
+            title={"Local Functions"}
             labelPositioning={"after"}
             LabelIcon={DesktopTower24Regular}
             isOpen={uiState.openLeftWidget === (WidgetIndices.Local as number)}
