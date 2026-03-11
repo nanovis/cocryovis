@@ -1,10 +1,14 @@
 import { Volume } from "./volume";
 import { ChannelData } from "./channelData";
-import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
+import type {
+  VolumeDescriptor,
+  VolumeDescriptorSettings,
+} from "@/utils/volumeDescriptor";
 import { pickDefaultTF } from "@/utils/helpers";
 import { CONFIG } from "@/constants";
 import { VolumeParameterBuffer } from "./volumeParameterBuffer";
 import { mat4 } from "gl-matrix";
+import { Observable } from "../utilities/observable";
 
 export interface VisualizationDescriptor {
   descriptors: VolumeDescriptor[];
@@ -19,6 +23,8 @@ export class VolumeManager {
   private modelMatrix: mat4 = mat4.create();
 
   private _settings: VolumeDescriptor["settings"] | undefined;
+
+  observableSettings = new Observable(() => this._settings);
 
   constructor(device: GPUDevice) {
     this.device = device;
@@ -111,6 +117,50 @@ export class VolumeManager {
     };
   }
 
+  setSettings(settings: VolumeDescriptor["settings"] | undefined) {
+    this._settings = settings;
+    if (settings) {
+      this.updateRatio();
+    }
+    this.observableSettings.notify();
+  }
+
+  setSettingParameters(parameters: Partial<VolumeDescriptorSettings>) {
+    if (!this._settings) {
+      throw new Error("Cannot set setting parameters before settings are set");
+    }
+    this._settings = { ...this._settings, ...parameters };
+    if (parameters.physicalSize || parameters.physicalUnit) {
+      this.updateRatio();
+    }
+    this.observableSettings.notify();
+  }
+
+  private updateRatio() {
+    if (!this._settings) return;
+    if (this._settings.physicalUnit === "PIXEL") {
+      const size = this._settings.size;
+      const maxSize = Math.max(size.x, size.y, size.z);
+      this.volumeParameterBuffer.set({
+        ratio: [size.x / maxSize, size.y / maxSize, size.z / maxSize, 1],
+      });
+    } else {
+      const maxPhysicalSize = Math.max(
+        this._settings.physicalSize.x,
+        this._settings.physicalSize.y,
+        this._settings.physicalSize.z
+      );
+      this.volumeParameterBuffer.set({
+        ratio: [
+          this._settings.physicalSize.x / maxPhysicalSize,
+          this._settings.physicalSize.y / maxPhysicalSize,
+          this._settings.physicalSize.z / maxPhysicalSize,
+          1,
+        ],
+      });
+    }
+  }
+
   async loadVolumes(
     visualizationDescriptor: VisualizationDescriptor
   ): Promise<VisualizationDescriptor> {
@@ -127,7 +177,7 @@ export class VolumeManager {
     }
 
     // this.channelData.clearChannelData();
-    this._settings = undefined;
+    let newSettings: VolumeDescriptor["settings"] | undefined;
 
     let tfIndex = 0;
     for (const descriptor of descriptors) {
@@ -145,48 +195,24 @@ export class VolumeManager {
       }
 
       const settings = await descriptor.getSettings();
-      if (!this._settings) {
-        this._settings = settings;
-      }
-
-      let scaledRatio!: [number, number, number];
-      if (settings.physicalUnit === "PIXEL") {
-        const size = settings.size;
-        const physicalSize = settings.physicalSize;
-        const sizeArray = [
-          size.x * physicalSize.x,
-          size.y * physicalSize.y,
-          size.z * physicalSize.z,
-        ];
-
-        const maxSize = Math.max(...sizeArray);
-        scaledRatio = sizeArray.map((s) => s / maxSize) as [
-          number,
-          number,
-          number,
-        ];
-      } else {
-        const maxPhysicalSize = Math.max(
-          settings.physicalSize.x,
-          settings.physicalSize.y,
-          settings.physicalSize.z
-        );
-        scaledRatio = [
-          settings.physicalSize.x / maxPhysicalSize,
-          settings.physicalSize.y / maxPhysicalSize,
-          settings.physicalSize.z / maxPhysicalSize,
-        ];
+      if (newSettings === undefined) {
+        newSettings = settings;
       }
 
       this.channelData.set(tfIndex, {
         color: [color.x / 255, color.y / 255, color.z / 255, 1],
-        ratio: scaledRatio,
         rampStart: transferFunction.rampLow,
         rampEnd: transferFunction.rampHigh,
         visible: true,
       });
       tfIndex++;
     }
+
+    if (!newSettings) {
+      throw new Error("Missing volume settings");
+    }
+    this.setSettings(newSettings);
+
     this.volumeParameterBuffer.set({
       numChannels: descriptors.length,
       rawVolumeChannel: rawVolumeChannel,

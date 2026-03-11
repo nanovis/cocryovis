@@ -20,7 +20,6 @@ struct Ray
 struct ChannelData
 {
   color : vec4<f32>,
-  ratio: vec4<f32>,
   rampStart: f32,
   rampEnd: f32,
   visible: u32,
@@ -53,7 +52,8 @@ struct VolumeParameters {
   rawVolumeChannel : i32,
   numChannels : i32,
   voxelSize : f32,
-  rawClippingPlane: i32
+  rawClippingPlane: i32,
+	ratio: vec4<f32>,
 }
 
 struct ClippingPlane {
@@ -258,7 +258,7 @@ fn main(
 	var numChannels = volumeParameters.numChannels;
 	var clippingEnabled = bool(clippingPlane.enabled);
 
-	var volumeRatio = channelData[0].ratio.xyz;
+	var volumeRatio = volumeParameters.ratio.xyz;
 
 	// intialize random seed
 	seedGlobal = u32(tex_coords.x * tex_coords.y * 1000000.0);

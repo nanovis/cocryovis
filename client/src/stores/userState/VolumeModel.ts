@@ -42,7 +42,7 @@ import {
 } from "@/api/volumeData";
 import ToastContainer from "../../utils/toastContainer";
 import type { VolumeRenderer } from "@/renderer/renderer";
-import { RootStore } from "@/stores/RootStore";
+import { RootStore, type RootInstance } from "@/stores/RootStore";
 import { physicalUnitSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
 
@@ -123,6 +123,9 @@ export const Volume = types
     get pseudoVolumeArray() {
       return Array.from(self.pseudoVolumes.values());
     },
+    get root(): RootInstance {
+      return getParentOfType<typeof RootStore>(self, RootStore);
+    },
     get renderer(): VolumeRenderer | null {
       const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
       return rootStore.renderer;
@@ -133,6 +136,53 @@ export const Volume = types
         description: self.description,
         children: self.name,
       };
+    },
+  }))
+  .actions((self) => ({
+    setPhysicalDimensions({
+      x,
+      y,
+      z,
+      unit,
+    }: {
+      x?: number;
+      y?: number;
+      z?: number;
+      unit?: string;
+    }) {
+      let changes = false;
+      if (x !== undefined) {
+        self.physicalSizeX = x;
+        changes = true;
+      }
+      if (y !== undefined) {
+        self.physicalSizeY = y;
+        changes = true;
+      }
+      if (z !== undefined) {
+        self.physicalSizeZ = z;
+        changes = true;
+      }
+      if (unit !== undefined && physicalUnitOptions.includes(unit)) {
+        self.physicalUnit = unit;
+        changes = true;
+      }
+
+      if (
+        changes &&
+        self.renderer &&
+        self.root.uiState.visualizedVolume?.volume?.id === self.id
+      ) {
+        self.renderer.volumeManager.setSettingParameters({
+          physicalUnit:
+            self.physicalUnit as VolumeDescriptorSettings["physicalUnit"],
+          physicalSize: {
+            x: self.physicalSizeX,
+            y: self.physicalSizeY,
+            z: self.physicalSizeZ,
+          },
+        });
+      }
     },
   }))
   .actions((self) => ({
@@ -162,8 +212,12 @@ export const Volume = types
         self.pseudoVolumes.set(volume.id, volume);
       });
     },
+
     setSparseLabelColor(index: number, color: string) {
       if (!self.renderer) return;
+      if (self.root.uiState.visualizedVolume?.volume?.id !== self.id) {
+        return;
+      }
       self.sparseLabelColors[index] = color;
 
       const parsedColor = Utils.fromHexColor(color);
@@ -178,6 +232,10 @@ export const Volume = types
     },
     setShownAnnotation(index: number, show: boolean) {
       if (!self.renderer) return;
+      if (self.root.uiState.visualizedVolume?.volume?.id !== self.id) {
+        return;
+      }
+
       self.shownAnnotations[index] = show;
 
       self.renderer.annotationManager.annotationsDataBuffer.set(index, {
@@ -194,10 +252,12 @@ export const Volume = types
 
       self.name = volume.name;
       self.description = volume.description;
-      self.physicalUnit = volume.physicalUnit;
-      self.physicalSizeX = volume.physicalSizeX;
-      self.physicalSizeY = volume.physicalSizeY;
-      self.physicalSizeZ = volume.physicalSizeZ;
+      self.setPhysicalDimensions({
+        x: volume.physicalSizeX,
+        y: volume.physicalSizeY,
+        z: volume.physicalSizeZ,
+        unit: volume.physicalUnit,
+      });
     }),
   }))
   .actions((self) => ({
@@ -351,10 +411,12 @@ export const Volume = types
 
         self.name = volume.name;
         self.description = volume.description;
-        self.physicalUnit = volume.physicalUnit;
-        self.physicalSizeX = volume.physicalSizeX;
-        self.physicalSizeY = volume.physicalSizeY;
-        self.physicalSizeZ = volume.physicalSizeZ;
+        self.setPhysicalDimensions({
+          x: volume.physicalSizeX,
+          y: volume.physicalSizeY,
+          z: volume.physicalSizeZ,
+          unit: volume.physicalUnit,
+        });
         return volume;
       } finally {
         if (isAlive(self)) {

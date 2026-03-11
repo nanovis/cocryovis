@@ -287,8 +287,7 @@ export class AnnotationManager {
       return;
     }
 
-    const ratio = this.volumeManager.channelData.get(0).ratio;
-    // const ratio = [1, 1, 1];
+    const ratio = this.volumeManager.volumeParameterBuffer.params.ratio;
 
     vertex[0] = (vertex[0] / ratio[0]) * 0.5 + 0.5;
     vertex[1] = (vertex[1] / ratio[1]) * 0.5 + 0.5;

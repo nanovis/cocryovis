@@ -8,8 +8,6 @@ import { WebGpuBufferBBOArray } from "@/renderer/core/webGpuBufferBBO";
 
 const channelParametersDescriptor = {
   color: Float32Vec4(),
-  ratio: Float32Vec4(),
-
   rampStart: Float32(),
   rampEnd: Float32(),
   visible: BoolUint32(),
@@ -25,35 +23,6 @@ export class ChannelData extends WebGpuBufferBBOArray<
   constructor(device: GPUDevice) {
     super(device, channelParametersDescriptor, "ChannelData Buffer", 4, {
       align: 16,
-    });
-
-    this.set(0, {
-      color: [1, 1, 1, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.1,
-      rampEnd: 0.9,
-      visible: false,
-    });
-    this.set(1, {
-      color: [0, 1, 0, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-      visible: false,
-    });
-    this.set(2, {
-      color: [0, 0, 1, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-      visible: false,
-    });
-    this.set(3, {
-      color: [1, 1, 0, 1],
-      ratio: [1, 1, 1, 1],
-      rampStart: 0.0,
-      rampEnd: 1.0,
-      visible: false,
     });
   }
 

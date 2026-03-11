@@ -165,16 +165,20 @@ const Ruler = observer(({ canvasRef }: Props) => {
 
     if (!canvas || !renderer) return;
 
-    const unsubscribeCamera =
-      renderer.camera.observable.observe(scheduleRedraw);
-    const unsubscribeClip =
+    const unsubscribes: Array<() => boolean> = [];
+
+    unsubscribes.push(renderer.camera.observable.observe(scheduleRedraw));
+    unsubscribes.push(
       renderer.clippingPlaneManager.clippingParametersBuffer.observable.observe(
         scheduleRedraw
-      );
+      )
+    );
+    unsubscribes.push(
+      renderer.volumeManager.observableSettings.observe(scheduleRedraw)
+    );
 
     return () => {
-      unsubscribeCamera();
-      unsubscribeClip();
+      unsubscribes.forEach((unsubscribe) => unsubscribe());
     };
   }, [rootStore.renderer, canvasRef]);
 

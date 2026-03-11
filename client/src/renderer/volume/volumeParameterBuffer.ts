@@ -3,6 +3,7 @@ import {
   Float32,
   BoolUint32,
   type DecodedBuffer,
+  Float32Vec4,
 } from "buffer-backed-object";
 import { WebGpuBufferBBO } from "../core/webGpuBufferBBO";
 
@@ -11,6 +12,7 @@ const volumeParametersDescriptor = {
   numChannels: Int32(),
   voxelSize: Float32(),
   rawClippingPlane: BoolUint32(),
+  ratio: Float32Vec4(),
 } as const;
 
 export type VolumeParameters = DecodedBuffer<typeof volumeParametersDescriptor>;
@@ -23,6 +25,7 @@ export class VolumeParameterBuffer extends WebGpuBufferBBO<
     numChannels: 0,
     voxelSize: 1,
     rawClippingPlane: false,
+    ratio: [1, 1, 1, 1],
   } as const;
 
   constructor(device: GPUDevice, init?: Partial<VolumeParameters>) {

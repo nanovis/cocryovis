@@ -85,7 +85,6 @@ const VolumeEditDialog = ({
   }, [open, defaults, reset]);
 
   const onSubmit = async (data: VolumeUpdateSchema) => {
-    console.log(data);
     try {
       await onEdit(data);
       onClose();
