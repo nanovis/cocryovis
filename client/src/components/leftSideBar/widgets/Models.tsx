@@ -39,13 +39,23 @@ const Models = observer(({ open, close }: Props) => {
   const { user } = useMst();
 
   const activeProject = user.userProjects.activeProject;
-  const projectModels = activeProject?.projectModels;
-  const selectedModelId = projectModels?.selectedModelId;
-  const selectedModel = projectModels?.selectedModel;
-  const modelCheckpoints = selectedModel?.modelCheckpoints;
-  const selectedCheckpoint = modelCheckpoints?.selectedCheckpoint;
-  const selectedCheckpointId = modelCheckpoints?.selectedCheckpointId;
-  const checkpoints = modelCheckpoints?.checkpoints;
+  const projectModels = user.userProjects.activeProject?.projectModels;
+  const selectedModelId =
+    user.userProjects.activeProject?.projectModels.selectedModelId;
+  const selectedModel =
+    user.userProjects.activeProject?.projectModels.selectedModel;
+  const modelCheckpoints =
+    user.userProjects.activeProject?.projectModels.selectedModel
+      ?.modelCheckpoints;
+  const selectedCheckpoint =
+    user.userProjects.activeProject?.projectModels.selectedModel
+      ?.modelCheckpoints.selectedCheckpoint;
+  const selectedCheckpointId =
+    user.userProjects.activeProject?.projectModels.selectedModel
+      ?.modelCheckpoints.selectedCheckpointId;
+  const checkpoints =
+    user.userProjects.activeProject?.projectModels.selectedModel
+      ?.modelCheckpoints.checkpoints;
 
   const globalClasses = globalStyles();
 
@@ -143,7 +153,7 @@ const Models = observer(({ open, close }: Props) => {
   };
 
   const handleRemoveModel = async () => {
-    if (!selectedModelId) {
+    if (selectedModelId === undefined || !projectModels) {
       return;
     }
     const toastContainer = new ToastContainer();
@@ -165,7 +175,7 @@ const Models = observer(({ open, close }: Props) => {
   // Function to remove the selected checkpoint
   const handleRemoveCheckpoint = async () => {
     const toastContainer = new ToastContainer();
-    if (!selectedCheckpointId) {
+    if (selectedCheckpointId === undefined || !modelCheckpoints) {
       return;
     }
     try {
@@ -187,7 +197,7 @@ const Models = observer(({ open, close }: Props) => {
   // Function to handle checkpoint download
   const handleDownloadCheckpoint = async () => {
     try {
-      if (!selectedCheckpointId) {
+      if (selectedCheckpointId === undefined) {
         return;
       }
       await Utils.downloadFileFromServer(
@@ -316,7 +326,7 @@ const Models = observer(({ open, close }: Props) => {
                 disabled={
                   isPageBusy() ||
                   !activeProject?.hasWriteAccess ||
-                  !selectedModelId
+                  selectedModelId === undefined
                 }
                 onClick={() => checkpointFileRef.current?.click()}
               >
@@ -345,7 +355,7 @@ const Models = observer(({ open, close }: Props) => {
                     globalClasses.actionButtonDelete
                 )}
                 disabled={
-                  !selectedModelId ||
+                  selectedModelId === undefined ||
                   isPageBusy() ||
                   !activeProject?.hasWriteAccess
                 }
@@ -402,7 +412,7 @@ const Models = observer(({ open, close }: Props) => {
               noOptionsMessage="No checkpoints match your search."
               className={globalClasses.selectionDropdown}
               disabled={
-                !selectedModelId ||
+                selectedModelId === undefined ||
                 isPageBusy() ||
                 !checkpoints ||
                 checkpoints.size < 1
@@ -423,7 +433,7 @@ const Models = observer(({ open, close }: Props) => {
                     )}
                   />
                 }
-                disabled={!selectedModelId || isPageBusy()}
+                disabled={selectedModelId === undefined || isPageBusy()}
                 onClick={() => void refreshCheckpoints()}
               />
             </Tooltip>
@@ -442,7 +452,7 @@ const Models = observer(({ open, close }: Props) => {
               <Button
                 appearance="secondary"
                 className={globalClasses.actionButton}
-                disabled={!selectedCheckpointId}
+                disabled={selectedCheckpointId === undefined}
                 onClick={() => void handleDownloadCheckpoint()}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
@@ -469,7 +479,8 @@ const Models = observer(({ open, close }: Props) => {
                     globalClasses.actionButtonDelete
                 )}
                 disabled={
-                  !selectedCheckpointId || !activeProject?.hasWriteAccess
+                  selectedCheckpointId === undefined ||
+                  !activeProject?.hasWriteAccess
                 }
                 onClick={() => setDeleteCheckpointDialogOpen(true)}
               >

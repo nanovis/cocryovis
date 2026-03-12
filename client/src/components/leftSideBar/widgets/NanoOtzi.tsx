@@ -65,10 +65,10 @@ interface Props {
 const NanoOtzi = observer(({ open, close }: Props) => {
   const { user } = useMst();
   const activeProject = user.userProjects.activeProject;
-  const projectVolumes = activeProject?.projectVolumes;
-  const volumes = projectVolumes?.volumes;
-  const projectModels = activeProject?.projectModels;
-  const models = projectModels?.models;
+  const projectVolumes = user.userProjects.activeProject?.projectVolumes;
+  const volumes = user.userProjects.activeProject?.projectVolumes.volumes;
+  const projectModels = user.userProjects.activeProject?.projectModels;
+  const models = user.userProjects.activeProject?.projectModels.models;
   const modelTraining = user.modelTraining;
 
   const classes = useStyles();
@@ -128,7 +128,10 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         throw new Error("Wasm module not initialized!");
       }
 
-      if (!inferenceVolumeId || !inferenceCheckpointId) {
+      if (
+        inferenceVolumeId === undefined ||
+        inferenceCheckpointId === undefined
+      ) {
         return;
       }
 
@@ -285,7 +288,11 @@ const NanoOtzi = observer(({ open, close }: Props) => {
   };
 
   const canDoInference = () => {
-    return !inferenceInProgress && inferenceCheckpointId && inferenceVolumeId;
+    return (
+      !inferenceInProgress &&
+      inferenceCheckpointId !== undefined &&
+      inferenceVolumeId !== undefined
+    );
   };
 
   const onTrainingVolumeSelect = (data: OptionOnSelectData | null) => {

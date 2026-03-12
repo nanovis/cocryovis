@@ -133,13 +133,23 @@ const Volume = observer(({ open, close }: Props) => {
   const { user, uiState, renderer } = useMst();
 
   const activeProject = user.userProjects.activeProject;
-  const projectVolumes = activeProject?.projectVolumes;
-  const selectedVolumeId = projectVolumes?.selectedVolumeId;
-  const selectedVolume = projectVolumes?.selectedVolume;
-  const volumeResults = selectedVolume?.volumeResults;
-  const selectedResultId = volumeResults?.selectedResultId;
-  const selectedResult = volumeResults?.selectedResult;
-  const results = selectedVolume?.volumeResults.results;
+  const projectVolumes = user.userProjects.activeProject?.projectVolumes;
+  const selectedVolumeId =
+    user.userProjects.activeProject?.projectVolumes.selectedVolumeId;
+  const selectedVolume =
+    user.userProjects.activeProject?.projectVolumes.selectedVolume;
+  const volumeResults =
+    user.userProjects.activeProject?.projectVolumes.selectedVolume
+      ?.volumeResults;
+  const selectedResultId =
+    user.userProjects.activeProject?.projectVolumes.selectedVolume
+      ?.volumeResults.selectedResultId;
+  const selectedResult =
+    user.userProjects.activeProject?.projectVolumes.selectedVolume
+      ?.volumeResults.selectedResult;
+  const results =
+    user.userProjects.activeProject?.projectVolumes.selectedVolume
+      ?.volumeResults.results;
   const visualizedVolume = uiState.visualizedVolume;
 
   const classes = useStyles();
@@ -259,7 +269,7 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const confirmDeleteVolume = async () => {
-    if (!selectedVolumeId) {
+    if (selectedVolumeId === undefined || !projectVolumes) {
       return;
     }
     const toastContainer = new ToastContainer();
@@ -332,7 +342,7 @@ const Volume = observer(({ open, close }: Props) => {
     toastContainer: ToastContainer,
     serverSide?: boolean
   ) => {
-    if (!selectedVolumeId) {
+    if (selectedVolumeId === undefined) {
       return;
     }
 
@@ -698,7 +708,7 @@ const Volume = observer(({ open, close }: Props) => {
   //Functions to handle result buttons
   const handleDownloadResultFiles = async () => {
     try {
-      if (!selectedResultId) {
+      if (selectedResultId === undefined) {
         return;
       }
 
@@ -711,7 +721,7 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const removeResult = async () => {
-    if (!selectedResultId) {
+    if (selectedResultId === undefined || !volumeResults) {
       return;
     }
     const toastContainer = new ToastContainer();
@@ -796,12 +806,16 @@ const Volume = observer(({ open, close }: Props) => {
                     <Edit24Regular
                       className={mergeClasses(
                         globalClasses.successIcon,
-                        !selectedVolumeId && globalClasses.disabledIcon
+                        selectedVolumeId === undefined &&
+                          globalClasses.disabledIcon
                       )}
                     />
                   }
                   onClick={editVolumeDialogOpen}
-                  disabled={!selectedVolumeId || !activeProject?.hasWriteAccess}
+                  disabled={
+                    selectedVolumeId === undefined ||
+                    !activeProject?.hasWriteAccess
+                  }
                 />
               </Tooltip>
             </div>
@@ -1519,7 +1533,7 @@ const Volume = observer(({ open, close }: Props) => {
                 classes.uploadDownloadButtom
               )}
               onClick={() => void handleDownloadResultFiles()}
-              disabled={!selectedResultId}
+              disabled={selectedResultId === undefined}
             >
               <div className={globalClasses.actionButtonIconContainer}>
                 <ArrowDownload20Regular />
@@ -1538,7 +1552,7 @@ const Volume = observer(({ open, close }: Props) => {
                   globalClasses.actionButton,
                   classes.visualizeButton
                 )}
-                disabled={!selectedResultId}
+                disabled={selectedResultId === undefined}
                 onClick={() => void handleResultVisualisationRequest()}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
@@ -1563,7 +1577,10 @@ const Volume = observer(({ open, close }: Props) => {
                   globalClasses.actionButton,
                   selectedVolume && globalClasses.actionButtonDelete
                 )}
-                disabled={!selectedResultId || !activeProject?.hasWriteAccess}
+                disabled={
+                  selectedResultId === undefined ||
+                  !activeProject?.hasWriteAccess
+                }
                 onClick={() => setIsDeleteResultDialogOpen(true)}
               >
                 <div className={globalClasses.actionButtonIconContainer}>
