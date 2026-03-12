@@ -94,16 +94,16 @@ async function loadSparseLabelVolumesIntoAnnotations(
 
 export const VisualizedVolume = types
   .model({
-    volume: types.maybe(types.reference(Volume)),
-    sparseLabelVolume: types.maybe(types.reference(SparseLabelVolume)),
+    volume: types.maybe(types.safeReference(Volume)),
+    sparseLabelVolume: types.maybe(types.safeReference(SparseLabelVolume)),
     sparseLabelVolumes: types.maybe(
-      types.array(types.reference(SparseLabelVolume))
+      types.array(types.safeReference(SparseLabelVolume))
     ),
-    pseudoLabelVolume: types.maybe(types.reference(PseudoLabelVolume)),
+    pseudoLabelVolume: types.maybe(types.safeReference(PseudoLabelVolume)),
     pseudoLabelVolumes: types.maybe(
-      types.array(types.reference(PseudoLabelVolume))
+      types.array(types.safeReference(PseudoLabelVolume))
     ),
-    result: types.maybe(types.reference(Result)),
+    result: types.maybe(types.safeReference(Result)),
     volVisSettings: types.array(VolVisSettings),
     clippingPlane: types.optional(
       types.enumeration("ClippingPlane", [

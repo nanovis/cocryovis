@@ -28,11 +28,20 @@ export enum optimizerOptions {
 
 export const ModelTraining = types
   .model({
-    model: types.maybe(types.reference(Model)),
+    model: types.maybe(types.safeReference(Model)),
     checkpointId: types.maybe(types.integer),
-    trainingVolumes: types.optional(types.array(types.reference(Volume)), []),
-    validationVolumes: types.optional(types.array(types.reference(Volume)), []),
-    testingVolumes: types.optional(types.array(types.reference(Volume)), []),
+    trainingVolumes: types.optional(
+      types.array(types.safeReference(Volume)),
+      []
+    ),
+    validationVolumes: types.optional(
+      types.array(types.safeReference(Volume)),
+      []
+    ),
+    testingVolumes: types.optional(
+      types.array(types.safeReference(Volume)),
+      []
+    ),
     minEpochs: types.optional(types.string, ""),
     maxEpochs: types.optional(types.string, ""),
     findLearningRate: types.optional(types.boolean, false),
@@ -55,7 +64,7 @@ export const ModelTraining = types
       }
     },
     removeTrainingVolume(volume: VolumeInstance) {
-      const index = self.trainingVolumes.findIndex((v) => v.id === volume.id);
+      const index = self.trainingVolumes.findIndex((v) => v?.id === volume.id);
       if (index !== -1) {
         self.trainingVolumes.splice(index, 1);
       }
@@ -72,7 +81,9 @@ export const ModelTraining = types
       }
     },
     removeValidationVolume(volume: VolumeInstance) {
-      const index = self.validationVolumes.findIndex((v) => v.id === volume.id);
+      const index = self.validationVolumes.findIndex(
+        (v) => v?.id === volume.id
+      );
       if (index !== -1) {
         self.validationVolumes.splice(index, 1);
       }
@@ -89,7 +100,7 @@ export const ModelTraining = types
       }
     },
     removeTestingVolume(volume: VolumeInstance) {
-      const index = self.testingVolumes.findIndex((v) => v.id === volume.id);
+      const index = self.testingVolumes.findIndex((v) => v?.id === volume.id);
       if (index !== -1) {
         self.testingVolumes.splice(index, 1);
       }
@@ -258,10 +269,14 @@ export const ModelTraining = types
       );
     },
     get trainingVolumeNames() {
-      return self.trainingVolumes.map((volume) => volume.name);
+      return self.trainingVolumes
+        .filter((v) => v !== undefined)
+        .map((volume) => volume.name);
     },
     get trainingVolumeIds() {
-      return self.trainingVolumes.map((volume) => volume.id.toString());
+      return self.trainingVolumes
+        .filter((v) => v !== undefined)
+        .map((volume) => volume.id.toString());
     },
     get validationVolumeOptions() {
       return self.volumes.filter(
@@ -271,10 +286,14 @@ export const ModelTraining = types
       );
     },
     get validationVolumeNames() {
-      return self.validationVolumes.map((volume) => volume.name);
+      return self.validationVolumes
+        .filter((v) => v !== undefined)
+        .map((volume) => volume.name);
     },
     get validationVolumeIds() {
-      return self.validationVolumes.map((volume) => volume.id.toString());
+      return self.validationVolumes
+        .filter((v) => v !== undefined)
+        .map((volume) => volume.id.toString());
     },
     get testingVolumeOptions() {
       return self.volumes.filter(
@@ -284,10 +303,14 @@ export const ModelTraining = types
       );
     },
     get testingVolumeNames() {
-      return self.testingVolumes.map((volume) => volume.name);
+      return self.testingVolumes
+        .filter((v) => v !== undefined)
+        .map((volume) => volume.name);
     },
     get testingVolumeIds() {
-      return self.testingVolumes.map((volume) => volume.id.toString());
+      return self.testingVolumes
+        .filter((v) => v !== undefined)
+        .map((volume) => volume.id.toString());
     },
   }))
   .actions((self) => ({
