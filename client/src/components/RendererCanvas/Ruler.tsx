@@ -14,6 +14,7 @@ import {
   computeVisibleDimensions,
 } from "@/renderer/utilities/math";
 import { makeStyles } from "@fluentui/react-components";
+import { formatToMinDigits } from "@/utils/helpers";
 
 const useStyles = makeStyles({
   container: {
@@ -39,8 +40,9 @@ const useStyles = makeStyles({
 });
 
 const config = {
-  barHeight: 100,
+  barHeight: 300,
   tickSpacing: 10,
+  maxDecimals: 5,
   color: "#FFFFFF",
   outlineColor: "#000000",
   startEndColor: "#FF0000",
@@ -449,7 +451,9 @@ function redrawHorizontal(
         outlineWidth: 1,
         color: config.color,
         outlineColor: config.outlineColor,
-        label: { text: `${tickSpanWidth.toFixed(1)} ${unit}` },
+        label: {
+          text: `${formatToMinDigits(tickSpanWidth, config.maxDecimals)} ${unit}`,
+        },
       }
     );
   }
@@ -466,7 +470,7 @@ function redrawHorizontal(
         };
 
   container
-    .text(`${widthInUnits.toFixed(1)} ${unit}`)
+    .text(`${formatToMinDigits(widthInUnits, config.maxDecimals)} ${unit}`)
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })
     .fill(config.color)
     .stroke({
@@ -565,7 +569,7 @@ function redrawVertical(
         };
 
   container
-    .text(`${heightInUnits.toFixed(1)} ${unit}`)
+    .text(`${formatToMinDigits(heightInUnits, config.maxDecimals)} ${unit}`)
     .css({ "text-anchor": "end" })
     .font({ size: config.fontSize, family: "Arial" })
     .fill(config.color)

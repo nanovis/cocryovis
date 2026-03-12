@@ -106,6 +106,10 @@ export function isFloatBetween(
   return !Number.isNaN(num) && num >= min && num <= max;
 }
 
+export function formatToMinDigits(n: number, digits: number) {
+  return n.toFixed(Math.max(0, digits - n.toFixed(0).length));
+}
+
 //Don't put in Api folder
 export async function downloadFileFromServer(
   url: string,
