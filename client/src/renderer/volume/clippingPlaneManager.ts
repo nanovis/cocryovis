@@ -99,9 +99,12 @@ export class ClippingPlaneManager {
         const dot = Math.abs(vec3.dot(normal, up));
 
         if (dot > 0.99 || dot < 0.01) {
-          // Pick fallback axis (X-axis)
+          const fallback =
+            Math.abs(normal[2]) < 0.9
+              ? vec3.fromValues(0, 0, 1)
+              : vec3.fromValues(0, 1, 0);
           const right = vec4.create();
-          vec3.cross(right, normal, vec3.fromValues(1, 0, 0));
+          vec3.cross(right, normal, fallback);
           vec3.normalize(right, right);
 
           vec3.cross(up, right, normal);
