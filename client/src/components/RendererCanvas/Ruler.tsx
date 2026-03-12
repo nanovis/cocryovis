@@ -2,7 +2,10 @@ import { useMst } from "@/stores/RootStore";
 import { SVG, type G, type Svg } from "@svgdotjs/svg.js";
 import { observer } from "mobx-react-lite";
 import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
-import { planeBBox, slicePixelSize } from "@/renderer/utilities/math";
+import {
+  computeSliceScreenBounds,
+  slicePixelSize,
+} from "@/renderer/utilities/math";
 import { makeStyles } from "@fluentui/react-components";
 
 const useStyles = makeStyles({
@@ -80,8 +83,11 @@ const Ruler = observer(({ canvasRef }: Props) => {
     const ratio = renderer.volumeManager.getRatio();
     if (!ratio) return;
 
-    const boundingBox = planeBBox(
-      camera,
+    const { viewProjMatrix, inverseViewProjMatrix } =
+      camera.getViewProjectionMatrix();
+
+    const boundingBox = computeSliceScreenBounds(
+      viewProjMatrix,
       canvas.width,
       canvas.height,
       clippingPlaneParams.clippingPlaneOrigin,
@@ -92,12 +98,10 @@ const Ruler = observer(({ canvasRef }: Props) => {
     const volumeSize = renderer.volumeManager.getScaledPhysicalSize();
     if (!volumeSize) return;
 
-    const invViewProj = camera.getViewProjectionMatrix().inverseViewProjMatrix;
-
     const pixelSize = slicePixelSize(
       canvas.width,
       canvas.height,
-      invViewProj,
+      inverseViewProjMatrix,
       clippingPlaneParams.clippingPlaneOrigin,
       clippingPlaneParams.clippingPlaneNormal,
       [volumeSize.x, volumeSize.y, volumeSize.z]

@@ -1,5 +1,4 @@
-import { vec3, vec4, mat4 } from "gl-matrix";
-import type { Camera } from "../core/camera";
+import { vec3, vec4, type mat4 } from "gl-matrix";
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -70,8 +69,8 @@ const BOX_EDGES = [
   [6, 7],
 ] as const;
 
-export function planeBBox(
-  camera: Camera,
+export function computeSliceScreenBounds(
+  viewProj: mat4,
   width: number,
   height: number,
   origin: vec3,
@@ -82,19 +81,15 @@ export function planeBBox(
     maxX = -Infinity;
   let minY = Infinity,
     maxY = -Infinity;
-
-  const { viewMatrix } = camera.getViewMatrix();
-  const projectionMatrix = camera.getProjectionMatrix();
-
-  const mvp = mat4.create();
-  mat4.multiply(mvp, projectionMatrix, viewMatrix);
-
   const d = vec3.dot(origin, normal);
 
   const ab = vec3.create();
   const p = vec3.create();
   const clip = vec4.create();
   const p4 = vec4.create();
+
+  let left: vec3 | undefined;
+  let right: vec3 | undefined;
 
   for (const [i, j] of BOX_EDGES) {
     const a = vec3.mul(vec3.create(), BOX_VERTICES[i], ratio);
@@ -111,7 +106,7 @@ export function planeBBox(
     vec3.scaleAndAdd(p, a, ab, t);
 
     vec4.set(p4, p[0], p[1], p[2], 1);
-    vec4.transformMat4(clip, p4, mvp);
+    vec4.transformMat4(clip, p4, viewProj);
 
     const w = clip[3];
     if (w === 0) continue;
