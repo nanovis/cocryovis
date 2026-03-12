@@ -55,6 +55,10 @@ export class ClippingPlaneManager {
         clippingPlaneNormal: [0, 0, -1, 0],
       });
     }
+
+    if (type !== "view-aligned") {
+      this.lastViewDirection = undefined;
+    }
   }
 
   setClippingPlaneOffset(offset: number) {
