@@ -90,6 +90,8 @@ export function computeSliceScreenBounds(
 
   let left: vec3 | undefined;
   let right: vec3 | undefined;
+  let top: vec3 | undefined;
+  let bottom: vec3 | undefined;
 
   for (const [i, j] of BOX_EDGES) {
     const a = vec3.mul(vec3.create(), BOX_VERTICES[i], ratio);
@@ -117,13 +119,37 @@ export function computeSliceScreenBounds(
     const sx = (ndcX + 1) * 0.5 * width;
     const sy = (1 - ndcY) * 0.5 * height;
 
-    minX = Math.min(minX, sx);
-    maxX = Math.max(maxX, sx);
-    minY = Math.min(minY, sy);
-    maxY = Math.max(maxY, sy);
+    if (sx < minX) {
+      minX = sx;
+      left = vec3.clone(p);
+    }
+
+    if (sx > maxX) {
+      maxX = sx;
+      right = vec3.clone(p);
+    }
+
+    if (sy < minY) {
+      minY = sy;
+      top = vec3.clone(p);
+    }
+
+    if (sy > maxY) {
+      maxY = sy;
+      bottom = vec3.clone(p);
+    }
   }
 
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+    left: left,
+    right: right,
+    top: top,
+    bottom: bottom,
+  };
 }
 
 export function rayFromPixel(
@@ -206,5 +232,86 @@ export function slicePixelSize(
   return {
     pixelSizeX,
     pixelSizeY,
+  };
+}
+
+export function computeVisibleBoundsCameraSpace(
+  leftWorld: vec3,
+  rightWorld: vec3,
+  topWorld: vec3,
+  bottomWorld: vec3,
+  view: mat4,
+  projection: mat4
+) {
+  function toView(v: vec3): vec3 {
+    const p = vec4.fromValues(v[0], v[1], v[2], 1);
+    vec4.transformMat4(p, p, view);
+    return vec3.fromValues(p[0], p[1], p[2]);
+  }
+
+  const leftV = toView(leftWorld);
+  const rightV = toView(rightWorld);
+  const topV = toView(topWorld);
+  const bottomV = toView(bottomWorld);
+
+  const z = leftV[2];
+
+  const minX = Math.min(leftV[0], rightV[0]);
+  const maxX = Math.max(leftV[0], rightV[0]);
+
+  const minY = Math.min(bottomV[1], topV[1]);
+  const maxY = Math.max(bottomV[1], topV[1]);
+
+  const P00 = projection[0];
+  const P11 = projection[5];
+
+  const d = Math.abs(z);
+
+  const xLimit = d / P00;
+  const yLimit = d / P11;
+
+  const visibleLeftX = Math.max(minX, -xLimit);
+  const visibleRightX = Math.min(maxX, xLimit);
+
+  const visibleBottomY = Math.max(minY, -yLimit);
+  const visibleTopY = Math.min(maxY, yLimit);
+
+  // Doesn't really matter where the center is, since the aspect ratio is preserved. Could also be 0
+  const centerX = (visibleLeftX + visibleRightX) * 0.5;
+  const centerY = (visibleTopY + visibleBottomY) * 0.5;
+
+  return {
+    left: vec3.fromValues(visibleLeftX, centerY, z),
+    right: vec3.fromValues(visibleRightX, centerY, z),
+    top: vec3.fromValues(centerX, visibleTopY, z),
+    bottom: vec3.fromValues(centerX, visibleBottomY, z),
+  };
+}
+
+export function computeVisibleDimensions(
+  leftWorld: vec3,
+  rightWorld: vec3,
+  topWorld: vec3,
+  bottomWorld: vec3,
+  view: mat4,
+  projection: mat4,
+  voxelSize: vec3
+) {
+  const { left, right, top, bottom } = computeVisibleBoundsCameraSpace(
+    leftWorld,
+    rightWorld,
+    topWorld,
+    bottomWorld,
+    view,
+    projection
+  );
+
+  // Scale by 0.5, since the volume spans from -1 to 1 in all dimensions
+  const width = anisotropicDistance(left, right, voxelSize) / 2;
+  const height = anisotropicDistance(top, bottom, voxelSize) / 2;
+
+  return {
+    width,
+    height,
   };
 }

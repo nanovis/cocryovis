@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
 import {
   computeSliceScreenBounds,
-  slicePixelSize,
+  computeVisibleDimensions,
 } from "@/renderer/utilities/math";
 import { makeStyles } from "@fluentui/react-components";
 
@@ -83,8 +83,7 @@ const Ruler = observer(({ canvasRef }: Props) => {
     const ratio = renderer.volumeManager.getRatio();
     if (!ratio) return;
 
-    const { viewProjMatrix, inverseViewProjMatrix } =
-      camera.getViewProjectionMatrix();
+    const { viewProjMatrix } = camera.getViewProjectionMatrix();
 
     const boundingBox = computeSliceScreenBounds(
       viewProjMatrix,
@@ -95,27 +94,42 @@ const Ruler = observer(({ canvasRef }: Props) => {
       [ratio.x, ratio.y, ratio.z]
     );
 
+    if (
+      !boundingBox.right ||
+      !boundingBox.left ||
+      !boundingBox.top ||
+      !boundingBox.bottom
+    ) {
+      horizontalDraw.clear();
+      verticalDraw.clear();
+      return;
+    }
+
     const volumeSize = renderer.volumeManager.getScaledPhysicalSize();
     if (!volumeSize) return;
 
-    const pixelSize = slicePixelSize(
-      canvas.width,
-      canvas.height,
-      inverseViewProjMatrix,
-      clippingPlaneParams.clippingPlaneOrigin,
-      clippingPlaneParams.clippingPlaneNormal,
-      [volumeSize.x, volumeSize.y, volumeSize.z]
-    );
-
     const unit = renderer.volumeManager.getUnits();
     if (!unit) return;
+
+    const { viewMatrix } = camera.getViewMatrix();
+    const projectionMatrix = camera.getProjectionMatrix();
+
+    const { width, height } = computeVisibleDimensions(
+      boundingBox.left,
+      boundingBox.right,
+      boundingBox.top,
+      boundingBox.bottom,
+      viewMatrix,
+      projectionMatrix,
+      [volumeSize.x, volumeSize.y, volumeSize.z]
+    );
 
     redrawHorizontal(
       horizontalDraw,
       boundingBox.width,
       boundingBox.x,
       canvas.width,
-      pixelSize?.pixelSizeX ?? 0,
+      width,
       unit
     );
     redrawVertical(
@@ -123,7 +137,7 @@ const Ruler = observer(({ canvasRef }: Props) => {
       boundingBox.height,
       boundingBox.y,
       canvas.height,
-      pixelSize?.pixelSizeY ?? 0,
+      height,
       unit
     );
   });
@@ -240,7 +254,7 @@ function redrawHorizontal(
   width: number,
   offset: number,
   containerWidth: number,
-  unitsPerPixel: number,
+  widthInUnits: number,
   unit: string
 ) {
   svg.clear();
@@ -297,7 +311,7 @@ function redrawHorizontal(
         };
 
   svg
-    .text(`${(width * unitsPerPixel).toFixed(1)} ${unit}`)
+    .text(`${widthInUnits.toFixed(1)} ${unit}`)
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })
     .fill(config.color)
     .stroke({
@@ -315,7 +329,7 @@ function redrawVertical(
   height: number,
   offset: number,
   containerHeight: number,
-  unitsPerPixel: number,
+  heightInUnits: number,
   unit: string
 ) {
   svg.clear();
@@ -371,7 +385,7 @@ function redrawVertical(
         };
 
   svg
-    .text(`${(height * unitsPerPixel).toFixed(1)} ${unit}`)
+    .text(`${heightInUnits.toFixed(1)} ${unit}`)
     .css("text-anchor", "end")
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })
     .fill(config.color)
