@@ -230,13 +230,30 @@ export class Camera extends WebGpuBuffer {
   ) {
     const up = vec3.clone(clippingPlaneUp);
     const viewCenter = vec3.clone(clippingPlaneOrigin);
-    const objectSize =
+    const objectHeight =
       Math.abs(volumeRatio[0] * clippingPlaneUp[0]) +
       Math.abs(volumeRatio[1] * clippingPlaneUp[1]) +
       Math.abs(volumeRatio[2] * clippingPlaneUp[2]);
 
-    const scaledFov = glMatrix.toRadian(this.params.fovY / 2);
-    const distance = objectSize / Math.tan(scaledFov);
+    const right = vec3.cross(
+      vec3.create(),
+      clippingPlaneNormal,
+      clippingPlaneUp
+    );
+
+    const objectWidth =
+      Math.abs(volumeRatio[0] * right[0]) +
+      Math.abs(volumeRatio[1] * right[1]) +
+      Math.abs(volumeRatio[2] * right[2]);
+
+    const projectionMatrix = this.getProjectionMatrix();
+    const tanHalfFovX = 1 / projectionMatrix[0];
+    const tanHalfFovY = 1 / projectionMatrix[5];
+
+    const distanceX = objectWidth / tanHalfFovX;
+    const distanceY = objectHeight / tanHalfFovY;
+    const distance = Math.max(distanceX, distanceY);
+
     const position = vec3.scaleAndAdd(
       vec3.create(),
       clippingPlaneOrigin,
