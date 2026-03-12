@@ -1,5 +1,12 @@
 import { useMst } from "@/stores/RootStore";
-import { SVG, type G, type Svg } from "@svgdotjs/svg.js";
+import {
+  SVG,
+  type Container,
+  type Marker,
+  type Polyline,
+  type StrokeData,
+  type Svg,
+} from "@svgdotjs/svg.js";
 import { observer } from "mobx-react-lite";
 import { useEffect, useEffectEvent, useRef, type RefObject } from "react";
 import {
@@ -35,12 +42,14 @@ const config = {
   barHeight: 100,
   tickSpacing: 10,
   color: "#FFFFFF",
+  outlineColor: "#000000",
   startEndColor: "#FF0000",
   fontSize: 14,
   minorTickHeight: 10,
   majorTickHeight: 20,
   horizontalTextOffset: 20,
   verticalTextOffset: 10,
+  tickRulerOffset: 15,
 } as const;
 
 interface Props {
@@ -219,7 +228,7 @@ const Ruler = observer(({ canvasRef }: Props) => {
 });
 
 function outlinedLine(
-  draw: Svg,
+  container: Container,
   x1: number,
   y1: number,
   x2: number,
@@ -231,35 +240,158 @@ function outlinedLine(
     borderWidth: number;
     linecap?: "butt" | "round" | "square";
   }
-): G {
-  const g = draw.group();
+) {
+  const g = container.group();
 
   const linecap = options.linecap ?? "butt";
 
-  g.line(x1, y1, x2, y2).stroke({
+  const outline = g.line(x1, y1, x2, y2).stroke({
     color: options.borderColor,
     width: options.width + options.borderWidth * 2,
     linecap,
   });
 
-  g.line(x1, y1, x2, y2).stroke({
+  const line = g.line(x1, y1, x2, y2).stroke({
     color: options.color,
     width: options.width,
     linecap,
   });
 
-  return g;
+  return { lineGroup: g, outline: outline, line: line };
+}
+
+function outlinedPolyline(
+  container: Container,
+  points: string,
+  {
+    width,
+    color,
+    outlineWidth,
+    outlineColor,
+    stroke,
+  }: {
+    width: number;
+    color: string;
+    outlineWidth: number;
+    outlineColor: string;
+    stroke?: StrokeData;
+  }
+): { outline: Polyline; line: Polyline } {
+  const outline = container
+    .polyline(points)
+    .fill("none")
+    .stroke({
+      width: width + 2 * outlineWidth,
+      color: outlineColor,
+      ...stroke,
+    });
+
+  const line = container
+    .polyline(points)
+    .fill("none")
+    .stroke({
+      width,
+      color,
+      ...stroke,
+    });
+
+  return { outline, line };
+}
+
+function drawSpanArrow(
+  container: Container,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  {
+    width,
+    outlineWidth,
+    color,
+    outlineColor,
+    stroke,
+    label,
+  }: {
+    width: number;
+    outlineWidth: number;
+    color: string;
+    outlineColor: string;
+    stroke?: StrokeData;
+    label?: {
+      text: string;
+      xOffset?: number;
+      yOffset?: number;
+      css?: Partial<CSSStyleDeclarationWithVars>;
+    };
+  }
+) {
+  const marker = container.marker(10, 10, function (this: Marker, add) {
+    outlinedPolyline(add, "5,2.5 10,5 5,7.5", {
+      width: width,
+      color: color,
+      outlineWidth: outlineWidth,
+      outlineColor: outlineColor,
+      stroke: {
+        linecap: "round",
+        linejoin: "round",
+      },
+    });
+
+    this.ref(10, 5);
+    this.orient("auto-start-reverse");
+  });
+
+  const { line } = outlinedLine(container, x1, y1, x2, y2, {
+    color: color,
+    width: width,
+    borderColor: outlineColor,
+    borderWidth: outlineWidth,
+    linecap: "round",
+  });
+  // const line = draw.line(x1, y1, x2, y2);
+
+  if (stroke) {
+    line.stroke(stroke);
+  }
+
+  line.marker("start", marker);
+  line.marker("end", marker);
+
+  let text = null;
+
+  if (label) {
+    text = container
+      .text(label.text)
+      .font({ size: config.fontSize, family: "Arial", anchor: "middle" })
+      .center(
+        (x1 + x2) / 2 + (label.xOffset ?? 0),
+        (y1 + y2) / 2 - 10 + (label.yOffset ?? 0)
+      )
+      .fill(config.color)
+      .stroke({
+        color: outlineColor,
+        width: 2,
+      })
+      .attr({
+        "paint-order": "stroke",
+      });
+    if (label.css) {
+      text.css(label.css);
+    }
+  }
+
+  return { line, text };
 }
 
 function redrawHorizontal(
-  svg: Svg,
+  container: Container,
   width: number,
   offset: number,
   containerWidth: number,
   widthInUnits: number,
   unit: string
 ) {
-  svg.clear();
+  container.clear();
   offset = Math.max(offset, 0);
   width = Math.min(width, containerWidth - offset);
 
@@ -271,7 +403,7 @@ function redrawHorizontal(
     const x = i * config.tickSpacing + offset;
 
     outlinedLine(
-      svg,
+      container,
       x,
       config.barHeight,
       x,
@@ -279,7 +411,7 @@ function redrawHorizontal(
       {
         color: i === 0 ? config.startEndColor : config.color,
         width: 1,
-        borderColor: "#000",
+        borderColor: config.outlineColor,
         borderWidth: 1,
         linecap: "round",
       }
@@ -287,7 +419,7 @@ function redrawHorizontal(
   }
 
   outlinedLine(
-    svg,
+    container,
     offset + width,
     config.barHeight,
     offset + width,
@@ -295,11 +427,32 @@ function redrawHorizontal(
     {
       color: config.startEndColor,
       width: 1,
-      borderColor: "#000",
+      borderColor: config.outlineColor,
       borderWidth: 1,
       linecap: "round",
     }
   );
+
+  if (ticks >= 10) {
+    const firstMajorTickX = offset;
+    const secondMajorTickX = offset + 10 * config.tickSpacing;
+    const tickSpanWidth = (widthInUnits / width) * 10 * config.tickSpacing;
+
+    drawSpanArrow(
+      container,
+      firstMajorTickX + 2,
+      config.barHeight - config.tickRulerOffset,
+      secondMajorTickX - 2,
+      config.barHeight - config.tickRulerOffset,
+      {
+        width: 1,
+        outlineWidth: 1,
+        color: config.color,
+        outlineColor: config.outlineColor,
+        label: { text: `${tickSpanWidth.toFixed(1)} ${unit}` },
+      }
+    );
+  }
 
   const textPosition =
     offset + width > containerWidth - 120
@@ -312,12 +465,12 @@ function redrawHorizontal(
           y: config.barHeight - config.horizontalTextOffset,
         };
 
-  svg
+  container
     .text(`${widthInUnits.toFixed(1)} ${unit}`)
     .font({ size: config.fontSize, family: "Arial", anchor: "end" })
     .fill(config.color)
     .stroke({
-      color: "#000",
+      color: config.outlineColor,
       width: 2,
     })
     .attr({
@@ -327,14 +480,14 @@ function redrawHorizontal(
 }
 
 function redrawVertical(
-  svg: Svg,
+  container: Container,
   height: number,
   offset: number,
   containerHeight: number,
   heightInUnits: number,
   unit: string
 ) {
-  svg.clear();
+  container.clear();
   offset = Math.max(offset, 0);
   height = Math.min(height, containerHeight - offset);
 
@@ -345,7 +498,7 @@ function redrawVertical(
   for (let i = 0; i < ticks; i++) {
     const y = i * config.tickSpacing + offset;
     outlinedLine(
-      svg,
+      container,
       config.barHeight,
       y,
       i % 10 === 0 ? majorTickEnd : minorTickEnd,
@@ -353,7 +506,7 @@ function redrawVertical(
       {
         color: i === 0 ? config.startEndColor : config.color,
         width: 1,
-        borderColor: "#000",
+        borderColor: config.outlineColor,
         borderWidth: 1,
         linecap: "round",
       }
@@ -361,7 +514,7 @@ function redrawVertical(
   }
 
   outlinedLine(
-    svg,
+    container,
     config.barHeight,
     offset + height,
     majorTickEnd,
@@ -369,11 +522,36 @@ function redrawVertical(
     {
       color: config.startEndColor,
       width: 1,
-      borderColor: "#000",
+      borderColor: config.outlineColor,
       borderWidth: 1,
       linecap: "round",
     }
   );
+
+  if (ticks >= 10) {
+    const firstMajorTickY = offset;
+    const secondMajorTickY = offset + 10 * config.tickSpacing;
+    const tickSpanHeight = (heightInUnits / height) * 10 * config.tickSpacing;
+
+    drawSpanArrow(
+      container,
+      config.barHeight - config.tickRulerOffset,
+      firstMajorTickY + 2,
+      config.barHeight - config.tickRulerOffset,
+      secondMajorTickY - 2,
+      {
+        width: 1,
+        outlineWidth: 1,
+        color: config.color,
+        outlineColor: config.outlineColor,
+        label: {
+          text: `${tickSpanHeight.toFixed(1)} ${unit}`,
+          css: { "writing-mode": "sideways-lr" },
+          xOffset: -5,
+        },
+      }
+    );
+  }
 
   const textPosition =
     offset + height > containerHeight - 120
@@ -386,13 +564,13 @@ function redrawVertical(
           x: config.barHeight - config.verticalTextOffset,
         };
 
-  svg
+  container
     .text(`${heightInUnits.toFixed(1)} ${unit}`)
-    .css("text-anchor", "end")
-    .font({ size: config.fontSize, family: "Arial", anchor: "end" })
+    .css({ "text-anchor": "end" })
+    .font({ size: config.fontSize, family: "Arial" })
     .fill(config.color)
     .stroke({
-      color: "#000",
+      color: config.outlineColor,
       width: 2,
     })
     .attr({
