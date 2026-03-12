@@ -200,7 +200,6 @@ const globalStyles = makeStyles({
     flexDirection: "column",
     rowGap: "14px",
     alignItems: "center",
-    height: "100%",
   },
   widgetButton: {
     ":hover:active:not(:disabled)": {

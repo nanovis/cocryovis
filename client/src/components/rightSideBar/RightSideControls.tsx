@@ -3,12 +3,13 @@ import RenderSettings from "./widgets/RenderSettings";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import globalStyles from "../globalStyles";
-import { Button, tokens, Tooltip } from "@fluentui/react-components";
+import { Button, Divider, tokens, Tooltip } from "@fluentui/react-components";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import {
   ArrowUpload24Regular,
   BorderNone24Regular,
   Info24Regular,
+  SaveImageRegular,
   SlideSettings24Regular,
 } from "@fluentui/react-icons";
 import { useState } from "react";
@@ -47,6 +48,22 @@ const SideControls = observer(() => {
       toastContainer.error(Utils.getErrorMessage(error));
       throw error;
     }
+  };
+
+  const downloadCanvasImage = () => {
+    // Find canvas by id
+    const canvas = document.getElementById(
+      "renderer-canvas"
+    ) as HTMLCanvasElement | null;
+    if (!canvas) {
+      console.error("Canvas element not found");
+      return;
+    }
+    if (!uiState.visualizedVolume) {
+      console.error("No visualized volume found");
+      return;
+    }
+    Utils.downloadCanvas(canvas, "rendered_image.png");
   };
 
   return (
@@ -113,6 +130,30 @@ const SideControls = observer(() => {
             onClick={() => uiState.setOpenRightWidget(WidgetIndices.About)}
             disabled={pageDisabled}
           />
+
+          <Divider />
+
+          <Tooltip
+            content="Save Rendered Image"
+            relationship="label"
+            appearance="inverted"
+            positioning={"before"}
+            withArrow={true}
+            showDelay={0}
+            hideDelay={0}
+          >
+            <Button
+              appearance="subtle"
+              size="large"
+              icon={
+                <span>
+                  <SaveImageRegular style={{ width: 24, height: 24 }} />
+                </span>
+              }
+              onClick={downloadCanvasImage}
+              disabled={!uiState.visualizedVolume || pageDisabled}
+            />
+          </Tooltip>
         </div>
       </div>
 

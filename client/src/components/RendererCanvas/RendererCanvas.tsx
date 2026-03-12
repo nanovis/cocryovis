@@ -97,7 +97,12 @@ const RendererCanvas = observer(() => {
         <Spinner className={classes.message} label={"Loading..."} />
       )}
       {error && <div className={classes.message}>{error}</div>}
-      <canvas ref={canvasRef} className={classes.canvas} {...canvasControls} />
+      <canvas
+        id="renderer-canvas"
+        ref={canvasRef}
+        className={classes.canvas}
+        {...canvasControls}
+      />
       <Ruler canvasRef={canvasRef} />
     </div>
   );

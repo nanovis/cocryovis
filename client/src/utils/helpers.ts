@@ -165,6 +165,16 @@ export function downloadBlob(blob: Blob, fileName: string) {
   window.URL.revokeObjectURL(url);
 }
 
+export function downloadCanvas(canvas: HTMLCanvasElement, fileName: string) {
+  const link = document.createElement("a");
+  link.download = fileName;
+  link.href = canvas.toDataURL("image/png");
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(link.href);
+}
+
 export function readFileAsText(file: Blob): Promise<string | null | undefined> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

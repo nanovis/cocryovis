@@ -10,6 +10,7 @@ import { useMst } from "@/stores/RootStore";
 import globalStyles from "../globalStyles";
 import {
   Button,
+  Divider,
   mergeClasses,
   tokens,
   Tooltip,
@@ -117,6 +118,8 @@ const SideControls = observer(() => {
             onClick={() => uiState.setOpenLeftWidget(WidgetIndices.Local)}
             disabled={user.isGuest || pageDisabled}
           />
+
+          <Divider />
 
           <Tooltip
             content="Delete Project"
