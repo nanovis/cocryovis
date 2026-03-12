@@ -61,6 +61,10 @@ export class ClippingPlaneManager {
     this.clippingPlaneOffset = clamp(offset, -1, 1);
   }
 
+  isFullscreen() {
+    return this.fullscreen;
+  }
+
   setFullscreen(fullscreen: boolean) {
     if (this.fullscreen === fullscreen) return;
     this.fullscreen = fullscreen;

@@ -66,10 +66,12 @@ const Ruler = observer(({ canvasRef }: Props) => {
     const verticalDraw = verticalDrawRef.current;
     if (!canvas || !renderer || !horizontalDraw || !verticalDraw) return;
 
-    const clippingPlaneType =
-      renderer.clippingPlaneManager.getClippingPlaneType();
+    const clippingPlaneManager = renderer.clippingPlaneManager;
 
-    if (clippingPlaneType !== "view-aligned") {
+    if (
+      clippingPlaneManager.getClippingPlaneType() !== "view-aligned" &&
+      !clippingPlaneManager.isFullscreen()
+    ) {
       horizontalDraw.clear();
       verticalDraw.clear();
       return;
