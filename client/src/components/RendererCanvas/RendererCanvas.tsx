@@ -7,6 +7,7 @@ import { CONFIG } from "@/constants";
 import { OrbitCameraController } from "@/utils/orbitCameraController";
 import { useCanvasControls } from "@/hooks/useCanvasControls";
 import Ruler from "./Ruler";
+import AnnotationMarker from "./AnnotationMarker";
 
 const useStyles = makeStyles({
   canvasContainer: {
@@ -104,6 +105,7 @@ const RendererCanvas = observer(() => {
         {...canvasControls}
       />
       <Ruler canvasRef={canvasRef} />
+      <AnnotationMarker canvasRef={canvasRef} />
     </div>
   );
 });

@@ -1,7 +1,63 @@
-import { vec3, vec4, type mat4 } from "gl-matrix";
+import { vec2, vec3, vec4, type mat4 } from "gl-matrix";
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+export function screenToNDC(
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): vec2 {
+  const nx = (x / width) * 2 - 1;
+  const ny = 1 - (y / height) * 2;
+
+  return vec2.fromValues(nx, ny);
+}
+
+export function unprojectPixel(
+  x: number,
+  y: number,
+  ndcZ: number,
+  invViewProj: mat4,
+  width: number,
+  height: number
+): vec3 {
+  const [nx, ny] = screenToNDC(x, y, width, height);
+
+  const v = vec4.fromValues(nx, ny, ndcZ, 1);
+
+  vec4.transformMat4(v, v, invViewProj);
+
+  if (v[3] === 0) {
+    throw new Error("W component is zero during unprojection");
+  }
+
+  return vec3.fromValues(v[0] / v[3], v[1] / v[3], v[2] / v[3]);
+}
+
+export function projectWorldToPixel(
+  p: vec3,
+  viewProj: mat4,
+  width: number,
+  height: number
+): vec2 {
+  const v = vec4.fromValues(p[0], p[1], p[2], 1);
+
+  vec4.transformMat4(v, v, viewProj);
+
+  if (v[3] === 0) {
+    throw new Error("W component is zero during projection");
+  }
+
+  const ndcX = v[0] / v[3];
+  const ndcY = v[1] / v[3];
+
+  const sx = (ndcX * 0.5 + 0.5) * width;
+  const sy = (1 - (ndcY * 0.5 + 0.5)) * height;
+
+  return [sx, sy];
 }
 
 export function intersectRayPlane(
@@ -85,7 +141,6 @@ export function computeSliceScreenBounds(
 
   const ab = vec3.create();
   const p = vec3.create();
-  const clip = vec4.create();
   const p4 = vec4.create();
 
   let left: vec3 | undefined;
@@ -108,35 +163,29 @@ export function computeSliceScreenBounds(
     vec3.scaleAndAdd(p, a, ab, t);
 
     vec4.set(p4, p[0], p[1], p[2], 1);
-    vec4.transformMat4(clip, p4, viewProj);
+    try {
+      const [sx, sy] = projectWorldToPixel(p4, viewProj, width, height);
+      if (sx < minX) {
+        minX = sx;
+        left = vec3.clone(p);
+      }
 
-    const w = clip[3];
-    if (w === 0) continue;
+      if (sx > maxX) {
+        maxX = sx;
+        right = vec3.clone(p);
+      }
 
-    const ndcX = clip[0] / w;
-    const ndcY = clip[1] / w;
+      if (sy < minY) {
+        minY = sy;
+        top = vec3.clone(p);
+      }
 
-    const sx = (ndcX + 1) * 0.5 * width;
-    const sy = (1 - ndcY) * 0.5 * height;
-
-    if (sx < minX) {
-      minX = sx;
-      left = vec3.clone(p);
-    }
-
-    if (sx > maxX) {
-      maxX = sx;
-      right = vec3.clone(p);
-    }
-
-    if (sy < minY) {
-      minY = sy;
-      top = vec3.clone(p);
-    }
-
-    if (sy > maxY) {
-      maxY = sy;
-      bottom = vec3.clone(p);
+      if (sy > maxY) {
+        maxY = sy;
+        bottom = vec3.clone(p);
+      }
+    } catch {
+      // Ignore points that can't be projected
     }
   }
 
@@ -159,20 +208,8 @@ export function rayFromPixel(
   height: number,
   invViewProj: mat4
 ) {
-  const ndcX = (x / width) * 2 - 1;
-  const ndcY = 1 - (y / height) * 2;
-
-  const near = vec4.fromValues(ndcX, ndcY, -1, 1);
-  const far = vec4.fromValues(ndcX, ndcY, 1, 1);
-
-  vec4.transformMat4(near, near, invViewProj);
-  vec4.transformMat4(far, far, invViewProj);
-
-  for (const v of [near, far]) {
-    v[0] /= v[3];
-    v[1] /= v[3];
-    v[2] /= v[3];
-  }
+  const near = unprojectPixel(x, y, -1, invViewProj, width, height);
+  const far = unprojectPixel(x, y, 1, invViewProj, width, height);
 
   const origin = vec3.fromValues(near[0], near[1], near[2]);
   const dir = vec3.normalize(
