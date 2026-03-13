@@ -1,7 +1,9 @@
 import {
   getParentOfType,
+  getType,
   type Instance,
   type SnapshotIn,
+  castToReferenceSnapshot,
 } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
 import { VolVisSettings } from "./VolVisSettings";
@@ -36,6 +38,18 @@ export type visualizedObjectInstances =
   | PseudoVolumeInstance[]
   | ResultInstance
   | undefined;
+
+export interface VisualizedVolumeInput extends Omit<
+  SnapshotIn<typeof VisualizedVolume>,
+  | "volume"
+  | "sparseLabelVolume"
+  | "pseudoLabelVolume"
+  | "result"
+  | "sparseLabelVolumes"
+  | "pseudoLabelVolumes"
+> {
+  visualizedObject?: visualizedObjectInstances;
+}
 
 async function loadSparseLabelVolumesIntoAnnotations(
   renderer: VolumeRenderer,
@@ -93,13 +107,13 @@ async function loadSparseLabelVolumesIntoAnnotations(
 }
 
 export const VisualizedVolume = types
-  .model({
-    volume: types.maybe(types.safeReference(Volume)),
-    sparseLabelVolume: types.maybe(types.safeReference(SparseLabelVolume)),
+  .model("VisualizedVolume", {
+    volume: types.safeReference(Volume),
+    sparseLabelVolume: types.safeReference(SparseLabelVolume),
     sparseLabelVolumes: types.maybe(
       types.array(types.safeReference(SparseLabelVolume))
     ),
-    pseudoLabelVolume: types.maybe(types.safeReference(PseudoLabelVolume)),
+    pseudoLabelVolume: types.safeReference(PseudoLabelVolume),
     pseudoLabelVolumes: types.maybe(
       types.array(types.safeReference(PseudoLabelVolume))
     ),
@@ -150,6 +164,31 @@ export const VisualizedVolume = types
     resetSaveAsNew() {
       for (let i = 0; i < self.saveAsNew.length; i++) {
         self.saveAsNew[i] = false;
+      }
+    },
+    setVisualizedObject(visualizedObject: visualizedObjectInstances) {
+      // This only exist since for whatever reason safeReference fails if object are passed on creation time, so we have to assign them later...
+      if (Array.isArray(visualizedObject)) {
+        if (visualizedObject.length > 0) {
+          if (PseudoLabelVolume.is(visualizedObject[0])) {
+            // @ts-expect-error - MST types are weird, but this works
+            self.pseudoLabelVolumes = (
+              visualizedObject as PseudoVolumeInstance[]
+            ).map((pseudoVolume) => castToReferenceSnapshot(pseudoVolume));
+          } else if (SparseLabelVolume.is(visualizedObject[0])) {
+            // @ts-expect-error - MST types are weird, but this works
+            self.sparseLabelVolumes =
+              visualizedObject as SparseVolumeInstance[];
+          }
+        }
+      } else if (Volume.is(visualizedObject)) {
+        self.volume = visualizedObject;
+      } else if (getType(visualizedObject) === Result) {
+        self.result = visualizedObject as ResultInstance;
+      } else if (getType(visualizedObject) === PseudoLabelVolume) {
+        self.pseudoLabelVolume = visualizedObject as PseudoVolumeInstance;
+      } else if (getType(visualizedObject) === SparseLabelVolume) {
+        self.pseudoLabelVolume = visualizedObject as SparseVolumeInstance;
       }
     },
     setFullscreen(enable: boolean) {

@@ -87,7 +87,7 @@ export const physicalUnitLabeledOptions = physicalUnitOptions.map((value) => ({
 }));
 
 export const Volume = types
-  .model({
+  .model("Volume", {
     id: types.identifierNumber,
     name: types.string,
     description: types.string,
@@ -430,7 +430,7 @@ export interface VolumeInstance extends Instance<typeof Volume> {}
 export interface VolumeSnapshotIn extends SnapshotIn<typeof Volume> {}
 
 export const ProjectVolumes = types
-  .model({
+  .model("ProjectVolumes", {
     projectId: types.identifierNumber,
     volumes: types.map(Volume),
     selectedVolumeId: types.maybe(types.integer),

@@ -7,6 +7,7 @@ import {
 import { flow, types } from "mobx-state-tree";
 import type {
   visualizedObjectInstances,
+  VisualizedVolumeInput,
   VisualizedVolumeSnapshotIn,
 } from "./VisualizedVolume";
 import { VisualizedVolume } from "./VisualizedVolume";
@@ -113,8 +114,9 @@ export const UiState = types
         kernelSize: [kernalSize, kernalSize, kernalSize, 0],
       });
     },
-    setVizualizedVolume(properties: VisualizedVolumeSnapshotIn) {
+    setVizualizedVolume(properties: VisualizedVolumeInput) {
       self.visualizedVolume = VisualizedVolume.create(properties);
+      self.visualizedVolume.setVisualizedObject(properties.visualizedObject);
     },
   }))
   .actions((self) => ({

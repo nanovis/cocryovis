@@ -1,19 +1,8 @@
-import { getType } from "mobx-state-tree";
 import type { VolVisSettingsSnapshotIn } from "@/stores/uiState/VolVisSettings";
 import type {
   visualizedObjectInstances,
-  VisualizedVolumeSnapshotIn,
+  VisualizedVolumeInput,
 } from "@/stores/uiState/VisualizedVolume";
-import { Volume, type VolumeInstance } from "@/stores/userState/VolumeModel";
-import { Result, type ResultInstance } from "@/stores/userState/ResultModel";
-import {
-  SparseLabelVolume,
-  type SparseVolumeInstance,
-} from "@/stores/userState/SparseVolumeModel";
-import {
-  PseudoLabelVolume,
-  type PseudoVolumeInstance,
-} from "@/stores/userState/PseudoVolumeModel";
 import {
   RawFileVolumeData,
   type VolumeData,
@@ -99,10 +88,10 @@ export async function visualizeVolumeFromConfig(
   renderer: VolumeRenderer,
   config: VisualizationDescriptor,
   visualizedObject?: visualizedObjectInstances
-): Promise<VisualizedVolumeSnapshotIn> {
+): Promise<VisualizedVolumeInput> {
   const volumeVisualizationSettings: VolVisSettingsSnapshotIn[] = [];
 
-  const visualizedVolume: VisualizedVolumeSnapshotIn = {
+  const visualizedVolume: VisualizedVolumeInput = {
     volVisSettings: volumeVisualizationSettings,
     clippingPlaneOffset: 0,
     clippingPlane: "none",
@@ -110,40 +99,8 @@ export async function visualizeVolumeFromConfig(
     manualLabelIndex: 0,
     fullscreen: false,
     showRawClippingPlane: false,
+    visualizedObject: visualizedObject,
   };
-
-  if (visualizedObject !== undefined) {
-    if (Array.isArray(visualizedObject)) {
-      if (visualizedObject.length < 1) {
-        throw new Error("Empty visualization object array.");
-      }
-      if (getType(visualizedObject[0]) === SparseLabelVolume) {
-        visualizedVolume.sparseLabelVolumes = visualizedObject.map(
-          (sparseVolume) => sparseVolume.id
-        );
-      } else if (getType(visualizedObject[0]) === PseudoLabelVolume) {
-        visualizedVolume.pseudoLabelVolumes = visualizedObject.map(
-          (sparseVolume) => sparseVolume.id
-        );
-      } else {
-        throw new Error("Invalid visualization object array.");
-      }
-    } else if (getType(visualizedObject) === Volume) {
-      visualizedVolume.volume = (visualizedObject as VolumeInstance).id;
-    } else if (getType(visualizedObject) === Result) {
-      visualizedVolume.result = (visualizedObject as ResultInstance).id;
-    } else if (getType(visualizedObject) === SparseLabelVolume) {
-      visualizedVolume.sparseLabelVolume = (
-        visualizedObject as SparseVolumeInstance
-      ).id;
-    } else if (getType(visualizedObject) === PseudoLabelVolume) {
-      visualizedVolume.pseudoLabelVolume = (
-        visualizedObject as PseudoVolumeInstance
-      ).id;
-    } else {
-      throw new Error("Invalid visualization object.");
-    }
-  }
 
   renderer.clippingPlaneManager.setClippingPlaneOffset(0);
   renderer.clippingPlaneManager.setClippingPlane("none");
