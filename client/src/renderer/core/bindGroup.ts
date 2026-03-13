@@ -1,9 +1,11 @@
 import { WebGpuBuffer } from "./webGpuBuffer";
-import type { WebGpuTexture } from "./webGpuTexture";
+import type { BindableTexture } from "./webGpuTexture";
+
+type BindableResource = WebGpuBuffer | BindableTexture;
 
 class BindGroupEntry {
   private bindGroupLayoutEntry: GPUBindGroupLayoutEntry;
-  private resource: WebGpuBuffer | WebGpuTexture | null = null;
+  private resource: BindableResource | null = null;
 
   private current: GPUBindGroupEntry | undefined;
 
@@ -29,7 +31,7 @@ class BindGroupEntry {
       return this.resource.getBuffer();
     }
     if (this.bindGroupLayoutEntry.sampler !== undefined) {
-      return this.resource.getSampler();
+      return this.resource.getSampler?.();
     } else {
       return this.resource.getView();
     }
@@ -79,7 +81,7 @@ export class BindGroup {
     );
   }
 
-  setResource(binding: number, resource: WebGpuBuffer | WebGpuTexture | null) {
+  setResource(binding: number, resource: BindableResource | null) {
     const entry = this.bindGroupEntries.find(
       (e) => e.getBindingIndex() === binding
     );

@@ -2,7 +2,20 @@ import { detect } from "detect-browser";
 import { CHROMIUM_BASED_BROWSERS } from "@/constants";
 import { getTextureFormatInfo } from "../utilities/formatInfo";
 
-export class WebGpuTexture {
+export interface BindableTexture {
+  getTexture(): GPUTexture | undefined;
+  getView(): GPUTextureView | undefined;
+  getSampler?(): GPUSampler | undefined;
+}
+
+type TextureInitDescriptor = RequireFields<
+  GPUTextureDescriptor,
+  "dimension" | "label"
+> & {
+  size: GPUExtent3DDictStrict;
+};
+
+export class TextureResource implements BindableTexture {
   protected texture: GPUTexture | undefined;
   protected view: GPUTextureView | undefined;
   protected sampler: GPUSampler | undefined;
@@ -27,6 +40,8 @@ export class WebGpuTexture {
 
   destroy() {
     this.texture?.destroy();
+    this.texture = undefined;
+    this.view = undefined;
   }
 
   protected requiresRenderAttachment(
@@ -47,11 +62,7 @@ export class WebGpuTexture {
     return byteSize > maxBufferSize;
   }
 
-  protected createTexture(
-    descriptor: RequireFields<GPUTextureDescriptor, "dimension" | "label"> & {
-      size: GPUExtent3DDictStrict;
-    }
-  ) {
+  createTexture(descriptor: TextureInitDescriptor) {
     this.texture?.destroy();
 
     // This is required due to an issue on Chrome:
@@ -73,6 +84,40 @@ export class WebGpuTexture {
       dimension: descriptor.dimension,
     });
 
+    this.texture = texture;
+    this.view = view;
+
     return { texture, view };
+  }
+}
+
+export class EagerTextureResource extends TextureResource {
+  constructor(
+    device: GPUDevice,
+    descriptor: TextureInitDescriptor,
+    sampler?: GPUSampler
+  ) {
+    super(device, sampler);
+    this.createTexture(descriptor);
+  }
+
+  override getTexture(): GPUTexture {
+    const texture = super.getTexture();
+    if (!texture) {
+      throw new Error(
+        "Texture has not been created yet. This should never happen in EagerTextureResource."
+      );
+    }
+    return texture;
+  }
+
+  override getView(): GPUTextureView {
+    const view = super.getView();
+    if (!view) {
+      throw new Error(
+        "Texture view has not been created yet. This should never happen in EagerTextureResource."
+      );
+    }
+    return view;
   }
 }

@@ -1,8 +1,16 @@
 import { streamVolumesToGPU } from "../utilities/volumeLoader";
 import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
-import { WebGpuTexture } from "../core/webGpuTexture";
+import { TextureResource, type BindableTexture } from "../core/webGpuTexture";
 
-export class Volume extends WebGpuTexture {
+export class Volume implements BindableTexture {
+  private readonly device: GPUDevice;
+  private texture: TextureResource;
+
+  constructor(device: GPUDevice, sampler?: GPUSampler) {
+    this.device = device;
+    this.texture = new TextureResource(device, sampler);
+  }
+
   async loadData(volumeDescriptors: VolumeDescriptor[]) {
     if (volumeDescriptors.length === 0) {
       throw new Error("No volume descriptors provided");
@@ -11,9 +19,7 @@ export class Volume extends WebGpuTexture {
 
     const settings = await descriptor.getSettings();
 
-    this.texture?.destroy();
-
-    const { texture, view } = this.createTexture({
+    const { texture } = this.texture.createTexture({
       label: "Volume",
       format: "rgba8unorm",
       dimension: "3d",
@@ -24,13 +30,23 @@ export class Volume extends WebGpuTexture {
       },
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
-    this.texture = texture;
-    this.view = view;
 
-    await streamVolumesToGPU(this.device, this.texture, volumeDescriptors);
+    await streamVolumesToGPU(this.device, texture, volumeDescriptors);
+  }
 
-    this.view = this.texture.createView({
-      dimension: "3d",
-    });
+  getTexture(): GPUTexture | undefined {
+    return this.texture.getTexture();
+  }
+
+  getView(): GPUTextureView | undefined {
+    return this.texture.getView();
+  }
+
+  getSampler(): GPUSampler | undefined {
+    return this.texture.getSampler();
+  }
+
+  destroy() {
+    this.texture.destroy();
   }
 }

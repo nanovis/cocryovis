@@ -1,16 +1,19 @@
-import { WebGpuTexture } from "../core/webGpuTexture";
+import { TextureResource, type BindableTexture } from "../core/webGpuTexture";
 import type { VolumeManager } from "../volume/volumeManager";
 import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
 import { streamVolumesToGPU } from "@/renderer/utilities/volumeLoader";
 
-export class AnnotationVolume extends WebGpuTexture {
+export class AnnotationVolume implements BindableTexture {
+  private readonly device: GPUDevice;
   private readonly volumeManager: VolumeManager;
   private readonly label: string;
+  private texture: TextureResource;
 
   constructor(device: GPUDevice, volumeManager: VolumeManager, label: string) {
-    super(device);
+    this.device = device;
     this.volumeManager = volumeManager;
     this.label = label;
+    this.texture = new TextureResource(device);
   }
 
   async loadData(volumeDescriptors: VolumeDescriptor[]) {
@@ -18,20 +21,13 @@ export class AnnotationVolume extends WebGpuTexture {
       throw new Error("No volume descriptors provided");
     }
 
-    if (!this.texture) {
-      const descriptor = volumeDescriptors[0];
-      const settings = await descriptor.getSettings();
+    const texture = this.getTexture();
 
-      const { texture, view } = this.createAnnotationTexture(
-        settings.size.x,
-        settings.size.y,
-        settings.size.z
-      );
-      this.texture = texture;
-      this.view = view;
+    if (!texture) {
+      throw new Error("Could not create annotation texture.");
     }
 
-    await streamVolumesToGPU(this.device, this.texture, volumeDescriptors);
+    await streamVolumesToGPU(this.device, texture, volumeDescriptors);
   }
 
   private createAnnotationTexture(
@@ -39,7 +35,7 @@ export class AnnotationVolume extends WebGpuTexture {
     height: number,
     depth: number
   ) {
-    return this.createTexture({
+    return this.texture.createTexture({
       label: this.label,
       format: "rgba8unorm",
       dimension: "3d",
@@ -56,37 +52,36 @@ export class AnnotationVolume extends WebGpuTexture {
     });
   }
 
-  update() {
+  private ensureTextureMatchesVolume() {
     const volumeTexture = this.volumeManager.volume.getTexture();
     if (!volumeTexture) {
       return;
     }
 
+    const texture = this.texture.getTexture();
+
     if (
-      this.texture?.width === volumeTexture.width &&
-      this.texture.height === volumeTexture.height &&
-      this.texture.depthOrArrayLayers === volumeTexture.depthOrArrayLayers
+      texture?.width === volumeTexture.width &&
+      texture.height === volumeTexture.height &&
+      texture.depthOrArrayLayers === volumeTexture.depthOrArrayLayers
     ) {
       return;
     }
 
-    const { texture, view } = this.createAnnotationTexture(
+    this.createAnnotationTexture(
       volumeTexture.width,
       volumeTexture.height,
       volumeTexture.depthOrArrayLayers
     );
-
-    this.texture = texture;
-    this.view = view;
   }
 
-  override getTexture(): GPUTexture | undefined {
-    this.update();
-    return super.getTexture();
+  getTexture(): GPUTexture | undefined {
+    this.ensureTextureMatchesVolume();
+    return this.texture.getTexture();
   }
 
-  override getView(): GPUTextureView | undefined {
-    this.update();
-    return super.getView();
+  getView(): GPUTextureView | undefined {
+    this.ensureTextureMatchesVolume();
+    return this.texture.getView();
   }
 }
