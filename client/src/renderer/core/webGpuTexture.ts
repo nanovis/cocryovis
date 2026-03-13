@@ -1,5 +1,6 @@
 import { detect } from "detect-browser";
 import { CHROMIUM_BASED_BROWSERS } from "@/constants";
+import { getTextureFormatInfo } from "../utilities/formatInfo";
 
 export class WebGpuTexture {
   protected texture: GPUTexture | undefined;
@@ -47,7 +48,7 @@ export class WebGpuTexture {
   }
 
   protected createTexture(
-    descriptor: GPUTextureDescriptor & {
+    descriptor: RequireFields<GPUTextureDescriptor, "dimension" | "label"> & {
       size: GPUExtent3DDictStrict;
     }
   ) {
@@ -55,20 +56,21 @@ export class WebGpuTexture {
 
     // This is required due to an issue on Chrome:
     // https://issues.chromium.org/issues/341741272
-    if (this.requiresRenderAttachment(descriptor.size, 4)) {
+    const textureFormatInfo = getTextureFormatInfo(descriptor.format);
+    if (
+      textureFormatInfo &&
+      this.requiresRenderAttachment(
+        descriptor.size,
+        textureFormatInfo.bytesPerBlock
+      )
+    ) {
       descriptor.usage |= GPUTextureUsage.RENDER_ATTACHMENT;
     }
 
-    const texture = this.device.createTexture({
-      label: descriptor.label,
-      size: descriptor.size,
-      format: "rgba8unorm",
-      dimension: "3d",
-      usage: descriptor.usage,
-    });
+    const texture = this.device.createTexture(descriptor);
 
     const view = texture.createView({
-      dimension: "3d",
+      dimension: descriptor.dimension,
     });
 
     return { texture, view };

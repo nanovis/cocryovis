@@ -12,7 +12,7 @@ const selectionDropdownTooltipStyle: React.CSSProperties = {
   alignContent: "center",
 };
 
-const tooltipProps: RequireFields<TooltipProps, "relationship"> = {
+const tooltipProps: RequireFields<Partial<TooltipProps>, "relationship"> = {
   hideDelay: 0,
   showDelay: 0,
   positioning: "after",
