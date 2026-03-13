@@ -115,6 +115,9 @@ export class ClippingPlaneManager {
           vec3.normalize(up, up);
         }
 
+        // Our clipping plane normal needs to point towards the camera
+        vec3.scale(normal, normal, -1);
+
         this.clippingParametersBuffer.set({
           clippingPlaneNormal: normal,
         });

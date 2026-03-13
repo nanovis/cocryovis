@@ -56,7 +56,7 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>)
 	}
 	
 	
-	var delta = vec3<i32>(kernel.x - i32(global_id.x), kernel.z - i32(global_id.y), kernel.z - i32(global_id.z));
+	var delta = vec3<i32>(kernel.x - i32(global_id.x), kernel.y - i32(global_id.y), kernel.z - i32(global_id.z));
 
 	apply_brush(vec3<f32>(param.vertex.x, param.vertex.y, param.vertex.z), delta);
 }

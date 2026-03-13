@@ -11,7 +11,7 @@ export class OrbitCameraController {
   rotateSpeed = 0.005;
   zoomSpeed = 0.002;
 
-  private azimuthalAngleRadians = 0;
+  private azimuthalAngleRadians = Math.PI;
   private polarAngleRadians = Math.PI / 2;
 
   private isDragging = false;

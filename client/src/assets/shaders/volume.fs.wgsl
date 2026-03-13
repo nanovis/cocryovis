@@ -174,7 +174,7 @@ fn isClipped(pos : vec3<f32>) -> bool
   var d = dot(clippingPlane.origin.xyz, clippingPlane.normal.xyz);
   var r = dot(pos, clippingPlane.normal.xyz);
 
-  return d > r;
+  return d < r; // We clip the side normal is point to
 }
 
 fn dataRead(pos : vec3<f32>) -> vec4<f32>

@@ -16,6 +16,23 @@ export function screenToNDC(
   return vec2.fromValues(nx, ny);
 }
 
+export function unproject(
+  ndcX: number,
+  ndcY: number,
+  ndcZ: number,
+  invViewProj: mat4
+): vec3 {
+  const v = vec4.fromValues(ndcX, ndcY, ndcZ, 1);
+
+  vec4.transformMat4(v, v, invViewProj);
+
+  if (v[3] === 0) {
+    throw new Error("W component is zero during unprojection");
+  }
+
+  return vec3.fromValues(v[0] / v[3], v[1] / v[3], v[2] / v[3]);
+}
+
 export function unprojectPixel(
   x: number,
   y: number,
@@ -26,15 +43,7 @@ export function unprojectPixel(
 ): vec3 {
   const [nx, ny] = screenToNDC(x, y, width, height);
 
-  const v = vec4.fromValues(nx, ny, ndcZ, 1);
-
-  vec4.transformMat4(v, v, invViewProj);
-
-  if (v[3] === 0) {
-    throw new Error("W component is zero during unprojection");
-  }
-
-  return vec3.fromValues(v[0] / v[3], v[1] / v[3], v[2] / v[3]);
+  return unproject(nx, ny, ndcZ, invViewProj);
 }
 
 export function projectWorldToPixel(
@@ -63,32 +72,40 @@ export function projectWorldToPixel(
 export function intersectRayPlane(
   rayOrigin: vec3,
   rayDir: vec3,
-  planePoint: vec3,
-  planeOrigin: vec3
-): number | undefined {
-  const d = vec3.dot(planeOrigin, rayDir);
+  planeOrigin: vec3,
+  planeNormal: vec3
+): { t: number; backface: boolean } | undefined {
+  const d = vec3.dot(planeNormal, rayDir);
 
   if (Math.abs(d) < Number.EPSILON) return undefined;
 
-  const diff = vec3.sub(vec3.create(), planePoint, rayOrigin);
-  const t = vec3.dot(diff, planeOrigin) / d;
+  const diff = vec3.sub(vec3.create(), planeOrigin, rayOrigin);
+  const t = vec3.dot(diff, planeNormal) / d;
 
   if (t < 0) return undefined;
 
-  return t;
+  return { t, backface: d > 0 };
 }
 
 export function findRayPlaneIntersection(
   rayOrigin: vec3,
   rayDir: vec3,
-  planePoint: vec3,
-  planeOrigin: vec3
-): vec3 | undefined {
-  const t = intersectRayPlane(rayOrigin, rayDir, planePoint, planeOrigin);
+  planeOrigin: vec3,
+  planeNormal: vec3
+): { point: vec3; backface: boolean } | undefined {
+  const intersection = intersectRayPlane(
+    rayOrigin,
+    rayDir,
+    planeOrigin,
+    planeNormal
+  );
 
-  if (t === undefined) return undefined;
+  if (intersection === undefined) return undefined;
 
-  return vec3.scaleAndAdd(vec3.create(), rayOrigin, rayDir, t);
+  return {
+    point: vec3.scaleAndAdd(vec3.create(), rayOrigin, rayDir, intersection.t),
+    backface: intersection.backface,
+  };
 }
 
 export function anisotropicDistance(a: vec3, b: vec3, voxel: vec3) {
@@ -208,7 +225,7 @@ export function rayFromPixel(
   height: number,
   invViewProj: mat4
 ) {
-  const near = unprojectPixel(x, y, -1, invViewProj, width, height);
+  const near = unprojectPixel(x, y, 0, invViewProj, width, height);
   const far = unprojectPixel(x, y, 1, invViewProj, width, height);
 
   const origin = vec3.fromValues(near[0], near[1], near[2]);
@@ -235,32 +252,36 @@ export function slicePixelSize(
   const rayX = rayFromPixel(cx + 1, cy, width, height, invViewProj);
   const rayY = rayFromPixel(cx, cy + 1, width, height, invViewProj);
 
-  const p0 = findRayPlaneIntersection(
+  const intersection = findRayPlaneIntersection(
     ray0.origin,
     ray0.dir,
     planeOrigin,
     planeNormal
   );
 
-  if (!p0) return null;
+  if (!intersection) return null;
 
-  const px = findRayPlaneIntersection(
+  const p0 = intersection.point;
+
+  const intersectionX = findRayPlaneIntersection(
     rayX.origin,
     rayX.dir,
     planeOrigin,
     planeNormal
   );
 
-  if (!px) return null;
+  if (!intersectionX) return null;
+  const px = intersectionX.point;
 
-  const py = findRayPlaneIntersection(
+  const intersectionY = findRayPlaneIntersection(
     rayY.origin,
     rayY.dir,
     planeOrigin,
     planeNormal
   );
 
-  if (!py) return null;
+  if (!intersectionY) return null;
+  const py = intersectionY.point;
 
   // Scale by 0.5, since the volume spans from -1 to 1 in all dimensions
   const pixelSizeX = anisotropicDistance(p0, px, voxelSize) * 0.5;

@@ -10,7 +10,7 @@ import { AnnotationVolume } from "./annotationVolume";
 import type { VolumeManager } from "../volume/volumeManager";
 import { vec3, vec4 } from "gl-matrix";
 import type { Camera } from "../core/camera";
-import { findRayPlaneIntersection } from "../utilities/math";
+import { findRayPlaneIntersection, unproject } from "../utilities/math";
 import type { ClippingPlaneManager } from "../volume/clippingPlaneManager";
 import type { RenderingParametersBuffer } from "../renderingParametersBuffer";
 import { AnnotationsDataBuffer } from "./annotationsDataBuffer";
@@ -248,20 +248,17 @@ export class AnnotationManager {
     const ndcX = 2 * mouseX - 1;
     const ndcY = 1 - 2 * mouseY;
 
-    const near = vec4.fromValues(ndcX, ndcY, 0, 1);
-    const far = vec4.fromValues(ndcX, ndcY, 1, 1);
-
     const invViewProj =
       this.camera.getViewProjectionMatrix().inverseViewProjMatrix;
 
-    vec4.transformMat4(near, near, invViewProj);
-    vec4.transformMat4(far, far, invViewProj);
+    let near!: vec3;
+    let far!: vec3;
 
-    for (const p of [near, far]) {
-      p[0] /= p[3];
-      p[1] /= p[3];
-      p[2] /= p[3];
-      p[3] = 1;
+    try {
+      near = unproject(ndcX, ndcY, 0, invViewProj);
+      far = unproject(ndcX, ndcY, 1, invViewProj);
+    } catch {
+      return;
     }
 
     const rayOrigin = vec3.fromValues(near[0], near[1], near[2]);
@@ -276,16 +273,17 @@ export class AnnotationManager {
 
     const clippingPlaneBuffer =
       this.clippingPlaneManager.clippingParametersBuffer;
-    const vertex = findRayPlaneIntersection(
+    const intersection = findRayPlaneIntersection(
       rayOrigin,
       rayDir,
       clippingPlaneBuffer.params.clippingPlaneOrigin,
       clippingPlaneBuffer.params.clippingPlaneNormal
     );
 
-    if (vertex === undefined) {
+    if (intersection === undefined || intersection.backface) {
       return;
     }
+    const vertex = intersection.point;
 
     const ratio = this.volumeManager.volumeParameterBuffer.params.ratio;
 
