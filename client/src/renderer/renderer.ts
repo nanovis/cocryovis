@@ -1,15 +1,14 @@
-import volumeVertexShader from "@/assets/shaders/volume.vs.wgsl?raw";
-import volumeFragmentShader from "@/assets/shaders/volume.fs.wgsl?raw";
 import {
   RenderingParametersBuffer,
   type RenderingParameters,
 } from "./renderingParametersBuffer";
 import { Camera, type CameraParams } from "./core/camera";
-import { BindGroup } from "./core/bindGroup";
 import { VolumeManager } from "./volume/volumeManager";
 import { ClippingPlaneManager } from "./volume/clippingPlaneManager";
 import { AnnotationManager } from "./annotations/annotationManager";
 import { toBoolean } from "@/utils/helpers";
+import { FullscreenPass } from "./core/fullscreenPass";
+import { VolumePass } from "./volume/volumePass";
 
 export interface OutputInfo {
   outputFormat: GPUTextureFormat;
@@ -123,58 +122,6 @@ export function obtainContext(
   return context;
 }
 
-const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-  entries: [
-    {
-      binding: 0,
-      visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
-      buffer: { type: "uniform" },
-    },
-    {
-      binding: 2,
-      visibility: GPUShaderStage.FRAGMENT,
-      sampler: { type: "filtering" },
-    },
-    {
-      binding: 3,
-      visibility: GPUShaderStage.FRAGMENT,
-      texture: { sampleType: "float", viewDimension: "3d" },
-    },
-    {
-      binding: 4,
-      visibility: GPUShaderStage.FRAGMENT,
-      texture: { sampleType: "float", viewDimension: "3d" },
-    },
-    {
-      binding: 6,
-      visibility: GPUShaderStage.FRAGMENT,
-      buffer: { type: "read-only-storage" },
-    },
-    {
-      binding: 7,
-      visibility: GPUShaderStage.FRAGMENT,
-      buffer: { type: "uniform" },
-    },
-    {
-      binding: 8,
-      visibility: GPUShaderStage.FRAGMENT,
-      buffer: { type: "uniform" },
-    },
-    {
-      binding: 9,
-      visibility: GPUShaderStage.FRAGMENT,
-      buffer: { type: "read-only-storage" },
-    },
-    {
-      binding: 10,
-      visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-      buffer: { type: "uniform" },
-    },
-  ],
-};
-
-const DEPTH_TEXTURE_FORMAT: GPUTextureFormat = "depth24plus";
-
 export type RendererCameraParameters = Omit<CameraParams, "aspectRatio">;
 
 export class VolumeRenderer {
@@ -196,14 +143,11 @@ export class VolumeRenderer {
   width: number;
   height: number;
   format: GPUTextureFormat;
-  volumePipeline: GPURenderPipeline;
   animationFrame: number | null = null;
 
-  private depthTexture: GPUTexture | undefined;
-
   private destroyed: boolean = false;
-
-  private bindGroup: BindGroup;
+  private volumePass: VolumePass;
+  private fullscreenPass: FullscreenPass;
 
   constructor(
     device: GPUDevice,
@@ -258,68 +202,24 @@ export class VolumeRenderer {
       forceWriteOnlyAnnotations
     );
 
-    this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
-    this.bindGroup.setResource(0, this.camera);
-    this.bindGroup.setResource(2, this.volumeManager.volume);
-    this.bindGroup.setResource(3, this.volumeManager.volume);
-    this.bindGroup.setResource(4, this.annotationManager.getAnnotationVolume());
-    this.bindGroup.setResource(6, this.annotationManager.annotationsDataBuffer);
-    this.bindGroup.setResource(7, this.volumeManager.volumeParameterBuffer);
-    this.bindGroup.setResource(8, this.renderingParameters);
-    this.bindGroup.setResource(9, this.volumeManager.channelData);
-    this.bindGroup.setResource(
-      10,
-      this.clippingPlaneManager.clippingParametersBuffer
+    this.volumePass = new VolumePass({
+      device: this.device,
+      width: this.width,
+      height: this.height,
+      format: this.format,
+      camera: this.camera,
+      volumeManager: this.volumeManager,
+      annotationManager: this.annotationManager,
+      renderingParameters: this.renderingParameters,
+      clippingPlaneManager: this.clippingPlaneManager,
+    });
+    this.fullscreenPass = new FullscreenPass(
+      this.device,
+      this.format,
+      this.volumePass.getOutputTexture()
     );
 
-    const pipelineLayout = this.device.createPipelineLayout({
-      bindGroupLayouts: [this.bindGroup.getBindGroupLayout()],
-    });
-
-    this.volumePipeline = this.device.createRenderPipeline({
-      layout: pipelineLayout,
-      vertex: {
-        module: this.device.createShaderModule({
-          label: "Volume Vertex Shader",
-          code: volumeVertexShader,
-        }),
-        entryPoint: "main",
-      },
-      fragment: {
-        module: this.device.createShaderModule({
-          label: "Volume Fragment Shader",
-          code: volumeFragmentShader,
-        }),
-        entryPoint: "main",
-        targets: [{ format: this.format }],
-      },
-      primitive: { topology: "triangle-list" },
-      depthStencil: {
-        depthWriteEnabled: true,
-        depthCompare: "less",
-        format: DEPTH_TEXTURE_FORMAT,
-      },
-    });
-
     this.render();
-  }
-
-  getDepthTexture(): GPUTexture {
-    if (
-      this.depthTexture?.width === this.width &&
-      this.depthTexture.height === this.height
-    ) {
-      return this.depthTexture;
-    }
-
-    this.depthTexture?.destroy();
-    this.depthTexture = this.device.createTexture({
-      label: "Depth Texture",
-      size: [this.width, this.height],
-      format: DEPTH_TEXTURE_FORMAT,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    return this.depthTexture;
   }
 
   render() {
@@ -336,34 +236,12 @@ export class VolumeRenderer {
     }
 
     this.clippingPlaneManager.update();
-
-    const gpuBindGroup = this.bindGroup.getGPUBindGroup();
-
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view,
-          clearValue: this.renderingParameters.params.clearColor,
-          loadOp: "clear",
-          storeOp: "store",
-        },
-      ],
-      depthStencilAttachment: {
-        view: this.getDepthTexture(),
-        depthClearValue: 1,
-        depthLoadOp: "clear",
-        depthStoreOp: "discard",
-      },
-    });
-
-    if (gpuBindGroup) {
-      pass.setPipeline(this.volumePipeline);
-      pass.setBindGroup(0, gpuBindGroup);
-
-      pass.draw(6);
-    }
-
-    pass.end();
+    this.volumePass.render(encoder, this.renderingParameters.params.clearColor);
+    this.fullscreenPass.render(
+      encoder,
+      view,
+      this.renderingParameters.params.clearColor
+    );
     this.device.queue.submit([encoder.finish()]);
 
     this.animationFrame = requestAnimationFrame(this.render.bind(this));
@@ -372,6 +250,7 @@ export class VolumeRenderer {
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
+    this.volumePass.resize(width, height);
     this.camera.setParameters({ aspectRatio: width / height });
   }
 
@@ -381,7 +260,7 @@ export class VolumeRenderer {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
     }
-    this.depthTexture?.destroy();
+    this.volumePass.destroy();
     this.volumeManager.destroy();
     this.camera.destroy();
     this.renderingParameters.destroy();

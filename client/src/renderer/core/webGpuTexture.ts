@@ -8,7 +8,7 @@ export interface BindableTexture {
   getSampler?(): GPUSampler | undefined;
 }
 
-type TextureInitDescriptor = RequireFields<
+export type TextureInitDescriptor = RequireFields<
   GPUTextureDescriptor,
   "dimension" | "label"
 > & {
