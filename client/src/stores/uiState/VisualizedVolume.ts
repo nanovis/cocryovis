@@ -239,6 +239,9 @@ export const VisualizedVolume = types
     setManualLabelIndex(index: number) {
       self.manualLabelIndex = index;
       self.volume?.setShownAnnotation(index, true);
+      if (self.renderer) {
+        self.renderer.annotationManager.activeLabelIndex = index;
+      }
     },
     setClippingPlane(clippingPlane: ClippingPlaneType) {
       if (!self.renderer) {

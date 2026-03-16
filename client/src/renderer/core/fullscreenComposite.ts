@@ -4,7 +4,7 @@ import fullscreenFragmentShader from "@/assets/shaders/fullscreen.fs.wgsl?raw";
 import { BindGroup } from "./bindGroup";
 import type { Framebuffer } from "./framebuffer";
 
-export class FullscreenPass {
+export class FullscreenComposite {
   private readonly bindGroup: BindGroup;
   private readonly pipeline: GPURenderPipeline;
 
@@ -53,30 +53,13 @@ export class FullscreenPass {
     });
   }
 
-  render(
-    encoder: GPUCommandEncoder,
-    targetView: GPUTextureView,
-    clearColor: GPUColor
-  ) {
+  render(pass: GPURenderPassEncoder) {
     const gpuBindGroup = this.bindGroup.getGPUBindGroup();
-
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: targetView,
-          clearValue: clearColor,
-          loadOp: "clear",
-          storeOp: "store",
-        },
-      ],
-    });
 
     if (gpuBindGroup) {
       pass.setPipeline(this.pipeline);
       pass.setBindGroup(0, gpuBindGroup);
       pass.draw(3);
     }
-
-    pass.end();
   }
 }

@@ -129,13 +129,9 @@ export class Camera extends WebGpuBuffer {
     viewProjMatrix: mat4;
     inverseViewProjMatrix: mat4;
   } {
-    const viewMatrix = this.getViewMatrix();
+    const { viewMatrix } = this.getViewMatrix();
     const projMatrix = this.getProjectionMatrix();
-    const viewProjMatrix = mat4.multiply(
-      mat4.create(),
-      projMatrix,
-      viewMatrix.viewMatrix
-    );
+    const viewProjMatrix = mat4.multiply(mat4.create(), projMatrix, viewMatrix);
     const inverseViewProjMatrix = mat4.create();
     mat4.invert(inverseViewProjMatrix, viewProjMatrix);
     return { viewProjMatrix, inverseViewProjMatrix };

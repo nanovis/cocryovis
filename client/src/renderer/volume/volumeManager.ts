@@ -117,6 +117,19 @@ export class VolumeManager {
     };
   }
 
+  getVoxelToWorld() {
+    if (!this._settings) {
+      return undefined;
+    }
+
+    const size = this._settings.size;
+    const ratio = this.getRatio();
+    if (!ratio) return undefined;
+
+    const t = size.x / ratio.x;
+    return 2 / t;
+  }
+
   setSettings(settings: VolumeDescriptor["settings"] | undefined) {
     this._settings = settings;
     if (settings) {

@@ -7,22 +7,32 @@ import {
 export class Framebuffer implements BindableTexture {
   private width: number;
   private height: number;
-  private readonly colorFormat: GPUTextureFormat;
+  readonly colorFormat: GPUTextureFormat;
   private readonly depthFormat: GPUTextureFormat | undefined;
   private readonly colorTexture: EagerTextureResource;
   private depthTexture: EagerTextureResource | undefined;
+  private readonly clearColor: GPUColor = { r: 0, g: 0, b: 0, a: 1 };
 
-  constructor(
-    device: GPUDevice,
-    width: number,
-    height: number,
-    colorFormat: GPUTextureFormat,
-    depthFormat?: GPUTextureFormat
-  ) {
+  constructor({
+    device,
+    width,
+    height,
+    colorFormat,
+    depthFormat,
+    clearColor,
+  }: {
+    device: GPUDevice;
+    width: number;
+    height: number;
+    colorFormat: GPUTextureFormat;
+    depthFormat?: GPUTextureFormat;
+    clearColor?: GPUColor;
+  }) {
     this.width = width;
     this.height = height;
     this.colorFormat = colorFormat;
     this.depthFormat = depthFormat;
+    this.clearColor = clearColor ?? this.clearColor;
 
     const sampler = device.createSampler({
       label: "Framebuffer Sampler",
@@ -134,16 +144,14 @@ export class Framebuffer implements BindableTexture {
     return this.depthTexture?.getTexture();
   }
 
-  getRenderPassDescriptor(
-    clearColor: GPUColor = { r: 0, g: 0, b: 0, a: 1 }
-  ): GPURenderPassDescriptor {
+  getRenderPassDescriptor(clearColor?: GPUColor): GPURenderPassDescriptor {
     const colorView = this.getColorView();
 
     const descriptor: GPURenderPassDescriptor = {
       colorAttachments: [
         {
           view: colorView,
-          clearValue: clearColor,
+          clearValue: clearColor ?? this.clearColor,
           loadOp: "clear",
           storeOp: "store",
         },

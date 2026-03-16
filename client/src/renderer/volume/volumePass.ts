@@ -64,7 +64,7 @@ export class VolumePass {
   private readonly device: GPUDevice;
   private readonly bindGroup: BindGroup;
   private readonly volumePipeline: GPURenderPipeline;
-  private readonly framebuffer: Framebuffer;
+  readonly framebuffer: Framebuffer;
 
   constructor({
     device,
@@ -88,13 +88,13 @@ export class VolumePass {
     clippingPlaneManager: ClippingPlaneManager;
   }) {
     this.device = device;
-    this.framebuffer = new Framebuffer(
+    this.framebuffer = new Framebuffer({
       device,
       width,
       height,
-      format,
-      DEPTH_TEXTURE_FORMAT
-    );
+      colorFormat: format,
+      depthFormat: DEPTH_TEXTURE_FORMAT,
+    });
 
     this.bindGroup = new BindGroup(this.device, bindGroupLayoutDescriptor);
     this.bindGroup.setResource(0, camera);
@@ -146,6 +146,7 @@ export class VolumePass {
 
   render(encoder: GPUCommandEncoder, clearColor: GPUColor) {
     const gpuBindGroup = this.bindGroup.getGPUBindGroup();
+
     const pass = encoder.beginRenderPass(
       this.framebuffer.getRenderPassDescriptor(clearColor)
     );
@@ -157,10 +158,6 @@ export class VolumePass {
     }
 
     pass.end();
-  }
-
-  getOutputTexture(): Framebuffer {
-    return this.framebuffer;
   }
 
   destroy() {

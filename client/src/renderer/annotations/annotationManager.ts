@@ -86,6 +86,7 @@ export class AnnotationManager {
   private readonly clear3dPipeline: GPUComputePipeline;
 
   private previousMousePosition: { x: number; y: number } | undefined;
+  activeLabelIndex: number = 0;
 
   constructor(
     device: GPUDevice,

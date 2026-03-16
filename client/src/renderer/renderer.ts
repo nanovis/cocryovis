@@ -7,8 +7,9 @@ import { VolumeManager } from "./volume/volumeManager";
 import { ClippingPlaneManager } from "./volume/clippingPlaneManager";
 import { AnnotationManager } from "./annotations/annotationManager";
 import { toBoolean } from "@/utils/helpers";
-import { FullscreenPass } from "./core/fullscreenPass";
+import { FullscreenComposite } from "./core/fullscreenComposite";
 import { VolumePass } from "./volume/volumePass";
+import { AnnotationMarkerRenderer } from "./annotations/annotationMarkerRenderer";
 
 export interface OutputInfo {
   outputFormat: GPUTextureFormat;
@@ -132,22 +133,24 @@ export class VolumeRenderer {
     "texture-formats-tier2",
   ] as const;
 
-  device: GPUDevice;
+  readonly device: GPUDevice;
   context: GPUCanvasContext | undefined;
   output: OutputInfo | undefined;
-  volumeManager: VolumeManager;
-  clippingPlaneManager: ClippingPlaneManager;
-  renderingParameters: RenderingParametersBuffer;
-  annotationManager: AnnotationManager;
-  camera: Camera;
+  readonly volumeManager: VolumeManager;
+  readonly clippingPlaneManager: ClippingPlaneManager;
+  readonly renderingParameters: RenderingParametersBuffer;
+  readonly annotationManager: AnnotationManager;
+  readonly camera: Camera;
   width: number;
   height: number;
-  format: GPUTextureFormat;
+  readonly format: GPUTextureFormat;
   animationFrame: number | null = null;
 
   private destroyed: boolean = false;
   private volumePass: VolumePass;
-  private fullscreenPass: FullscreenPass;
+  private fullscreenComposite: FullscreenComposite;
+
+  readonly annotationMarkerRenderer: AnnotationMarkerRenderer;
 
   constructor(
     device: GPUDevice,
@@ -193,6 +196,7 @@ export class VolumeRenderer {
       this.camera,
       this.volumeManager
     );
+
     this.annotationManager = new AnnotationManager(
       this.device,
       this.volumeManager,
@@ -213,11 +217,20 @@ export class VolumeRenderer {
       renderingParameters: this.renderingParameters,
       clippingPlaneManager: this.clippingPlaneManager,
     });
-    this.fullscreenPass = new FullscreenPass(
+    this.fullscreenComposite = new FullscreenComposite(
       this.device,
       this.format,
-      this.volumePass.getOutputTexture()
+      this.volumePass.framebuffer
     );
+    this.annotationMarkerRenderer = new AnnotationMarkerRenderer({
+      device: this.device,
+      format: this.format,
+      camera: this.camera,
+      clippingPlaneManager: this.clippingPlaneManager,
+      volumeManager: this.volumeManager,
+      annotationManager: this.annotationManager,
+      renderingParametersBuffer: this.renderingParameters,
+    });
 
     this.render();
   }
@@ -237,11 +250,23 @@ export class VolumeRenderer {
 
     this.clippingPlaneManager.update();
     this.volumePass.render(encoder, this.renderingParameters.params.clearColor);
-    this.fullscreenPass.render(
-      encoder,
-      view,
-      this.renderingParameters.params.clearColor
-    );
+
+    const fullscreenPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: view,
+          clearValue: this.renderingParameters.params.clearColor,
+          loadOp: "clear",
+          storeOp: "store",
+        },
+      ],
+    });
+
+    this.fullscreenComposite.render(fullscreenPass);
+    this.annotationMarkerRenderer.render(fullscreenPass);
+
+    fullscreenPass.end();
+
     this.device.queue.submit([encoder.finish()]);
 
     this.animationFrame = requestAnimationFrame(this.render.bind(this));

@@ -60,6 +60,10 @@ const RendererCanvas = observer(() => {
         rootStore.uiState.visualizedVolume.manualLabelIndex
       );
     },
+    onMove: (x, y) => {
+      if (!rootStore.uiState.visualizedVolume) return;
+      rootStore.renderer?.annotationMarkerRenderer.setMousePosition(x, y);
+    },
     onWheel: (direction, event) => {
       if (!event.shiftKey) return;
       rootStore.uiState.visualizedVolume?.changeClippingPlaneOffset(
