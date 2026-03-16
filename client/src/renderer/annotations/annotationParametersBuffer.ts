@@ -26,7 +26,7 @@ export class AnnotationParametersBuffer extends WebGpuBufferBBO<
 > {
   static readonly defaults: AnnotationParameters = {
     vertex: vec4.create(),
-    kernelSize: [25, 25, 25, 0],
+    kernelSize: [5, 5, 5, 0],
     clearMask: vec4.create(),
 
     addAnnotation: true,

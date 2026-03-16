@@ -27,7 +27,7 @@ export const UiState = types
     openSignUpPage: types.optional(types.boolean, false),
     openProfilePage: types.optional(types.boolean, false),
     openAdminPanel: types.optional(types.boolean, false),
-    kernelSize: types.optional(types.integer, 25),
+    kernelSize: types.optional(types.integer, 5),
     visualizedVolume: types.maybe(VisualizedVolume),
     renderSettings: types.optional(RenderSettings, {}),
     uploadDialog: types.optional(UploadDialog, {}),
@@ -107,11 +107,11 @@ export const UiState = types
         self.openSignInPage = false;
       }
     },
-    setKernelSize(kernalSize: number) {
+    setKernelSize(kernelSize: number) {
       if (!self.renderer) return;
-      self.kernelSize = kernalSize;
+      self.kernelSize = kernelSize;
       self.renderer.annotationManager.annotationParameterBuffer.set({
-        kernelSize: [kernalSize, kernalSize, kernalSize, 0],
+        kernelSize: [kernelSize, kernelSize, kernelSize, 0],
       });
     },
     setVizualizedVolume(properties: VisualizedVolumeInput) {
