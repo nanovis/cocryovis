@@ -768,7 +768,7 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const canActivateEditingMode = () => {
-    return selectedVolume && visualizedVolume && visualizedVolume.canEditLabels;
+    return selectedVolume && visualizedVolume?.canEditLabels;
   };
 
   return open ? (
@@ -1079,7 +1079,7 @@ const Volume = observer(({ open, close }: Props) => {
                     <Text>Label Editing Mode</Text>
                     <br />
                     <div>
-                      {!visualizedVolume || !visualizedVolume.canEditLabels ? (
+                      {!visualizedVolume?.canEditLabels ? (
                         <ErrorCircle16Filled
                           className={globalClasses.failIcon}
                         />

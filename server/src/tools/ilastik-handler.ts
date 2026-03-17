@@ -367,7 +367,7 @@ export default class IlastikHandler {
       );
     }
 
-    if (!volume.rawData || !volume.rawData.dataFile.rawFilePath) {
+    if (!volume.rawData?.dataFile.rawFilePath) {
       throw new ApiError(
         400,
         "Pseudo Labels Generation error: Raw Data is missing."
@@ -375,7 +375,7 @@ export default class IlastikHandler {
     }
 
     for (const sparseLabel of volume.sparseVolumes) {
-      if (!sparseLabel || !sparseLabel.dataFile.rawFilePath) {
+      if (!sparseLabel?.dataFile.rawFilePath) {
         throw new ApiError(
           400,
           "Pseudo Labels Generation error: Manual Label Data is missing."
