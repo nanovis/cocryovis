@@ -166,7 +166,7 @@ const startServer = async () => {
   // API
   app.use("/api", projectsApi);
 
-  const clientPath = path.join("client", "build");
+  const clientPath = path.join("../", "client", "build");
   console.log("Client path: ", clientPath);
 
   if (fileSystem.existsSync(clientPath)) {
