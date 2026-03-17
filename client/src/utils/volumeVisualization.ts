@@ -13,6 +13,7 @@ import type { VolumeRenderer } from "@/renderer/renderer";
 import { visualizationConfigSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import type { FileMap } from "./helpers";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
+import { createBreakpointsObject } from "@/stores/uiState/TransferFunction";
 
 const CONFIG_FILE_NAME = "config.json";
 
@@ -112,19 +113,16 @@ export async function visualizeVolumeFromConfig(
     index < visualizationDescriptor.descriptors.length;
     index++
   ) {
-    const channelData = renderer.volumeManager.channelData.get(index);
+    const tf =
+      renderer.volumeManager.transferFunctionLut.transferFunctions[index];
     volumeVisualizationSettings.push({
       index: index,
       name: `Volume ${index}`,
       type:
         index === visualizationDescriptor.rawVolumeChannel ? "raw" : "volume",
       transferFunction: {
-        rampLow: channelData.rampStart,
-        rampHigh: channelData.rampEnd,
-        red: Math.round(channelData.color[0] * 255),
-        green: Math.round(channelData.color[1] * 255),
-        blue: Math.round(channelData.color[2] * 255),
         comment: `transferFunction_${index}`,
+        breakpoints: createBreakpointsObject(tf.breakpoints),
       },
     });
   }

@@ -1,15 +1,10 @@
 import {
   BoolUint32,
   type DecodedBuffer,
-  Float32,
-  Float32Vec4,
 } from "buffer-backed-object";
 import { WebGpuBufferBBOArray } from "@/renderer/core/webGpuBufferBBO";
 
 const channelParametersDescriptor = {
-  color: Float32Vec4(),
-  rampStart: Float32(),
-  rampEnd: Float32(),
   visible: BoolUint32(),
 } as const;
 

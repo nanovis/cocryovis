@@ -16,9 +16,6 @@ struct Ray {
 }
 
 struct ChannelData {
-	color: vec4<f32>,
-	rampStart: f32,
-	rampEnd: f32,
 	visible: u32,
 }
 
@@ -76,6 +73,9 @@ var volume0: texture_3d<f32>;
 
 @group(0) @binding(4)
 var annotationVolume: texture_3d<f32>;
+
+@group(0) @binding(5)
+var transferFunctionLut: texture_2d<f32>;
 
 @group(0) @binding(6)
 var<storage, read> annotations: array<AnnotationChannelData>;
@@ -190,32 +190,17 @@ fn dataRead(pos: vec3<f32>) -> vec4<f32> {
 	var mapped: vec4<f32>;
 
 	var sample4 = textureSampleLevel(volume0, s, pos, 0.0);
-
-	var low0 = channelData[0].rampStart;
-	var high0 = channelData[0].rampEnd;
-	mapped.x = clamp((sample4.x - low0) / (high0 - low0), 0.0, 1.0);
-	mapped.x = mapped.x * f32(channelData[0].visible);
-
-	var low1 = channelData[1].rampStart;
-	var high1 = channelData[1].rampEnd;
-	mapped.y = clamp((sample4.y - low1) / (high1 - low1), 0.0, 1.0);
-	mapped.y = mapped.y * f32(channelData[1].visible);
-
-	var low2 = channelData[2].rampStart;
-	var high2 = channelData[2].rampEnd;
-	mapped.z = clamp((sample4.z - low2) / (high2 - low2), 0.0, 1.0);
-	mapped.z = mapped.z * f32(channelData[2].visible);
-
-	var low3 = channelData[3].rampStart;
-	var high3 = channelData[3].rampEnd;
-	mapped.w = clamp((sample4.w - low3) / (high3 - low3), 0.0, 1.0);
-	mapped.z = mapped.z * f32(channelData[3].visible);
+	mapped.x = sample4.x * f32(channelData[0].visible);
+	mapped.y = sample4.y * f32(channelData[1].visible);
+	mapped.z = sample4.z * f32(channelData[2].visible);
+	mapped.w = sample4.w * f32(channelData[3].visible);
 
 	return mapped;
 }
 
-fn color_transfer(which: i32) -> vec3<f32> {
-	return channelData[which].color.xyz;
+fn color_transfer(which: i32, sampleValue: f32) -> vec4<f32> {
+	var uv = vec2<f32>(clamp(sampleValue, 0.0, 1.0), (f32(which) + 0.5) / 4.0);
+	return textureSampleLevel(transferFunctionLut, s, uv, 0.0);
 }
 
 fn mixAnnotationColor(color: vec3<f32>, position: vec4<f32>, annotationColor: vec4<f32>) -> vec3<f32> {
@@ -342,8 +327,9 @@ fn main(@location(0) eye: vec3<f32>, @location(1) direction: vec3<f32>, @locatio
 					if (which == rawVolumeChannel) {
 						continue;
 					}
-					maskSum += masks[which];
-					result_color += masks[which] * color_transfer(which);
+					var tfSample = color_transfer(which, masks[which]);
+					maskSum += tfSample.a;
+					result_color += tfSample.a * tfSample.rgb;
 				}
 				if (maskSum > 0.1) {
 					output.color = vec4<f32>(mixAnnotationColor(vec3<f32>(result_color), position, annotationColor), 1.0);
@@ -357,7 +343,7 @@ fn main(@location(0) eye: vec3<f32>, @location(1) direction: vec3<f32>, @locatio
 
 		for (var i: i32 = 0; i < numChannels; i = i + 1) {
 			if (i != rawVolumeChannel) {
-				influence += masks[i];
+				influence += color_transfer(i, masks[i]).a;
 			}
 		}
 
@@ -446,8 +432,9 @@ fn main(@location(0) eye: vec3<f32>, @location(1) direction: vec3<f32>, @locatio
 			if (which == rawVolumeChannel) {
 				continue;
 			}
-			var alpha = masks[which];
-			var color = color_transfer(which) * 1.0;
+			var tfSample = color_transfer(which, masks[which]);
+			var alpha = tfSample.a;
+			var color = tfSample.rgb;
 
 			// alpha normalization based on the stepSize
 			alpha = alpha * stepSize / 0.0025;

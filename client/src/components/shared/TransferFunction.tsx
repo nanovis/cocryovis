@@ -14,7 +14,6 @@ import {
   ColorArea,
   ColorPicker,
   ColorSlider,
-  type ColorPickerProps,
 } from "@fluentui/react-color-picker";
 import * as Utils from "@/utils/helpers";
 import { type TransferFunctionInstance } from "@/stores/uiState/TransferFunction";
@@ -26,6 +25,13 @@ import { useRafMapScheduler } from "@/hooks/useRafMapScheduler";
 
 interface TransferFunctionWidgetProps {
   transferFunction: TransferFunctionInstance;
+}
+
+interface HsvaColor {
+  h: number;
+  s: number;
+  v: number;
+  a?: number;
 }
 
 const useStyles = makeStyles({
@@ -139,8 +145,8 @@ function colorAtPosition(
       const span = right.position - left.position;
       const t = span === 0 ? 0 : (pos - left.position) / span;
 
-      const cLeft = Color(left);
-      const cRight = Color(right);
+      const cLeft = Color(left.color);
+      const cRight = Color(right.color);
 
       return cLeft.mix(cRight, Utils.clamp(t, 0, 1)).hexa();
     }
@@ -169,16 +175,15 @@ const TransferFunctionWidget = observer(
       }
     );
 
-    const scheduleColorUpdate = useRafMapScheduler<
-      string,
-      ColorPickerProps["color"]
-    >((updates) => {
-      updates.forEach((color, id) => {
-        transferFunction.breakpoints
-          .get(id)
-          ?.setHSV(color.h, color.s, color.v, color.a);
-      });
-    });
+    const scheduleColorUpdate = useRafMapScheduler<string, HsvaColor>(
+      (updates) => {
+        updates.forEach((color, id) => {
+          transferFunction.breakpoints
+            .get(id)
+            ?.setHSV(color.h, color.s, color.v, color.a);
+        });
+      }
+    );
 
     const positionFromClientX = (clientX: number) => {
       if (!rampTrackRef.current) {

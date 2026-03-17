@@ -1,12 +1,25 @@
 import type { Instance, SnapshotIn } from "mobx-state-tree";
 import { getParentOfType, types } from "mobx-state-tree";
 import { v4 as uuidv4 } from "uuid";
-import { clamp } from "@/utils/helpers";
+import { clamp, downloadBlob } from "@/utils/helpers";
 import Color from "color";
+import { VolVisSettings } from "./VolVisSettings";
+import { transferFunctionSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 export const MAX_BREAKPOINTS = 10;
 export const MIN_BREAKPOINTS = 1;
 export const MIN_DISTANCE_BETWEEN_BREAKPOINTS = 0.001;
+
+export function createBreakpointsObject(
+  breakpoints: TransferFunctionBreakpointSnapshotIn[]
+) {
+  return Object.fromEntries(
+    breakpoints.map((point) => {
+      const id = point.id ?? uuidv4();
+      return [id, { ...point, id }];
+    })
+  );
+}
 
 export const TransferFunctionBreakpoint = types
   .model("Transfer Function Breakpoint", {
@@ -15,9 +28,6 @@ export const TransferFunctionBreakpoint = types
     color: types.string, // Hex color string, e.g., "#ff0000"
   })
   .views((self) => ({
-    get transferFunction(): TransferFunctionInstance {
-      return getParentOfType(self, TransferFunction);
-    },
     get hsv() {
       const color = Color(self.color).hsv();
       return {
@@ -31,17 +41,16 @@ export const TransferFunctionBreakpoint = types
   .actions((self) => ({
     setPosition(position: number) {
       self.position = clamp(position, 0, 1);
+      getParentOfType(self, VolVisSettings).transferFunction.updateRenderer();
     },
     setColor(color: string) {
       self.color = color;
+      getParentOfType(self, VolVisSettings).transferFunction.updateRenderer();
     },
     setHSV(hue: number, saturation: number, value: number, alpha: number = 1) {
       const color = Color.hsv(hue, saturation * 100, value * 100).alpha(alpha);
       self.color = color.hexa();
-    },
-    setAlpha(alpha: number) {
-      const color = Color(self.color).alpha(alpha);
-      self.color = color.hexa();
+      getParentOfType(self, VolVisSettings).transferFunction.updateRenderer();
     },
   }));
 
@@ -78,12 +87,31 @@ export const TransferFunction = types
     },
   }))
   .actions((self) => ({
-    addBreakpoint(breakpoint: TransferFunctionBreakpointSnapshotIn) {
+    updateRenderer() {
+      const volVisSettings = getParentOfType(self, VolVisSettings);
+      volVisSettings.renderer?.volumeManager.transferFunctionLut.setBreakpoints(
+        volVisSettings.index,
+        self.sortedBreakpoints.map((point) => ({
+          position: point.position,
+          color: point.color,
+        }))
+      );
+    },
+  }))
+  .actions((self) => ({
+    addBreakpoint(
+      breakpoint: TransferFunctionBreakpointSnapshotIn,
+      updateRenderer = true
+    ) {
       if (!self.canAddBreakpoint) {
         throw new Error(`Maximum of ${MAX_BREAKPOINTS} breakpoints reached.`);
       }
       breakpoint.position = clamp(breakpoint.position, 0, 1);
-      return self.breakpoints.put(breakpoint);
+      const created = self.breakpoints.put(breakpoint);
+      if (updateRenderer) {
+        self.updateRenderer();
+      }
+      return created;
     },
     removeBreakpoint(id: string) {
       if (!self.canDeleteBreakpoint) {
@@ -92,6 +120,46 @@ export const TransferFunction = types
         ); // Ensure at least one breakpoint remains
       }
       self.breakpoints.delete(id);
+      self.updateRenderer();
+    },
+    download() {
+      const blob = new Blob(
+        [
+          JSON.stringify(
+            {
+              comment: self.comment,
+              breakpoints: self.sortedBreakpoints.map((point) => ({
+                position: point.position,
+                color: point.color,
+              })),
+            },
+            null,
+            2
+          ),
+        ],
+        {
+          type: "application/json",
+        }
+      );
+      const index = getParentOfType(self, VolVisSettings).index;
+      downloadBlob(blob, `transferFunction_${index}.json`);
+    },
+  }))
+  .actions((self) => ({
+    fromJsonString(json: string) {
+      try {
+        const data = transferFunctionSchema.parse(JSON.parse(json));
+        self.breakpoints.clear();
+        data.breakpoints.forEach(
+          (point: TransferFunctionBreakpointSnapshotIn) => {
+            self.addBreakpoint(point, false);
+          }
+        );
+        self.comment = data.comment;
+      } catch (error) {
+        console.error("Failed to upload transfer function:", error);
+        throw new Error("Invalid transfer function file.", { cause: error });
+      }
     },
   }));
 

@@ -33,6 +33,11 @@ const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
       texture: { sampleType: "float", viewDimension: "3d" },
     },
     {
+      binding: 5,
+      visibility: GPUShaderStage.FRAGMENT,
+      texture: { sampleType: "float", viewDimension: "2d" },
+    },
+    {
       binding: 6,
       visibility: GPUShaderStage.FRAGMENT,
       buffer: { type: "read-only-storage" },
@@ -101,6 +106,7 @@ export class VolumePass {
     this.bindGroup.setResource(2, volumeManager.volume);
     this.bindGroup.setResource(3, volumeManager.volume);
     this.bindGroup.setResource(4, annotationManager.getAnnotationVolume());
+    this.bindGroup.setResource(5, volumeManager.transferFunctionLut);
     this.bindGroup.setResource(6, annotationManager.annotationsDataBuffer);
     this.bindGroup.setResource(7, volumeManager.volumeParameterBuffer);
     this.bindGroup.setResource(8, renderingParameters);

@@ -269,7 +269,7 @@ export function pickDefaultTF(
   blank = false
 ): { tfName: string; tfDefinition: TransferFunction } {
   let tfName;
-  let tfDefinition;
+  let tfDefinition!: TransferFunction;
   if (blank) {
     tfName = `${DEFAULT_TF.prefix}_${DEFAULT_TF.defaultTransferFunction.comment}.json`;
     tfDefinition = DEFAULT_TF.defaultTransferFunction;

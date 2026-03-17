@@ -1,60 +1,48 @@
+import type { TransferFunction } from "@/utils/volumeDescriptor";
+
+const defaultTransferFunction: TransferFunction = {
+  breakpoints: [
+    { position: 0, color: "#ffffff00" },
+    { position: 1, color: "#ffffffff" },
+  ],
+  comment: "blank",
+} as const;
+
+const defaultTransferFunctionArray: TransferFunction[] = [
+  {
+    breakpoints: [
+      { position: 0.34, color: "#ffffff00" },
+      { position: 0.45, color: "#cf1f61ff" },
+    ],
+  },
+  {
+    breakpoints: [
+      { position: 0.43, color: "#ffffff00" },
+      { position: 0.86, color: "#c79aabff" },
+    ],
+  },
+  {
+    breakpoints: [
+      { position: 0.7, color: "#ffffff00" },
+      { position: 1, color: "#223378ff" },
+    ],
+  },
+  {
+    breakpoints: [
+      { position: 0.01, color: "#ffffff00" },
+      { position: 0.99, color: "#ffffffff" },
+    ],
+  },
+  {
+    breakpoints: [
+      { position: 0.97, color: "#ffffff00" },
+      { position: 0.99, color: "#0c96dfff" },
+    ],
+  },
+] as const;
+
 export const DEFAULT_TF = {
   prefix: "00-TF-DEFAULT",
-  defaultTransferFunction: {
-    rampLow: 0.01,
-    rampHigh: 0.99,
-    color: {
-      x: 255,
-      y: 255,
-      z: 255,
-    },
-    comment: "blank",
-  },
-  tfArray: [
-    {
-      rampLow: 0.34,
-      rampHigh: 0.45,
-      color: {
-        x: 207,
-        y: 31,
-        z: 97,
-      },
-    },
-    {
-      rampLow: 0.43,
-      rampHigh: 0.86,
-      color: {
-        x: 199,
-        y: 154,
-        z: 171,
-      },
-    },
-    {
-      rampLow: 0.7,
-      rampHigh: 1,
-      color: {
-        x: 34,
-        y: 51,
-        z: 120,
-      },
-    },
-    {
-      rampLow: 0.01,
-      rampHigh: 0.99,
-      color: {
-        x: 255,
-        y: 255,
-        z: 255,
-      },
-    },
-    {
-      rampLow: 0.97,
-      rampHigh: 0.99,
-      color: {
-        x: 12,
-        y: 150,
-        z: 223,
-      },
-    },
-  ],
+  defaultTransferFunction: defaultTransferFunction,
+  tfArray: defaultTransferFunctionArray,
 } as const;

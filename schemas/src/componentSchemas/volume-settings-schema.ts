@@ -103,13 +103,12 @@ export const visualizationConfigSchema = z.object({
   rawVolumeChannel: z.number().optional(),
 });
 
+export const breakpointSchema = z.object({
+  position: z.number().min(0).max(1),
+  color: z.string(),
+});
+
 export const transferFunctionSchema = z.object({
-  rampLow: z.number().min(0).max(1),
-  rampHigh: z.number().min(0).max(1),
-  color: z.object({
-    x: z.number().min(0).max(255),
-    y: z.number().min(0).max(255),
-    z: z.number().min(0).max(255),
-  }),
+  breakpoints: z.array(breakpointSchema),
   comment: z.string().optional(),
 });

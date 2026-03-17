@@ -13,10 +13,12 @@ import {
 } from "@fluentui/react-components";
 import {
   ArrowCircleRight28Regular,
+  ArrowDownload16Regular,
+  ArrowUpload16Regular,
   EditFilled,
   EraserFilled,
 } from "@fluentui/react-icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as Utils from "@/utils/helpers";
 import globalStyles from "../../globalStyles";
 import { observer } from "mobx-react-lite";
@@ -32,6 +34,8 @@ import {
 import ToastContainer from "@/utils/toastContainer";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 import TransferFunctionWidget from "@/components/shared/TransferFunction";
+import type { VisualizedVolumeInstance } from "@/stores/uiState/VisualizedVolume";
+import type { TransferFunctionInstance } from "@/stores/uiState/TransferFunction";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -121,71 +125,6 @@ const useStyles = makeStyles({
     pointerEvents: "none",
   },
 });
-
-// const TFUploadElement = ({
-//   settingsInstance,
-// }: {
-//   settingsInstance: VolVisSettingsInstance;
-// }) => {
-//   const classes = useStyles();
-//   const globalClasses = globalStyles();
-
-//   const fileInputRef = useRef<HTMLInputElement | null>(null);
-//   const TFFileRef = useRef<HTMLInputElement | null>(null);
-
-//   const handleTFUpload = async (
-//     event: FileChangeEvent,
-//     volVisSettings: VolVisSettingsInstance
-//   ) => {
-//     try {
-//       if (!event.target.files || event.target.files.length === 0) {
-//         throw new Error("No file selected.");
-//       }
-//       await volVisSettings.transferFunction.handleTFUpload(
-//         event.target.files[0]
-//       );
-//     } catch (error) {
-//       const toastContainer = new ToastContainer();
-//       toastContainer.error(`Error: ${error}`);
-//       console.error("Error:", error);
-//     } finally {
-//       if (TFFileRef.current) {
-//         TFFileRef.current.value = "";
-//       }
-//     }
-//   };
-
-//   return (
-//     <div
-//       onClick={() => fileInputRef.current?.click()}
-//       className={classes.actionButton}
-//     >
-//       <Tooltip
-//         content="Upload Transfer Function"
-//         relationship="label"
-//         appearance="inverted"
-//         positioning="after-top"
-//       >
-//         <ArrowUpload16Regular
-//           className={classes.tfIcon}
-//           style={{
-//             marginTop: "3px",
-//             border: "1px solid",
-//             borderRadius: "5px",
-//             padding: 8,
-//           }}
-//         />
-//       </Tooltip>
-//       <input
-//         type="file"
-//         onChange={(event) => void handleTFUpload(event, settingsInstance)}
-//         accept=".json"
-//         ref={fileInputRef}
-//         className={globalClasses.hiddenInput}
-//       />
-//     </div>
-//   );
-// };
 
 interface Props {
   open: boolean;
@@ -309,60 +248,6 @@ const Visualization = observer(({ open, close }: Props) => {
     uiState.visualizedVolume?.clearActiveAnnotationChannel();
   };
 
-  // const downloadTF = (volVisSettings: VolVisSettingsInstance) => {
-  //   const transferFunction = volVisSettings.transferFunction;
-
-  //   const blob = new Blob(
-  //     [
-  //       JSON.stringify(
-  //         {
-  //           rampLow: transferFunction.rampLow,
-  //           rampHigh: transferFunction.rampHigh,
-  //           color: {
-  //             x: transferFunction.red,
-  //             y: transferFunction.green,
-  //             z: transferFunction.blue,
-  //           },
-  //           comment: `tf-${volVisSettings.index}`,
-  //         },
-  //         null,
-  //         2
-  //       ),
-  //     ],
-  //     {
-  //       type: "text/plain",
-  //     }
-  //   );
-
-  //   Utils.downloadBlob(blob, `transferFunction_${volVisSettings.index}.json`);
-  // };
-
-  // const handleClippingChange = (
-  //   event: ChangeEvent<HTMLInputElement>,
-  //   volumeSettings: VolVisSettingsInstance
-  // ) => {
-  //   volumeSettings.setClipping(event.target.checked);
-  // };
-
-  // const handleChangeRW = (
-  //   event: ChangeEvent<HTMLInputElement>,
-  //   upper: boolean
-  // ) => {
-  //   if (!uiState.visualizedVolume?.rawSettings) {
-  //     return;
-  //   }
-
-  //   if (!upper) {
-  //     uiState.visualizedVolume.rawSettings.transferFunction.setRampLow(
-  //       Number(event.target.value)
-  //     );
-  //   } else {
-  //     uiState.visualizedVolume.rawSettings.transferFunction.setRampHigh(
-  //       Number(event.target.value)
-  //     );
-  //   }
-  // };
-
   const actionsDisabled = () => {
     return !uiState.visualizedVolume;
   };
@@ -466,7 +351,7 @@ const Visualization = observer(({ open, close }: Props) => {
                 <Tooltip
                   content={
                     <Text>
-                      Draw Annorations <ShortcutKey content="L" />
+                      Draw Annotations <ShortcutKey content="L" />
                     </Text>
                   }
                   relationship={"label"}
@@ -666,7 +551,7 @@ const Visualization = observer(({ open, close }: Props) => {
                   )
                 )}
               </div>
-
+              {/* TODO Readd raw volume contribution */}
               {/* {uiState.visualizedVolume.rawSettings && (
                 <>
                   <h3
@@ -709,101 +594,7 @@ const Visualization = observer(({ open, close }: Props) => {
                   borderColor: tokens.colorNeutralBackground1Hover,
                 }}
               />
-
-              <h3 style={{ fontWeight: "100", margin: 0 }}>
-                Transfer Function(s)
-              </h3>
-
-              {/* <TransferFunctionWidget transferFunction={uiState.tf} /> */}
-
-              {uiState.visualizedVolume.volumeSettings.map(
-                (settingsInstance: VolVisSettingsInstance) => (
-                  <div
-                    key={settingsInstance.id}
-                    style={{
-                      display: "grid",
-                      gap: "8px",
-                    }}
-                  >
-                    <span>{settingsInstance.name.substring(0, 40)}</span>
-                    <TransferFunctionWidget
-                      transferFunction={settingsInstance.transferFunction}
-                    />
-                  </div>
-                )
-              )}
-
-              {/* {uiState.visualizedVolume.volumeSettings.map(
-                (settingsInstance: VolVisSettingsInstance) => (
-                  <div
-                    key={settingsInstance.id}
-                    className={classes.transferFunctions}
-                  >
-                    <input
-                      className={classes.colorPicker}
-                      type="color"
-                      value={settingsInstance.transferFunction.color}
-                      onChange={(event) => {
-                        const color = Utils.fromHexColor(event.target.value);
-                        settingsInstance.transferFunction.setColor(
-                          color.r,
-                          color.g,
-                          color.b
-                        );
-                      }}
-                    />
-                    <div className={classes.sliderContainer}>
-                      <Label>Low bound</Label>
-                      <Slider
-                        value={settingsInstance.transferFunction.rampLow * 100}
-                        min={0}
-                        max={100}
-                        onChange={(_, data) =>
-                          settingsInstance.transferFunction.setRampLow(
-                            data.value
-                          )
-                        }
-                      />
-                    </div>
-                    <div className={classes.sliderContainer}>
-                      <Label>High bound</Label>
-                      <Slider
-                        value={settingsInstance.transferFunction.rampHigh * 100}
-                        min={0}
-                        max={100}
-                        onChange={(_, data) =>
-                          settingsInstance.transferFunction.setRampHigh(
-                            data.value
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div
-                      onClick={() => downloadTF(settingsInstance)}
-                      className={classes.actionButton}
-                    >
-                      <Tooltip
-                        content="Download Transfer Function"
-                        relationship="label"
-                        appearance="inverted"
-                        positioning="after-top"
-                      >
-                        <ArrowDownload16Regular
-                          className={classes.tfIcon}
-                          style={{
-                            marginTop: "3px",
-                            border: "1px solid",
-                            borderRadius: "5px",
-                            padding: 8,
-                          }}
-                        />
-                      </Tooltip>
-                    </div>
-                    <TFUploadElement settingsInstance={settingsInstance} />
-                  </div>
-                )
-              )} */}
+              <TransferFunctions visualizedVolume={uiState.visualizedVolume} />
             </>
           )}
         </div>
@@ -811,5 +602,113 @@ const Visualization = observer(({ open, close }: Props) => {
     </div>
   ) : null;
 });
+
+const TransferFunctions = observer(
+  ({ visualizedVolume }: { visualizedVolume: VisualizedVolumeInstance }) => {
+    return (
+      <>
+        <h3 style={{ fontWeight: "100", margin: 0 }}>Transfer Function(s)</h3>
+        {visualizedVolume.volumeSettings.map(
+          (settingsInstance: VolVisSettingsInstance) => (
+            <div
+              key={settingsInstance.id}
+              style={{
+                display: "grid",
+                gap: "8px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span>{settingsInstance.name.substring(0, 40)}</span>
+                <div
+                  style={{ display: "flex", flexDirection: "row", gap: "8px" }}
+                >
+                  <TransferFunctionUpload
+                    transferFunction={settingsInstance.transferFunction}
+                  />
+                  <Tooltip
+                    content="Download Transfer Function"
+                    relationship="label"
+                    appearance="inverted"
+                    positioning="above"
+                  >
+                    <Button
+                      onClick={() =>
+                        settingsInstance.transferFunction.download()
+                      }
+                      icon={<ArrowDownload16Regular />}
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+
+              <TransferFunctionWidget
+                transferFunction={settingsInstance.transferFunction}
+              />
+            </div>
+          )
+        )}
+      </>
+    );
+  }
+);
+
+const TransferFunctionUpload = ({
+  transferFunction,
+}: {
+  transferFunction: TransferFunctionInstance;
+}) => {
+  const globalClasses = globalStyles();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleTFUpload = async (event: FileChangeEvent) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) {
+        throw new Error("No file selected.");
+      }
+      const text = await file.text();
+      transferFunction.fromJsonString(text);
+    } catch (error) {
+      const toastContainer = new ToastContainer();
+      toastContainer.error(Utils.getErrorMessage(error));
+      console.error("Error:", error);
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  return (
+    <>
+      <Tooltip
+        content="Upload Transfer Function"
+        relationship="label"
+        appearance="inverted"
+        positioning="above"
+      >
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          icon={<ArrowUpload16Regular />}
+        />
+      </Tooltip>
+      <input
+        type="file"
+        onChange={(event) => void handleTFUpload(event)}
+        accept=".json"
+        ref={fileInputRef}
+        className={globalClasses.hiddenInput}
+      />
+    </>
+  );
+};
 
 export default Visualization;

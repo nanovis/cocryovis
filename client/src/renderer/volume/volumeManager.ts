@@ -9,6 +9,7 @@ import { CONFIG } from "@/constants";
 import { VolumeParameterBuffer } from "./volumeParameterBuffer";
 import { mat4 } from "gl-matrix";
 import { Observable } from "../utilities/observable";
+import { TransferFunctionLut } from "./transferFunctionLut";
 
 export interface VisualizationDescriptor {
   descriptors: VolumeDescriptor[];
@@ -19,6 +20,7 @@ export class VolumeManager {
   private device: GPUDevice;
   volume: Volume;
   channelData: ChannelData;
+  transferFunctionLut: TransferFunctionLut;
   volumeParameterBuffer: VolumeParameterBuffer;
   private modelMatrix: mat4 = mat4.create();
 
@@ -29,6 +31,7 @@ export class VolumeManager {
   constructor(device: GPUDevice) {
     this.device = device;
     this.channelData = new ChannelData(device);
+    this.transferFunctionLut = new TransferFunctionLut(device);
     const volumeSampler = this.device.createSampler({
       magFilter: "linear",
       minFilter: "linear",
@@ -202,22 +205,20 @@ export class VolumeManager {
         ).tfDefinition;
       }
 
-      let color = transferFunction.color;
-      if (tfIndex === rawVolumeChannel) {
-        color = { x: 255, y: 255, z: 255 };
-      }
-
       const settings = await descriptor.getSettings();
       if (newSettings === undefined) {
         newSettings = settings;
       }
 
       this.channelData.set(tfIndex, {
-        color: [color.x / 255, color.y / 255, color.z / 255, 1],
-        rampStart: transferFunction.rampLow,
-        rampEnd: transferFunction.rampHigh,
         visible: true,
       });
+
+      this.transferFunctionLut.setBreakpoints(
+        tfIndex,
+        transferFunction.breakpoints
+      );
+
       tfIndex++;
     }
 
@@ -245,5 +246,6 @@ export class VolumeManager {
   destroy() {
     this.volume.destroy();
     this.channelData.destroy();
+    this.transferFunctionLut.destroy();
   }
 }
