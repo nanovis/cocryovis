@@ -43,6 +43,18 @@ const useStyles = makeStyles({
     display: "flex",
     columnGap: "10px",
   },
+  activeProjectContainer: {
+    display: "flex",
+    alignItems: "center",
+    minWidth: 0,
+  },
+  activeProjectLabel: {
+    marginLeft: "20px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    display: "block",
+  },
 });
 
 interface Props {
@@ -115,8 +127,8 @@ const MenuBar = observer(({ toggleTheme, connectionStatus }: Props) => {
           </MenuBarItem>
         )}
         {user.userProjects.activeProjectId && !rootStore.pageDisabled && (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Label style={{ marginLeft: "20px" }}>
+          <div className={classes.activeProjectContainer}>
+            <Label className={classes.activeProjectLabel}>
               {"Active Project: "} {user.userProjects.activeProject?.name}
             </Label>
             {!user.isGuest &&
