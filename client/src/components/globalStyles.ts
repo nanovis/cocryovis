@@ -153,6 +153,9 @@ const globalStyles = makeStyles({
     "&:enabled:hover:active": {
       background: tokens.colorStatusDangerBackground3Pressed,
     },
+    "& .fui-Button__icon": {
+      background: "rgba(0,0,0,0.15)",
+    },
   },
   actionButtonDropdown: {
     height: "32px",

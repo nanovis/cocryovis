@@ -4,10 +4,10 @@ import {
   type SnapshotIn,
 } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
-import { TransferFunction } from "./TransferFunction";
 import { RootStore } from "../RootStore";
 import type { VolumeRenderer } from "@/renderer/renderer";
 import { v4 as uuid } from "uuid";
+import { TransferFunction } from "./TransferFunction";
 
 export const VolVisSettings = types
   .model({

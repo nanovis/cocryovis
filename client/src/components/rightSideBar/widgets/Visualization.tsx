@@ -5,7 +5,6 @@ import {
   Radio,
   RadioGroup,
   Button,
-  Label,
   Slider,
   Tooltip,
   Switch,
@@ -14,14 +13,11 @@ import {
 } from "@fluentui/react-components";
 import {
   ArrowCircleRight28Regular,
-  ArrowDownload16Regular,
-  ArrowUpload16Regular,
   EditFilled,
   EraserFilled,
 } from "@fluentui/react-icons";
-import type { ChangeEvent } from "react";
-import { useRef, useState } from "react";
-import * as Utils from "../../../utils/helpers";
+import { useState } from "react";
+import * as Utils from "@/utils/helpers";
 import globalStyles from "../../globalStyles";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
@@ -33,8 +29,9 @@ import {
   updateAnnotations,
   updateVolumeData,
 } from "@/api/volumeData";
-import ToastContainer from "../../../utils/toastContainer";
+import ToastContainer from "@/utils/toastContainer";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
+import TransferFunctionWidget from "@/components/shared/TransferFunction";
 
 const useStyles = makeStyles({
   uploadSection: {
@@ -125,70 +122,70 @@ const useStyles = makeStyles({
   },
 });
 
-const TFUploadElement = ({
-  settingsInstance,
-}: {
-  settingsInstance: VolVisSettingsInstance;
-}) => {
-  const classes = useStyles();
-  const globalClasses = globalStyles();
+// const TFUploadElement = ({
+//   settingsInstance,
+// }: {
+//   settingsInstance: VolVisSettingsInstance;
+// }) => {
+//   const classes = useStyles();
+//   const globalClasses = globalStyles();
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const TFFileRef = useRef<HTMLInputElement | null>(null);
+//   const fileInputRef = useRef<HTMLInputElement | null>(null);
+//   const TFFileRef = useRef<HTMLInputElement | null>(null);
 
-  const handleTFUpload = async (
-    event: FileChangeEvent,
-    volVisSettings: VolVisSettingsInstance
-  ) => {
-    try {
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("No file selected.");
-      }
-      await volVisSettings.transferFunction.handleTFUpload(
-        event.target.files[0]
-      );
-    } catch (error) {
-      const toastContainer = new ToastContainer();
-      toastContainer.error(`Error: ${error}`);
-      console.error("Error:", error);
-    } finally {
-      if (TFFileRef.current) {
-        TFFileRef.current.value = "";
-      }
-    }
-  };
+//   const handleTFUpload = async (
+//     event: FileChangeEvent,
+//     volVisSettings: VolVisSettingsInstance
+//   ) => {
+//     try {
+//       if (!event.target.files || event.target.files.length === 0) {
+//         throw new Error("No file selected.");
+//       }
+//       await volVisSettings.transferFunction.handleTFUpload(
+//         event.target.files[0]
+//       );
+//     } catch (error) {
+//       const toastContainer = new ToastContainer();
+//       toastContainer.error(`Error: ${error}`);
+//       console.error("Error:", error);
+//     } finally {
+//       if (TFFileRef.current) {
+//         TFFileRef.current.value = "";
+//       }
+//     }
+//   };
 
-  return (
-    <div
-      onClick={() => fileInputRef.current?.click()}
-      className={classes.actionButton}
-    >
-      <Tooltip
-        content="Upload Transfer Function"
-        relationship="label"
-        appearance="inverted"
-        positioning="after-top"
-      >
-        <ArrowUpload16Regular
-          className={classes.tfIcon}
-          style={{
-            marginTop: "3px",
-            border: "1px solid",
-            borderRadius: "5px",
-            padding: 8,
-          }}
-        />
-      </Tooltip>
-      <input
-        type="file"
-        onChange={(event) => void handleTFUpload(event, settingsInstance)}
-        accept=".json"
-        ref={fileInputRef}
-        className={globalClasses.hiddenInput}
-      />
-    </div>
-  );
-};
+//   return (
+//     <div
+//       onClick={() => fileInputRef.current?.click()}
+//       className={classes.actionButton}
+//     >
+//       <Tooltip
+//         content="Upload Transfer Function"
+//         relationship="label"
+//         appearance="inverted"
+//         positioning="after-top"
+//       >
+//         <ArrowUpload16Regular
+//           className={classes.tfIcon}
+//           style={{
+//             marginTop: "3px",
+//             border: "1px solid",
+//             borderRadius: "5px",
+//             padding: 8,
+//           }}
+//         />
+//       </Tooltip>
+//       <input
+//         type="file"
+//         onChange={(event) => void handleTFUpload(event, settingsInstance)}
+//         accept=".json"
+//         ref={fileInputRef}
+//         className={globalClasses.hiddenInput}
+//       />
+//     </div>
+//   );
+// };
 
 interface Props {
   open: boolean;
@@ -312,33 +309,33 @@ const Visualization = observer(({ open, close }: Props) => {
     uiState.visualizedVolume?.clearActiveAnnotationChannel();
   };
 
-  const downloadTF = (volVisSettings: VolVisSettingsInstance) => {
-    const transferFunction = volVisSettings.transferFunction;
+  // const downloadTF = (volVisSettings: VolVisSettingsInstance) => {
+  //   const transferFunction = volVisSettings.transferFunction;
 
-    const blob = new Blob(
-      [
-        JSON.stringify(
-          {
-            rampLow: transferFunction.rampLow,
-            rampHigh: transferFunction.rampHigh,
-            color: {
-              x: transferFunction.red,
-              y: transferFunction.green,
-              z: transferFunction.blue,
-            },
-            comment: `tf-${volVisSettings.index}`,
-          },
-          null,
-          2
-        ),
-      ],
-      {
-        type: "text/plain",
-      }
-    );
+  //   const blob = new Blob(
+  //     [
+  //       JSON.stringify(
+  //         {
+  //           rampLow: transferFunction.rampLow,
+  //           rampHigh: transferFunction.rampHigh,
+  //           color: {
+  //             x: transferFunction.red,
+  //             y: transferFunction.green,
+  //             z: transferFunction.blue,
+  //           },
+  //           comment: `tf-${volVisSettings.index}`,
+  //         },
+  //         null,
+  //         2
+  //       ),
+  //     ],
+  //     {
+  //       type: "text/plain",
+  //     }
+  //   );
 
-    Utils.downloadBlob(blob, `transferFunction_${volVisSettings.index}.json`);
-  };
+  //   Utils.downloadBlob(blob, `transferFunction_${volVisSettings.index}.json`);
+  // };
 
   // const handleClippingChange = (
   //   event: ChangeEvent<HTMLInputElement>,
@@ -347,24 +344,24 @@ const Visualization = observer(({ open, close }: Props) => {
   //   volumeSettings.setClipping(event.target.checked);
   // };
 
-  const handleChangeRW = (
-    event: ChangeEvent<HTMLInputElement>,
-    upper: boolean
-  ) => {
-    if (!uiState.visualizedVolume?.rawSettings) {
-      return;
-    }
+  // const handleChangeRW = (
+  //   event: ChangeEvent<HTMLInputElement>,
+  //   upper: boolean
+  // ) => {
+  //   if (!uiState.visualizedVolume?.rawSettings) {
+  //     return;
+  //   }
 
-    if (!upper) {
-      uiState.visualizedVolume.rawSettings.transferFunction.setRampLow(
-        Number(event.target.value)
-      );
-    } else {
-      uiState.visualizedVolume.rawSettings.transferFunction.setRampHigh(
-        Number(event.target.value)
-      );
-    }
-  };
+  //   if (!upper) {
+  //     uiState.visualizedVolume.rawSettings.transferFunction.setRampLow(
+  //       Number(event.target.value)
+  //     );
+  //   } else {
+  //     uiState.visualizedVolume.rawSettings.transferFunction.setRampHigh(
+  //       Number(event.target.value)
+  //     );
+  //   }
+  // };
 
   const actionsDisabled = () => {
     return !uiState.visualizedVolume;
@@ -669,7 +666,8 @@ const Visualization = observer(({ open, close }: Props) => {
                   )
                 )}
               </div>
-              {uiState.visualizedVolume.rawSettings && (
+
+              {/* {uiState.visualizedVolume.rawSettings && (
                 <>
                   <h3
                     style={{ fontWeight: "100", margin: 0, marginTop: "6px" }}
@@ -703,7 +701,7 @@ const Visualization = observer(({ open, close }: Props) => {
                     </div>
                   </div>
                 </>
-              )}
+              )} */}
               <hr
                 style={{
                   margin: "12px 0",
@@ -716,7 +714,26 @@ const Visualization = observer(({ open, close }: Props) => {
                 Transfer Function(s)
               </h3>
 
+              {/* <TransferFunctionWidget transferFunction={uiState.tf} /> */}
+
               {uiState.visualizedVolume.volumeSettings.map(
+                (settingsInstance: VolVisSettingsInstance) => (
+                  <div
+                    key={settingsInstance.id}
+                    style={{
+                      display: "grid",
+                      gap: "8px",
+                    }}
+                  >
+                    <span>{settingsInstance.name.substring(0, 40)}</span>
+                    <TransferFunctionWidget
+                      transferFunction={settingsInstance.transferFunction}
+                    />
+                  </div>
+                )
+              )}
+
+              {/* {uiState.visualizedVolume.volumeSettings.map(
                 (settingsInstance: VolVisSettingsInstance) => (
                   <div
                     key={settingsInstance.id}
@@ -786,7 +803,7 @@ const Visualization = observer(({ open, close }: Props) => {
                     <TFUploadElement settingsInstance={settingsInstance} />
                   </div>
                 )
-              )}
+              )} */}
             </>
           )}
         </div>
