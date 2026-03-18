@@ -3,13 +3,10 @@ import {
   BoolUint32,
   type DecodedBuffer,
   Float32,
-  Float32Vec4,
   Int32,
 } from "buffer-backed-object";
 
 const renderingParametersDescriptor = {
-  clearColor: Float32Vec4(),
-
   enableEarlyRayTermination: BoolUint32(),
   enableJittering: BoolUint32(),
   enableAmbientOcclusion: BoolUint32(),
@@ -37,8 +34,6 @@ export class RenderingParametersBuffer extends WebGpuBufferBBO<
   typeof renderingParametersDescriptor
 > {
   static readonly defaults: RenderingParameters = {
-    clearColor: [0, 0, 0, 1],
-
     enableEarlyRayTermination: true,
     enableJittering: true,
     enableAmbientOcclusion: true,

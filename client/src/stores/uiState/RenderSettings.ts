@@ -52,9 +52,9 @@ export const RenderSettings = types
     },
     setClearColor(r: number, g: number, b: number) {
       self.clearColor.replace([r, g, b]);
-      self.renderer?.renderingParameters.set({
-        clearColor: [r / 255, g / 255, b / 255, 1],
-      });
+      if (self.renderer) {
+        self.renderer.clearColor = [r / 255, g / 255, b / 255, 1];
+      }
     },
     setSampleRate(rate: number) {
       self.sampleRate = rate;
@@ -160,13 +160,6 @@ export const RenderSettings = types
         shadowStrength: self.shadowStrength,
         shadowMin: self.shadowMin,
         shadowMax: self.shadowMax,
-
-        clearColor: [
-          self.clearColor[0],
-          self.clearColor[1],
-          self.clearColor[2],
-          1,
-        ],
 
         shadowRadius: self.shadowRadius,
       };

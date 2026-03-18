@@ -141,8 +141,9 @@ export class VolumeRenderer {
   readonly renderingParameters: RenderingParametersBuffer;
   readonly annotationManager: AnnotationManager;
   readonly camera: Camera;
-  width: number;
-  height: number;
+  private width: number;
+  private height: number;
+  clearColor: GPUColor;
   readonly format: GPUTextureFormat;
   animationFrame: number | null = null;
 
@@ -160,16 +161,19 @@ export class VolumeRenderer {
       context,
       parameters,
       forceWriteOnlyAnnotations,
+      clearColor = [0, 0, 0, 1],
     }: {
       output?: OutputInfo;
       context?: GPUCanvasContext;
       parameters?: Partial<RenderingParameters>;
       forceWriteOnlyAnnotations?: boolean;
+      clearColor?: GPUColor;
     } = {}
   ) {
     this.device = device;
     this.context = context;
     this.output = output;
+    this.clearColor = clearColor;
 
     if (output) {
       this.width = output.width;
@@ -249,13 +253,13 @@ export class VolumeRenderer {
     }
 
     this.clippingPlaneManager.update();
-    this.volumePass.render(encoder, this.renderingParameters.params.clearColor);
+    this.volumePass.render(encoder, this.clearColor);
 
     const fullscreenPass = encoder.beginRenderPass({
       colorAttachments: [
         {
           view: view,
-          clearValue: this.renderingParameters.params.clearColor,
+          clearValue: this.clearColor,
           loadOp: "clear",
           storeOp: "store",
         },

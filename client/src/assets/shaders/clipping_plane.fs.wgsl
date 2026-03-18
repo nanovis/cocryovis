@@ -22,8 +22,6 @@ struct AnnotationChannelData {
 }
 
 struct Param {
-	clearColor: vec4<f32>,
-
 	enableEarlyRayTermination: u32,
 	enableJittering: u32,
 	enableAmbientOcclusion: u32,

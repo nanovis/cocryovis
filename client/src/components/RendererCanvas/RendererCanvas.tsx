@@ -36,6 +36,10 @@ const RendererCanvas = observer(() => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const { rendererRef, isPending, error } = useRenderer(canvasRef, {
+    clearColor: [
+      ...rootStore.uiState.renderSettings.clearColor.map((c) => c / 255),
+      1,
+    ],
     parameters: rootStore.uiState.renderSettings.getRendererParameters(),
     cameraParameters: rootStore.uiState.renderSettings.getCameraParameters(),
     onReady: (renderer) => {

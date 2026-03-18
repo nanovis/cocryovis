@@ -27,10 +27,12 @@ const defaultCameraParameters: RendererCameraParameters = {
 export default function useRenderer(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   {
+    clearColor,
     parameters,
     cameraParameters,
     onReady,
   }: {
+    clearColor?: GPUColor;
     parameters?: Partial<RenderingParameters>;
     cameraParameters?: Partial<RendererCameraParameters>;
     onReady?: (renderer: VolumeRenderer) => void;
@@ -57,6 +59,7 @@ export default function useRenderer(
           deviceInfo.device,
           rendererCameraParameters,
           {
+            clearColor: clearColor,
             context: context,
             parameters: parameters,
             forceWriteOnlyAnnotations: CONFIG.forceWriteOnlyAnnotations,
