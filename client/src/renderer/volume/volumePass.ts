@@ -143,7 +143,23 @@ export class VolumePass {
           code: volumeFragmentShader,
         }),
         entryPoint: "main",
-        targets: [{ format }],
+        targets: [
+          {
+            format,
+            blend: {
+              color: {
+                srcFactor: "src-alpha",
+                dstFactor: "one-minus-src-alpha",
+                operation: "add",
+              },
+              alpha: {
+                srcFactor: "one",
+                dstFactor: "one-minus-src-alpha",
+                operation: "add",
+              },
+            },
+          },
+        ],
       },
       primitive: { topology: "triangle-list" },
       depthStencil: {
@@ -168,7 +184,23 @@ export class VolumePass {
           code: clippingPlaneFragmentShader,
         }),
         entryPoint: "main",
-        targets: [{ format }],
+        targets: [
+          {
+            format,
+            blend: {
+              color: {
+                srcFactor: "src-alpha",
+                dstFactor: "one-minus-src-alpha",
+                operation: "add",
+              },
+              alpha: {
+                srcFactor: "one",
+                dstFactor: "one-minus-src-alpha",
+                operation: "add",
+              },
+            },
+          },
+        ],
       },
       primitive: { topology: "triangle-list" },
       depthStencil: {

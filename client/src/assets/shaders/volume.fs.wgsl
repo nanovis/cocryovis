@@ -17,6 +17,7 @@ struct Ray {
 
 struct ChannelData {
 	visible: u32,
+	_padding: vec3<u32>,
 }
 
 struct Param {
@@ -58,6 +59,7 @@ struct ClippingPlane {
 struct AnnotationChannelData {
 	color: vec4<f32>,
 	enabled: u32,
+	_padding: vec3<u32>,
 }
 
 @group(0) @binding(0)
@@ -253,11 +255,8 @@ fn main(input: FragmentInput) -> FragmentOutput {
 	//get intersection with the bounding cube (in form of distance on the ray dir * t + eye)
 	var outputCube = cube(eye, direction, volumeRatio);
 
-	var bg = param.clearColor;
-
 	if (outputCube.t < 0.0) {
-		output.color = bg;
-		return output;
+		discard;
 	}
 
 	var stepSize = 0.01;
@@ -455,16 +454,7 @@ fn main(input: FragmentInput) -> FragmentOutput {
 	}
 
 	// make the picture brighter
-	accumC = accumC * 1.5;
-
-	// apply background color
-	accumC = accumC + (1.0 - accumA) * bg.xyz;
-	accumA = accumA + (1.0 - accumA);
-
-	// background
-	if (accumA == 0.0) {
-		accumA = 1.0;
-	}
+	// accumC = accumC * 1.5;
 
 	var fragColor = vec4<f32>(accumC.x, accumC.y, accumC.z, accumA);
 

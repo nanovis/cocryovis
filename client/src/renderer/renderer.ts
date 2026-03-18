@@ -289,5 +289,6 @@ export class VolumeRenderer {
     this.volumeManager.destroy();
     this.camera.destroy();
     this.renderingParameters.destroy();
+    this.device.destroy();
   }
 }

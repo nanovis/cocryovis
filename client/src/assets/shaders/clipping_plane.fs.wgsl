@@ -12,11 +12,13 @@ struct Camera {
 
 struct ChannelData {
 	visible: u32,
+	_padding: vec3<u32>,
 }
 
 struct AnnotationChannelData {
 	color: vec4<f32>,
 	enabled: u32,
+  _padding: vec3<u32>,
 }
 
 struct Param {
