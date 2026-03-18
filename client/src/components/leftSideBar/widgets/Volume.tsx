@@ -86,6 +86,7 @@ import {
 } from "@/components/shared/ComboboxOptions";
 import type z from "zod";
 import type { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-schema";
+import Color from "color";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -421,15 +422,17 @@ const Volume = observer(({ open, close }: Props) => {
       if (getType(volumeInstance) === SparseLabelVolume) {
         const sparseLabelVolume = volumeInstance as SparseVolumeInstance;
         if (sparseLabelVolume.color) {
-          const color = Utils.fromHexColor(sparseLabelVolume.color);
           transferFunction = {
-            rampLow: 0,
-            rampHigh: 1,
-            color: {
-              x: color.r,
-              y: color.g,
-              z: color.b,
-            },
+            breakpoints: [
+              {
+                position: 0,
+                color: Color(sparseLabelVolume.color).alpha(0).hexa(),
+              },
+              {
+                position: 1,
+                color: Color(sparseLabelVolume.color).hexa(),
+              },
+            ],
           };
         }
       }
@@ -497,17 +500,20 @@ const Volume = observer(({ open, close }: Props) => {
 
         const color =
           "color" in labelVolume && labelVolume.color
-            ? Utils.fromHexColor(labelVolume.color as string)
-            : { r: 255, g: 255, b: 255 };
+            ? (labelVolume.color as string)
+            : "#FFFFFF";
 
         const transferFunction: TransferFunction = {
-          rampLow: 0,
-          rampHigh: 1,
-          color: {
-            x: color.r,
-            y: color.g,
-            z: color.b,
-          },
+          breakpoints: [
+            {
+              position: 0,
+              color: Color(color).alpha(0).hexa(),
+            },
+            {
+              position: 1,
+              color: Color(color).hexa(),
+            },
+          ],
         };
 
         const contents = await downloadFullVolumeData(dataType, labelVolume.id);
