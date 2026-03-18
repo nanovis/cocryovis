@@ -80,6 +80,11 @@ const useStyles = makeStyles({
     outlineWidth: "2px",
     outlineColor: tokens.colorBrandStroke1,
   },
+  markerPopoverOpen: {
+    outlineStyle: "solid",
+    outlineWidth: "2px",
+    outlineColor: tokens.colorPaletteDarkOrangeForeground1,
+  },
   colorArea: {
     minWidth: "250px",
     minHeight: "250px",
@@ -159,12 +164,9 @@ const TransferFunctionWidget = observer(
   ({ transferFunction }: TransferFunctionWidgetProps) => {
     const classes = useStyles();
 
-    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [openMarkerId, setOpenMarkerId] = useState<string | null>(null);
     const [draggingId, setDraggingId] = useState<string | null>(null);
-    const [pointerDownId, setPointerDownId] = useState<string | null>(null);
     const rampTrackRef = useRef<HTMLDivElement | null>(null);
-    const dragMovedRef = useRef(false);
     const pointerDownRef = useRef<{ id: string; x: number } | null>(null);
 
     const schedulePositionUpdate = useRafMapScheduler<string, number>(
@@ -206,7 +208,6 @@ const TransferFunctionWidget = observer(
           color,
         };
         const breakpoint = transferFunction.addBreakpoint(nextBreakpoint);
-        setSelectedId(breakpoint.id);
         setOpenMarkerId(breakpoint.id);
       } catch (error) {
         const toastContainer = new ToastContainer();
@@ -217,19 +218,12 @@ const TransferFunctionWidget = observer(
 
     const deleteBreakpoint = (breakpointId: string) => {
       transferFunction.removeBreakpoint(breakpointId);
-      if (selectedId === breakpointId) {
-        setSelectedId(null);
-      }
       if (openMarkerId === breakpointId) {
         setOpenMarkerId(null);
       }
     };
 
     useEffect(() => {
-      if (!pointerDownId && !draggingId) {
-        return;
-      }
-
       const onPointerMove = (event: PointerEvent) => {
         const pending = pointerDownRef.current;
         if (!pending) {
@@ -245,16 +239,11 @@ const TransferFunctionWidget = observer(
           setDraggingId(pending.id);
         }
 
-        dragMovedRef.current = true;
-        setOpenMarkerId(pending.id);
         schedulePositionUpdate(pending.id, positionFromClientX(event.clientX));
       };
 
-      const onPointerUp = (event: PointerEvent) => {
-        event.preventDefault();
-        event.stopPropagation();
+      const onPointerUp = () => {
         pointerDownRef.current = null;
-        setPointerDownId(null);
         setDraggingId(null);
       };
 
@@ -265,7 +254,7 @@ const TransferFunctionWidget = observer(
         window.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("pointerup", onPointerUp);
       };
-    }, [draggingId, pointerDownId, schedulePositionUpdate]);
+    }, [draggingId, schedulePositionUpdate]);
 
     const gradientBackground = toCssGradient(transferFunction);
 
@@ -297,17 +286,6 @@ const TransferFunctionWidget = observer(
                 key={point.id}
                 open={openMarkerId === point.id}
                 appearance="inverted"
-                onOpenChange={(_, data) => {
-                  if (
-                    (draggingId === point.id || dragMovedRef.current) &&
-                    !data.open
-                  ) {
-                    dragMovedRef.current = false;
-                    setOpenMarkerId(point.id);
-                    return;
-                  }
-                  setOpenMarkerId(data.open ? point.id : null);
-                }}
                 positioning={{
                   position: "above",
                   offset: 16,
@@ -316,9 +294,17 @@ const TransferFunctionWidget = observer(
                 <PopoverTrigger disableButtonEnhancement>
                   <button
                     type="button"
+                    title={
+                      openMarkerId === null
+                        ? "Shift+click or double-click to open marker options"
+                        : "Shift+click or double-click to close marker options"
+                    }
                     className={mergeClasses(
                       classes.marker,
-                      point.id === selectedId && classes.markerActive
+                      point.id === draggingId && classes.markerActive,
+                      openMarkerId === point.id &&
+                        openMarkerId !== draggingId &&
+                        classes.markerPopoverOpen
                     )}
                     style={{
                       left: `${point.position * 100}%`,
@@ -326,15 +312,25 @@ const TransferFunctionWidget = observer(
                       backgroundSize: "100% 100%, 8px 8px, 8px 8px",
                       backgroundPosition: "0 0, 0 0, 4px 4px",
                     }}
+                    onClick={(event) => {
+                      if (!event.shiftKey) {
+                        return;
+                      }
+                      setOpenMarkerId((prev) =>
+                        prev === point.id ? null : point.id
+                      );
+                    }}
+                    onDoubleClick={() => {
+                      setOpenMarkerId(
+                        openMarkerId === point.id ? null : point.id
+                      );
+                    }}
                     onPointerDown={(event) => {
                       event.preventDefault();
-                      dragMovedRef.current = false;
                       pointerDownRef.current = {
                         id: point.id,
                         x: event.clientX,
                       };
-                      setPointerDownId(point.id);
-                      setSelectedId(point.id);
                     }}
                     aria-label={`Select breakpoint at ${point.position.toFixed(2)}`}
                   />
