@@ -166,8 +166,7 @@ fn cube(eye: vec3<f32>, dir: vec3<f32>, size: vec3<f32>) -> CubeOutput {
 		}
 		i = i + 1;
 	}
-	if (near < 0.0) //eye lies within the cube
-	{
+	if (near < 0.0) {
 		output.fr = far;
 		output.t = 0.0;
 	}
@@ -220,13 +219,26 @@ fn mixAnnotationColor(color: vec3<f32>, position: vec4<f32>, annotationColor: ve
 	return mix(color, stripe, annotationColor.a);
 }
 
+struct FragmentInput {
+	@builtin(position) position: vec4<f32>,
+	@location(0) eye: vec3<f32>,
+	@location(1) direction: vec3<f32>,
+	@location(2) lightPos: vec3<f32>,
+	@location(3) tex_coords: vec2<f32>,
+}
+
 struct FragmentOutput {
 	@location(0) color: vec4<f32>,
 	@builtin(frag_depth) frag_depth: f32,
 }
 
 @fragment
-fn main(@location(0) eye: vec3<f32>, @location(1) direction: vec3<f32>, @location(2) lightPos: vec3<f32>, @location(3) tex_coords: vec2<f32>, @builtin(position) position: vec4<f32>,) -> FragmentOutput {
+fn main(input: FragmentInput) -> FragmentOutput {
+	let eye = input.eye;
+	let direction = input.direction;
+	let lightPos = input.lightPos;
+	let position = input.position;
+	let tex_coords = input.tex_coords;
 
 	var output: FragmentOutput;
 	output.frag_depth = 0.0;

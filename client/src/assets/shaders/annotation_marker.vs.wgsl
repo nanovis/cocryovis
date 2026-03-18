@@ -36,7 +36,12 @@ struct VertexOutput {
   @location(0) worldPos: vec3<f32>
 }
 
-const corners = array<vec2<f32>, 4>(vec2(- 1.0, - 1.0), vec2(1.0, - 1.0), vec2(- 1.0, 1.0), vec2(1.0, 1.0));
+const corners = array<vec2<f32>, 4>(
+  vec2(-1.0, -1.0),
+  vec2( 1.0, -1.0),
+  vec2(-1.0,  1.0), 
+  vec2( 1.0,  1.0)
+);
 
 @vertex
 fn main(input: VertexInput) -> VertexOutput {
