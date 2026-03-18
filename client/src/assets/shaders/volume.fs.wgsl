@@ -55,8 +55,6 @@ struct ClippingPlane {
 	enabled: i32,
 }
 
-;
-
 struct AnnotationChannelData {
 	color: vec4<f32>,
 	enabled: u32,
@@ -202,14 +200,14 @@ fn color_transfer(which: i32, sampleValue: f32) -> vec4<f32> {
 	return textureSampleLevel(transferFunctionLut, s, uv, 0.0);
 }
 
-fn mixAnnotationColor(color: vec3<f32>, position: vec4<f32>, annotationColor: vec4<f32>) -> vec3<f32> {
+fn mixAnnotationColor(color: vec3<f32>, worldPos: vec3<f32>, annotationColor: vec4<f32>) -> vec3<f32> {
 	if (annotationColor.a == 0.0) {
 		return color;
 	}
 	var stripe = annotationColor.xyz;
 
 	var stripeStrength = 0.2;
-	if (sin((position.x + position.y) * 100.0) > 0.0) {
+	if (sin((worldPos.x + worldPos.y) * 100.0) > 0.0) {
 		stripe = mix(stripe, vec3<f32>(0.0, 0.0, 0.0), stripeStrength);
 	}
 	else {
@@ -220,7 +218,6 @@ fn mixAnnotationColor(color: vec3<f32>, position: vec4<f32>, annotationColor: ve
 }
 
 struct FragmentInput {
-	@builtin(position) position: vec4<f32>,
 	@location(0) eye: vec3<f32>,
 	@location(1) direction: vec3<f32>,
 	@location(2) lightPos: vec3<f32>,
@@ -237,14 +234,11 @@ fn main(input: FragmentInput) -> FragmentOutput {
 	let eye = input.eye;
 	let direction = input.direction;
 	let lightPos = input.lightPos;
-	let position = input.position;
 	let tex_coords = input.tex_coords;
 
 	var output: FragmentOutput;
 	output.frag_depth = 0.0;
 	output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
-
-	var clipped = false;
 
 	var rawVolumeChannel = volumeParameters.rawVolumeChannel;
 	var useRawVolume = rawVolumeChannel >= 0;
@@ -303,7 +297,6 @@ fn main(input: FragmentInput) -> FragmentOutput {
 		}
 
 		if (clippingEnabled && isClipped(isec0)) {
-			clipped = true;
 			continue;
 		}
 
@@ -327,27 +320,6 @@ fn main(input: FragmentInput) -> FragmentOutput {
 			var projPos = camera.proj * camera.view * vec4<f32>(isec0.xyz, 1.0);
 			output.frag_depth = projPos.z / projPos.w;
 			firstHit = false;
-			if (clipped) {
-				if (bool(volumeParameters.rawClippingPlane) && useRawVolume) {
-					output.color = vec4<f32>(mixAnnotationColor(vec3<f32>(masks[rawVolumeChannel]), position, annotationColor), 1.0);
-					return output;
-				}
-
-				var result_color = vec3<f32>(0., 0., 0.);
-				var maskSum = 0.0;
-				for (var which: i32 = 0; which < numChannels; which += 1) {
-					if (which == rawVolumeChannel) {
-						continue;
-					}
-					var tfSample = color_transfer(which, masks[which]);
-					maskSum += tfSample.a;
-					result_color += tfSample.a * tfSample.rgb;
-				}
-				if (maskSum > 0.1) {
-					output.color = vec4<f32>(mixAnnotationColor(vec3<f32>(result_color), position, annotationColor), 1.0);
-					return output;
-				}
-			}
 		}
 
 		// voxels with low influence are skipped
@@ -462,7 +434,7 @@ fn main(input: FragmentInput) -> FragmentOutput {
 
 			color = mix(color, vec3<f32>(0.0, 0.01, 0.02), ao);
 			color = mix(color, vec3<f32>(0.0, 0.015, 0.03), shadow);
-			color = mixAnnotationColor(color, position, annotationColor);
+			color = mixAnnotationColor(color, isec0, annotationColor);
 
 			//front to back alpha compositing
 			accumC = accumC + (1.0 - accumA) * color.xyz * alpha;

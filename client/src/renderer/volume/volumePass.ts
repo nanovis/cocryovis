@@ -1,5 +1,6 @@
 import volumeVertexShader from "@/assets/shaders/volume.vs.wgsl?raw";
 import volumeFragmentShader from "@/assets/shaders/volume.fs.wgsl?raw";
+import clippingPlaneFragmentShader from "@/assets/shaders/clipping_plane.fs.wgsl?raw";
 
 import type { AnnotationManager } from "../annotations/annotationManager";
 import { BindGroup } from "../core/bindGroup";
@@ -9,6 +10,7 @@ import type { RenderingParametersBuffer } from "../renderingParametersBuffer";
 import type { ClippingPlaneManager } from "./clippingPlaneManager";
 import type { VolumeManager } from "./volumeManager";
 import { DEPTH_TEXTURE_FORMAT } from "../core/defines";
+import { vec3 } from "gl-matrix";
 
 const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
   entries: [
@@ -69,7 +71,11 @@ export class VolumePass {
   private readonly device: GPUDevice;
   private readonly bindGroup: BindGroup;
   private readonly volumePipeline: GPURenderPipeline;
+  private readonly clippingPlanePipeline: GPURenderPipeline;
   readonly framebuffer: Framebuffer;
+
+  private readonly camera: Camera;
+  private readonly clippingPlaneManager: ClippingPlaneManager;
 
   constructor({
     device,
@@ -93,6 +99,8 @@ export class VolumePass {
     clippingPlaneManager: ClippingPlaneManager;
   }) {
     this.device = device;
+    this.camera = camera;
+    this.clippingPlaneManager = clippingPlaneManager;
     this.framebuffer = new Framebuffer({
       device,
       width,
@@ -140,7 +148,32 @@ export class VolumePass {
       primitive: { topology: "triangle-list" },
       depthStencil: {
         depthWriteEnabled: true,
-        depthCompare: "less",
+        depthCompare: "always",
+        format: DEPTH_TEXTURE_FORMAT,
+      },
+    });
+
+    this.clippingPlanePipeline = this.device.createRenderPipeline({
+      layout: pipelineLayout,
+      vertex: {
+        module: this.device.createShaderModule({
+          label: "Clipping Plane Vertex Shader",
+          code: volumeVertexShader,
+        }),
+        entryPoint: "main",
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          label: "Clipping Plane Fragment Shader",
+          code: clippingPlaneFragmentShader,
+        }),
+        entryPoint: "main",
+        targets: [{ format }],
+      },
+      primitive: { topology: "triangle-list" },
+      depthStencil: {
+        depthWriteEnabled: true,
+        depthCompare: "always",
         format: DEPTH_TEXTURE_FORMAT,
       },
     });
@@ -157,10 +190,31 @@ export class VolumePass {
       this.framebuffer.getRenderPassDescriptor(clearColor)
     );
 
+    const cameraWorldPos = this.camera.position;
+    const clippingPlaneNormal =
+      this.clippingPlaneManager.clippingParametersBuffer.params
+        .clippingPlaneNormal;
+    const inFrontOfClippingPlane =
+      vec3.dot(cameraWorldPos, clippingPlaneNormal) > 0;
+
     if (gpuBindGroup) {
-      pass.setPipeline(this.volumePipeline);
-      pass.setBindGroup(0, gpuBindGroup);
-      pass.draw(6);
+      if (inFrontOfClippingPlane) {
+        pass.setPipeline(this.volumePipeline);
+        pass.setBindGroup(0, gpuBindGroup);
+        pass.draw(6);
+
+        pass.setPipeline(this.clippingPlanePipeline);
+        pass.setBindGroup(0, gpuBindGroup);
+        pass.draw(6);
+      } else {
+        pass.setPipeline(this.clippingPlanePipeline);
+        pass.setBindGroup(0, gpuBindGroup);
+        pass.draw(6);
+
+        pass.setPipeline(this.volumePipeline);
+        pass.setBindGroup(0, gpuBindGroup);
+        pass.draw(6);
+      }
     }
 
     pass.end();
