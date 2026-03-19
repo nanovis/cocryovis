@@ -106,6 +106,14 @@ async function loadSparseLabelVolumesIntoAnnotations(
   }
 }
 
+export const clippingPlaneOptions = [
+  { value: "view-aligned", label: "View Aligned" },
+  { value: "x", label: "X-Axis" },
+  { value: "y", label: "Y-Axis" },
+  { value: "z", label: "Z-Axis" },
+  { value: "none", label: "None" },
+] as const;
+
 export const VisualizedVolume = types
   .model("VisualizedVolume", {
     volume: types.safeReference(Volume),
@@ -120,16 +128,16 @@ export const VisualizedVolume = types
     result: types.maybe(types.safeReference(Result)),
     volVisSettings: types.array(VolVisSettings),
     clippingPlane: types.optional(
-      types.enumeration("ClippingPlane", [
-        "view-aligned",
-        "x",
-        "y",
-        "z",
-        "none",
-      ]),
+      types.enumeration(
+        "ClippingPlane",
+        clippingPlaneOptions.map((option) => option.value)
+      ),
       "none"
     ),
     clippingPlaneOffset: types.optional(types.number, 0),
+    clippingPlaneOffsetX: types.optional(types.integer, 0),
+    clippingPlaneOffsetY: types.optional(types.integer, 0),
+    clippingPlaneOffsetZ: types.optional(types.integer, 0),
     labelEditingMode: types.optional(types.boolean, false),
     manualLabelIndex: types.optional(types.integer, 0),
     fullscreen: types.optional(types.boolean, false),
@@ -234,6 +242,27 @@ export const VisualizedVolume = types
       self.clippingPlaneOffset = clamp(offset, -1, 1);
       self.renderer.clippingPlaneManager.setClippingPlaneOffset(offset);
     },
+    setClippingOffsetX(offset: number) {
+      if (!self.renderer) {
+        return;
+      }
+      self.clippingPlaneOffsetX = offset;
+      self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(offset);
+    },
+    setClippingOffsetY(offset: number) {
+      if (!self.renderer) {
+        return;
+      }
+      self.clippingPlaneOffsetY = offset;
+      self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(offset);
+    },
+    setClippingOffsetZ(offset: number) {
+      if (!self.renderer) {
+        return;
+      }
+      self.clippingPlaneOffsetZ = offset;
+      self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(offset);
+    },
   }))
   .actions((self) => ({
     setManualLabelIndex(index: number) {
@@ -249,12 +278,37 @@ export const VisualizedVolume = types
       }
       self.clippingPlane = clippingPlane;
       self.renderer.clippingPlaneManager.setClippingPlane(clippingPlane);
+      if (clippingPlane === "x") {
+        self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(
+          self.clippingPlaneOffsetX
+        );
+      } else if (clippingPlane === "y") {
+        self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(
+          self.clippingPlaneOffsetY
+        );
+      } else if (clippingPlane === "z") {
+        self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(
+          self.clippingPlaneOffsetZ
+        );
+      } else {
+        self.renderer.clippingPlaneManager.setClippingPlaneOffset(
+          self.clippingPlaneOffset
+        );
+      }
       if (self.fullscreen && clippingPlane === "none") {
         self.setFullscreen(false);
       }
     },
     changeClippingPlaneOffset(offset: number) {
-      self.setClippingOffset(self.clippingPlaneOffset + offset);
+      if (self.clippingPlane === "x") {
+        self.setClippingOffsetX(self.clippingPlaneOffsetX + Math.sign(offset));
+      } else if (self.clippingPlane === "y") {
+        self.setClippingOffsetY(self.clippingPlaneOffsetY + Math.sign(offset));
+      } else if (self.clippingPlane === "z") {
+        self.setClippingOffsetZ(self.clippingPlaneOffsetZ + Math.sign(offset));
+      } else {
+        self.setClippingOffset(self.clippingPlaneOffset + offset);
+      }
     },
     clearActiveAnnotationChannel() {
       if (!self.renderer) {

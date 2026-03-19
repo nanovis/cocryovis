@@ -108,6 +108,15 @@ export async function visualizeVolumeFromConfig(
   const visualizationDescriptor =
     await renderer.volumeManager.loadVolumes(config);
 
+  const size = renderer.volumeManager.settings?.size;
+  if (!size) {
+    throw new Error("Volume size is not defined in volume manager settings.");
+  }
+
+  visualizedVolume.clippingPlaneOffsetX = Math.floor(size.x / 2);
+  visualizedVolume.clippingPlaneOffsetY = Math.floor(size.y / 2);
+  visualizedVolume.clippingPlaneOffsetZ = Math.floor(size.z / 2);
+
   for (
     let index = 0;
     index < visualizationDescriptor.descriptors.length;

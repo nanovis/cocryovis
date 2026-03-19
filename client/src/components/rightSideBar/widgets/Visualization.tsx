@@ -34,7 +34,10 @@ import {
 import ToastContainer from "@/utils/toastContainer";
 import type { ClippingPlaneType } from "@/renderer/volume/clippingPlaneManager";
 import TransferFunctionWidget from "@/components/shared/TransferFunction";
-import type { VisualizedVolumeInstance } from "@/stores/uiState/VisualizedVolume";
+import {
+  clippingPlaneOptions,
+  type VisualizedVolumeInstance,
+} from "@/stores/uiState/VisualizedVolume";
 import type { TransferFunctionInstance } from "@/stores/uiState/TransferFunction";
 
 const useStyles = makeStyles({
@@ -424,36 +427,19 @@ const Visualization = observer(({ open, close }: Props) => {
               className={classes.clippingPlane}
               disabled={actionsDisabled()}
             >
-              <Radio value="none" label="None" />
-              <Radio value="view-aligned" label="View-aligned" />
-              <Radio value="x" label="YZ-plane" />
-              <Radio value="y" label="XZ-plane" />
-              <Radio value="z" label="XY-plane" />
+              {clippingPlaneOptions.map((option) => (
+                <Radio
+                  key={option.value}
+                  value={option.value}
+                  label={option.label}
+                />
+              ))}
             </RadioGroup>
           </Field>
 
           <div className={classes.settingsGrid}>
             <div className={classes.settingsGridRow}>
-              <Text>
-                Clipping Plane Offset [
-                {uiState.visualizedVolume?.clippingPlaneOffset.toFixed(2)}]
-              </Text>
-              <Slider
-                disabled={
-                  actionsDisabled() ||
-                  uiState.visualizedVolume?.clippingPlane === "none"
-                }
-                value={
-                  uiState.visualizedVolume?.clippingPlaneOffset
-                    ? uiState.visualizedVolume.clippingPlaneOffset * 100
-                    : 0
-                }
-                min={-100}
-                max={100}
-                onChange={(_, data) =>
-                  uiState.visualizedVolume?.setClippingOffset(data.value / 100)
-                }
-              />
+              <ClippingPlaneOffsetSlider disabled={actionsDisabled()} />
             </div>
             <Tooltip
               content={
@@ -602,6 +588,107 @@ const Visualization = observer(({ open, close }: Props) => {
     </div>
   ) : null;
 });
+
+const ClippingPlaneOffsetSlider = observer(
+  ({ disabled }: { disabled: boolean }) => {
+    const { uiState } = useMst();
+
+    if (!uiState.visualizedVolume) {
+      return null;
+    }
+
+    const volumeSizeX =
+      uiState.visualizedVolume.renderer?.volumeManager.settings?.size.x ?? null;
+    const volumeSizeY =
+      uiState.visualizedVolume.renderer?.volumeManager.settings?.size.y ?? null;
+    const volumeSizeZ =
+      uiState.visualizedVolume.renderer?.volumeManager.settings?.size.z ?? null;
+
+    if (uiState.visualizedVolume.clippingPlane === "x" && volumeSizeX) {
+      return (
+        <>
+          <Text>
+            Clipping Plane Offset [
+            {uiState.visualizedVolume.clippingPlaneOffsetX}]
+          </Text>
+          <Slider
+            disabled={disabled}
+            value={uiState.visualizedVolume.clippingPlaneOffsetX}
+            min={0}
+            max={volumeSizeX - 1}
+            onChange={(_, data) =>
+              uiState.visualizedVolume?.setClippingOffsetX(data.value)
+            }
+          />
+        </>
+      );
+    }
+
+    if (uiState.visualizedVolume.clippingPlane === "y" && volumeSizeY) {
+      return (
+        <>
+          <Text>
+            Clipping Plane Offset [
+            {uiState.visualizedVolume.clippingPlaneOffsetY}]
+          </Text>
+          <Slider
+            disabled={disabled}
+            value={uiState.visualizedVolume.clippingPlaneOffsetY}
+            min={0}
+            max={volumeSizeY - 1}
+            onChange={(_, data) =>
+              uiState.visualizedVolume?.setClippingOffsetY(data.value)
+            }
+          />
+        </>
+      );
+    }
+
+    if (uiState.visualizedVolume.clippingPlane === "z" && volumeSizeZ) {
+      return (
+        <>
+          <Text>
+            Clipping Plane Offset [
+            {uiState.visualizedVolume.clippingPlaneOffsetZ}]
+          </Text>
+          <Slider
+            disabled={disabled}
+            value={uiState.visualizedVolume.clippingPlaneOffsetZ}
+            min={0}
+            max={volumeSizeZ - 1}
+            onChange={(_, data) =>
+              uiState.visualizedVolume?.setClippingOffsetZ(data.value)
+            }
+          />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <Text>
+          Clipping Plane Offset [
+          {uiState.visualizedVolume.clippingPlaneOffset.toFixed(2)}]
+        </Text>
+        <Slider
+          disabled={
+            disabled || uiState.visualizedVolume.clippingPlane === "none"
+          }
+          value={
+            uiState.visualizedVolume.clippingPlaneOffset
+              ? uiState.visualizedVolume.clippingPlaneOffset * 100
+              : 0
+          }
+          min={-100}
+          max={100}
+          onChange={(_, data) =>
+            uiState.visualizedVolume?.setClippingOffset(data.value / 100)
+          }
+        />
+      </>
+    );
+  }
+);
 
 const TransferFunctions = observer(
   ({ visualizedVolume }: { visualizedVolume: VisualizedVolumeInstance }) => {

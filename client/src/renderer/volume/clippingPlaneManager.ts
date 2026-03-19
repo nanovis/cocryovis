@@ -65,6 +65,35 @@ export class ClippingPlaneManager {
     this.clippingPlaneOffset = clamp(offset, -1, 1);
   }
 
+  setClippingPlaneOffsetVoxel(offset: number) {
+    if (
+      this.clippingPlaneType !== "x" &&
+      this.clippingPlaneType !== "y" &&
+      this.clippingPlaneType !== "z"
+    ) {
+      console.warn(
+        "setClippingPlaneOffsetVoxel should only be used when clipping plane type is x, y or z"
+      );
+      return;
+    }
+
+    const size = this.volumeManager.settings?.size;
+    if (!size) {
+      return;
+    }
+
+    const axisSize =
+      this.clippingPlaneType === "x"
+        ? size.x
+        : this.clippingPlaneType === "y"
+          ? size.y
+          : size.z;
+
+    const scaledOffset = ((offset + 0.5) / axisSize) * 2 - 1;
+
+    this.setClippingPlaneOffset(scaledOffset);
+  }
+
   isFullscreen() {
     return this.fullscreen;
   }
