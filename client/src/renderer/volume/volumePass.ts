@@ -222,14 +222,14 @@ export class VolumePass {
       this.framebuffer.getRenderPassDescriptor(clearColor)
     );
 
-    const cameraWorldPos = this.camera.position;
-    const clippingPlaneNormal =
-      this.clippingPlaneManager.clippingParametersBuffer.params
-        .clippingPlaneNormal;
-    const inFrontOfClippingPlane =
-      vec3.dot(cameraWorldPos, clippingPlaneNormal) > 0;
-
     if (gpuBindGroup) {
+      const cameraWorldPos = this.camera.position;
+      const clippingPlaneNormal =
+        this.clippingPlaneManager.clippingParametersBuffer.params
+          .clippingPlaneNormal;
+      const inFrontOfClippingPlane =
+        vec3.dot(cameraWorldPos, clippingPlaneNormal) > 0;
+
       if (inFrontOfClippingPlane) {
         pass.setPipeline(this.volumePipeline);
         pass.setBindGroup(0, gpuBindGroup);
