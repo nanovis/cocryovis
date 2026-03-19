@@ -246,6 +246,11 @@ export const VisualizedVolume = types
       if (!self.renderer) {
         return;
       }
+      const sizeX = self.renderer.volumeManager.settings?.size.x;
+      if (sizeX === undefined) {
+        return;
+      }
+      offset = clamp(offset, 0, sizeX - 1);
       self.clippingPlaneOffsetX = offset;
       self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(offset);
     },
@@ -253,6 +258,11 @@ export const VisualizedVolume = types
       if (!self.renderer) {
         return;
       }
+      const sizeY = self.renderer.volumeManager.settings?.size.x;
+      if (sizeY === undefined) {
+        return;
+      }
+      offset = clamp(offset, 0, sizeY - 1);
       self.clippingPlaneOffsetY = offset;
       self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(offset);
     },
@@ -260,6 +270,11 @@ export const VisualizedVolume = types
       if (!self.renderer) {
         return;
       }
+      const sizeZ = self.renderer.volumeManager.settings?.size.z;
+      if (sizeZ === undefined) {
+        return;
+      }
+      offset = clamp(offset, 0, sizeZ - 1);
       self.clippingPlaneOffsetZ = offset;
       self.renderer.clippingPlaneManager.setClippingPlaneOffsetVoxel(offset);
     },
