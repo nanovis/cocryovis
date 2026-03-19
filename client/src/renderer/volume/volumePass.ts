@@ -227,8 +227,19 @@ export class VolumePass {
       const clippingPlaneNormal =
         this.clippingPlaneManager.clippingParametersBuffer.params
           .clippingPlaneNormal;
+
+      const clippingPlaneOrigin =
+        this.clippingPlaneManager.clippingParametersBuffer.params
+          .clippingPlaneOrigin;
+
+      const toCamera = vec3.subtract(
+        vec3.create(),
+        cameraWorldPos,
+        clippingPlaneOrigin
+      );
+
       const inFrontOfClippingPlane =
-        vec3.dot(cameraWorldPos, clippingPlaneNormal) > 0;
+        vec3.dot(toCamera, clippingPlaneNormal) > 0;
 
       if (inFrontOfClippingPlane) {
         pass.setPipeline(this.volumePipeline);
