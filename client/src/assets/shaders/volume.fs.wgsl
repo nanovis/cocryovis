@@ -346,12 +346,17 @@ fn main(input: FragmentInput) -> FragmentOutput {
 
 				var sample_pos = isec1 + randomOffset;
 				var sample_var = vec3<f32>(0.0);
-
+				
+				var value = 0.0;
 				// sample only within bounds of the texture
 				if (sample_pos.x > 0.0 && sample_pos.x < 1.0 && sample_pos.y > 0.0 && sample_pos.y < 1.0 && sample_pos.z > 0.0 && sample_pos.z < 1.0) {
 					sample_var = dataRead(sample_pos).xyz;
+					for (var i: i32 = 0; i < numChannels; i = i + 1) {
+						if (i != rawVolumeChannel) {
+							value += color_transfer(i, sample_var[i]).a;
+						}
+					}
 				}
-				var value = (sample_var.x + sample_var.y + sample_var.z);
 				value = clamp(value, 0.0, 1.0);
 				var occlusion = 1.0 - value;
 
