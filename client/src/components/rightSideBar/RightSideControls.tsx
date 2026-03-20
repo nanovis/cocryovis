@@ -8,6 +8,7 @@ import WidgetToggleButton from "../shared/WidgetToggleButton";
 import {
   ArrowUpload24Regular,
   BorderNone24Regular,
+  DataLine24Regular,
   Info24Regular,
   SaveImageRegular,
   SlideSettings24Regular,
@@ -19,11 +20,13 @@ import VolumeUploadDialog from "../shared/VolumeUploadDialog";
 import type { VolumeDescriptor } from "@/utils/volumeDescriptor";
 import ToastContainer from "../../utils/toastContainer";
 import type { VisualizationDescriptor } from "@/renderer/volume/volumeManager";
+import TransferFunctions from "./widgets/TransferFunctions";
 
 const enum WidgetIndices {
   Visualization = 0,
-  RenderSettings = 1,
-  About = 2,
+  TransferFunctions = 1,
+  RenderSettings = 2,
+  About = 3,
 }
 
 const SideControls = observer(() => {
@@ -109,6 +112,20 @@ const SideControls = observer(() => {
           />
 
           <WidgetToggleButton
+            title={"Transfer Functions"}
+            labelPositioning={"before"}
+            LabelIcon={DataLine24Regular}
+            isOpen={
+              uiState.openRightWidget ===
+              (WidgetIndices.TransferFunctions as number)
+            }
+            onClick={() =>
+              uiState.setOpenRightWidget(WidgetIndices.TransferFunctions)
+            }
+            disabled={!uiState.visualizedVolume || pageDisabled}
+          />
+
+          <WidgetToggleButton
             title={"Render Settings"}
             labelPositioning={"before"}
             LabelIcon={SlideSettings24Regular}
@@ -160,6 +177,14 @@ const SideControls = observer(() => {
       <Visualization
         open={
           uiState.openRightWidget === (WidgetIndices.Visualization as number)
+        }
+        close={uiState.closeRightHandWidgets}
+      />
+
+      <TransferFunctions
+        open={
+          uiState.openRightWidget ===
+          (WidgetIndices.TransferFunctions as number)
         }
         close={uiState.closeRightHandWidgets}
       />
