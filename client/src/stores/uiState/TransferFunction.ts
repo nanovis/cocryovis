@@ -25,9 +25,12 @@ export const TransferFunctionBreakpoint = types
   .model("Transfer Function Breakpoint", {
     id: types.optional(types.identifier, () => uuidv4()),
     position: types.number,
-    color: types.string, // Hex color string, e.g., "#ff0000"
+    color: types.string, // Hex/hexa color string, e.g., "#ff0000"
   })
   .views((self) => ({
+    get transferFunction(): TransferFunctionInstance {
+      return getParentOfType(self, TransferFunction);
+    },
     get hsv() {
       const color = Color(self.color).hsv();
       return {
@@ -37,20 +40,74 @@ export const TransferFunctionBreakpoint = types
         a: color.alpha(),
       };
     },
+    get red() {
+      return Color(self.color).red();
+    },
+    get green() {
+      return Color(self.color).green();
+    },
+    get blue() {
+      return Color(self.color).blue();
+    },
+    get alpha() {
+      return Color(self.color).alpha();
+    },
   }))
   .actions((self) => ({
     setPosition(position: number) {
       self.position = clamp(position, 0, 1);
-      getParentOfType(self, VolVisSettings).transferFunction.updateRenderer();
+      self.transferFunction.updateRenderer();
     },
     setColor(color: string) {
-      self.color = color;
-      getParentOfType(self, VolVisSettings).transferFunction.updateRenderer();
+      try {
+        self.color = Color(color).hexa();
+        self.transferFunction.updateRenderer();
+      } catch {
+        // Invalid color string, ignore the update
+      }
     },
     setHSV(hue: number, saturation: number, value: number, alpha: number = 1) {
-      const color = Color.hsv(hue, saturation * 100, value * 100).alpha(alpha);
-      self.color = color.hexa();
-      getParentOfType(self, VolVisSettings).transferFunction.updateRenderer();
+      try {
+        const color = Color.hsv(hue, saturation * 100, value * 100).alpha(
+          alpha
+        );
+        this.setColor(color.hexa());
+      } catch {
+        // Invalid HSV values, ignore the update
+      }
+    },
+    setRed(red: number) {
+      try {
+        const color = Color(self.color).red(red);
+        this.setColor(color.hexa());
+      } catch {
+        // Invalid red value, ignore the update
+      }
+    },
+    setGreen(green: number) {
+      try {
+        const color = Color(self.color).green(green);
+        this.setColor(color.hexa());
+      } catch {
+        // Invalid green value, ignore the update
+      }
+    },
+    setBlue(blue: number) {
+      try {
+        console.log("Setting blue to", blue);
+        const color = Color(self.color).blue(blue);
+        this.setColor(color.hexa());
+      } catch {
+        // Invalid blue value, ignore the update
+      }
+    },
+    setAlpha(alpha: number) {
+      try {
+        const color = Color(self.color).alpha(alpha);
+        this.setColor(color.hexa());
+      } catch {
+        // Invalid alpha value, ignore the update
+      }
     },
   }));
 

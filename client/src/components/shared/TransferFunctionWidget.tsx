@@ -1,37 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Field,
-  Input,
-  Popover,
-  PopoverSurface,
-  PopoverTrigger,
   makeStyles,
   tokens,
   mergeClasses,
 } from "@fluentui/react-components";
-import {
-  AlphaSlider,
-  ColorArea,
-  ColorPicker,
-  ColorSlider,
-} from "@fluentui/react-color-picker";
 import * as Utils from "@/utils/helpers";
 import { type TransferFunctionInstance } from "@/stores/uiState/TransferFunction";
 import ToastContainer from "@/utils/toastContainer";
 import { observer } from "mobx-react-lite";
 import Color from "color";
-import DeleteButton from "./DeleteButton";
 import { useRafMapScheduler } from "@/hooks/useRafMapScheduler";
+import {
+  TRANSPARENCY_CHECKER_DARK,
+  TRANSPARENCY_CHECKER_LIGHT,
+} from "@/utils/transparencyChecker";
 
 interface TransferFunctionWidgetProps {
   transferFunction: TransferFunctionInstance;
-}
-
-interface HsvaColor {
-  h: number;
-  s: number;
-  v: number;
-  a?: number;
+  openMarkerId: string | null;
+  setOpenMarkerId: (id: string | null) => void;
 }
 
 const useStyles = makeStyles({
@@ -123,11 +111,6 @@ function toCssGradient(transferFunction: TransferFunctionInstance) {
     .join(", ")})`;
 }
 
-const TRANSPARENCY_CHECKER_LIGHT =
-  "linear-gradient(45deg, #ececec 25%, transparent 25%, transparent 75%, #ececec 75%, #ececec)";
-const TRANSPARENCY_CHECKER_DARK =
-  "linear-gradient(45deg, #d4d4d4 25%, transparent 25%, transparent 75%, #d4d4d4 75%, #d4d4d4)";
-
 function colorAtPosition(
   transferFunction: TransferFunctionInstance,
   position: number
@@ -161,10 +144,13 @@ function colorAtPosition(
 }
 
 const TransferFunctionWidget = observer(
-  ({ transferFunction }: TransferFunctionWidgetProps) => {
+  ({
+    transferFunction,
+    openMarkerId,
+    setOpenMarkerId,
+  }: TransferFunctionWidgetProps) => {
     const classes = useStyles();
 
-    const [openMarkerId, setOpenMarkerId] = useState<string | null>(null);
     const [draggingId, setDraggingId] = useState<string | null>(null);
     const rampTrackRef = useRef<HTMLDivElement | null>(null);
     const pointerDownRef = useRef<{ id: string; x: number } | null>(null);
@@ -173,16 +159,6 @@ const TransferFunctionWidget = observer(
       (updates) => {
         updates.forEach((position, id) => {
           transferFunction.breakpoints.get(id)?.setPosition(position);
-        });
-      }
-    );
-
-    const scheduleColorUpdate = useRafMapScheduler<string, HsvaColor>(
-      (updates) => {
-        updates.forEach((color, id) => {
-          transferFunction.breakpoints
-            .get(id)
-            ?.setHSV(color.h, color.s, color.v, color.a);
         });
       }
     );
@@ -213,13 +189,6 @@ const TransferFunctionWidget = observer(
         const toastContainer = new ToastContainer();
         toastContainer.error(Utils.getErrorMessage(error));
         console.error("Error:", error);
-      }
-    };
-
-    const deleteBreakpoint = (breakpointId: string) => {
-      transferFunction.removeBreakpoint(breakpointId);
-      if (openMarkerId === breakpointId) {
-        setOpenMarkerId(null);
       }
     };
 
@@ -269,6 +238,7 @@ const TransferFunctionWidget = observer(
             <div
               className={classes.rampTrack}
               ref={rampTrackRef}
+              title="Double-click to add breakpoint"
               style={{
                 backgroundImage: `${gradientBackground}, ${TRANSPARENCY_CHECKER_LIGHT}, ${TRANSPARENCY_CHECKER_DARK}`,
                 backgroundSize: "100% 100%, 12px 12px, 12px 12px",
@@ -281,126 +251,45 @@ const TransferFunctionWidget = observer(
           </Field>
           <div className={classes.markerTrack}>
             {transferFunction.sortedBreakpoints.map((point) => (
-              <Popover
-                withArrow
+              <button
                 key={point.id}
-                open={openMarkerId === point.id}
-                appearance="inverted"
-                positioning={{
-                  position: "above",
-                  offset: 16,
+                type="button"
+                title={
+                  openMarkerId === null
+                    ? "Shift+click or double-click to open marker options"
+                    : "Shift+click or double-click to close marker options"
+                }
+                className={mergeClasses(
+                  classes.marker,
+                  point.id === draggingId && classes.markerActive,
+                  openMarkerId === point.id &&
+                    openMarkerId !== draggingId &&
+                    classes.markerPopoverOpen
+                )}
+                style={{
+                  left: `${point.position * 100}%`,
+                  backgroundImage: `linear-gradient(${point.color}, ${point.color}), ${TRANSPARENCY_CHECKER_LIGHT}, ${TRANSPARENCY_CHECKER_DARK}`,
+                  backgroundSize: "100% 100%, 8px 8px, 8px 8px",
+                  backgroundPosition: "0 0, 0 0, 4px 4px",
                 }}
-              >
-                <PopoverTrigger disableButtonEnhancement>
-                  <button
-                    type="button"
-                    title={
-                      openMarkerId === null
-                        ? "Shift+click or double-click to open marker options"
-                        : "Shift+click or double-click to close marker options"
-                    }
-                    className={mergeClasses(
-                      classes.marker,
-                      point.id === draggingId && classes.markerActive,
-                      openMarkerId === point.id &&
-                        openMarkerId !== draggingId &&
-                        classes.markerPopoverOpen
-                    )}
-                    style={{
-                      left: `${point.position * 100}%`,
-                      backgroundImage: `linear-gradient(${point.color}, ${point.color}), ${TRANSPARENCY_CHECKER_LIGHT}, ${TRANSPARENCY_CHECKER_DARK}`,
-                      backgroundSize: "100% 100%, 8px 8px, 8px 8px",
-                      backgroundPosition: "0 0, 0 0, 4px 4px",
-                    }}
-                    onClick={(event) => {
-                      if (!event.shiftKey) {
-                        return;
-                      }
-                      setOpenMarkerId((prev) =>
-                        prev === point.id ? null : point.id
-                      );
-                    }}
-                    onDoubleClick={() => {
-                      setOpenMarkerId(
-                        openMarkerId === point.id ? null : point.id
-                      );
-                    }}
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      pointerDownRef.current = {
-                        id: point.id,
-                        x: event.clientX,
-                      };
-                    }}
-                    aria-label={`Select breakpoint at ${point.position.toFixed(2)}`}
-                  />
-                </PopoverTrigger>
-                <PopoverSurface>
-                  <div className={classes.popoverContent}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-end",
-                        gap: "12px",
-                      }}
-                    >
-                      <Field label="Position" style={{ flex: 1 }}>
-                        <Input
-                          step={0.001}
-                          min={0}
-                          max={1}
-                          value={point.position.toFixed(4)}
-                          onChange={(event) => {
-                            const raw = Number(
-                              (event.target as HTMLInputElement).value
-                            );
-                            if (Number.isFinite(raw)) {
-                              schedulePositionUpdate(point.id, raw);
-                            }
-                          }}
-                        />
-                      </Field>
-
-                      <div
-                        className={classes.preview}
-                        style={{
-                          backgroundColor: point.color,
-                          backgroundImage: `linear-gradient(${point.color}, ${point.color}), ${TRANSPARENCY_CHECKER_LIGHT}, ${TRANSPARENCY_CHECKER_DARK}`,
-                          backgroundSize: "100% 100%, 8px 8px, 8px 8px",
-                          backgroundPosition: "0 0, 0 0, 4px 4px",
-                        }}
-                      />
-                    </div>
-
-                    <div className={classes.pickerWrap}>
-                      <ColorPicker
-                        color={point.hsv}
-                        onColorChange={(_, data) => {
-                          scheduleColorUpdate(point.id, data.color);
-                        }}
-                      >
-                        <ColorArea className={classes.colorArea} />
-                        <ColorSlider />
-                      </ColorPicker>
-                      <AlphaSlider
-                        color={point.hsv}
-                        onChange={(_, data) => {
-                          scheduleColorUpdate(point.id, data.color);
-                        }}
-                      />
-                    </div>
-
-                    <div className={classes.popoverActions}>
-                      <DeleteButton
-                        text={"Delete Marker"}
-                        disabled={!transferFunction.canDeleteBreakpoint}
-                        onClick={() => deleteBreakpoint(point.id)}
-                      />
-                    </div>
-                  </div>
-                </PopoverSurface>
-              </Popover>
+                onClick={(event) => {
+                  if (!event.shiftKey) {
+                    return;
+                  }
+                  setOpenMarkerId(openMarkerId === point.id ? null : point.id);
+                }}
+                onDoubleClick={() => {
+                  setOpenMarkerId(openMarkerId === point.id ? null : point.id);
+                }}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  pointerDownRef.current = {
+                    id: point.id,
+                    x: event.clientX,
+                  };
+                }}
+                aria-label={`Select breakpoint at ${point.position.toFixed(2)}`}
+              />
             ))}
           </div>
         </div>
