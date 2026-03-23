@@ -160,11 +160,18 @@ const NanoOtzi = observer(({ open, close }: Props) => {
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
-      window.WasmModule.FS.writeFile(settingsFileName, JSON.stringify(rawData));
+      const inferenceRunnerSettings = {
+        ...settings,
+        ratio: { x: 1, y: 1, z: 1 },
+      };
+
+      window.WasmModule.FS.writeFile(
+        settingsFileName,
+        JSON.stringify(inferenceRunnerSettings)
+      );
 
       window.WasmModule.FS.writeFile(settings.file, rawDataFile);
 
-      //LOL error when calling this api
       const checkpointTxt = await checkpointToText(inferenceCheckpointId);
 
       window.WasmModule.FS.writeFile("parameters.txt", checkpointTxt);

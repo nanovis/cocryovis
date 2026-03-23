@@ -176,6 +176,7 @@ const Local = observer(({ open, close }: Props) => {
         throw new Error("Failed to read the settings file.");
       }
       const settings = volumeSettings.parse(JSON.parse(settingsFile));
+      const inferneceSettings = { ...settings, ratio: { x: 1, y: 1, z: 1 } };
 
       const settingsFileName = settings.file.replace(/\.[^/.]+$/, "") + ".json";
 
@@ -184,7 +185,10 @@ const Local = observer(({ open, close }: Props) => {
       // This allows the toast to update, hopefully...
       await new Promise((r) => setTimeout(r, 1000));
 
-      window.WasmModule.FS.writeFile(settingsFileName, settingsFile);
+      window.WasmModule.FS.writeFile(
+        settingsFileName,
+        JSON.stringify(inferneceSettings)
+      );
 
       window.WasmModule.FS.writeFile(settings.file, rawData);
 
