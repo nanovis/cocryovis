@@ -27,17 +27,22 @@ export const TransferFunctionBreakpoint = types
     position: types.number,
     color: types.string, // Hex/hexa color string, e.g., "#ff0000"
   })
+  .volatile((self) => ({
+    hue: Color(self.color).hue(),
+    saturation: Color(self.color).saturationv() / 100,
+    value: Color(self.color).value() / 100,
+    alpha: Color(self.color).alpha(),
+  }))
   .views((self) => ({
     get transferFunction(): TransferFunctionInstance {
       return getParentOfType(self, TransferFunction);
     },
     get hsv() {
-      const color = Color(self.color).hsv();
       return {
-        h: color.hue(),
-        s: color.saturationv() / 100,
-        v: color.value() / 100,
-        a: color.alpha(),
+        h: self.hue,
+        s: self.saturation,
+        v: self.value,
+        a: self.alpha,
       };
     },
     get red() {
@@ -58,10 +63,17 @@ export const TransferFunctionBreakpoint = types
       self.position = clamp(position, 0, 1);
       self.transferFunction.updateRenderer();
     },
-    setColor(color: string) {
+    setColor(color: string, setHsv = true) {
       try {
-        self.color = Color(color).hexa();
+        const c = Color(color);
+        self.color = c.hexa();
         self.transferFunction.updateRenderer();
+        if (setHsv) {
+          self.hue = c.hue();
+          self.saturation = c.saturationv() / 100;
+          self.value = c.value() / 100;
+          self.alpha = c.alpha();
+        }
       } catch {
         // Invalid color string, ignore the update
       }
@@ -71,7 +83,11 @@ export const TransferFunctionBreakpoint = types
         const color = Color.hsv(hue, saturation * 100, value * 100).alpha(
           alpha
         );
-        this.setColor(color.hexa());
+        this.setColor(color.hexa(), false);
+        self.hue = hue;
+        self.saturation = saturation;
+        self.value = value;
+        self.alpha = alpha;
       } catch {
         // Invalid HSV values, ignore the update
       }
