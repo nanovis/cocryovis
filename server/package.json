@@ -54,8 +54,8 @@
     "helmet": "^8.1.0",
     "npm-check-updates": "^19.6.5",
     "swagger-ui-express": "^5.0.1",
-    "ws": "^8.19.0",
-    "yaml": "^2.8.2",
+    "ws": "^8.20.0",
+    "yaml": "^2.8.3",
     "zod": "^4.3.6",
     "zod-openapi": "^5.4.6",
     "zod-validation-error": "^5.0.0"
@@ -73,7 +73,7 @@
     "@types/node": "^25.5.0",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/ws": "^8.18.1",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "eslint-plugin-jsdoc": "^62.8.0",
     "globals": "^17.4.0",
     "nodemon": "^3.1.14",
@@ -82,6 +82,6 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.57.2"
   }
 }
