@@ -14,6 +14,7 @@ import {
   AccordionHeader,
   AccordionPanel,
   Text,
+  mergeClasses,
 } from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
@@ -350,8 +351,14 @@ const NanoOtzi = observer(({ open, close }: Props) => {
     modelTraining.removeTestingVolumeByIndex(index);
   };
 
-  return open ? (
-    <div className={globalClasses.leftSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.leftSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div
         className={globalClasses.sidebarContents}
         style={{ marginBottom: "15px" }}
@@ -674,7 +681,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 });
 
 export default NanoOtzi;

@@ -16,13 +16,13 @@ import globalStyles from "../../globalStyles";
 import type { TiltSeriesOptions } from "../../shared/ProcessTiltSeriesDialog";
 import ProcessTiltSeriesDialog from "../../shared/ProcessTiltSeriesDialog";
 import { useRef, useState } from "react";
-import * as Utils from "../../../utils/helpers";
+import * as Utils from "@/utils/helpers";
 import JSZip from "jszip";
 import saveAs from "file-saver";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
-import { checkpointFileToText } from "../../../api/checkpoint";
-import ToastContainer from "../../../utils/toastContainer";
+import { useMst } from "@/stores/RootStore";
+import { checkpointFileToText } from "@/api/checkpoint";
+import ToastContainer from "@/utils/toastContainer";
 import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
 const useStyles = makeStyles({
@@ -286,8 +286,14 @@ const Local = observer(({ open, close }: Props) => {
     }
   };
 
-  return open ? (
-    <div className={globalClasses.leftSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.leftSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>
           <h1>Local Functions</h1>
@@ -445,6 +451,6 @@ const Local = observer(({ open, close }: Props) => {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 });
 export default Local;

@@ -257,8 +257,14 @@ const Visualization = observer(({ open, close }: Props) => {
     );
   };
 
-  return open ? (
-    <div className={globalClasses.rightSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.rightSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>
           <h1>Visualization</h1>
@@ -571,7 +577,7 @@ const Visualization = observer(({ open, close }: Props) => {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 });
 
 const ClippingPlaneOffsetSlider = observer(

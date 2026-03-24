@@ -234,8 +234,14 @@ const Models = observer(({ open, close }: Props) => {
     }
   };
 
-  return open ? (
-    <div className={globalClasses.leftSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.leftSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>
           <h1>Neural Models</h1>
@@ -517,7 +523,7 @@ const Models = observer(({ open, close }: Props) => {
         isActive={!!projectModels?.createModelActiveRequest}
       />
     </div>
-  ) : null;
+  );
 });
 
 export default Models;

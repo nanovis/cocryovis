@@ -4,6 +4,7 @@ import {
   Text,
   List,
   ListItem,
+  mergeClasses,
 } from "@fluentui/react-components";
 import globalStyles from "../../globalStyles";
 import { ArrowCircleRight28Regular, Open24Filled } from "@fluentui/react-icons";
@@ -16,8 +17,14 @@ interface Props {
 const About = ({ open, close }: Props) => {
   const globalClasses = globalStyles();
 
-  return open ? (
-    <div className={globalClasses.rightSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.rightSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>
           <h1>About</h1>
@@ -139,7 +146,7 @@ const About = ({ open, close }: Props) => {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 };
 
 export default About;

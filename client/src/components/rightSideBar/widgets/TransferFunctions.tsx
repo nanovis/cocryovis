@@ -22,6 +22,7 @@ import {
   AlphaSlider,
   ColorSlider,
   SpinButton,
+  mergeClasses,
 } from "@fluentui/react-components";
 import Color from "color";
 import TransferFunctionWidget from "@/components/shared/TransferFunctionWidget";
@@ -58,8 +59,11 @@ const TransferFunctions = observer(({ open, close }: Props) => {
 
   return (
     <div
-      style={{ display: open ? "block" : "none" }}
-      className={globalClasses.rightSidebar}
+      className={mergeClasses(
+        globalClasses.rightSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
     >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>

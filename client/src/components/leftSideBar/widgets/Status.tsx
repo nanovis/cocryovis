@@ -1,5 +1,11 @@
 //Status.js
-import { makeStyles, TabList, Tab, Spinner } from "@fluentui/react-components";
+import {
+  makeStyles,
+  TabList,
+  Tab,
+  Spinner,
+  mergeClasses,
+} from "@fluentui/react-components";
 import {
   ArrowCircleLeft28Regular,
   bundleIcon,
@@ -15,7 +21,7 @@ import UserHistoryTable from "./elements/UserHistoryTable";
 import TaskQueueTable from "./elements/TaskQueueTable";
 import Paganation from "../../shared/Pagination";
 import { getErrorMessage } from "@/utils/helpers";
-import ToastContainer from "../../../utils/toastContainer";
+import ToastContainer from "@/utils/toastContainer";
 import { usePolling } from "@/hooks/usePooling";
 import GpuStatus from "./elements/GpuStatus";
 
@@ -87,8 +93,15 @@ const Status = observer(({ open, close }: Props) => {
     }
   }
 
-  return open ? (
-    <div className={globalClasses.leftSidebar} style={{ width: "700px" }}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.leftSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+      style={{ width: "700px" }}
+    >
       <div className={classes.contents}>
         <div className={classes.header}>
           <h1>Status</h1>
@@ -180,7 +193,7 @@ const Status = observer(({ open, close }: Props) => {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 });
 
 export default Status;

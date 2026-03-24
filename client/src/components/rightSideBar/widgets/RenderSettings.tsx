@@ -4,11 +4,12 @@ import {
   Slider,
   Switch,
   Text,
+  mergeClasses,
 } from "@fluentui/react-components";
 import { ArrowCircleRight28Regular } from "@fluentui/react-icons";
 import globalStyles from "../../globalStyles";
 import { observer } from "mobx-react-lite";
-import { useMst } from "../../../stores/RootStore";
+import { useMst } from "@/stores/RootStore";
 
 const useStyles = makeStyles({
   colorPicker: {
@@ -76,8 +77,14 @@ const RenderSettings = observer(({ open, close }: Props) => {
     );
   };
 
-  return open ? (
-    <div className={globalClasses.rightSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.rightSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>
           <h1>Render Settings</h1>
@@ -387,7 +394,7 @@ const RenderSettings = observer(({ open, close }: Props) => {
         </div>
       </div>
     </div>
-  ) : null;
+  );
 });
 
 export default RenderSettings;

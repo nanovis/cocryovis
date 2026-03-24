@@ -777,8 +777,14 @@ const Volume = observer(({ open, close }: Props) => {
     return selectedVolume && visualizedVolume?.canEditLabels;
   };
 
-  return open ? (
-    <div className={globalClasses.leftSidebar}>
+  return (
+    <div
+      className={mergeClasses(
+        globalClasses.leftSidebar,
+        !open && globalClasses.invisible
+      )}
+      aria-hidden={!open}
+    >
       <div className={globalClasses.sidebarContents}>
         <div className={globalClasses.sidebarHeader}>
           <h1>Data</h1>
@@ -1638,7 +1644,7 @@ const Volume = observer(({ open, close }: Props) => {
         isActive={!!volumeResults?.removeResultActiveRequest}
       />
     </div>
-  ) : null;
+  );
 });
 
 export default Volume;
