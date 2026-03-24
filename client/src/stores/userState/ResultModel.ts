@@ -79,7 +79,7 @@ export const VolumeResults = types
       });
     },
     removeResult: flow(function* removeResult(resultId: number) {
-      yield deleteResult(self.volumeId);
+      yield deleteResult(resultId);
       if (!isAlive(self)) {
         return;
       }
