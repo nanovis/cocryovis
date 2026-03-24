@@ -7,6 +7,9 @@ import {
   Button,
   Divider,
   Link,
+  Popover,
+  PopoverSurface,
+  PopoverTrigger,
   tokens,
   Tooltip,
 } from "@fluentui/react-components";
@@ -36,11 +39,23 @@ const enum WidgetIndices {
   About = 3,
 }
 
+const USER_MANUAL_POPOVER_KEY = "volweb_user_manual_popover_seen";
+
 const SideControls = observer(() => {
-  const { uiState, pageDisabled } = useMst();
+  const { uiState, pageDisabled, wasmLoaded } = useMst();
   const globalClasses = globalStyles();
 
   const [isVisDialogOpen, setIsVisDialogOpen] = useState(false);
+  const [showUserManualPopover, setShowUserManualPopover] = useState(
+    () =>
+      import.meta.env.VITE_ALWAYS_FIRST_TIME === "true" ||
+      !localStorage.getItem(USER_MANUAL_POPOVER_KEY)
+  );
+
+  const dismissUserManualPopover = () => {
+    localStorage.setItem(USER_MANUAL_POPOVER_KEY, "true");
+    setShowUserManualPopover(false);
+  };
 
   const visualizeVolume = async (volumeDescriptor: VolumeDescriptor) => {
     const toastContainer = new ToastContainer();
@@ -146,27 +161,61 @@ const SideControls = observer(() => {
             disabled={pageDisabled}
           />
 
-          <Link
-            target="_"
-            href={`https://docs.google.com/document/d/e/2PACX-1vQjgHSJ-kbe5bFp9JzaNPWlbikrnTgdI2qDPw3l4bJ8cBBG4nP9Mq-aS_cxLYYdUgaD01xbrsIAPFT9/pub`}
+          <Popover
+            open={showUserManualPopover && wasmLoaded}
+            withArrow={true}
+            positioning="before"
+            appearance="inverted"
+            onOpenChange={(_event, data) => {
+              if (!data.open && showUserManualPopover) {
+                dismissUserManualPopover();
+              }
+            }}
           >
-            <Tooltip
-              content="User Manual [Opens in new tab]"
-              relationship="label"
-              appearance="inverted"
-              positioning="before"
-              showDelay={0}
-              hideDelay={0}
-              withArrow={true}
-            >
-              <Button
-                appearance="subtle"
-                size="large"
-                className={globalClasses.widgetButton}
-                icon={<BookInformationRegular />}
-              />
-            </Tooltip>
-          </Link>
+            <PopoverTrigger>
+              <Link
+                target="_"
+                href={`https://docs.google.com/document/d/e/2PACX-1vQjgHSJ-kbe5bFp9JzaNPWlbikrnTgdI2qDPw3l4bJ8cBBG4nP9Mq-aS_cxLYYdUgaD01xbrsIAPFT9/pub`}
+                onClick={dismissUserManualPopover}
+              >
+                <Tooltip
+                  content="User Manual [Opens in new tab]"
+                  relationship="label"
+                  appearance="inverted"
+                  positioning="before"
+                  showDelay={0}
+                  hideDelay={0}
+                  withArrow={true}
+                >
+                  <Button
+                    appearance="subtle"
+                    size="large"
+                    className={globalClasses.widgetButton}
+                    icon={<BookInformationRegular />}
+                  />
+                </Tooltip>
+              </Link>
+            </PopoverTrigger>
+            <PopoverSurface>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  maxWidth: 240,
+                }}
+              >
+                <span>Open the User Manual for a quick walkthrough.</span>
+                <Button
+                  size="small"
+                  appearance="primary"
+                  onClick={dismissUserManualPopover}
+                >
+                  Got it
+                </Button>
+              </div>
+            </PopoverSurface>
+          </Popover>
 
           <WidgetToggleButton
             title={"About"}
