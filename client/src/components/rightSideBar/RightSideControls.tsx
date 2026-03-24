@@ -3,10 +3,17 @@ import RenderSettings from "./widgets/RenderSettings";
 import { observer } from "mobx-react-lite";
 import { useMst } from "@/stores/RootStore";
 import globalStyles from "../globalStyles";
-import { Button, Divider, tokens, Tooltip } from "@fluentui/react-components";
+import {
+  Button,
+  Divider,
+  Link,
+  tokens,
+  Tooltip,
+} from "@fluentui/react-components";
 import WidgetToggleButton from "../shared/WidgetToggleButton";
 import {
   ArrowUpload24Regular,
+  BookInformationRegular,
   BorderNone24Regular,
   DataLine24Regular,
   Info24Regular,
@@ -138,6 +145,28 @@ const SideControls = observer(() => {
             }
             disabled={pageDisabled}
           />
+
+          <Link
+            target="_"
+            href={`https://docs.google.com/document/d/e/2PACX-1vQjgHSJ-kbe5bFp9JzaNPWlbikrnTgdI2qDPw3l4bJ8cBBG4nP9Mq-aS_cxLYYdUgaD01xbrsIAPFT9/pub`}
+          >
+            <Tooltip
+              content="User Manual [Opens in new tab]"
+              relationship="label"
+              appearance="inverted"
+              positioning="before"
+              showDelay={0}
+              hideDelay={0}
+              withArrow={true}
+            >
+              <Button
+                appearance="subtle"
+                size="large"
+                className={globalClasses.widgetButton}
+                icon={<BookInformationRegular />}
+              />
+            </Tooltip>
+          </Link>
 
           <WidgetToggleButton
             title={"About"}

@@ -1,13 +1,6 @@
-import {
-  Link,
-  Tooltip,
-  Text,
-  List,
-  ListItem,
-  mergeClasses,
-} from "@fluentui/react-components";
+import { Text, List, ListItem, mergeClasses } from "@fluentui/react-components";
 import globalStyles from "../../globalStyles";
-import { ArrowCircleRight28Regular, Open24Filled } from "@fluentui/react-icons";
+import { ArrowCircleRight28Regular } from "@fluentui/react-icons";
 
 interface Props {
   open: boolean;
@@ -38,33 +31,6 @@ const About = ({ open, close }: Props) => {
           </div>
         </div>
         <div className={globalClasses.siderbarBody}>
-          <h2
-            style={{
-              display: "flex",
-            }}
-          >
-            User Manual
-            <Link
-              style={{
-                marginLeft: "10px",
-                display: "flex",
-              }}
-              target="_"
-              href={`https://docs.google.com/document/d/e/2PACX-1vQjgHSJ-kbe5bFp9JzaNPWlbikrnTgdI2qDPw3l4bJ8cBBG4nP9Mq-aS_cxLYYdUgaD01xbrsIAPFT9/pub`}
-            >
-              <Tooltip
-                content="Open User Manual (Google Drive)"
-                relationship="label"
-                appearance="inverted"
-                positioning="after"
-                withArrow={true}
-              >
-                <Open24Filled />
-              </Tooltip>
-            </Link>
-          </h2>
-
-          <h2>About CoCryoViS</h2>
           <Text>
             <strong>CoCryoViS</strong> is a web-based system designed to support
             tomographic reconstruction, segmentation, and visualization of
