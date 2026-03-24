@@ -160,11 +160,11 @@ export const VisualizedVolume = types
       return self.volume !== undefined;
     },
     get renderer(): VolumeRenderer | null {
-      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      const rootStore = getParentOfType(self, RootStore);
       return rootStore.renderer;
     },
     get orbitCameraController(): OrbitCameraController | null {
-      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      const rootStore = getParentOfType(self, RootStore);
       return rootStore.orbitCameraController;
     },
   }))
@@ -196,7 +196,7 @@ export const VisualizedVolume = types
       } else if (getType(visualizedObject) === PseudoLabelVolume) {
         self.pseudoLabelVolume = visualizedObject as PseudoVolumeInstance;
       } else if (getType(visualizedObject) === SparseLabelVolume) {
-        self.pseudoLabelVolume = visualizedObject as SparseVolumeInstance;
+        self.sparseLabelVolume = visualizedObject as SparseVolumeInstance;
       }
     },
     setFullscreen(enable: boolean) {
