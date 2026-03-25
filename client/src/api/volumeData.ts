@@ -1,5 +1,9 @@
 import type z from "zod";
 import * as Utils from "../utils/helpers";
+import {
+  maybeCompressFileToZip,
+  type OptionalCompressionConfig,
+} from "../utils/compression";
 import type { rawVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/raw-volume-data-schema";
 import type { sparseLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/sparse-label-volume-data-schema";
 import type { pseudoLabelVolumeDataSchema } from "@cocryovis/schemas/componentSchemas/pseudo-label-volume-data-schema";
@@ -78,10 +82,16 @@ export async function getVolumeVisualizationFiles(
 export async function createFromFiles<T extends keyof VolumeDataMap>(
   type: T,
   id: number,
-  request: z.input<typeof createFromFilesSchema>
+  request: z.input<typeof createFromFilesSchema>,
+  compressionOptions?: OptionalCompressionConfig
 ) {
   const formData = new FormData();
-  formData.append("rawFile", request.rawFile);
+  const fileToUpload = await maybeCompressFileToZip(
+    request.rawFile,
+    compressionOptions
+  );
+
+  formData.append("rawFile", fileToUpload);
   formData.append("settings", JSON.stringify(request.volumeSettings));
   const response = await Utils.sendApiRequest(
     `volume/${id}/volumeData/${type}/from-files`,
@@ -95,13 +105,25 @@ export async function createFromFiles<T extends keyof VolumeDataMap>(
   return volumeData;
 }
 
-export async function createFromMrcFile(id: number, request: FormData) {
+export async function createFromMrcFile(
+  id: number,
+  mrcFile: File,
+  compressionOptions?: OptionalCompressionConfig
+) {
+  const formData = new FormData();
+
+  const compressedFile = await maybeCompressFileToZip(
+    mrcFile,
+    compressionOptions
+  );
+
+  formData.append("files", compressedFile);
   const response = await Utils.sendApiRequest(
     `volume/${id}/volumeData/RawVolumeData/from-mrc-file`,
     {
       method: "POST",
       credentials: "include",
-      body: request,
+      body: formData,
     }
   );
   const rawVolumeData = (await response.json()) as RawVolumeData;
@@ -128,10 +150,16 @@ export async function createFromUrl(
 export async function updateAnnotations(
   idVolume: number,
   idVolumeData: number,
-  request: z.input<typeof updateAnnotationsSchema>
+  request: z.input<typeof updateAnnotationsSchema>,
+  compressionOptions?: OptionalCompressionConfig
 ) {
   const formData = new FormData();
-  formData.append("rawFile", request.rawFile);
+
+  const fileToUpload = await maybeCompressFileToZip(
+    request.rawFile,
+    compressionOptions
+  );
+  formData.append("rawFile", fileToUpload);
 
   const response = await Utils.sendApiRequest(
     `volume/${idVolume}/volumeData/SparseLabeledVolumeData/${idVolumeData}/update-annotations`,

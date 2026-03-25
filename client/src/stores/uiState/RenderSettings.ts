@@ -33,7 +33,7 @@ export const RenderSettings = types
   })
   .views((self) => ({
     get renderer(): VolumeRenderer | null {
-      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      const rootStore = getParentOfType(self, RootStore);
       return rootStore.renderer;
     },
   }))

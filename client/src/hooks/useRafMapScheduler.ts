@@ -4,7 +4,7 @@ export function useRafMapScheduler<K, V>(
   applyUpdates: (updates: Map<K, V>) => void
 ) {
   const frameRequestRef = useRef<number | null>(null);
-  const pendingRef = useRef<Map<K, V>>(new Map());
+  const pendingRef = useRef(new Map<K, V>());
 
   const flush = useCallback(() => {
     frameRequestRef.current = null;

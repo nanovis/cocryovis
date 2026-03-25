@@ -87,6 +87,7 @@ import {
 import type z from "zod";
 import type { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import Color from "color";
+import { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -354,17 +355,15 @@ const Volume = observer(({ open, close }: Props) => {
         if (!file.name.endsWith(".ali") && !file.name.endsWith(".mrc")) {
           throw new Error("Wrong file format.");
         }
+        const parsedOptions = tiltSeriesOptions.parse(options);
 
-        const formData = new FormData();
-        formData.append("tiltSeries", file);
-        formData.append(
-          "data",
-          JSON.stringify({
+        await queueTiltSeriesReconstruction({
+          tiltSeries: file,
+          data: {
             volumeId: selectedVolumeId,
-            options: options,
-          })
-        );
-        await queueTiltSeriesReconstruction(formData);
+            options: parsedOptions,
+          },
+        });
         toastContainer.success(
           "Tilt series reconstruction successfuly queued!"
         );

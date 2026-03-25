@@ -5,7 +5,7 @@ import prismaManager from "../tools/prisma-manager.mjs";
 import path from "path";
 import fs from "fs";
 import { ApiError } from "../tools/error-handler.mjs";
-import { PendingFile } from "../tools/file-handler.mjs";
+import { PendingUpload } from "../tools/file-handler.mjs";
 import ResultDataFile from "./result-data-file.mjs";
 
 /**
@@ -32,7 +32,7 @@ export default class ResultVolume extends DatabaseModel {
 
   /**
    * @param {number} resultId
-   * @param {string | PendingFile} file
+   * @param {string | PendingUpload} file
    * @param {Omit<import("@prisma/client").Prisma.ResultVolumeCreateInput, "result" | "dataFile">} volumeParameters
    * @param {import("@prisma/client").Prisma.TransactionClient} client
    * @returns {Promise<ResultVolumeDB>}
@@ -60,7 +60,7 @@ export default class ResultVolume extends DatabaseModel {
 
       newDirectory = await ResultDataFile.createDirectory(volume.id);
       let newFilePath;
-      if (file instanceof PendingFile) {
+      if (file instanceof PendingUpload) {
         newFilePath = await file.saveAs(newDirectory);
       } else {
         const filePath = path.resolve(file);

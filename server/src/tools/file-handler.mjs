@@ -339,12 +339,16 @@ export class PendingData extends PendingUpload {
 }
 
 /**
- * @param {fileUpload.UploadedFile[]} files
+ * @param {fileUpload.UploadedFile | fileUpload.UploadedFile[]} files
  * @param {string[]?} acceptedExtensions
  * @returns {Promise<PendingUpload[]>}
  */
 export async function unpackFiles(files, acceptedExtensions = []) {
   const result = [];
+
+  if (!Array.isArray(files)) {
+    files = [files];
+  }
 
   for (const file of files) {
     if (path.extname(file.name) === ".zip") {

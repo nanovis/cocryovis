@@ -11,6 +11,7 @@
     "buffer-backed-object": "github:Scurek/buffer-backed-object#main",
     "color": "^5.0.3",
     "detect-browser": "^5.3.0",
+    "fflate": "^0.8.2",
     "file-saver": "^2.0.5",
     "gl-matrix": "^3.4.4",
     "js-cookie": "^3.0.5",

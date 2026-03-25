@@ -1,7 +1,6 @@
-import type { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
+import { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
 import { ApiError } from "../tools/error-handler.mjs";
 import { type Request, type Response } from "express";
-import type z from "zod";
 import type ReconstructionHandler from "../tools/reconstruction-handler";
 
 export default class PreProcessingController {
@@ -28,17 +27,19 @@ export default class PreProcessingController {
     }
     const body = req.body as { data: string };
 
-    // Check if zod parses json
     const data = JSON.parse(body.data) as {
-      options: z.infer<typeof tiltSeriesOptions>;
+      options: unknown;
       volumeId: number;
     };
+
+    const options = tiltSeriesOptions.parse(data.options);
+    const volumeId = data.volumeId;
 
     const taskHistory =
       await reconstructionHandler.queueTiltSeriesReconstruction(
         req.files.tiltSeries,
-        data.options,
-        data.volumeId,
+        options,
+        volumeId,
         req.session.user.id
       );
 

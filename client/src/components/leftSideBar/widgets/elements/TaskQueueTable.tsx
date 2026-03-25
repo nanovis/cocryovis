@@ -54,8 +54,7 @@ interface Props {
 const TaskQueueTable = observer(({ taskQueueItems }: Props) => {
   const globalClasses = globalStyles();
 
-  const [columns] =
-    useState<TableColumnDefinition<TaskQueueItem>[]>(columnsDef);
+  const [columns] = useState(columnsDef);
 
   const [columnSizingOptions] = useState<TableColumnSizingOptions>({
     taskStatus: {

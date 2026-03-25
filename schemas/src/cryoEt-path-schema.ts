@@ -60,11 +60,11 @@ export const tomogramSchema = z.object({
 
 export const reconstructionOptions = z.object({
   volume_depth: z.int().positive(),
-  tiled: z.boolean().default(true),
-  crop: z.boolean().default(true),
-  is_data_linearized: z.boolean().default(false),
-  delinearize_result: z.boolean().default(true),
-  data_term_end: z.boolean().default(false),
+  tiled: z.coerce.boolean().default(true),
+  crop: z.coerce.boolean().default(true),
+  is_data_linearized: z.coerce.boolean().default(false),
+  delinearize_result: z.coerce.boolean().default(true),
+  data_term_end: z.coerce.boolean().default(false),
   data_term_iters: z.int().min(1).max(20).default(2),
   proximal_iters: z.int().min(1).max(200).default(80),
   sample_rate: z.number().min(0.25).max(1).default(0.5),

@@ -496,3 +496,14 @@ export function toInferenceSettingSchema(
     addValue: volumeData.addValue,
   };
 }
+
+export function toBlobSafeUint8Array(
+  data: Uint8Array
+): Uint8Array<ArrayBuffer> {
+  // Prevents the issue when Uint8Array is Uint8Array<SharedArrayBuffer> which is not accepted by Blob constructor
+  if (data.buffer instanceof ArrayBuffer) {
+    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  }
+
+  return new Uint8Array(data);
+}

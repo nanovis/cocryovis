@@ -70,7 +70,7 @@ const VolumeEditDialog = ({
     register,
     reset,
     formState: { errors, isSubmitting, isValid },
-  } = useForm<VolumeUpdateSchema>({
+  } = useForm({
     resolver: zodResolver(volumeUpdateSchema),
     mode: "onChange",
     defaultValues: defaults,

@@ -6,7 +6,7 @@ import RawVolumeData from "../models/raw-volume-data.mjs";
 import { WriteMultiLock } from "./write-lock-manager.mjs";
 import { ApiError } from "./error-handler.mjs";
 import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
-import { PendingLocalFile } from "./file-handler.mjs";
+import { PendingLocalFile, unpackFiles } from "./file-handler.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import appConfig from "./config.mjs";
 import type z from "zod";
@@ -148,12 +148,30 @@ export default class ReconstructionHandler {
       outputPath = this.createTemporaryOutputPath();
     }
 
+    let inputFile: string | undefined;
+    try {
+      await fs.promises.mkdir(outputPath, { recursive: true });
+      const files = await unpackFiles(tiltSeriesFile);
+      if (files.length === 0) {
+        throw new ApiError(
+          400,
+          "Failed Attempt to start tilt series reconstruction: No valid tilt series file uploaded."
+        );
+      }
+      const file = files[0];
+      inputFile = await file.saveAs(outputPath);
+    } catch (error) {
+      const errorMessage = Utils.formatError(error);
+      throw new ApiError(
+        500,
+        `Failed to save tilt series file: ${errorMessage}`
+      );
+    }
+
     try {
       await this.validateReconstructionInput(tiltSeriesFile, options, volumeId);
 
-      await fs.promises.mkdir(outputPath, { recursive: true });
-
-      let inputFileAbsolutePath = path.resolve(tiltSeriesFile.tempFilePath);
+      let inputFileAbsolutePath = path.resolve(inputFile);
 
       if (options.alignment !== undefined) {
         inputFileAbsolutePath = await this.runIMODTiltSeriesAlignment(
@@ -186,7 +204,7 @@ export default class ReconstructionHandler {
 
       await logFile?.writeLog("Tilt series reconstruction started\n");
 
-      const inputFileName = Utils.stripExtension(tiltSeriesFile.name);
+      const inputFileName = Utils.stripExtension(inputFile);
 
       const outputAbsolutePath = path.resolve(
         path.join(outputPath, inputFileName)
@@ -202,7 +220,11 @@ export default class ReconstructionHandler {
       if (options.reconstruction) {
         for (const [key, value] of Object.entries(options.reconstruction)) {
           params.push(key);
-          params.push(value.toString());
+          if (typeof value === "boolean") {
+            params.push(value ? "1" : "0");
+          } else {
+            params.push(value.toString());
+          }
         }
       }
 
@@ -271,12 +293,21 @@ export default class ReconstructionHandler {
           "Inference: Failed to remove the temporary setting file."
         );
       }
+      try {
+        await fs.promises.rm(inputFile, {
+          force: true,
+        });
+      } catch {
+        console.error(
+          "Inference: Failed to remove the temporary setting file."
+        );
+      }
     }
   }
 
   private async runIMODTiltSeriesAlignment(
-    inputPath: string,
     outputFolder: string,
+    inputPath: string,
     options: z.infer<typeof IMODOptions>,
     logFile?: LogFile
   ): Promise<string> {

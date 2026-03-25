@@ -124,10 +124,10 @@ export const Volume = types
       return Array.from(self.pseudoVolumes.values());
     },
     get root(): RootInstance {
-      return getParentOfType<typeof RootStore>(self, RootStore);
+      return getParentOfType(self, RootStore);
     },
     get renderer(): VolumeRenderer | null {
-      const rootStore = getParentOfType<typeof RootStore>(self, RootStore);
+      const rootStore = getParentOfType(self, RootStore);
       return rootStore.renderer;
     },
     get comboboxOption(): VolumeComboboxOption {
@@ -309,10 +309,7 @@ export const Volume = types
         throw new Error("Too many files selected.");
       }
 
-      const formData = new FormData();
-      formData.append("files", mrcFile);
-
-      const rawData = (yield createFromMrcFile(self.id, formData)) as z.infer<
+      const rawData = (yield createFromMrcFile(self.id, mrcFile)) as z.infer<
         typeof rawVolumeDataSchema
       >;
 

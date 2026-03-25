@@ -31,7 +31,7 @@ export const SparseLabelVolume = types
   })
   .views((self) => ({
     get renderer(): VolumeRenderer | null {
-      return getParentOfType<typeof RootStore>(self, RootStore).renderer;
+      return getParentOfType(self, RootStore).renderer;
     },
   }))
   .actions((self) => ({

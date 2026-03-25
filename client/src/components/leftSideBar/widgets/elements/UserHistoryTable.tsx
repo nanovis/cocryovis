@@ -87,8 +87,7 @@ const UserHistoryTable = observer(({ taskHistoryItems }: Props) => {
   const classes = useStyles();
   const globalClasses = globalStyles();
 
-  const [columns] =
-    useState<TableColumnDefinition<TaskHistoryItem>[]>(columnsDef);
+  const [columns] = useState(columnsDef);
 
   const [columnSizingOptions] = useState<TableColumnSizingOptions>({
     taskStatus: {

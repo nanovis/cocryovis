@@ -10,7 +10,7 @@ import RawVolumeData from "./raw-volume-data.mjs";
 import WriteLockManager from "../tools/write-lock-manager.mjs";
 import { ApiError, MissingResourceError } from "../tools/error-handler.mjs";
 import fileUpload from "express-fileupload";
-import { PendingFile } from "../tools/file-handler.mjs";
+import { unpackFiles } from "../tools/file-handler.mjs";
 import Utils from "../tools/utils.mjs";
 import { Prisma } from "@prisma/client";
 import ResultVolume from "./result-volume.mjs";
@@ -246,7 +246,7 @@ export default class Result extends DatabaseModel {
       throw new ApiError(400, "Source Volume Data is missing a raw file.");
     }
 
-    const pendingFiles = files.map((file) => new PendingFile(file));
+    const pendingFiles = await unpackFiles(files);
 
     const resultsFolderPath = path.join(appConfig.dataPath, this.resultsFolder);
 

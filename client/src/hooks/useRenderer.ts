@@ -39,7 +39,7 @@ export default function useRenderer(
   }
 ) {
   const rendererRef = useRef<VolumeRenderer | null>(null);
-  const onReadyRef = useRef<typeof onReady>(onReady);
+  const onReadyRef = useRef(onReady);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 

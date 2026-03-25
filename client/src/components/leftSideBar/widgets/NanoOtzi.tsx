@@ -190,7 +190,8 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       toastContainer.loading("Sending data to server...");
       const volumeDescriptors = [];
 
-      const formData = new FormData();
+      const files: File[] = [];
+
       for (const [i, volume] of volumeData.entries()) {
         const blob = new Blob([new Uint8Array(volume)], {
           type: "application/octet-stream",
@@ -199,7 +200,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         const fileName = `volume_${i}`;
         const rawFileName = `${fileName}.raw`;
 
-        formData.append("files", blob, rawFileName);
+        files.push(new File([blob], rawFileName));
 
         const volSettings = { ...settings };
         volSettings.file = rawFileName;
@@ -232,15 +233,13 @@ const NanoOtzi = observer(({ open, close }: Props) => {
         }
       }
 
-      formData.append(
-        "data",
-        JSON.stringify({
-          idCheckpoint: inferenceCheckpointId,
-          volumeDescriptors: volumeDescriptors,
-        })
-      );
-
-      await createResultFromFiles(volume.id, formData);
+      await createResultFromFiles(volume.id, {
+        idCheckpoint: inferenceCheckpointId,
+        volumeDescriptors: volumeDescriptors,
+        files: {
+          files: files,
+        },
+      });
 
       toastContainer.success("Local Inference Successful!");
 

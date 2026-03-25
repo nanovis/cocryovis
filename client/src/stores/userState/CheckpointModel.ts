@@ -100,15 +100,9 @@ export const ModelCheckpoints = types
         }
       }
 
-      const formData = new FormData();
-      for (const file of files) {
-        formData.append("files", file);
-      }
-
-      const checkpoints = (yield checkpointApi.uploadCheckpoints(
-        self.modelId,
-        formData
-      )) as z.infer<typeof checkpointSchemaArray>;
+      const checkpoints = (yield checkpointApi.uploadCheckpoints(self.modelId, {
+        files: Array.from(files),
+      })) as z.infer<typeof checkpointSchemaArray>;
       if (!isAlive(self)) {
         return;
       }
