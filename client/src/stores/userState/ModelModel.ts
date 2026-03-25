@@ -58,7 +58,6 @@ export const ProjectModels = types
         : undefined;
     },
     get modelComboboxOptions(): ModelComboboxOption[] {
-      console.log("Computing modelComboboxOptions");
       return Array.from(self.models.values()).map(
         (model) => model.comboboxOption
       );

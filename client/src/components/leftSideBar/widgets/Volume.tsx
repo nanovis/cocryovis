@@ -136,22 +136,11 @@ const Volume = observer(({ open, close }: Props) => {
 
   const activeProject = user.userProjects.activeProject;
   const projectVolumes = user.userProjects.activeProject?.projectVolumes;
-  const selectedVolumeId =
-    user.userProjects.activeProject?.projectVolumes.selectedVolumeId;
-  const selectedVolume =
-    user.userProjects.activeProject?.projectVolumes.selectedVolume;
-  const volumeResults =
-    user.userProjects.activeProject?.projectVolumes.selectedVolume
-      ?.volumeResults;
-  const selectedResultId =
-    user.userProjects.activeProject?.projectVolumes.selectedVolume
-      ?.volumeResults.selectedResultId;
-  const selectedResult =
-    user.userProjects.activeProject?.projectVolumes.selectedVolume
-      ?.volumeResults.selectedResult;
-  const results =
-    user.userProjects.activeProject?.projectVolumes.selectedVolume
-      ?.volumeResults.results;
+  const selectedVolume = projectVolumes?.selectedVolume;
+  const volumeResults = selectedVolume?.volumeResults;
+  const selectedResultId = selectedVolume?.volumeResults.selectedResultId;
+  const selectedResult = selectedVolume?.volumeResults.selectedResult;
+  const results = selectedVolume?.volumeResults.results;
   const visualizedVolume = uiState.visualizedVolume;
 
   const classes = useStyles();
@@ -271,13 +260,13 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const confirmDeleteVolume = async () => {
-    if (selectedVolumeId === undefined || !projectVolumes) {
+    if (selectedVolume === undefined || !projectVolumes) {
       return;
     }
     const toastContainer = new ToastContainer();
     try {
       projectVolumes.setRemoveVolumeActiveRequest(true);
-      await projectVolumes.removeVolume(selectedVolumeId);
+      await projectVolumes.removeVolume(selectedVolume.id);
       closeDeleteDialog();
       toastContainer.success("Volume removed from project!");
     } catch (error) {
@@ -344,7 +333,7 @@ const Volume = observer(({ open, close }: Props) => {
     toastContainer: ToastContainer,
     serverSide?: boolean
   ) => {
-    if (selectedVolumeId === undefined) {
+    if (selectedVolume === undefined) {
       return;
     }
 
@@ -360,7 +349,7 @@ const Volume = observer(({ open, close }: Props) => {
         await queueTiltSeriesReconstruction({
           tiltSeries: file,
           data: {
-            volumeId: selectedVolumeId,
+            volumeId: selectedVolume.id,
             options: parsedOptions,
           },
         });
@@ -382,7 +371,7 @@ const Volume = observer(({ open, close }: Props) => {
 
         await Utils.waitForNextFrame();
 
-        await selectedVolume?.uploadRawVolume(fileData, parsedSettings);
+        await selectedVolume.uploadRawVolume(fileData, parsedSettings);
 
         toastContainer.success("Data successfully uploaded!");
       }
@@ -567,13 +556,13 @@ const Volume = observer(({ open, close }: Props) => {
   };
 
   const queuePseudoLabelGeneration = async () => {
-    if (selectedVolumeId === undefined) {
+    if (selectedVolume === undefined) {
       return;
     }
     const toastContainer = new ToastContainer();
     try {
       toastContainer.loading("Creating pseudo label volumes...");
-      await queuePseudoLabelsGeneration(selectedVolumeId);
+      await queuePseudoLabelsGeneration(selectedVolume.id);
       toastContainer.success("Label generation queued!");
     } catch (error) {
       console.error("Error:", error);
@@ -817,14 +806,14 @@ const Volume = observer(({ open, close }: Props) => {
                     <Edit24Regular
                       className={mergeClasses(
                         globalClasses.successIcon,
-                        selectedVolumeId === undefined &&
+                        selectedVolume === undefined &&
                           globalClasses.disabledIcon
                       )}
                     />
                   }
                   onClick={editVolumeDialogOpen}
                   disabled={
-                    selectedVolumeId === undefined ||
+                    selectedVolume === undefined ||
                     !activeProject?.hasWriteAccess
                   }
                 />
