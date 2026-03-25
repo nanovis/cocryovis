@@ -48,6 +48,7 @@ import {
   volumeRenderOption,
   volumeTooltip,
 } from "@/components/shared/ComboboxOptions";
+import { toBlobSafeUint8Array } from "@/utils/helpers";
 
 const useStyles = makeStyles({
   advancedOptionsRow: {
@@ -193,7 +194,7 @@ const NanoOtzi = observer(({ open, close }: Props) => {
       const files: File[] = [];
 
       for (const [i, volume] of volumeData.entries()) {
-        const blob = new Blob([new Uint8Array(volume)], {
+        const blob = new Blob([toBlobSafeUint8Array(volume)], {
           type: "application/octet-stream",
         });
 

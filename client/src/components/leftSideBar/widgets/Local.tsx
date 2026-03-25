@@ -24,6 +24,7 @@ import { useMst } from "@/stores/RootStore";
 import { checkpointFileToText } from "@/api/checkpoint";
 import ToastContainer from "@/utils/toastContainer";
 import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import { toBlobSafeUint8Array } from "@/utils/helpers";
 
 const useStyles = makeStyles({
   inferenceButtons: {
@@ -243,7 +244,7 @@ const Local = observer(({ open, close }: Props) => {
       for (const [i, volume] of volumeData.entries()) {
         const fileName = `volume_${i}`;
         const rawFileName = `${fileName}.raw`;
-        const parsedVolume = new Uint8Array(volume);
+        const parsedVolume = toBlobSafeUint8Array(volume);
         zip.file(rawFileName, parsedVolume, {
           compression: "DEFLATE",
           compressionOptions: { level: 9 },
