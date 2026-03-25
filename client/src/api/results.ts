@@ -11,7 +11,7 @@ import {
 } from "@/utils/compression";
 
 export async function getResultsFromVolume(id: number) {
-  const response = await Utils.sendApiRequest(`/volume/${id}/results`, {
+  const response = await Utils.sendApiRequest(`volume/${id}/results`, {
     method: "GET",
     credentials: "include",
   });
