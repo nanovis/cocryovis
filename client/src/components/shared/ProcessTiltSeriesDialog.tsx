@@ -81,10 +81,11 @@ const useStyles = makeStyles({
 });
 
 export interface TiltSeriesOptions {
+  volume_depth: number;
   alignment?: Record<string, unknown>;
   ctf?: Record<string, unknown>;
   motionCorrection?: Record<string, unknown>;
-  reconstruction: { volume_depth: number; [key: string]: unknown };
+  reconstruction?: Record<string, unknown>;
 }
 
 interface Props {
@@ -142,9 +143,7 @@ const ProcessTiltSeriesDialog = observer(
         setIsBusy(true);
 
         const options: TiltSeriesOptions = {
-          reconstruction: {
-            volume_depth: store.generalInputs.volume_depth.convertToValue(),
-          },
+          volume_depth: store.generalInputs.volume_depth.convertToValue(),
         };
         if (store.serverSide) {
           if (store.alignmentEnabled) {
@@ -160,10 +159,9 @@ const ProcessTiltSeriesDialog = observer(
               Object.entries(store.motionCorrectionInputs)
             );
           }
-          options.reconstruction = {
-            ...options.reconstruction,
-            ...parseOptions(Object.entries(store.reconstructionInputs)),
-          };
+          options.reconstruction = parseOptions(
+            Object.entries(store.reconstructionInputs)
+          );
         }
         await onSubmit(
           store.pendingFile,
@@ -175,7 +173,11 @@ const ProcessTiltSeriesDialog = observer(
           fileInputRef.current.value = "";
         }
         onClose();
-        toastContainer.success("Tilt series processed successfully.");
+        toastContainer.success(
+          store.serverSide
+            ? "Tile series processing queued successfully."
+            : "Tilt series processed successfully."
+        );
       } catch (error) {
         toastContainer.error(Utils.getErrorMessage(error));
       } finally {

@@ -1,7 +1,7 @@
-import { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
 import { ApiError } from "../tools/error-handler.mjs";
 import { type Request, type Response } from "express";
 import type ReconstructionHandler from "../tools/reconstruction-handler";
+import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
 
 export default class PreProcessingController {
   static async queueTiltSeriesReconstruction(

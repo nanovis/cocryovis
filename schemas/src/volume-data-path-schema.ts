@@ -20,6 +20,7 @@ import {
   volumeSettings,
 } from "./componentSchemas/volume-settings-schema";
 import type { ZodOpenApiPathsObject } from "zod-openapi";
+import { tiltSeriesOptions } from "./componentSchemas/tilt-series-schema";
 
 export const volumeData = z.union([
   sparseLabelVolumeDataSchema,
@@ -130,6 +131,7 @@ export const idVolumeVolumeDataTypeParams = z
 export const createFromFilesSchema = z.object({
   volumeSettings,
   rawFile: fileSchema,
+  reconstructionParameters: tiltSeriesOptions.optional(),
 });
 
 export const volumeDataPath: ZodOpenApiPathsObject = {

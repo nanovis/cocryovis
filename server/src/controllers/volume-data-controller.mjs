@@ -25,6 +25,7 @@ import {
 import VolumeData from "../models/volume-data.mjs";
 import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import Volume from "../models/volume.mjs";
+import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
 
 /**
  * @import z from "zod"
@@ -163,12 +164,17 @@ export default class VolumeDataController {
       VolumeDataClass.acceptedFileExtensions
     );
     const settings = volumeSettings.parse(JSON.parse(req.body.settings));
+    const reconstructionParameters =
+      req.body.reconstructionParameters !== undefined
+        ? tiltSeriesOptions.parse(JSON.parse(req.body.reconstructionParameters))
+        : undefined;
 
     const volumeData = await VolumeDataClass.createFromFiles(
       req.session.user.id,
       params.idVolume,
       unpackedFiles,
-      settings
+      settings,
+      { reconstructionParameters: reconstructionParameters }
     );
 
     res.status(201).json(volumeData);

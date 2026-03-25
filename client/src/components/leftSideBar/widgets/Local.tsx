@@ -77,10 +77,7 @@ const Local = observer(({ open, close }: Props) => {
       await Utils.waitForNextFrame();
 
       const { parsedSettings, fileData } =
-        await Utils.convertTiltSeriesToRawData(
-          file,
-          options.reconstruction.volume_depth
-        );
+        await Utils.convertTiltSeriesToRawData(file, options.volume_depth);
       toastContainer.loading("Preparing data for download...");
 
       await Utils.waitForNextFrame();

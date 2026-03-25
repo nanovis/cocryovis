@@ -45,6 +45,7 @@ import type { VolumeRenderer } from "@/renderer/renderer";
 import { RootStore, type RootInstance } from "@/stores/RootStore";
 import { physicalUnitSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 import type { ComboboxOption } from "@/components/shared/ComboboxSearch";
+import type { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
 
 export type LabeledVolumeTypes =
   | "SparseLabeledVolumeData"
@@ -311,7 +312,8 @@ export const Volume = types
   .actions((self) => ({
     uploadRawVolume: flow(function* uploadRawVolume(
       dataOrFile: File | ArrayBuffer,
-      settings: VolumeSettings
+      settings: VolumeSettings,
+      reconstructionParameters?: z.infer<typeof tiltSeriesOptions>
     ) {
       let rawFile!: File;
       if (dataOrFile instanceof File) {
@@ -325,6 +327,7 @@ export const Volume = types
       const rawData = (yield createFromFiles("RawVolumeData", self.id, {
         rawFile,
         volumeSettings: settings,
+        reconstructionParameters: reconstructionParameters,
       })) as z.infer<typeof rawVolumeDataSchema>;
       if (!isAlive(self)) {
         return;

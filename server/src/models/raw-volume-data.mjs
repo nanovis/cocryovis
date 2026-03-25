@@ -17,7 +17,8 @@ import { Prisma } from "@prisma/client";
 
 /**
  * @import z from "zod"
- * @import { volumeDescriptorSettingsSchema, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+ * @import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
+ * @import { volumeDescriptorSettingsSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  */
 
@@ -92,22 +93,16 @@ export default class RawVolumeData extends VolumeData {
    * @param {number} volumeId
    * @param {PendingUpload[]} files
    * @param {z.infer<typeof volumeDescriptorSettingsSchema>} settings
-   * @param {boolean?} skipLock
+   * @param {{ skipLock?: boolean, client?: Prisma.TransactionClient, reconstructionParameters?: z.infer<tiltSeriesOptions> }} [options]
    * @returns {Promise<RawVolumeDataDB>}
    */
-  static async createFromFiles(
-    creatorId,
-    volumeId,
-    files,
-    settings,
-    skipLock = false
-  ) {
+  static async createFromFiles(creatorId, volumeId, files, settings, options) {
     return await super.createFromFiles(
       creatorId,
       volumeId,
       files,
       settings,
-      skipLock
+      options
     );
   }
 

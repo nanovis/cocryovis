@@ -11,17 +11,17 @@ import TaskHistory from "../models/task-history.mjs";
 import appConfig from "./config.mjs";
 import type z from "zod";
 import type fileUpload from "express-fileupload";
-import type {
-  IMODOptions,
-  CTFOptions,
-  tiltSeriesOptions,
-  motionCorrectionOptions,
-} from "@cocryovis/schemas/cryoEt-path-schema";
 import type GPUTaskHandler from "./gpu-task-handler";
 import fs from "fs";
 import { GPUTask } from "./gpu-task-handler";
 import type GPUResourcesManager from "./gpu-resources-manager";
 import { Deferred } from "./task-queue";
+import type {
+  CTFOptions,
+  IMODOptions,
+  motionCorrectionOptions,
+  tiltSeriesOptions,
+} from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
 
 class ReconstructionTask extends GPUTask<RawVolumeDataDB> {
   protected logName = "reconstruction";
@@ -252,7 +252,7 @@ export default class ReconstructionHandler {
         volumeId,
         [new PendingLocalFile(rawFilePath)],
         settings,
-        true
+        { skipLock: true, reconstructionParameters: options }
       );
 
       await logFile?.writeLog(`Raw data created.\n\nSaving task history...\n`);

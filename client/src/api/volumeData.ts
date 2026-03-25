@@ -93,6 +93,13 @@ export async function createFromFiles<T extends keyof VolumeDataMap>(
 
   formData.append("rawFile", fileToUpload);
   formData.append("settings", JSON.stringify(request.volumeSettings));
+  if (request.reconstructionParameters !== undefined) {
+    formData.append(
+      "reconstructionParameters",
+      JSON.stringify(request.reconstructionParameters)
+    );
+  }
+
   const response = await Utils.sendApiRequest(
     `volume/${id}/volumeData/${type}/from-files`,
     {

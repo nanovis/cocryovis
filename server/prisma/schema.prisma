@@ -84,8 +84,8 @@ model Volume {
 }
 
 model RawVolumeData {
-  id             Int               @id @default(autoincrement())
-  creator        User?             @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  id             Int     @id @default(autoincrement())
+  creator        User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId      Int?
   name           String
   sizeX          Int
@@ -97,10 +97,13 @@ model RawVolumeData {
   addValue       Int
   bytesPerVoxel  Int
   usedBits       Int
-  volume         Volume            @relation(fields: [volumeId], references: [id], onDelete: Cascade)
-  volumeId       Int               @unique
-  dataFile       RawVolumeDataFile @relation(fields: [dataFileId], references: [id], onDelete: Restrict)
-  dataFileId     Int
+
+  reconstructionParameters Json?
+
+  volume     Volume            @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  volumeId   Int               @unique
+  dataFile   RawVolumeDataFile @relation(fields: [dataFileId], references: [id], onDelete: Restrict)
+  dataFileId Int
   // BytesPerVoxel   BytesPerVoxel? @relation(fields: [bytesPerVoxelId], references: [id])
   // bytesPerVoxelId Int?
   // UsedBits        UsedBits?      @relation(fields: [usedBitsId], references: [id])

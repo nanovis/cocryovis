@@ -87,7 +87,7 @@ import {
 import type z from "zod";
 import type { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import Color from "color";
-import { tiltSeriesOptions } from "@cocryovis/schemas/cryoEt-path-schema";
+import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -339,12 +339,12 @@ const Volume = observer(({ open, close }: Props) => {
 
     try {
       setIsUploadingData(true);
+      const parsedOptions = tiltSeriesOptions.parse(options);
 
       if (serverSide) {
         if (!file.name.endsWith(".ali") && !file.name.endsWith(".mrc")) {
           throw new Error("Wrong file format.");
         }
-        const parsedOptions = tiltSeriesOptions.parse(options);
 
         await queueTiltSeriesReconstruction({
           tiltSeries: file,
@@ -365,13 +365,17 @@ const Volume = observer(({ open, close }: Props) => {
         const { parsedSettings, fileData } =
           await Utils.convertTiltSeriesToRawData(
             file,
-            options.reconstruction.volume_depth
+            parsedOptions.volume_depth
           );
         toastContainer.loading("Uploading data to the server...");
 
         await Utils.waitForNextFrame();
 
-        await selectedVolume.uploadRawVolume(fileData, parsedSettings);
+        await selectedVolume.uploadRawVolume(
+          fileData,
+          parsedSettings,
+          parsedOptions
+        );
 
         toastContainer.success("Data successfully uploaded!");
       }

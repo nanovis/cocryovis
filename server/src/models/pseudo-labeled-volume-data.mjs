@@ -14,6 +14,7 @@ import { withTransaction } from "./database-model.mjs";
 
 /**
  * @import z from "zod"
+ * @import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
  * @import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").PseudoLabelVolumeData } PseudoVolumeDataDB
  */
@@ -66,22 +67,16 @@ export default class PseudoLabeledVolumeData extends VolumeData {
    * @param {number} volumeId
    * @param {PendingUpload[]} files
    * @param {z.infer<typeof volumeSettings>} settings
-   * @param {boolean?} skipLock
+   * @param {{ skipLock?: boolean, client?: Prisma.TransactionClient, reconstructionParameters?: z.infer<tiltSeriesOptions> }} [options]
    * @returns {Promise<PseudoVolumeDataDB>}
    */
-  static async createFromFiles(
-    creatorId,
-    volumeId,
-    files,
-    settings,
-    skipLock = false
-  ) {
+  static async createFromFiles(creatorId, volumeId, files, settings, options) {
     return await super.createFromFiles(
       creatorId,
       volumeId,
       files,
       settings,
-      skipLock
+      options
     );
   }
 

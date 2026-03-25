@@ -14,6 +14,7 @@ import prismaManager from "../tools/prisma-manager.mjs";
 
 /**
  * @import z from "zod"
+ * @import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
  * @import { volumeDescriptorSettingsSchema, volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
  * @typedef { import("@prisma/client").RawVolumeData } RawVolumeDataDB
  * @typedef { import("@prisma/client").SparseLabelVolumeData } SparseLabelVolumeDataDB
@@ -140,8 +141,7 @@ export default class VolumeData extends DatabaseModel {
    * @param {number} volumeId
    * @param {PendingUpload[]} files
    * @param {z.infer<typeof volumeDescriptorSettingsSchema>} settings
-   * @param {boolean?} skipLock
-   * @param {Prisma.TransactionClient | undefined} [client]
+   * @param {{ skipLock?: boolean, client?: Prisma.TransactionClient, reconstructionParameters?: z.infer<tiltSeriesOptions> }} [options]
    * @returns {Promise<object>}
    */
   static async createFromFiles(
@@ -149,8 +149,7 @@ export default class VolumeData extends DatabaseModel {
     volumeId,
     files,
     settings,
-    skipLock = false,
-    client
+    { skipLock = false, client, reconstructionParameters } = {}
   ) {
     // Temporary fix to avoid circular dependency.
     const { default: Volume } = await import("./volume.mjs");
@@ -201,6 +200,9 @@ export default class VolumeData extends DatabaseModel {
                 create: {},
               },
               name: Utils.stripExtension(rawFile.fileName),
+              ...(reconstructionParameters && {
+                reconstructionParameters: reconstructionParameters,
+              }),
             },
           });
           let folderPath = null;

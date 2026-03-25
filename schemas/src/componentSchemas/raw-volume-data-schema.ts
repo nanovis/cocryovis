@@ -1,4 +1,5 @@
 import z from "zod";
+import { tiltSeriesOptions } from "./tilt-series-schema";
 
 export const rawVolumeDataSchema = z.object({
   id: z.int(),
@@ -13,6 +14,7 @@ export const rawVolumeDataSchema = z.object({
   addValue: z.int(),
   bytesPerVoxel: z.int(),
   usedBits: z.int(),
+  reconstructionParameters: tiltSeriesOptions.nullable(),
   volumeId: z.int().nullable(),
 });
 
