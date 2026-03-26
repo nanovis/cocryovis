@@ -7,6 +7,13 @@ export function useWebSocketConnection(url: string, enabled: boolean) {
       retryOnError: true,
       reconnectAttempts: Infinity,
       reconnectInterval: 1000,
+      shouldReconnect: (event) => {
+        console.warn(
+          "WebSocket closed unexpectedly. Attempting to reconnect...",
+          event
+        );
+        return enabled;
+      },
       onOpen: () => console.log("WebSocket connected"),
       onClose: () => console.log("WebSocket disconnected"),
       onError: (error) => console.error("WebSocket error", error),
