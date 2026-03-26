@@ -88,6 +88,7 @@ import type z from "zod";
 import type { volumeUpdateSchema } from "@cocryovis/schemas/componentSchemas/volume-schema";
 import Color from "color";
 import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
+import ReconstructionParameters from "./elements/ReconstructionParameters";
 
 const useStyles = makeStyles({
   visualizeButton: {
@@ -1014,6 +1015,8 @@ const Volume = observer(({ open, close }: Props) => {
             confirmText="Upload"
             uploadDialogStore={uiState.uploadDialog}
           />
+
+          <ReconstructionParameters volume={selectedVolume} />
 
           <div
             style={{
