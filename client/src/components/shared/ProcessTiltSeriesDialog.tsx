@@ -19,8 +19,14 @@ import {
   Tab,
   Checkbox,
   mergeClasses,
+  Tooltip,
 } from "@fluentui/react-components";
-import { Document20Regular } from "@fluentui/react-icons";
+import {
+  ArrowDownload24Regular,
+  ArrowUpload24Regular,
+  ClipboardPaste24Regular,
+  Document20Regular,
+} from "@fluentui/react-icons";
 import globalStyles from "../globalStyles";
 import type { TiltSeriesDialogInstance } from "@/stores/uiState/TiltSeriesDialog";
 import {
@@ -32,6 +38,10 @@ import type { NumberInputField } from "@/utils/input";
 import { BooleanInputField } from "@/utils/input";
 import * as Utils from "../../utils/helpers";
 import ToastContainer from "../../utils/toastContainer";
+import type z from "zod";
+import { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
+
+const tiltSeriesOptionsInputSchema = tiltSeriesOptions.partial();
 
 const useStyles = makeStyles({
   optionsTabCheckbox: {},
@@ -116,6 +126,7 @@ const ProcessTiltSeriesDialog = observer(
     const [isBusy, setIsBusy] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const jsonInputRef = useRef<HTMLInputElement | null>(null);
 
     const parseOptions = (
       optionsList: [string, NumberInputField | BooleanInputField][]
@@ -197,6 +208,153 @@ const ProcessTiltSeriesDialog = observer(
 
       const file = event.target.files[0];
       store.setPendingFile(file);
+    };
+
+    const loadSettings = (
+      options: z.output<typeof tiltSeriesOptionsInputSchema>
+    ) => {
+      if (options.volume_depth !== undefined) {
+        store.generalInputs.volume_depth.setValue(
+          options.volume_depth.toString()
+        );
+      }
+
+      if (
+        options.reconstruction ||
+        options.ctf ||
+        options.motionCorrection ||
+        options.alignment
+      ) {
+        store.setServerSide(true);
+      }
+
+      if (options.alignment) {
+        store.setAlignmentEnabled(true);
+        Object.entries(options.alignment).forEach(([key, value]) => {
+          if (key in store.alignmentInputs) {
+            store.alignmentInputs[
+              key as keyof typeof store.alignmentInputs
+            ].setValue(value.toString());
+          }
+        });
+      }
+
+      if (options.ctf) {
+        store.setCtfEnabled(true);
+        Object.entries(options.ctf).forEach(([key, value]) => {
+          if (key in store.ctfInputs) {
+            store.ctfInputs[key as keyof typeof store.ctfInputs].setValue(
+              value.toString()
+            );
+          }
+        });
+      }
+
+      if (options.motionCorrection) {
+        store.setMotionCorrectionEnabled(true);
+        Object.entries(options.motionCorrection).forEach(([key, value]) => {
+          if (key in store.motionCorrectionInputs) {
+            store.motionCorrectionInputs[
+              key as keyof typeof store.motionCorrectionInputs
+            ].setValue(value.toString());
+          }
+        });
+      }
+
+      if (options.reconstruction) {
+        Object.entries(options.reconstruction).forEach(([key, value]) => {
+          if (key in store.reconstructionInputs) {
+            const input =
+              store.reconstructionInputs[
+                key as keyof typeof store.reconstructionInputs
+              ];
+            if (input instanceof BooleanInputField) {
+              input.setValue(value === true);
+            } else {
+              input.setValue(value.toString());
+            }
+          }
+        });
+      }
+    };
+
+    const handleImport = async (event: FileChangeEvent) => {
+      const toastContainer = new ToastContainer();
+      try {
+        if (!event.target.files || event.target.files.length < 1) {
+          return;
+        }
+
+        const file = event.target.files[0];
+        const text = await file.text();
+        const options = tiltSeriesOptionsInputSchema.parse(JSON.parse(text));
+
+        loadSettings(options);
+        toastContainer.success("Settings loaded from file.");
+      } catch (error) {
+        toastContainer.error(Utils.getErrorMessage(error));
+      } finally {
+        if (jsonInputRef.current) {
+          jsonInputRef.current.value = "";
+        }
+      }
+    };
+
+    const handleUploadClick = () => {
+      jsonInputRef.current?.click();
+    };
+
+    const handlePaste = async () => {
+      const toastContainer = new ToastContainer();
+      try {
+        const text = await navigator.clipboard.readText();
+        const options = tiltSeriesOptionsInputSchema.parse(JSON.parse(text));
+
+        loadSettings(options);
+        toastContainer.success("Settings loaded from clipboard.");
+      } catch (error) {
+        toastContainer.error(Utils.getErrorMessage(error));
+      }
+    };
+
+    const handleExport = () => {
+      const toastContainer = new ToastContainer();
+      try {
+        if (!store.generalInputs.volume_depth.isValid()) {
+          throw new Error("Invalid volume depth");
+        }
+
+        const options: Record<string, unknown> = {
+          volume_depth: store.generalInputs.volume_depth.convertToValue(),
+        };
+
+        if (store.serverSide) {
+          if (store.alignmentEnabled) {
+            options.alignment = parseOptions(
+              Object.entries(store.alignmentInputs)
+            );
+          }
+          if (store.ctfEnabled) {
+            options.ctf = parseOptions(Object.entries(store.ctfInputs));
+          }
+          if (store.motionCorrectionEnabled) {
+            options.motionCorrection = parseOptions(
+              Object.entries(store.motionCorrectionInputs)
+            );
+          }
+          options.reconstruction = parseOptions(
+            Object.entries(store.reconstructionInputs)
+          );
+        }
+
+        const json = JSON.stringify(options, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        Utils.downloadBlob(blob, "tilt_series_processing_settings.json");
+
+        toastContainer.success("Settings downloaded successfully.");
+      } catch (error) {
+        toastContainer.error(Utils.getErrorMessage(error));
+      }
     };
 
     return (
@@ -364,37 +522,84 @@ const ProcessTiltSeriesDialog = observer(
                   </AccordionItem>
                 </Accordion>
               )}
-
               <div
                 style={{
                   display: "flex",
-                  columnGap: "20px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginTop: "20px",
                 }}
               >
-                <Button
-                  onClick={handleButtonClick}
-                  appearance="primary"
-                  className={globalClasses.actionButton}
-                  style={{ width: "150px", height: "35px" }}
-                  disabled={isBusy}
-                >
-                  <div className={globalClasses.actionButtonIconContainer}>
-                    <Document20Regular />
-                  </div>
-
-                  <div className="buttonText">Select File</div>
-                </Button>
-                <Text
+                <div
                   style={{
-                    alignSelf: "center",
-                    color: tokens.colorNeutralForeground2,
+                    display: "flex",
+                    columnGap: "20px",
+                    alignItems: "center",
                   }}
                 >
-                  {store.pendingFile
-                    ? store.pendingFile.name
-                    : "No file selected."}
-                </Text>
+                  <Button
+                    onClick={handleButtonClick}
+                    appearance="primary"
+                    className={globalClasses.actionButton}
+                    style={{ width: "150px", height: "35px" }}
+                    disabled={isBusy}
+                  >
+                    <div className={globalClasses.actionButtonIconContainer}>
+                      <Document20Regular />
+                    </div>
+
+                    <div className="buttonText">Select File</div>
+                  </Button>
+                  <Text
+                    style={{
+                      alignSelf: "center",
+                      color: tokens.colorNeutralForeground2,
+                    }}
+                  >
+                    {store.pendingFile
+                      ? store.pendingFile.name
+                      : "No file selected."}
+                  </Text>
+                </div>
+                <div
+                  style={{ display: "flex", gap: "10px", alignItems: "center" }}
+                >
+                  <Tooltip
+                    content="Download settings as a JSON file"
+                    relationship="label"
+                    appearance="inverted"
+                  >
+                    <Button
+                      icon={<ArrowDownload24Regular />}
+                      onClick={handleExport}
+                      disabled={isBusy}
+                    />
+                  </Tooltip>
+                  <Tooltip
+                    content="Import settings from JSON file"
+                    relationship="label"
+                    appearance="inverted"
+                  >
+                    <Button
+                      icon={<ArrowUpload24Regular />}
+                      onClick={handleUploadClick}
+                      disabled={isBusy}
+                    />
+                  </Tooltip>
+                  <Tooltip
+                    content="Load settings from clipboard"
+                    relationship="label"
+                    appearance="inverted"
+                  >
+                    <Button
+                      icon={<ClipboardPaste24Regular />}
+                      onClick={() => {
+                        void handlePaste();
+                      }}
+                      disabled={isBusy}
+                    />
+                  </Tooltip>
+                </div>
               </div>
 
               <input
@@ -403,6 +608,14 @@ const ProcessTiltSeriesDialog = observer(
                 accept=".mrc, .ali"
                 style={{ display: "none" }}
                 onChange={handleFileChange}
+                disabled={isBusy}
+              />
+              <input
+                ref={jsonInputRef}
+                type="file"
+                accept=".json"
+                style={{ display: "none" }}
+                onChange={(event) => void handleImport(event)}
                 disabled={isBusy}
               />
             </DialogContent>

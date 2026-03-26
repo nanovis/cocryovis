@@ -150,7 +150,7 @@ const ReconstructionParameters = observer(({ volume }: Props) => {
               <div className={classes.panelButtons}>
                 <Tooltip
                   content="Download parameters as a JSON file"
-                  relationship={"description"}
+                  relationship={"label"}
                   appearance="inverted"
                 >
                   <Button
@@ -161,7 +161,7 @@ const ReconstructionParameters = observer(({ volume }: Props) => {
                 </Tooltip>
                 <Tooltip
                   content="Copy parameters to clipboard"
-                  relationship={"description"}
+                  relationship={"label"}
                   appearance="inverted"
                 >
                   <Button
