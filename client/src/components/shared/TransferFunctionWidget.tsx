@@ -46,6 +46,7 @@ const useStyles = makeStyles({
     height: "12px",
     borderRadius: "2px",
     border: `1px solid ${tokens.colorNeutralStroke2}`,
+    cursor: "pointer",
   },
   markerTrack: {
     position: "relative",
@@ -238,15 +239,26 @@ const TransferFunctionWidget = observer(
             <div
               className={classes.rampTrack}
               ref={rampTrackRef}
-              title="Double-click to add breakpoint"
+              title="Shift+click or double-click to add breakpoint"
               style={{
                 backgroundImage: `${gradientBackground}, ${TRANSPARENCY_CHECKER_LIGHT}, ${TRANSPARENCY_CHECKER_DARK}`,
                 backgroundSize: "100% 100%, 12px 12px, 12px 12px",
                 backgroundPosition: "0 0, 0 0, 6px 6px",
               }}
-              onClick={(event) =>
-                addBreakpointAt(positionFromClientX(event.clientX))
-              }
+              onDoubleClick={(event) => {
+                if (event.shiftKey) {
+                  return;
+                }
+                addBreakpointAt(positionFromClientX(event.clientX));
+              }}
+              onClick={(event) => {
+                {
+                  if (!event.shiftKey) {
+                    return;
+                  }
+                  addBreakpointAt(positionFromClientX(event.clientX));
+                }
+              }}
             />
           </Field>
           <div className={classes.markerTrack}>
@@ -255,9 +267,9 @@ const TransferFunctionWidget = observer(
                 key={point.id}
                 type="button"
                 title={
-                  openMarkerId === null
-                    ? "Shift+click or double-click to open marker options"
-                    : "Shift+click or double-click to close marker options"
+                  openMarkerId !== point.id
+                    ? "Click to open breakpoint options"
+                    : "Click to close breakpoint options"
                 }
                 className={mergeClasses(
                   classes.marker,
@@ -272,17 +284,9 @@ const TransferFunctionWidget = observer(
                   backgroundSize: "100% 100%, 8px 8px, 8px 8px",
                   backgroundPosition: "0 0, 0 0, 4px 4px",
                 }}
-                onClick={(event) => {
-                  if (!event.shiftKey) {
-                    return;
-                  }
-                  setOpenMarkerId(openMarkerId === point.id ? null : point.id);
-                }}
-                onDoubleClick={() => {
-                  setOpenMarkerId(openMarkerId === point.id ? null : point.id);
-                }}
                 onPointerDown={(event) => {
                   event.preventDefault();
+                  setOpenMarkerId(openMarkerId === point.id ? null : point.id);
                   pointerDownRef.current = {
                     id: point.id,
                     x: event.clientX,

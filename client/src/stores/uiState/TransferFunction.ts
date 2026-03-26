@@ -6,7 +6,7 @@ import Color from "color";
 import { VolVisSettings } from "./VolVisSettings";
 import { transferFunctionSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
 
-export const MAX_BREAKPOINTS = 10;
+export const MAX_BREAKPOINTS = 20;
 export const MIN_BREAKPOINTS = 1;
 export const MIN_DISTANCE_BETWEEN_BREAKPOINTS = 0.001;
 

@@ -167,7 +167,17 @@ const TransferFunctionList = observer(
             </div>
           )
         )}
-        {openSettingsInstance && openMarker ? (
+        <Text
+          style={{
+            color: tokens.colorNeutralForeground3,
+            marginBottom: "16px",
+          }}
+        >
+          Click on a breakpoint to edit its properties.
+          <br />
+          Shift or double click on the ramp to add a new breakpoint.
+        </Text>
+        {openSettingsInstance && openMarker && (
           <TransferFunctionBreakpointEditor
             transferFunction={openSettingsInstance.transferFunction}
             breakpoint={openMarker}
@@ -175,10 +185,6 @@ const TransferFunctionList = observer(
               openSettingsInstance.transferFunction.removeBreakpoint(id)
             }
           />
-        ) : (
-          <Text style={{ color: tokens.colorNeutralForeground3 }}>
-            Shift or double click a marker to edit its position and color.
-          </Text>
         )}
       </div>
     );
