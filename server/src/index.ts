@@ -59,10 +59,7 @@ const startServer = async () => {
 
   const app = express();
 
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://files.cryoetdataportal.cziscience.com",
-  ];
+  const allowedOrigins = ["https://files.cryoetdataportal.cziscience.com"];
 
   const corsOptions = {
     origin: allowedOrigins,
@@ -120,18 +117,27 @@ const startServer = async () => {
     rolling: true,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure:
+        process.env.NODE_ENV === "production" &&
+        process.env.ALLOW_INSECURE_COOKIES !== "true",
       maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
-      sameSite: "strict",
+      sameSite: "lax",
     },
   };
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_INSECURE_COOKIES === "true"
+  ) {
+    console.warn(
+      "WARNING: Insecure cookies are allowed in production! This is not recommended for production environments."
+    );
+  }
 
   const sessionParser = session(sess);
 
   if (app.get("env") === "production") {
     app.set("trust proxy", 1);
-    sess.cookie.secure = true;
-    sess.cookie.httpOnly = true;
     app.use(
       helmet({
         contentSecurityPolicy: {

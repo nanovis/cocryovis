@@ -1,8 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+# Set script root to its directory
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit
+
 CUDA_VERSION="11.8.0"
-ENVIRONMENT_PATH="./.venv"
+ENVIRONMENT_PATH="../.venv"
 
 # Clean
 rm -rf $ENVIRONMENT_PATH

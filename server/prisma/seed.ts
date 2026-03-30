@@ -39,6 +39,13 @@ async function main() {
   const passwordSalt = await bcrypt.genSalt(bcryptCost);
   const passwordHash = await bcrypt.hash(password, passwordSalt);
 
+  // If such username already exists (e.g. from a previous seed run), fail
+  if (await prisma.user.findUnique({ where: { username } })) {
+    throw new Error(
+      `Error while creating an admin with username "${username}" already exists`
+    );
+  }
+
   const admin = await prisma.user.create({
     data: {
       username,

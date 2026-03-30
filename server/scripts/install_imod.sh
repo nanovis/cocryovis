@@ -1,11 +1,14 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+# Set script root to its directory
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit
 
 IMOD_INSTALLER="imod_5.1.1_RHEL8-64_CUDA12.0.sh"
 IMOD_URL="https://bio3d.colorado.edu/imod/AMD64-RHEL5/${IMOD_INSTALLER}"
 
-mkdir -p ./modules/imod
-cd ./modules/imod
+mkdir -p ../modules/imod
+cd ../modules/imod
 find ./ -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} +
 
 echo "Downloading IMOD installer from ${IMOD_URL}..."

@@ -1,7 +1,6 @@
 node_modules
 dist/
 .vs
-db.json
 /database/*
 /logs/*
 /data/*
@@ -10,17 +9,9 @@ db.json
 *.sqlite3
 *.sqlite
 *.sqlite-journal
-.env
-.vscode/
 .venv/
-/temp/
 /modules/ilastik/*
-!/modules/nano-oetzi
 /modules/imod/*
-python-scripts/__pycache__
+__pycache__
 !.gitkeep
 openapi.yaml
-
-sessions/*.db
-sessions/*.db-shm
-sessions/*.db-wal

@@ -1,6 +1,0 @@
-dockerfiles
-node_modules
-client/node_modules
-
-modules/imod
-modules/Proximal_CryoET/CUDA_PROXIMAL_SART/build

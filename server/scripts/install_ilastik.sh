@@ -1,8 +1,11 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-mkdir -p ./modules/ilastik
-cd ./modules/ilastik
+# Set script root to its directory
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit
+
+mkdir -p ../modules/ilastik
+cd ../modules/ilastik
 
 # Exit early if run_ilastik.sh already exists
 if [ -f "run_ilastik.sh" ]; then

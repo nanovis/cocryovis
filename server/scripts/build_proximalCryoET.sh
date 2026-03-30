@@ -1,7 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-cd ./modules/Proximal_CryoET/CUDA_PROXIMAL_SART
+# Set script root to its directory
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")" || exit
+
+CUDA_ARCHITECTURES="native"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --cuda-architectures)
+      CUDA_ARCHITECTURES="$2"
+      shift 2
+      ;;
+    *)
+      # Legacy positional argument support
+      CUDA_ARCHITECTURES="$1"
+      shift
+      ;;
+  esac
+done
+
+cd ../modules/Proximal_CryoET/CUDA_PROXIMAL_SART
 rm -r -f ./build
 
 if [ -x /usr/bin/gcc-12 ]; then
@@ -17,6 +36,6 @@ else
     exit 1
 fi
 
-cmake -S ./ -B ./build
+cmake -S ./ -B ./build -DCUDA_ARCHITECTURES="${CUDA_ARCHITECTURES}"
 cd build
 make
