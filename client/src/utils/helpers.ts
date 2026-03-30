@@ -1,9 +1,6 @@
 import JSZip from "jszip";
 import { DEFAULT_TF } from "../defaultTransferFunctions";
 import ToastContainer from "./toastContainer";
-import type { RawVolumeInstance } from "../stores/userState/RawVolumeModel";
-import type { SparseVolumeInstance } from "../stores/userState/SparseVolumeModel";
-import type { PseudoVolumeInstance } from "../stores/userState/PseudoVolumeModel";
 import type { TransferFunction } from "@/utils/volumeDescriptor";
 import type z from "zod";
 import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
@@ -472,9 +469,18 @@ export async function loadScript(src: string): Promise<void> {
   });
 }
 
-export function toInferenceSettingSchema(
-  volumeData: RawVolumeInstance | SparseVolumeInstance | PseudoVolumeInstance
-) {
+export function toInferenceSettingSchema(volumeData: {
+  name: string;
+  sizeX: number;
+  sizeY: number;
+  sizeZ: number;
+  bytesPerVoxel: number;
+  usedBits: number;
+  skipBytes: number;
+  isLittleEndian: boolean;
+  isSigned: boolean;
+  addValue: number;
+}) {
   return {
     file: volumeData.name,
     size: {
