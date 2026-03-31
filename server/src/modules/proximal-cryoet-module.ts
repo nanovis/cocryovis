@@ -2,12 +2,17 @@ import path from "path";
 import { z } from "zod";
 import Utils from "../tools/utils.mjs";
 import { BaseModule } from "./base-module";
+import type { ModuleInstallContext } from "./base-module";
 import { ApiError } from "../tools/error-handler.mjs";
 import type LogFile from "../tools/log-manager.mjs";
 import type { tiltSeriesOptions } from "@cocryovis/schemas/componentSchemas/tilt-series-schema";
 
 export const proximalCryoETConfigSchema = z.object({
   path: z.string().min(1),
+});
+
+const proximalCryoETInstallConfigSchema = z.object({
+  cudaArchitectures: z.string().min(1).optional(),
 });
 
 export type ProximalCryoETConfig = z.infer<typeof proximalCryoETConfigSchema>;
@@ -20,6 +25,79 @@ export class ProximalCryoETModule extends BaseModule {
 
   static readonly executablePath =
     "CUDA_PROXIMAL_SART/build/CUDA_PROXIMAL_SART";
+
+  static override async installModule(
+    moduleId: string,
+    {
+      modulesRoot,
+      runCommand,
+      removePath,
+      existsSync,
+      getEnvValue,
+      getModuleInstallConfig,
+    }: ModuleInstallContext
+  ): Promise<void> {
+    const config = getModuleInstallConfig(
+      moduleId,
+      proximalCryoETInstallConfigSchema
+    );
+    const proximalPath = path.join(
+      modulesRoot,
+      "Proximal_CryoET",
+      "CUDA_PROXIMAL_SART"
+    );
+    const cudaArchitectures =
+      getEnvValue([
+        "PROXIMAL_CRYOET_CUDA_ARCHITECTURES",
+        "CUDA_ARCHITECTURES",
+      ]) ??
+      config.cudaArchitectures ??
+      "native";
+
+    await removePath(path.join(proximalPath, "build"), {
+      recursive: true,
+      force: true,
+    });
+
+    let compilerEnv: NodeJS.ProcessEnv;
+    if (existsSync("/usr/bin/gcc-12") && existsSync("/usr/bin/g++-12")) {
+      compilerEnv = {
+        ...process.env,
+        CC: "/usr/bin/gcc-12",
+        CXX: "/usr/bin/g++-12",
+        CUDAHOSTCXX: "/usr/bin/g++-12",
+      };
+    } else if (existsSync("/usr/bin/gcc-11") && existsSync("/usr/bin/g++-11")) {
+      compilerEnv = {
+        ...process.env,
+        CC: "/usr/bin/gcc-11",
+        CXX: "/usr/bin/g++-11",
+        CUDAHOSTCXX: "/usr/bin/g++-11",
+      };
+    } else {
+      throw new Error("No supported GCC version (11 or 12) found.");
+    }
+
+    await runCommand(
+      "cmake",
+      [
+        "-S",
+        "./",
+        "-B",
+        "./build",
+        `-DCUDA_ARCHITECTURES=${cudaArchitectures}`,
+      ],
+      {
+        cwd: proximalPath,
+        env: compilerEnv,
+      }
+    );
+
+    await runCommand("make", [], {
+      cwd: path.join(proximalPath, "build"),
+      env: compilerEnv,
+    });
+  }
 
   constructor(config: ProximalCryoETConfig) {
     super("ProximalCryoET");

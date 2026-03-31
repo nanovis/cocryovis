@@ -12,9 +12,13 @@ Proximal CryoET requires CMake 3.24 to build.
 ## Setup
 Make sure submodules are installed by running ```git pull --recurse-submodules```
 
-Download Ilastik by running ```./install_ilastik.sh```
+Download/build modules by running ```npm run modules:install```
 
-Build submodules by running ```./install_submodules.sh```
+The installer list is read from ```module_config.json``` using each module's ```moduleFile``` entry.
+Module IDs are the top-level keys in that file. You can also add optional ```aliases``` per module for ```--skip``` matching.
+
+To skip specific module installers, use:
+```npm run modules:install -- --skip Ilastik --skip ProximalCryoET```
 
 Install python packages via ```pip install -r requirements.txt```
 

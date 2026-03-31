@@ -5,7 +5,8 @@ dist/
 /logs/*
 /data/*
 .idea
-/cache/
+/cache/*
+/.module-cache/*
 *.sqlite3
 *.sqlite
 *.sqlite-journal

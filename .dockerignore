@@ -12,7 +12,7 @@ dockerfiles
 server/database/*
 server/logs/*
 server/data/*
-server/cache/*
+server/.module-cache/*
 server/openapi.yaml
 .venv/
 

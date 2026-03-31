@@ -77,33 +77,24 @@ RUN /opt/conda/bin/conda tos accept --override-channels --channel https://repo.a
 
 # Copy application source code
 USER root
-
-COPY --chown=${SETUSER}:${SETUSER} server/scripts /app/server/scripts
-COPY --chown=${SETUSER}:${SETUSER} server/modules /app/server/modules
-
-# Set executable permissions for scripts
-RUN find /app/server/scripts -type f -name "*.sh" -exec chmod +x {} +
+COPY --chown=${SETUSER}:${SETUSER} ./ /app/
 
 USER ${SETUSER}
 
-# Build ProximalCryoET with specified CUDA architecture
-RUN /app/server/scripts/build_proximalCryoET.sh --cuda-architectures ${CUDA_ARCHITECTURES}
-
-# Install other submodules and build the client
-RUN /app/server/scripts/install_submodules.sh --skip build_proximalCryoET
-
-# Copy files
-COPY --exclude=server/scripts --exclude=server/modules --chown=${SETUSER}:${SETUSER} ./ /app/
-
-RUN ls /app/server
-
-# Install npm dependencies with cache
+# Install npm dependencies with cache and build shared schema package
 RUN cd /app/schemas && npm install && npm run build
-RUN /app/server/scripts/build_client.sh
+RUN cd /app/server && npm install
+
+# Install/download external modules through Node-based installer
+RUN --mount=type=cache,id=volweb-module-cache,target=/app/server/.module-cache,uid=10001,gid=10001 \
+    cd /app/server && npm run modules:install
+
+# Build client bundle
+RUN cd /app/client && npm install && npm run build
 
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
-RUN cd /app/server && npm install --cache /home/${SETUSER}/.npm && npx prisma generate && npm run build
+RUN cd /app/server && npx prisma generate && npm run build
 
 # Expose application port
 USER root

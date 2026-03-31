@@ -22,6 +22,7 @@ services:
       - app_dbdata:/app/server/database
       - app_filedata:/app/server/data
       - app_logdata:/app/server/logs
+      - app_modulecache:/app/server/.module-cache
     deploy:
       resources:
         reservations:
@@ -42,3 +43,4 @@ volumes:
   app_dbdata:
   app_filedata:
   app_logdata:
+  app_modulecache:
