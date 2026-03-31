@@ -1,0 +1,29 @@
+{
+  "Ilastik": {
+    "path": "./modules/ilastik/",
+    "cleanTemporaryFiles": true
+  },
+  "NanoOetzi": {
+    "path": "./modules/nano-oetzi/",
+    "pythonPath": "python",
+    "inference": {
+      "defaultModel": "four_classes_model.ckpt",
+      "cleanTemporaryFiles": true
+    },
+    "training": {
+      "cleanTemporaryFiles": true
+    }
+  },
+  "ProximalCryoET": {
+    "path": "./modules/Proximal_CryoET/"
+  },
+  "MotionCor3": {
+    "path": "./modules/motioncor3/"
+  },
+  "GCtfFind": {
+    "path": "./modules/gctffind/"
+  },
+  "IMOD": {
+    "path": "./modules/imod/"
+  }
+}

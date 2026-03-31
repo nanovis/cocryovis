@@ -16,6 +16,8 @@ import WebSocketManager, { ActionTypes } from "./websocket-manager.mjs";
 import TaskHistory from "../models/task-history.mjs";
 import type z from "zod";
 import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
+import moduleConfigLoader from "./module-config-loader";
+import { ilastikConfigSchema, IlastikModule } from "../modules/ilastik-module";
 
 class LabelGenerationTask extends Task<PseudoLabeledVolumeData[]> {
   private ilastikHandler: IlastikHandler;
@@ -60,12 +62,16 @@ export default class IlastikHandler {
   private config: AppConfig;
   private ilastikTempDirectory: string;
   private taskQueue: TaskQueue;
+  private ilastikModule: IlastikModule;
 
   constructor(config: AppConfig) {
     this.config = config;
     this.taskQueue = new TaskQueue();
     this.ilastikTempDirectory = path.join(this.config.tempPath, "ilastik");
-    Object.preventExtensions(this);
+    const ilastikConfig = ilastikConfigSchema.parse(
+      moduleConfigLoader.getModuleConfig("Ilastik")
+    );
+    this.ilastikModule = new IlastikModule(ilastikConfig);
   }
 
   async queueLabelGeneration(
@@ -129,36 +135,12 @@ export default class IlastikHandler {
     labelsOutputPath: string,
     logFile: LogFile
   ): Promise<string> {
-    await logFile.writeLog("\n\nIlastik inference started\n");
-
-    const rawDataFullPath =
-      path.resolve(rawDataPath) + IlastikHandler.rawDataset;
-    const modelFullPath = path.resolve(modelPath);
-    const resultsFilePath = path.join(
+    return await this.ilastikModule.runInference(
+      rawDataPath,
+      modelPath,
       labelsOutputPath,
-      `${Utils.stripExtension(rawDataPath)}_pseudo_labels.h5`
+      logFile
     );
-
-    await Utils.runScript(
-      this.config.ilastik.path + this.config.ilastik.inference,
-      [
-        "--headless",
-        `--project=${modelFullPath}`,
-        "--output_format=hdf5",
-        "--export_source=Probabilities",
-        "--export_dtype=uint8",
-        "--pipeline_result_drange=(0.0,1.0)",
-        "--export_drange=(0,255)",
-        `--output_internal_path=${IlastikHandler.pseudoLabelsDataset}`,
-        `--output_filename_format=${resultsFilePath}`,
-        rawDataFullPath,
-      ],
-      null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
-    );
-
-    return resultsFilePath;
   }
 
   private async createIlastikProject(
@@ -167,35 +149,12 @@ export default class IlastikHandler {
     outputPath: string,
     logFile: LogFile
   ): Promise<string> {
-    await logFile.writeLog("\n\nCreating Ilastik project\n");
-
-    const modelOutputFullPath = path.join(
-      path.resolve(outputPath),
-      this.config.ilastik.model_file_name
+    return await this.ilastikModule.createProject(
+      rawDataPath,
+      sparseLabelPath,
+      outputPath,
+      logFile
     );
-    const rawDataFullPath =
-      path.resolve(rawDataPath) + IlastikHandler.rawDataset;
-    const sparseLabelFullPath =
-      path.resolve(sparseLabelPath) + IlastikHandler.labelsDataset;
-
-    await Utils.runScript(
-      this.config.ilastik.python,
-      [
-        path.join(
-          this.config.ilastik.path,
-          this.config.ilastik.scripts_path,
-          this.config.ilastik.create_project_command
-        ),
-        modelOutputFullPath,
-        rawDataFullPath,
-        sparseLabelFullPath,
-      ],
-      null,
-      (value) => logFile.writeLog(value),
-      (value) => logFile.writeLog(value)
-    );
-
-    return modelOutputFullPath;
   }
 
   async generateLabels(
@@ -250,7 +209,7 @@ export default class IlastikHandler {
       });
       await H5ToLabels(
         resultPath,
-        IlastikHandler.pseudoLabelsDataset,
+        IlastikModule.pseudoLabelsDataset,
         labelDirectory,
         logFile
       );
@@ -279,7 +238,7 @@ export default class IlastikHandler {
       await logFile?.writeLog(`exec error: ${errorMsg}`);
       throw error;
     } finally {
-      if (appConfig.ilastik.cleanTemporaryFiles) {
+      if (this.ilastikModule.shouldCleanTemporaryFiles()) {
         try {
           await fsPromises.rm(outputPath, {
             recursive: true,
@@ -325,14 +284,14 @@ export default class IlastikHandler {
       rawData.isSigned,
       rawData.isLittleEndian,
       rawOutputPath,
-      IlastikHandler.rawDataset,
+      IlastikModule.rawDataset,
       logFile
     );
     await labelsToH5(
       sparseLabelsStack.map((l) => l.dataFile.rawFilePath),
       dimensions,
       labelsOutputPath,
-      IlastikHandler.labelsDataset,
+      IlastikModule.labelsDataset,
       logFile
     );
   }

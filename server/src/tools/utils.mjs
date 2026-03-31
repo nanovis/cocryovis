@@ -3,13 +3,10 @@
 import fileSystem from "fs";
 import path from "path";
 import https from "https";
-import { exec, spawn } from "child_process";
+import { spawn } from "child_process";
 import appConfig from "./config.mjs";
-import { promisify } from "node:util";
 import fs from "fs";
 import { volumeSettings } from "@cocryovis/schemas/componentSchemas/volume-settings-schema";
-
-const execPromise = promisify(exec);
 
 /**
  * @import z from "zod"
@@ -46,17 +43,18 @@ export default class Utils {
    * @param {string} outputPath
    */
   static async mrcToRaw(inputFile, outputPath) {
-    const command = `${appConfig.nanoOetzi.python} "${path.join(
-      "./python-scripts",
-      "mrc-to-raw.py"
-    )}" -i "${inputFile}" -o "${outputPath}"`;
-    const { stdout } = await execPromise(command);
-    // fs.writeFileSync(
-    //     path.join(outputPath, "mrc-to-raw.log"),
-    //     `Converting mrc file to a raw file\n\nstdout:\n${stdout}\n\stderr:\n${stderr}`
-    // );
+    // prettier-ignore
+    const params = [
+      "-i", inputFile,
+      "-o", outputPath
+    ];
 
-    const data = volumeSettings.parse(JSON.parse(stdout));
+    const output = await Utils.runPythonScriptWithOutput(
+      "mrc-to-raw.py",
+      params
+    );
+
+    const data = volumeSettings.parse(JSON.parse(output));
     return {
       rawFileName: data.file,
       settings: data,
@@ -68,14 +66,19 @@ export default class Utils {
    * @param {string} outputPath
    */
   static async analyzeToRaw(inputFile, outputPath) {
-    const command = `${appConfig.nanoOetzi.python} "${path.join(
-      "./python-scripts",
-      "analyze-to-raw.py"
-    )}" -i "${inputFile}" -o "${outputPath}"`;
-    const { stdout } = await execPromise(command);
+    // prettier-ignore
+    const params = [
+      "-i", inputFile,
+      "-o", outputPath
+    ]
+
+    const output = await Utils.runPythonScriptWithOutput(
+      "analyze-to-raw.py",
+      params
+    );
 
     /** @type z.infer<typeof volumeSettings> */
-    const data = JSON.parse(stdout);
+    const data = JSON.parse(output);
     return {
       rawFileName: data.file,
       settings: data,
@@ -185,25 +188,21 @@ export default class Utils {
     const rawFileAbsolutePath = path.resolve(rawFilePath);
     const outputAbsolutePath = path.resolve(outputPath);
 
-    /** @type {Array<number | string>} */
+    /** @type {Array<string>} */
     const params = [
       `"${rawFileAbsolutePath}"`,
-      width,
-      height,
-      depth,
+      width.toString(),
+      height.toString(),
+      depth.toString(),
       `"${outputAbsolutePath}"`,
     ];
 
     if (filterSize != null) {
-      params.push(filterSize);
+      params.push(filterSize.toString());
     }
 
-    const command = `${appConfig.nanoOetzi.python} "${path.join(
-      "./python-scripts",
-      "mean-filter.py"
-    )}" ${params.join(" ")}`;
+    await Utils.runPythonScript("mean-filter.py", params);
 
-    await execPromise(command);
     return outputPath;
   }
 
@@ -212,31 +211,10 @@ export default class Utils {
    * @returns {Promise<string>}
    */
   static async ckptToText(checkpointPath) {
-    return new Promise((resolve, reject) => {
-      const pythonProcess = spawn(appConfig.nanoOetzi.python, [
-        path.join("./python-scripts", "ckpt-to-text.py"),
-        "-c",
-        path.resolve(checkpointPath),
-      ]);
-
-      let outputData = "";
-
-      pythonProcess.stdout.on("data", (data) => {
-        outputData += data.toString(); // Accumulate data
-      });
-
-      pythonProcess.stderr.on("data", (error) => {
-        reject(`Error: ${error}`);
-      });
-
-      pythonProcess.on("close", (code) => {
-        if (code !== 0) {
-          reject(`Python process exited with code ${code}`);
-        } else {
-          resolve(outputData);
-        }
-      });
-    });
+    return Utils.runPythonScriptWithOutput("ckpt-to-text.py", [
+      "-c",
+      path.resolve(checkpointPath),
+    ]);
   }
 
   /**
@@ -407,7 +385,7 @@ export default class Utils {
    * @param {string} cwd - Optional working directory. Defaults to current directory.
    * @param {(value: string) => void | Promise<void> | null} [stdoutCallback] - Callback for stdout.
    * @param {(value: string) => void | Promise<void> | null} [stderrCallback] - Callback for stderr.
-   * @param {number[]} allowSoftFailCodes
+   * @param {{ env?: NodeJS.ProcessEnv, allowSoftFailCodes?: number[]}} options
    * @returns {Promise<number>}
    */
   static async runScript(
@@ -416,12 +394,13 @@ export default class Utils {
     cwd = null,
     stdoutCallback = null,
     stderrCallback = null,
-    allowSoftFailCodes = [139] //treat segfault
+    { env, allowSoftFailCodes } = {}
   ) {
     return new Promise((resolve, reject) => {
       const child = spawn(command, args, {
         cwd: cwd || process.cwd(),
         stdio: ["ignore", "pipe", "pipe"],
+        env: env,
       });
 
       if (stdoutCallback) {
@@ -437,7 +416,10 @@ export default class Utils {
       }
 
       child.on("close", (code) => {
-        if (code === 0 || allowSoftFailCodes.includes(code)) {
+        if (
+          code === 0 ||
+          (allowSoftFailCodes && allowSoftFailCodes.includes(code))
+        ) {
           if (code !== 0) {
             stdoutCallback(
               `Warning: script exited with non-zero allowed code ${code}`

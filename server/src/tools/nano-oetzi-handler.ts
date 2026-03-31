@@ -19,6 +19,11 @@ import type { volumeSizeSchema } from "@cocryovis/schemas/componentSchemas/volum
 import { GPUTask } from "./gpu-task-handler";
 import type GPUResourcesManager from "./gpu-resources-manager";
 import { Deferred } from "./task-queue";
+import moduleConfigLoader from "./module-config-loader";
+import {
+  nanoOetziConfigSchema,
+  NanoOetziModule,
+} from "../modules/nano-oetzi-module";
 
 interface DeepVolume extends VolumeDB {
   rawData: RawVolumeDataWithFileDB;
@@ -111,11 +116,17 @@ class TrainingTask extends GPUTask<CheckpointDB> {
 
 export default class NanoOetziHandler {
   private static readonly tempDirectory = "nano-oetzi-tasks";
+  private nanoOetziModule: NanoOetziModule;
 
   constructor(
     private gpuTaskHandler: GPUTaskHandler,
     private config: AppConfig
-  ) {}
+  ) {
+    const nanoOetziConfig = nanoOetziConfigSchema.parse(
+      moduleConfigLoader.getModuleConfig("NanoOetzi")
+    );
+    this.nanoOetziModule = new NanoOetziModule(nanoOetziConfig);
+  }
 
   async queueInference(
     checkpointId: number,
@@ -198,7 +209,7 @@ export default class NanoOetziHandler {
         `${Utils.stripExtension(rawVolumeData.dataFile.rawFilePath)}.json`
       );
 
-      await NanoOetziHandler.writeNanoOetziSettingsFile(
+      await NanoOetziModule.writeSettingsFile(
         rawVolumeData.dataFile.rawFilePath,
         rawVolumeData,
         tempSettingsPath
@@ -206,41 +217,15 @@ export default class NanoOetziHandler {
 
       await fs.promises.mkdir(outputPath, { recursive: true });
 
-      await logFile?.writeLog("Nano-Oetzi inference started\n");
-
       const inferenceDataAbsolutePath = path.resolve(tempSettingsPath);
       const outputAbsolutePath = path.resolve(outputPath);
 
-      if (!fs.existsSync(outputAbsolutePath)) {
-        fs.mkdirSync(outputAbsolutePath, { recursive: true });
-      }
-
-      const checkpointAbsolutePath = path.resolve(checkpoint.filePath);
-      const params = [
-        "./" + this.config.nanoOetzi.inference.command,
+      await this.nanoOetziModule.runInference(
         inferenceDataAbsolutePath,
+        checkpoint.filePath,
         outputAbsolutePath,
-        "-m",
-        checkpointAbsolutePath,
-        "--gpu",
-        gpuId.toString(),
-      ];
-      if (this.config.nanoOetzi.inference.cleanTemporaryFiles) {
-        params.push("-c", "True");
-      }
-
-      await Utils.runScript(
-        this.config.nanoOetzi.python,
-        params,
-        path.resolve(
-          path.join(this.config.nanoOetzi.path, this.config.nanoOetzi.scripts)
-        ),
-        async (value) => logFile?.writeLog(value),
-        async (value) => logFile?.writeLog(value)
-      );
-
-      await logFile?.writeLog(
-        `\n--------------\nNanoOetzi inference finished\n\nCreating results entry...\n`
+        gpuId,
+        logFile
       );
 
       const outputFile = await fs.promises.readFile(
@@ -676,7 +661,7 @@ export default class NanoOetziHandler {
       }
       throw error;
     } finally {
-      if (this.config.nanoOetzi.cleanTemporaryFiles) {
+      if (this.nanoOetziModule.shouldCleanTrainingTemporaryFiles()) {
         try {
           await fs.promises.rm(workFolder, {
             recursive: true,
@@ -875,32 +860,6 @@ export default class NanoOetziHandler {
   private createTemporaryOutputPath() {
     return Utils.createTemporaryFolder(
       path.join(this.config.tempPath, NanoOetziHandler.tempDirectory)
-    );
-  }
-
-  private static writeNanoOetziSettingsFile(
-    filePath: string,
-    settings: CommonVolumeSettings,
-    outputPath: string
-  ): Promise<void> {
-    const nanoOetziSettings = {
-      file: path.basename(filePath),
-      usedBits: settings.usedBits,
-      isSigned: settings.isSigned,
-      isLittleEndian: settings.isLittleEndian,
-      addValue: settings.addValue,
-      skipBytes: settings.skipBytes,
-      bytesPerVoxel: settings.bytesPerVoxel,
-      size: {
-        x: settings.sizeX,
-        y: settings.sizeY,
-        z: settings.sizeZ,
-      },
-    };
-    return fs.promises.writeFile(
-      outputPath,
-      JSON.stringify(nanoOetziSettings),
-      "utf8"
     );
   }
 }
