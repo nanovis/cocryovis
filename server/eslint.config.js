@@ -55,7 +55,9 @@ export default defineConfig([
       globals: globals.node,
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["prisma/seed.ts", "prisma/seeds/*.ts"],
+        },
       },
     },
     rules: {
