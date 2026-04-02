@@ -7,10 +7,13 @@
   "scripts": {
     "prisma:init": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",
+    "prisma:generate": "prisma generate",
     "prisma:db": "npx prisma studio",
     "prisma:seed": "npx prisma db seed",
+    "db:setup": "npm run prisma:deploy && npm run prisma:seed",
     "prisma:seed:users": "tsx prisma/seeds/test-users.ts",
     "start": "node dist/index.js",
+    "start:prod": "npm run db:setup && npm run start",
     "dev": "tsx src/index.ts",
     "dev:env": "conda run --no-capture-output -p ./.venv tsx src/index.ts",
     "build": "tsup",

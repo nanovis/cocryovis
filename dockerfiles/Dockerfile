@@ -81,20 +81,18 @@ COPY --chown=${SETUSER}:${SETUSER} ./ /app/
 
 USER ${SETUSER}
 
-# Install npm dependencies with cache and build shared schema package
-RUN cd /app/schemas && npm install && npm run build
-RUN cd /app/server && npm install
+# Install all workspace npm dependencies in one step
+RUN cd /app && npm ci
 
 # Install/download external modules through Node-based installer
 RUN --mount=type=cache,id=volweb-module-cache,target=/app/server/.module-cache,uid=10001,gid=10001 \
     cd /app/server && npm run modules:install
 
-# Build client bundle
-RUN cd /app/client && npm install && npm run build
-
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
-RUN cd /app/server && npx prisma generate && npm run build
+
+# Generate Prisma client and build all workspace packages
+RUN cd /app && npm run build:prod
 
 # Expose application port
 USER root

@@ -36,7 +36,7 @@ services:
       [
         "sh",
         "-c",
-        "cd server && . modules/imod/IMOD/IMOD-linux.sh && npx prisma migrate deploy && npx prisma db seed && conda run --no-capture-output -n volweb npm start -- --port 8080 --host 0.0.0.0 --demoProject 13"
+        "cd server && . modules/imod/IMOD/IMOD-linux.sh && conda run --no-capture-output -n volweb npm run start:prod -- --port 8080 --host 0.0.0.0 --demoProject 13"
       ]
 
 volumes:

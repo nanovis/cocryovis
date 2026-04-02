@@ -94,11 +94,11 @@ The client defaults to `http://localhost:8080` for API calls. Override with `VIT
 
 ## Production-Style Local Run
 
-Build client and server from the workspace root, then run the compiled server (which serves `client/build`):
+Build from the workspace root, then run the unified production startup (Prisma deploy + seed + server start):
 
 ```bash
-npm run build
-cd server && npm start -- --host 0.0.0.0 --port 8080
+npm run build:prod
+npm run start:prod
 ```
 
 ## Modules System
@@ -153,7 +153,7 @@ docker compose -f compose.yml up --build
 Notes:
 
 - Compose setup assumes GPU-capable runtime (`gpus: all`).
-- The container startup runs Prisma migrations and seed before launching the server.
+- The container startup uses `npm run start:prod` (runs Prisma deploy + seed, then starts server).
 - Configure credentials/secrets with environment variables (`SESSION_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`).
 
 ## Useful Commands
@@ -162,6 +162,7 @@ From `server/`:
 
 - `npm run dev`: start API in development mode
 - `npm run build`: build TypeScript output
+- `npm run start:prod`: run production startup (Prisma deploy + seed + `start`)
 - `npm start`: run compiled server (`dist/index.js`)
 - `npm run prisma:db`: open Prisma Studio
 
