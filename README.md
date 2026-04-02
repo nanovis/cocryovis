@@ -30,12 +30,10 @@ git clone --recurse-submodules <repo-url>
 cd vol-web-server-dev
 ```
 
-### 2. Install JavaScript dependencies
+### 2. Install JavaScript dependencies (workspace)
 
 ```bash
-cd schemas && npm install && npm run build
-cd ../server && npm install
-cd ../client && npm install
+npm install
 ```
 
 ### 3. Install Python dependencies
@@ -96,12 +94,11 @@ The client defaults to `http://localhost:8080` for API calls. Override with `VIT
 
 ## Production-Style Local Run
 
-Build client and server, then run the compiled server (which serves `client/build`):
+Build client and server from the workspace root, then run the compiled server (which serves `client/build`):
 
 ```bash
-cd client && npm run build
-cd ../server && npm run build
-npm start -- --host 0.0.0.0 --port 8080
+npm run build
+cd server && npm start -- --host 0.0.0.0 --port 8080
 ```
 
 ## Modules System
@@ -172,7 +169,3 @@ From `client/`:
 
 - `npm run dev`: start Vite dev server
 - `npm run build`: build production bundle
-
-From `schemas/`:
-
-- `npm run build`: build shared schema package

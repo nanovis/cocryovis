@@ -26,8 +26,9 @@
     "checkJs": true,
 
     "paths": {
-      "@cocryovis/schemas/*": ["../schemas/src/*.ts"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@cocryovis/schemas": ["../schemas/src"],
+      "@cocryovis/schemas/*": ["../schemas/src/*"]
     },
     "types": ["@webgpu/types"]
   },

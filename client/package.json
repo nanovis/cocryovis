@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@cocryovis/schemas": "file:../schemas",
+    "@cocryovis/schemas": "1.0.0",
     "@fluentui/react-components": "^9.73.5",
     "@hookform/resolvers": "^5.2.2",
     "@svgdotjs/svg.js": "^3.2.5",

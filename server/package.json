@@ -37,7 +37,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@cocryovis/schemas": "file:../schemas",
+    "@cocryovis/schemas": "1.0.0",
     "@prisma/client": "^6.19.2",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",

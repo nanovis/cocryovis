@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "./dist",
 
     "target": "ES2024",
@@ -10,10 +11,10 @@
     "checkJs": true,
     "esModuleInterop": true,
     "allowImportingTsExtensions": false,
-
     "paths": {
-      "@cocryovis/schemas/*": ["../schemas/src/*.ts"]
+      "@cocryovis/schemas": ["../schemas/src"],
+      "@cocryovis/schemas/*": ["../schemas/src/*"]
     }
   },
-  "include": ["src", "prisma/**/*.ts"]
+  "include": ["src"]
 }
