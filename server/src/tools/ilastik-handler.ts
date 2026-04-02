@@ -1,7 +1,6 @@
 import fileSystem from "fs";
 import path from "path";
 import fsPromises from "node:fs/promises";
-import { H5ToLabels, labelsToH5, rawToH5 } from "./raw-to-h5.mjs";
 import Utils from "./utils.mjs";
 import TaskQueue, { Deferred, Task } from "./task-queue";
 import Volume from "../models/volume.mjs";
@@ -207,7 +206,7 @@ export default class IlastikHandler {
       await fsPromises.mkdir(labelDirectory, {
         recursive: true,
       });
-      await H5ToLabels(
+      await this.ilastikModule.H5ToLabels(
         resultPath,
         IlastikModule.pseudoLabelsDataset,
         labelDirectory,
@@ -277,7 +276,7 @@ export default class IlastikHandler {
       z: rawData.sizeZ,
     };
 
-    await rawToH5(
+    await this.ilastikModule.rawToH5(
       rawData.dataFile.rawFilePath,
       dimensions,
       rawData.usedBits,
@@ -287,7 +286,7 @@ export default class IlastikHandler {
       IlastikModule.rawDataset,
       logFile
     );
-    await labelsToH5(
+    await this.ilastikModule.labelsToH5(
       sparseLabelsStack.map((l) => l.dataFile.rawFilePath),
       dimensions,
       labelsOutputPath,

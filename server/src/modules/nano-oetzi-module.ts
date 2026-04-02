@@ -6,6 +6,7 @@ import Utils from "../tools/utils.mjs";
 import { BaseModule } from "./base-module";
 import { ApiError } from "../tools/error-handler.mjs";
 import type LogFile from "../tools/log-manager.mjs";
+import type { trainingOptions } from "@cocryovis/schemas/nano-oetzi-path-schema";
 
 export const nanoOetziConfigSchema = z.object({
   path: z.string().min(1),
@@ -125,6 +126,8 @@ export class NanoOetziModule extends BaseModule {
     configPath: string,
     outputPath: string,
     gpuId: number,
+    trainingParams?: z.infer<typeof trainingOptions>,
+    checkpointPath?: string,
     logFile?: LogFile
   ): Promise<void> {
     if (!configPath || !outputPath) {
@@ -137,16 +140,50 @@ export class NanoOetziModule extends BaseModule {
     await logFile?.writeLog("Nano-Oetzi training started\n");
 
     // prettier-ignore
-    const params = [
+    const commandParams = [
       path.join("./", NanoOetziModule.trainingCommand),
       configPath,
       outputPath,
       "--device", gpuId.toString(),
     ];
 
+    if (trainingParams?.minEpochs !== undefined) {
+      commandParams.push("--min_epochs", trainingParams.minEpochs.toString());
+    }
+    if (trainingParams?.maxEpochs !== undefined) {
+      commandParams.push("--max_epochs", trainingParams.maxEpochs.toString());
+    }
+    if (trainingParams?.findLearningRate) {
+      commandParams.push("--find_lr");
+    }
+    if (trainingParams?.learningRate !== undefined) {
+      commandParams.push(
+        "--learning_rate",
+        trainingParams.learningRate.toString()
+      );
+    }
+    if (trainingParams?.batchSize !== undefined) {
+      commandParams.push("--batch_size", trainingParams.batchSize.toString());
+    }
+    if (trainingParams?.loss !== undefined) {
+      commandParams.push("--loss", trainingParams.loss.toLowerCase());
+    }
+    if (trainingParams?.optimizer !== undefined) {
+      commandParams.push("--opt", trainingParams.optimizer.toLowerCase());
+    }
+    if (trainingParams?.accumulateGradients !== undefined) {
+      commandParams.push(
+        "--accumulate-grads",
+        trainingParams.accumulateGradients.toString()
+      );
+    }
+    if (checkpointPath) {
+      commandParams.push("--checkpoint", path.resolve(checkpointPath));
+    }
+
     await Utils.runScript(
       this.nanoOetziConfig.pythonPath,
-      params,
+      commandParams,
       path.resolve(
         path.join(this.nanoOetziConfig.path, NanoOetziModule.scriptsDirectory)
       ),

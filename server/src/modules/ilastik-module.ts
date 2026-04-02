@@ -260,4 +260,96 @@ export class IlastikModule extends BaseModule {
   shouldCleanTemporaryFiles(): boolean {
     return this.ilastikConfig.cleanTemporaryFiles ?? true;
   }
+
+  async rawToH5(
+    rawVolumePath: string,
+    dimensions: { x: number; y: number; z: number },
+    usedBits: number,
+    isSigned: boolean,
+    littleEndian: boolean,
+    outputPath: string,
+    datasetName: string,
+    logFile?: LogFile
+  ) {
+    // prettier-ignore
+    const params = [
+      path.join("./python-scripts", "raw-to-h5.py"),
+      "-r", rawVolumePath,
+      "-d", `${dimensions.x.toString()}x${dimensions.y.toString()}x${dimensions.z.toString()}`,
+      "-b", usedBits.toString(),
+      "-sg", isSigned.toString(),
+      "-le", littleEndian.toString(),
+      "-s", datasetName,
+      "-o", outputPath
+    ]
+
+    await Utils.runScript(
+      this.ilastikConfig.path + IlastikModule.pythonPath,
+      params,
+      null,
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
+    );
+
+    return outputPath;
+  }
+
+  async labelsToH5(
+    labelPaths: string[],
+    dimensions: { x: number; y: number; z: number },
+    outputPath: string,
+    datasetName: string,
+    logFile?: LogFile
+  ) {
+    // prettier-ignore
+    const params = [
+      path.join("./python-scripts", "labels-to-h5.py"),
+      "-l", ...labelPaths,
+      "-d", `${dimensions.x.toString()}x${dimensions.y.toString()}x${dimensions.z.toString()}`,
+      "-s", datasetName,
+      "-o", outputPath,
+      "-log", "True"
+    ];
+
+    await Utils.runScript(
+      this.ilastikConfig.path + IlastikModule.pythonPath,
+      params,
+      null,
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
+    );
+
+    return outputPath;
+  }
+
+  /**
+   * @param {string} labelPath
+   * @param {string} datasetName
+   * @param {string} outputPath
+   * @param {LogFile} logFile
+   */
+  async H5ToLabels(
+    labelPath: string,
+    datasetName: string,
+    outputPath: string,
+    logFile?: LogFile
+  ) {
+    // prettier-ignore
+    const params = [
+      path.join("./python-scripts", "h5-to-labels.py"),
+      "-l", labelPath,
+      "-s", datasetName,
+      "-o", outputPath
+    ];
+
+    await Utils.runScript(
+      this.ilastikConfig.path + IlastikModule.pythonPath,
+      params,
+      null,
+      (value) => logFile?.writeLog(value),
+      (value) => logFile?.writeLog(value)
+    );
+
+    return outputPath;
+  }
 }

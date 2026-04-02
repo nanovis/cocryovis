@@ -109,6 +109,7 @@ class TrainingTask extends GPUTask<CheckpointDB> {
       this.testingVolumesIds,
       this.params,
       this.outputPath,
+      this.gpuId,
       this.logFile
     );
   }
@@ -482,8 +483,13 @@ export default class NanoOetziHandler {
     testingVolumesIds: number[],
     params: z.infer<typeof trainingOptions>,
     outputPath: string | null,
+    gpuId: number,
     logFile?: LogFile
   ): Promise<CheckpointDB> {
+    if (!outputPath) {
+      outputPath = this.createTemporaryOutputPath();
+    }
+
     const workFolder = path.join(outputPath, "training-data");
 
     try {
@@ -517,7 +523,7 @@ export default class NanoOetziHandler {
       await logFile?.writeLog("Converting raw data into pytorch tensors...\n");
 
       await Utils.runScript(
-        this.config.nanoOetzi.python,
+        this.config.python,
         [
           path.join("./python-scripts", "raws-to-train-sets.py"),
           "-i",
@@ -534,39 +540,7 @@ export default class NanoOetziHandler {
         `\n--------------\nSuccess.\n\nLauching training script...\n`
       );
 
-      const scriptParams = [
-        this.config.nanoOetzi.training.command,
-        outputAbsolutePath,
-      ];
-
-      if (params.minEpochs !== undefined) {
-        scriptParams.push("--min_epochs", params.minEpochs.toString());
-      }
-      if (params.maxEpochs !== undefined) {
-        scriptParams.push("--max_epochs", params.maxEpochs.toString());
-      }
-      if (params.findLearningRate) {
-        scriptParams.push("--find_lr");
-      }
-      if (params.learningRate !== undefined) {
-        scriptParams.push("--learning_rate", params.learningRate.toString());
-      }
-      if (params.batchSize !== undefined) {
-        scriptParams.push("--batch_size", params.batchSize.toString());
-      }
-      if (params.loss !== undefined) {
-        scriptParams.push("--loss", params.loss.toLowerCase());
-      }
-      if (params.optimizer !== undefined) {
-        scriptParams.push("--opt", params.optimizer.toLowerCase());
-      }
-      if (params.accumulateGradients !== undefined) {
-        scriptParams.push(
-          "--accumulate-grads",
-          params.accumulateGradients.toString()
-        );
-      }
-
+      let checkpointPath: string | undefined = undefined;
       if (params.checkpointId !== undefined) {
         const checkpoint = await Checkpoint.getById(params.checkpointId);
         if (!checkpoint) {
@@ -575,18 +549,16 @@ export default class NanoOetziHandler {
         if (!checkpoint.filePath) {
           throw new ApiError(400, "Training error: Checkpoint file not found.");
         }
-        const checkpointAbsolutePath = path.resolve(checkpoint.filePath);
-        scriptParams.push("--checkpoint", checkpointAbsolutePath);
+        checkpointPath = checkpoint.filePath;
       }
 
-      await Utils.runScript(
-        this.config.nanoOetzi.python,
-        scriptParams,
-        path.resolve(
-          path.join(this.config.nanoOetzi.path, this.config.nanoOetzi.scripts)
-        ),
-        (value) => logFile?.writeLog(value),
-        (value) => logFile?.writeLog(value)
+      await this.nanoOetziModule.runTraining(
+        configAbsolutePath,
+        outputAbsolutePath,
+        gpuId,
+        params,
+        checkpointPath,
+        logFile
       );
 
       await logFile?.writeLog(
