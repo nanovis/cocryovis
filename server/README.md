@@ -18,6 +18,7 @@ Create a new module template and config entry with ```npm run modules:create -- 
 
 The installer list is read from ```module_config.json``` using each module's ```moduleFile``` entry.
 Module IDs are the top-level keys in that file. You can also add optional ```aliases``` per module for ```--skip``` matching.
+See detailed module documentation in ```docs/modules-system.md```.
 
 To skip specific module installers, use:
 ```npm run modules:install -- --skip Ilastik --skip ProximalCryoET```
