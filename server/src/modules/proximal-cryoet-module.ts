@@ -26,6 +26,20 @@ export class ProximalCryoETModule extends BaseModule {
   static readonly executablePath =
     "CUDA_PROXIMAL_SART/build/CUDA_PROXIMAL_SART";
 
+  constructor(config: ProximalCryoETConfig) {
+    super();
+    this.proximalConfig = config;
+    this.validateConfiguration();
+  }
+
+  validateConfiguration(): void {
+    const executablePath = path.join(
+      this.proximalConfig.path,
+      ProximalCryoETModule.executablePath
+    );
+    this.validateFileExists(executablePath);
+  }
+
   static override async installModule(
     moduleId: string,
     {
@@ -97,24 +111,6 @@ export class ProximalCryoETModule extends BaseModule {
       cwd: path.join(proximalPath, "build"),
       env: compilerEnv,
     });
-  }
-
-  constructor(config: ProximalCryoETConfig) {
-    super("ProximalCryoET");
-    this.proximalConfig = config;
-    this.validateConfiguration();
-  }
-
-  validateConfiguration(): void {
-    this.validateDirectoryExists(
-      this.proximalConfig.path,
-      "Proximal_CryoET directory"
-    );
-    const executablePath = path.join(
-      this.proximalConfig.path,
-      ProximalCryoETModule.executablePath
-    );
-    this.validateFileExists(executablePath, "CUDA_PROXIMAL_SART executable");
   }
 
   /**

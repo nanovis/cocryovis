@@ -33,39 +33,33 @@ export class NanoOetziModule extends BaseModule {
   static readonly trainingCommand = "train.py";
 
   constructor(config: NanoOetziConfig) {
-    super("NanoOetzi");
+    super();
     this.nanoOetziConfig = config;
     this.validateConfiguration();
   }
 
   validateConfiguration(): void {
-    this.validateDirectoryExists(
-      this.nanoOetziConfig.path,
-      "NanoOetzi directory"
-    );
+    this.validateDirectoryExists(this.nanoOetziConfig.path);
     this.validateFileExists(
       path.join(
         this.nanoOetziConfig.path,
         NanoOetziModule.scriptsDirectory,
         NanoOetziModule.meanFilteringCommand
-      ),
-      "NanoOetzi mean filtering script"
+      )
     );
     this.validateFileExists(
       path.join(
         this.nanoOetziConfig.path,
         NanoOetziModule.scriptsDirectory,
         NanoOetziModule.inferenceCommand
-      ),
-      "NanoOetzi inference script"
+      )
     );
     this.validateFileExists(
       path.join(
         this.nanoOetziConfig.path,
         NanoOetziModule.scriptsDirectory,
         NanoOetziModule.trainingCommand
-      ),
-      "NanoOetzi training script"
+      )
     );
   }
 

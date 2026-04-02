@@ -40,7 +40,7 @@ export interface ModuleInstallContext {
  * Provides common interface for executing external scripts/executables
  */
 export abstract class BaseModule {
-  protected readonly moduleName: string;
+  protected readonly moduleId: string = this.constructor.name;
 
   static async installModule(
     _moduleId: string,
@@ -49,19 +49,15 @@ export abstract class BaseModule {
     // No-op by default for modules without an installation step.
   }
 
-  constructor(moduleName: string) {
-    this.moduleName = moduleName;
-  }
-
   /**
    * Validate that a file or directory exists
    */
-  protected validatePathExists(filePath: string, description: string): void {
+  protected validatePathExists(filePath: string): void {
     const absolutePath = path.resolve(filePath);
     if (!fs.existsSync(absolutePath)) {
       throw new ApiError(
         500,
-        `${this.moduleName} module: ${description} not found at ${absolutePath}`
+        `${this.moduleId} module: ${absolutePath} not found`
       );
     }
   }
@@ -69,13 +65,13 @@ export abstract class BaseModule {
   /**
    * Validate that a file exists
    */
-  protected validateFileExists(filePath: string, description: string): void {
-    this.validatePathExists(filePath, `${description} file`);
+  protected validateFileExists(filePath: string): void {
+    this.validatePathExists(filePath);
     const absolutePath = path.resolve(filePath);
     if (!fs.statSync(absolutePath).isFile()) {
       throw new ApiError(
         500,
-        `${this.moduleName} module: ${description} is not a file at ${absolutePath}`
+        `${this.moduleId} module: ${absolutePath} is not a file`
       );
     }
   }
@@ -83,16 +79,13 @@ export abstract class BaseModule {
   /**
    * Validate that a directory exists
    */
-  protected validateDirectoryExists(
-    dirPath: string,
-    description: string
-  ): void {
-    this.validatePathExists(dirPath, description);
+  protected validateDirectoryExists(dirPath: string): void {
+    this.validatePathExists(dirPath);
     const absolutePath = path.resolve(dirPath);
     if (!fs.statSync(absolutePath).isDirectory()) {
       throw new ApiError(
         500,
-        `${this.moduleName} module: ${description} is not a directory at ${absolutePath}`
+        `${this.moduleId} module: ${absolutePath} is not a directory`
       );
     }
   }

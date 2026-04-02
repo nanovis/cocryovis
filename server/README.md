@@ -14,6 +14,8 @@ Make sure submodules are installed by running ```git pull --recurse-submodules``
 
 Download/build modules by running ```npm run modules:install```
 
+Create a new module template and config entry with ```npm run modules:create -- <module-id-or-name>```
+
 The installer list is read from ```module_config.json``` using each module's ```moduleFile``` entry.
 Module IDs are the top-level keys in that file. You can also add optional ```aliases``` per module for ```--skip``` matching.
 

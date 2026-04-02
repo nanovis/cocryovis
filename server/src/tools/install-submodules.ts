@@ -9,29 +9,26 @@ import type {
   ModuleInstallContext,
   RunInstallCommandOptions,
 } from "../modules/base-module";
+import {
+  moduleInstallerEntrySchema,
+  MODULES_CACHE_DIRECTORY,
+  MODULES_DIRECTORY,
+  MODULES_WRAPPER_DIRECTORY,
+  readModuleConfig,
+  type ModuleConfig,
+} from "./module-config-utils";
 import { z } from "zod";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const serverRoot = path.resolve(currentDir, "..", "..");
-const modulesRoot = path.resolve(serverRoot, "modules");
-const cacheRoot = path.resolve(serverRoot, ".module-cache");
-const modulesSourceRoot = path.resolve(serverRoot, "src", "modules");
+const modulesRoot = path.resolve(serverRoot, MODULES_DIRECTORY);
+const cacheRoot = path.resolve(serverRoot, MODULES_CACHE_DIRECTORY);
+const modulesSourceRoot = path.resolve(serverRoot, MODULES_WRAPPER_DIRECTORY);
 
 interface CliOptions {
   skip: string[];
   only: string[];
 }
-
-type ModuleConfig = Record<string, Record<string, unknown>>;
-
-const normalizeStepAlias = (name: string): string =>
-  name
-    .trim()
-    .toLowerCase()
-    .replace(/^\.\//, "")
-    .replace(/\.sh$/, "")
-    .replace(/^scripts\//, "")
-    .replace(/[-\s]/g, "_");
 
 const isBaseModuleClass = (value: unknown): value is typeof BaseModule =>
   typeof value === "function" && value.prototype instanceof BaseModule;
@@ -42,15 +39,6 @@ interface LoadedInstaller {
   install: (context: ModuleInstallContext) => Promise<void>;
 }
 
-const moduleConfigSchema = z.record(
-  z.string(),
-  z.record(z.string(), z.unknown())
-);
-const moduleEntrySchema = z.object({
-  moduleFile: z.string().min(1),
-  aliases: z.array(z.string().min(1)).optional(),
-});
-
 const isSkipped = (
   skipSet: Set<string>,
   onlySet: Set<string>,
@@ -59,10 +47,8 @@ const isSkipped = (
 ): boolean => {
   const names = [moduleId, ...aliases];
   return (
-    (skipSet.size > 0 &&
-      names.some((name) => skipSet.has(normalizeStepAlias(name)))) ||
-    (onlySet.size > 0 &&
-      !names.some((name) => onlySet.has(normalizeStepAlias(name))))
+    (skipSet.size > 0 && names.some((name) => skipSet.has(name))) ||
+    (onlySet.size > 0 && !names.some((name) => onlySet.has(name)))
   );
 };
 
@@ -149,7 +135,7 @@ const loadInstallers = async (
   const installers: LoadedInstaller[] = [];
 
   for (const [moduleId, moduleSettings] of Object.entries(moduleConfig)) {
-    const entry = moduleEntrySchema.safeParse(moduleSettings);
+    const entry = moduleInstallerEntrySchema.safeParse(moduleSettings);
     if (!entry.success) {
       continue;
     }
@@ -195,21 +181,6 @@ const loadInstallers = async (
   return installers;
 };
 
-const getModuleConfig = async (): Promise<ModuleConfig> => {
-  const configPath = path.join(serverRoot, "module_config.json");
-  if (!existsSync(configPath)) {
-    return {};
-  }
-
-  const content = await fs.readFile(configPath, "utf8");
-  const parsed = moduleConfigSchema.safeParse(JSON.parse(content) as unknown);
-  if (!parsed.success) {
-    return {};
-  }
-
-  return parsed.data;
-};
-
 const parseModuleIdValues = (value: string, previous: string[]): string[] => {
   const parsed = value
     .split(",")
@@ -247,7 +218,7 @@ const main = async (): Promise<void> => {
 
   program.parse(process.argv);
   const options = program.opts<CliOptions>();
-  const moduleConfig = await getModuleConfig();
+  const moduleConfig = await readModuleConfig(serverRoot);
   const installers = await loadInstallers(moduleConfig);
 
   if (installers.length === 0) {
@@ -255,13 +226,9 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  const skipSet = new Set(
-    options.skip.map((value) => normalizeStepAlias(value))
-  );
+  const skipSet = new Set(options.skip);
 
-  const onlySet = new Set(
-    options.only.map((value) => normalizeStepAlias(value))
-  );
+  const onlySet = new Set(options.only);
 
   await ensureDir(cacheRoot);
 

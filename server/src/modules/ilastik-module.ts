@@ -39,6 +39,27 @@ export class IlastikModule extends BaseModule {
   );
   static readonly modelFileName = "ilastik_project.ilp";
 
+  protected ilastikConfig: IlastikConfig;
+
+  constructor(config: IlastikConfig) {
+    super();
+    this.ilastikConfig = config;
+    this.validateConfiguration();
+  }
+
+  validateConfiguration(): void {
+    this.validateDirectoryExists(this.ilastikConfig.path);
+    this.validateFileExists(
+      path.join(this.ilastikConfig.path, IlastikModule.pythonPath)
+    );
+    this.validateFileExists(
+      path.join(this.ilastikConfig.path, IlastikModule.inferencePath)
+    );
+    this.validateFileExists(
+      path.join(this.ilastikConfig.path, IlastikModule.createProjectPath)
+    );
+  }
+
   static override async installModule(
     moduleId: string,
     {
@@ -136,30 +157,6 @@ export class IlastikModule extends BaseModule {
 
     await removePath(extractPath, { force: true, recursive: true });
     await removePath(archivePath, { force: true });
-  }
-
-  protected ilastikConfig: IlastikConfig;
-
-  constructor(config: IlastikConfig) {
-    super("Ilastik");
-    this.ilastikConfig = config;
-    this.validateConfiguration();
-  }
-
-  validateConfiguration(): void {
-    this.validateDirectoryExists(this.ilastikConfig.path, "Ilastik directory");
-    this.validateFileExists(
-      path.join(this.ilastikConfig.path, IlastikModule.pythonPath),
-      "Ilastik python interpreter"
-    );
-    this.validateFileExists(
-      path.join(this.ilastikConfig.path, IlastikModule.inferencePath),
-      "Ilastik inference script"
-    );
-    this.validateFileExists(
-      path.join(this.ilastikConfig.path, IlastikModule.createProjectPath),
-      "Ilastik create project script"
-    );
   }
 
   /**

@@ -78,13 +78,13 @@ export class IMODModule extends BaseModule {
   }
 
   constructor(config: IMODConfig) {
-    super("IMOD");
+    super();
     this.imodConfig = config;
     this.validateConfiguration();
   }
 
   validateConfiguration(): void {
-    this.validateDirectoryExists(this.imodConfig.path, "IMOD directory");
+    this.validateDirectoryExists(this.imodConfig.path);
   }
 
   private getEnvironment(): NodeJS.ProcessEnv {

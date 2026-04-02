@@ -25,6 +25,21 @@ export class GCtfFindModule extends BaseModule {
 
   static readonly executablePath = "GCtfFind";
 
+  constructor(config: GCtfFindConfig) {
+    super();
+    this.gctfFindConfig = config;
+    this.validateConfiguration();
+  }
+
+  validateConfiguration(): void {
+    this.validateDirectoryExists(this.gctfFindConfig.path);
+    const executablePath = path.join(
+      this.gctfFindConfig.path,
+      GCtfFindModule.executablePath
+    );
+    this.validateFileExists(executablePath);
+  }
+
   static override async installModule(
     moduleId: string,
     {
@@ -56,23 +71,6 @@ export class GCtfFindModule extends BaseModule {
         cwd: modulePath,
       }
     );
-  }
-
-  constructor(config: GCtfFindConfig) {
-    super("GCtfFind");
-    this.gctfFindConfig = config;
-  }
-
-  validateConfiguration(): void {
-    this.validateDirectoryExists(
-      this.gctfFindConfig.path,
-      "GCtfFind directory"
-    );
-    const executablePath = path.join(
-      this.gctfFindConfig.path,
-      GCtfFindModule.executablePath
-    );
-    this.validateFileExists(executablePath, "GCtfFind executable");
   }
 
   /**

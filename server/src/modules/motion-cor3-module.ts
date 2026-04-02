@@ -25,6 +25,20 @@ export class MotionCor3Module extends BaseModule {
 
   static readonly executablePath = "MotionCor3";
 
+  constructor(config: MotionCor3Config) {
+    super();
+    this.motionCor3Config = config;
+    this.validateConfiguration();
+  }
+
+  validateConfiguration(): void {
+    const executablePath = path.join(
+      this.motionCor3Config.path,
+      MotionCor3Module.executablePath
+    );
+    this.validateFileExists(executablePath);
+  }
+
   static override async installModule(
     moduleId: string,
     {
@@ -56,20 +70,6 @@ export class MotionCor3Module extends BaseModule {
         cwd: modulePath,
       }
     );
-  }
-
-  constructor(config: MotionCor3Config) {
-    super("MotionCor3");
-    this.motionCor3Config = config;
-    this.validateConfiguration();
-  }
-
-  validateConfiguration(): void {
-    const executablePath = path.join(
-      this.motionCor3Config.path,
-      MotionCor3Module.executablePath
-    );
-    this.validateFileExists(executablePath, "MotionCor3 executable");
   }
 
   /**
