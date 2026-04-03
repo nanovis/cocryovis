@@ -11,6 +11,7 @@ const useStyles = makeStyles({
     flexDirection: "column",
     alignItems: "center",
     height: "100%",
+    zIndex: 1,
   },
   signUpHeader: {
     marginTop: "50px",
