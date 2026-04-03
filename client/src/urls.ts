@@ -1,5 +1,10 @@
-import { DEFAULT_URL } from "./constants";
+const envApiUrl = import.meta.env.VITE_API_URL;
 
-const apiBase = import.meta.env.VITE_API_URL || DEFAULT_URL;
-const wsProtocol = apiBase.startsWith("https") ? "wss" : "ws";
-export const websocketUrl = `${wsProtocol}://${new URL(apiBase).host}/ws`;
+// Prefer build-time env and fallback to current page origin.
+const resolvedApiBase = new URL(
+	envApiUrl || window.location.origin,
+	window.location.origin
+);
+
+const wsProtocol = resolvedApiBase.protocol === "https:" ? "wss" : "ws";
+export const websocketUrl = `${wsProtocol}://${resolvedApiBase.host}/ws`;
