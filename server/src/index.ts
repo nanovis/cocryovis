@@ -102,6 +102,8 @@ const startServer = async () => {
   const sessionsDB = new Database(seassionsPath);
   sessionsDB.pragma("journal_mode = WAL");
 
+  const allowInsecureCookies = process.env.ALLOW_INSECURE_COOKIES === "true";
+
   const sess: SessionOptions = {
     name: appConfig.cookieName,
     store: new SqliteStore({
@@ -117,18 +119,13 @@ const startServer = async () => {
     rolling: true,
     cookie: {
       httpOnly: true,
-      secure:
-        process.env.NODE_ENV === "production" &&
-        process.env.ALLOW_INSECURE_COOKIES !== "true",
+      secure: !allowInsecureCookies,
       maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
       sameSite: "lax",
     },
   };
 
-  if (
-    process.env.NODE_ENV === "production" &&
-    process.env.ALLOW_INSECURE_COOKIES === "true"
-  ) {
+  if (process.env.NODE_ENV === "production" && allowInsecureCookies) {
     console.warn(
       "WARNING: Insecure cookies are allowed in production! This is not recommended for production environments."
     );
@@ -137,7 +134,7 @@ const startServer = async () => {
   const sessionParser = session(sess);
 
   if (app.get("env") === "production") {
-    app.set("trust proxy", 1);
+    app.set("trust proxy", true);
     app.use(
       helmet({
         contentSecurityPolicy: {
@@ -147,6 +144,8 @@ const startServer = async () => {
             connectSrc: [
               "'self'",
               "https://files.cryoetdataportal.cziscience.com",
+              "wss:",
+              "ws:",
             ],
           },
         },

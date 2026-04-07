@@ -1,5 +1,22 @@
 services:
+  init-permissions:
+    image: alpine
+    user: root
+    volumes:
+      - app_dbdata:/database
+      - ${APP_FILEDATA_PATH:-./.volumes/data}:/data
+    command: 
+      [
+        "sh",
+        "-c",
+        "chown -R 10001:10001 /database && chown -R 10001:10001 /data"
+      ]
+    restart: "no"
+
   web:
+    depends_on:
+      init-permissions:
+        condition: service_completed_successfully
     build:
       context: ../
       dockerfile: dockerfiles/Dockerfile
@@ -16,11 +33,14 @@ services:
       - SESSIONS_PATH=/app/server/database/db.sessions
       - SESSION_SECRET=${SESSION_SECRET:-notsecret}
       - ALLOW_INSECURE_COOKIES=${ALLOW_INSECURE_COOKIES:-false}
+      - CROSS_SITE_COOKIES=${CROSS_SITE_COOKIES:-false}
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      # - DEMO_PROJECT=${DEMO_PROJECT}
+      # - DOMAIN_NAME=${DOMAIN_NAME}
     volumes:
       - app_dbdata:/app/server/database
-      - app_filedata:/app/server/data
+      - ${APP_FILEDATA_PATH:-./.volumes/data}:/app/server/data
       - app_logdata:/app/server/logs
       - app_modulecache:/app/server/.module-cache
     deploy:
@@ -32,15 +52,19 @@ services:
               capabilities: [gpu]
     gpus: all
     restart: unless-stopped
+    networks:
+      - volweb-network
     command:
       [
         "sh",
         "-c",
-        "cd server && . modules/imod/IMOD/IMOD-linux.sh && conda run --no-capture-output -n volweb npm run start:prod -- --port 8080 --host 0.0.0.0 --demoProject 13"
+        "cd server && conda run --no-capture-output -n volweb sh -lc 'npm run db:setup && npm run start -- --port 8080 --host 0.0.0.0 --demoProject 2'"
       ]
 
 volumes:
   app_dbdata:
-  app_filedata:
   app_logdata:
   app_modulecache:
+
+networks:
+  volweb-network:

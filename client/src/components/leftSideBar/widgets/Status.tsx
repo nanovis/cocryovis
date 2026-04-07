@@ -100,7 +100,7 @@ const Status = observer(({ open, close }: Props) => {
         !open && globalClasses.invisible
       )}
       aria-hidden={!open}
-      style={{ width: "700px" }}
+      style={{ width: "706px" }}
     >
       <div className={classes.contents}>
         <div className={classes.header}>

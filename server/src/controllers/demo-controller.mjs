@@ -22,7 +22,7 @@ export default class DemoController {
         "Demo project index is not set. Please check your configuration."
       );
     }
-    const project = await Project.getByIdDeep(demoProjectIndex);
+    const project = await Project.getByIdDeep(Number(demoProjectIndex));
 
     res.json(project);
   };
