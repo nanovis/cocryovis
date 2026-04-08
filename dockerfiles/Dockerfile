@@ -1,23 +1,19 @@
 # syntax=docker/dockerfile:1.7-labs
 
-# Use NVIDIA CUDA base image with Ubuntu 24.04 and Miniconda pre-installed
-FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+# -------- Builder stage (toolchains + build dependencies) --------
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04 AS builder
 
-# Build argument for CUDA architectures (e.g. "native" if it works, "80;86;90" for multiple, or "80" for single)
+# Build argument for CUDA architectures (e.g. "native", "80;86;90", or "80")
 ARG CUDA_ARCHITECTURES=native
 
-# Set environment variables early for caching
 ENV DEBIAN_FRONTEND=noninteractive \
     NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    SETUSER=volweb \
-    UID=10001 \
     PATH=/opt/conda/bin:$PATH \
     CUDA_HOME=/usr/local/cuda
 
-# Install system dependencies, Miniconda, Node.js 20.x
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libtiff-dev \
     libpng-dev \
@@ -25,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gfortran \
     liblapack-dev \
     libopenblas-dev \
-    nvidia-container-toolkit \
     libxml2 \
     libglpk-dev \
     libxt-dev \
@@ -38,54 +33,46 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     file \
     && rm -rf /var/lib/apt/lists/*
 
-# Install CMake 3.24+ from official release (not from apt which has older version)
+# Install CMake 3.24+
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.8/cmake-3.27.8-linux-x86_64.tar.gz -O /tmp/cmake.tar.gz \
     && tar -xzf /tmp/cmake.tar.gz -C /usr/local --strip-components=1 \
     && rm /tmp/cmake.tar.gz
 
-# Install Miniconda (latest Miniconda3 installer)
+# Install Miniconda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
     && bash /tmp/miniconda.sh -b -p /opt/conda \
     && rm /tmp/miniconda.sh \
     && /opt/conda/bin/conda clean -afy
 
-# Create user with specified UID and home directory
-RUN useradd -m -s /bin/bash -u ${UID} ${SETUSER} \
-    && mkdir -p /home/${SETUSER}/.npm \
-    && chown -R ${SETUSER}:${SETUSER} /home/${SETUSER}
-
 # Install Node.js 24.x
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends nodejs \
     && npm install -g npm@latest \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory and permissions
 WORKDIR /app
-RUN chown ${SETUSER}:${SETUSER} /app
 
-# Copy python dependency files first so we can fail faster
-COPY --chown=${SETUSER}:${SETUSER} server/requirements.txt /app/server/
+# Install Python env/deps
+COPY server/requirements.txt /app/server/
 
-# Create conda environment and install Python dependencies
 RUN /opt/conda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main \
     && /opt/conda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r \
     && /opt/conda/bin/conda create -n volweb python=3.9 -y \
     && /opt/conda/bin/conda run -n volweb pip install --no-cache-dir -r /app/server/requirements.txt \
     && /opt/conda/bin/conda clean -afy
 
-# Copy application source code
-USER root
-COPY --chown=${SETUSER}:${SETUSER} ./ /app/
+# Install JS deps
+COPY package*.json /app/
+COPY client/package*.json /app/client/
+COPY schemas/package*.json /app/schemas/
+COPY server/package*.json /app/server/
+RUN npm ci
 
-USER ${SETUSER}
-
-# Install all workspace npm dependencies in one step
-RUN cd /app && npm ci
+# Copy source
+COPY ./ /app/
 
 # Install/download external modules through Node-based installer
-RUN --mount=type=cache,id=volweb-module-cache,target=/app/server/.module-cache,uid=10001,gid=10001 \
+RUN --mount=type=cache,id=volweb-module-cache,target=/app/server/.module-cache \
     cd /app/server && npm run modules:install
 
 ARG DATABASE_URL
@@ -94,9 +81,55 @@ ENV DATABASE_URL=${DATABASE_URL}
 # Generate Prisma client and build all workspace packages
 RUN cd /app && npm run build:prod
 
-# Expose application port
-USER root
+
+# -------- Runtime stage (leaner image) --------
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    SETUSER=volweb \
+    UID=10001 \
+    PATH=/opt/conda/bin:$PATH \
+    CUDA_HOME=/usr/local/cuda
+
+# Runtime-only system libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libtiff5 \
+    libpng16-16 \
+    libjpeg-turbo8 \
+    liblapack3 \
+    libopenblas0-pthread \
+    libxml2 \
+    libglpk40 \
+    libxt6 \
+    libcairo2 \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js runtime for npm start scripts
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g npm@latest \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create runtime user
+RUN useradd -m -s /bin/bash -u ${UID} ${SETUSER} \
+    && mkdir -p /home/${SETUSER}/.npm \
+    && chown -R ${SETUSER}:${SETUSER} /home/${SETUSER}
+
+WORKDIR /app
+
+# Bring in prepared conda env and built app from builder
+COPY --from=builder /opt/conda /opt/conda
+COPY --from=builder --chown=${SETUSER}:${SETUSER} /app /app
+
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
 EXPOSE 8080
 
-# Default user
 USER ${SETUSER}

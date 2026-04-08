@@ -1,0 +1,9 @@
+services:
+  web:
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+    # Remove unsupported fields by overriding them
+    deploy: {}
