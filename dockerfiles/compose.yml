@@ -50,7 +50,6 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    gpus: all
     restart: unless-stopped
     networks:
       - volweb-network
