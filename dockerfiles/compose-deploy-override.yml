@@ -1,7 +1,7 @@
 services:
   web:
     networks:
-      - volweb-network
+      - cocryovis-network
 
   nginx:
     image: nginx:alpine
@@ -13,7 +13,7 @@ services:
       - ${NGINX_CONF_PATH:-./nginx.conf}:/etc/nginx/nginx.conf
       - ${CERT_PATH:-./ssl}:/etc/nginx/ssl
     networks:
-      - volweb-network
+      - cocryovis-network
     depends_on:
       - web
     restart: unless-stopped

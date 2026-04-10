@@ -24,7 +24,7 @@ services:
         CUDA_ARCHITECTURES: ${CUDA_ARCHITECTURES:-native}
         DATABASE_URL: file:/app/server/database/db.sqlite
     image: ${IMAGE_NAME:-cocryovis:latest}
-    container_name: volweb-app
+    container_name: cocryovis
     ports:
       - "8080:8080"
     environment:
@@ -52,7 +52,7 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
     networks:
-      - volweb-network
+      - cocryovis-network
     command:
       [
         "sh",
@@ -66,4 +66,4 @@ volumes:
   app_modulecache:
 
 networks:
-  volweb-network:
+  cocryovis-network:
