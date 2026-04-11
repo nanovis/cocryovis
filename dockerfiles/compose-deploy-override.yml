@@ -8,6 +8,7 @@ services:
     user: root
     container_name: cocryovis-nginx-proxy
     ports:
+      - "80:80"
       - "443:443"
     volumes:
       - ${NGINX_CONF_PATH:-./nginx.conf}:/etc/nginx/nginx.conf
