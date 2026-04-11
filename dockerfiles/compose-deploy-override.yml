@@ -1,8 +1,4 @@
 services:
-  web:
-    networks:
-      - cocryovis-network
-
   nginx:
     image: nginx:alpine
     user: root

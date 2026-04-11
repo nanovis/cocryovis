@@ -67,3 +67,4 @@ volumes:
 
 networks:
   cocryovis-network:
+    driver: bridge
