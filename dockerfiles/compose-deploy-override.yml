@@ -11,7 +11,8 @@ services:
       - "443:443"
     volumes:
       - ${NGINX_CONF_PATH:-./nginx.conf}:/etc/nginx/nginx.conf
-      - ${CERT_PATH:-./ssl}:/etc/nginx/ssl
+      - ${CERT_PATH:-./ssl/cert.pem}:/etc/nginx/ssl/cert.pem
+      - ${KEY_PATH:-./ssl/privkey.pem}:/etc/nginx/ssl/privkey.pem
     networks:
       - cocryovis-network
     depends_on:
