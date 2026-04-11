@@ -6,7 +6,7 @@ services:
   nginx:
     image: nginx:alpine
     user: root
-    container_name: nginx-proxy
+    container_name: cocryovis-nginx-proxy
     ports:
       - "443:443"
     volumes:
