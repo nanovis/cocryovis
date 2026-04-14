@@ -5,11 +5,13 @@ services:
     volumes:
       - app_dbdata:/database
       - ${APP_FILEDATA_PATH:-./.docker-volumes/data}:/data
+      - ${APP_FILEDATA_PATH:-./.docker-volumes/logs}:/app/server/logs
+      - ${APP_FILEDATA_PATH:-./.docker-volumes/module-cache}:/app/server/.module-cache
     command: 
       [
         "sh",
         "-c",
-        "chown -R 10001:10001 /database && chown -R 10001:10001 /data"
+        "chown -R 10001:10001 /database && chown -R 10001:10001 /data && chown -R 10001:10001 /logs && chown -R 10001:10001 /module-cache"
       ]
     restart: "no"
 
@@ -40,9 +42,9 @@ services:
       # - DOMAIN_NAME=${DOMAIN_NAME}
     volumes:
       - app_dbdata:/app/server/database
-      - ${APP_FILEDATA_PATH:-./docker-volumes/data}:/app/server/data
-      - app_logdata:/app/server/logs
-      - app_modulecache:/app/server/.module-cache
+      - ${APP_FILEDATA_PATH:-./.docker-volumes/data}:/app/server/data
+      - ${APP_FILEDATA_PATH:-./.docker-volumes/logs}:/app/server/logs
+      - ${APP_FILEDATA_PATH:-./.docker-volumes/module-cache}:/app/server/.module-cache
     deploy:
       resources:
         reservations:
