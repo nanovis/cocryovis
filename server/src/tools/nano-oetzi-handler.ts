@@ -142,7 +142,9 @@ export default class NanoOetziHandler {
       );
     }
 
-    const rawVolumeData = await RawVolumeData.getWithData(volumeId);
+    const volume = await Volume.getById(volumeId, { rawData: true });
+
+    const rawVolumeData = await RawVolumeData.getWithData(volume.rawData.id);
     const checkpoint = await Checkpoint.getById(checkpointId);
 
     NanoOetziHandler.checkInferenceInput(rawVolumeData, checkpoint);
