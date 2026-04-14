@@ -4,7 +4,7 @@ services:
     user: root
     volumes:
       - app_dbdata:/database
-      - ${APP_FILEDATA_PATH:-./.volumes/data}:/data
+      - ${APP_FILEDATA_PATH:-./.docker-volumes/data}:/data
     command: 
       [
         "sh",
