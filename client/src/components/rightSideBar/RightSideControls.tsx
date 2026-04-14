@@ -175,7 +175,7 @@ const SideControls = observer(() => {
             <PopoverTrigger>
               <Link
                 target="_"
-                href={`https://docs.google.com/document/d/e/2PACX-1vQjgHSJ-kbe5bFp9JzaNPWlbikrnTgdI2qDPw3l4bJ8cBBG4nP9Mq-aS_cxLYYdUgaD01xbrsIAPFT9/pub`}
+                href={`https://docs.google.com/document/d/e/2PACX-1vSthzBXAf8r53Yi0RB7i46oug8xKjA4mznyx8IsSfTj8C_QJ39K8ZuGduZAYbCjfSAP6P-nsJKNaoQm/pub`}
                 onClick={dismissUserManualPopover}
               >
                 <Tooltip
