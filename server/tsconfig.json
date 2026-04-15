@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
+    // This, together with paths, is a trick to allow directly previewing local imports in VSC
+    "rootDirs": ["src", "../schemas/src"],
     "outDir": "./dist",
 
     "target": "ES2024",
