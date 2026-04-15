@@ -59,6 +59,8 @@ const startServer = async () => {
 
   const app = express();
 
+  const isProduction = app.get("env") === "production";
+
   const allowedOrigins = ["https://files.cryoetdataportal.cziscience.com"];
 
   const corsOptions = {
@@ -80,7 +82,7 @@ const startServer = async () => {
   console.log("Running environment: ", app.get("env"));
 
   // middleware
-  if (app.get("env") !== "production" && process.env.DELAY !== undefined) {
+  if (!isProduction && process.env.DELAY !== undefined) {
     app.use(delay(Number(process.env.DELAY)));
   }
   app.use(express.urlencoded({ extended: true }));
@@ -119,13 +121,13 @@ const startServer = async () => {
     rolling: true,
     cookie: {
       httpOnly: true,
-      secure: !allowInsecureCookies,
+      secure: isProduction && !allowInsecureCookies,
       maxAge: appConfig.idleSessionExpirationMin * 60 * 1000,
       sameSite: "lax",
     },
   };
 
-  if (process.env.NODE_ENV === "production" && allowInsecureCookies) {
+  if (isProduction && allowInsecureCookies) {
     console.warn(
       "WARNING: Insecure cookies are allowed in production! This is not recommended for production environments."
     );
@@ -133,7 +135,7 @@ const startServer = async () => {
 
   const sessionParser = session(sess);
 
-  if (app.get("env") === "production") {
+  if (isProduction) {
     app.set("trust proxy", true);
     app.use(
       helmet({
