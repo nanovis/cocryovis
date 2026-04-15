@@ -10,7 +10,9 @@
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+
+    "types": ["node"]
   },
   "include": ["src"],
   "references": [{ "path": "../schemas" }]
