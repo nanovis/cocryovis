@@ -254,7 +254,7 @@ export class Camera extends WebGpuBuffer {
       vec3.create(),
       clippingPlaneOrigin,
       clippingPlaneNormal,
-      -distance
+      distance
     );
 
     this.setParameters({

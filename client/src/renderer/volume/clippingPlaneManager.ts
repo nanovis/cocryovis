@@ -187,7 +187,7 @@ export class ClippingPlaneManager {
       }
     }
 
-    if (this.fullscreen && this.volumeManager.channelData.length > 0) {
+    if (this.fullscreen) {
       const clippingPlaneNormal =
         this.clippingParametersBuffer.params.clippingPlaneNormal;
       const clippingPlaneOrigin =
