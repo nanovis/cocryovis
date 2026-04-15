@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "rootDirs": ["src", "../schemas/src"],
+    "rootDir": "src",
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "useDefineForClassFields": true,
@@ -27,12 +27,11 @@
     "checkJs": true,
 
     "paths": {
-      "@/*": ["./src/*"],
-      "@cocryovis/schemas": ["../schemas/src"],
-      "@cocryovis/schemas/*": ["../schemas/src/*"]
+      "@/*": ["./src/*"]
     },
     "types": ["@webgpu/types"]
   },
   "include": ["src"],
-  "exclude": ["vite.config.ts"]
+  "exclude": ["vite.config.ts"],
+  "references": [{ "path": "../schemas" }]
 }

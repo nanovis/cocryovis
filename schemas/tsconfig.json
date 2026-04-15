@@ -2,6 +2,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
 
     "module": "es2022",
     "target": "es2024",
@@ -9,6 +10,9 @@
     "lib": ["esnext"],
     "types": ["node"],
     "moduleResolution": "bundler",
+
+    "composite": true,
+    "emitDeclarationOnly": false,
 
     // Other Outputs
     "sourceMap": true,
@@ -29,16 +33,11 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-
-    "allowJs": true,
-    "checkJs": true,
-    "esModuleInterop": true
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

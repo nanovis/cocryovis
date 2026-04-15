@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    // This, together with paths, is a trick to allow directly previewing local imports in VSC
-    "rootDirs": ["src", "../schemas/src"],
+    "rootDir": "src",
     "outDir": "./dist",
 
     "target": "ES2024",
@@ -11,11 +10,8 @@
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
-    "allowImportingTsExtensions": false,
-    "paths": {
-      "@cocryovis/schemas": ["../schemas/src"],
-      "@cocryovis/schemas/*": ["../schemas/src/*"]
-    }
+    "allowImportingTsExtensions": false
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [{ "path": "../schemas" }]
 }

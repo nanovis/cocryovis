@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsc -b",
     "tscheck": "tsc --noEmit",
     "format": "prettier --write .",
     "lint": "npx eslint .",
@@ -31,7 +31,6 @@
     "globals": "^17.4.0",
     "@types/node": "^25.3.3",
     "ts-node": "^10.9.2",
-    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "eslint": "^10.0.2",
     "npm-check-updates": "^19.6.3",
