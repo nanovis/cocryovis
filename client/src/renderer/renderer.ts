@@ -129,6 +129,7 @@ export class VolumeRenderer {
   static readonly REQUIRED_LIMITS: Partial<RequiredLimits> = {
     maxComputeInvocationsPerWorkgroup: 512,
   } as const;
+  // @ts-expect-error - Bad type inference, since when DOM added WebGPU types, it didn't add up to date ones, but it overrides the @webgpu/types ones
   static readonly OPTIONAL_FEATURES: Iterable<GPUFeatureName> = [
     "texture-formats-tier2",
   ] as const;
