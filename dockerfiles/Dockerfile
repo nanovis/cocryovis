@@ -71,6 +71,9 @@ RUN npm ci
 # Copy source
 COPY ./ /app/
 
+# Build schemas first because modules installer imports dist exports
+RUN cd /app && npm run -w schemas build
+
 # Install/download external modules through Node-based installer
 RUN --mount=type=cache,id=volweb-module-cache,target=/app/server/.module-cache \
     cd /app/server && npm run modules:install
